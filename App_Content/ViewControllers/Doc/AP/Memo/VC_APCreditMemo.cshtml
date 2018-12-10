@@ -1,0 +1,203 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, baseModelHelper) {
+
+        var VC_PurchaseReturn = function () {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'PurchaseReturnDetails';
+        }
+
+        VC_PurchaseReturn.prototype = Object.create(baseModelHelper.prototype);
+
+        
+        VC_PurchaseReturn.prototype.Init = function (VC) {
+            var _ = this;
+            _.IsAddItemDisabled = true;
+            baseModelHelper.prototype.Init.call(this, VC);   
+        }
+        
+
+        VC_PurchaseReturn.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+            VC.butBrowseRR.option('onClick', function () {
+                if (_.CurrentObject.ID_Supplier == null) {
+                    VC.MsgBox('Please select a supplier', 'Purchase Return');
+                    return;
+                }
+                //
+                //
+                //
+
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vReceivingReport_Detail WHERE ID_FilingStatus NOT IN ( 1 , 7 )
+                                                    AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @ID_Details )")', {
+                    title: 'Select Receiving Report (' + _.CurrentObject.Supplier + ')',
+                    ID_View: '0ECB95D8-D2A0-4057-A86D-4C6015BBF141',
+                    params : {
+                         'ID_BusinessPartner' : _.CurrentObject.ID_Supplier
+                       , 'ID_Details': Enumerable.From(_.CurrentObject.PurchaseReturnDetails).Select('$.ID_DocDetail').ToArray()
+                    },
+                    onCustomizeColumns : function( columns ) { 
+                        $.each( columns, function(i,c)  { 
+                            if ( c.dataField == "DocumentNo") { 
+                                c.caption = "RR No.";
+                            }
+                            if ( c.dataField == "Date") { 
+                                c.caption = "RR Date";
+                            }
+                        });
+                    }
+                }).then( function(Details)  { 
+                    if (_.CurrentObject.PurchaseReturnDetails == null) _.CurrentObject.PurchaseReturnDetails = [];
+                    $.each(Details,function( i , d ) { 
+                        var detail = { 
+                            ID : -1,
+                            RefID : d.ID,
+                            Code : d.Code,
+                            ItemCode : d.Code,
+                            Quantity : 0.00,
+                            RefQuantity : d.Quantity,
+                            UnitPrice : d.UnitPrice,
+                            TotalAmount : d.TotalAmount,
+                            ID_UOM : d.ID_UOM,
+                            ID_Item : d.ID_Item,
+                            Description : d.Description,
+                            Notes : d.Notes,
+                            ID_TaxScheme : d.ID_TaxScheme,
+                            VatAmt : d.VatAmt,
+                            Item : d.Item,
+                            UOM : d.UOM,
+                            TaxScheme : d.TaxScheme,
+                            ID_DocDetail : d.ID,
+                            Reference : d.DocumentNo + ':' + d.ID,
+                            ID_DocModel: 2142,
+                            DocStatus : ''
+
+                        }
+                        _.CurrentObject.PurchaseReturnDetails.push(detail);
+                        
+                    });
+                   
+                });
+        });
+
+
+        //
+        //
+        var _ = this;
+        VC.AddToolBarButtonOnGrid('PurchaseReturnDetails', {
+            text: 'Browse Reference RR',
+            icon: 'mdi mdi-package-variant',
+            onClick: function () {
+                if (_.CurrentObject.ID_Supplier == null) {
+                    VC.MsgBox('Please select a supplier', 'Purchase Return');
+                    return;
+                }
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vReceivingReport_Detail WHERE ID_FilingStatus NOT IN ( 1 , 7 )
+                                                    AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @ID_Details )")', {
+                title: 'Select Receiving Report (' + _.CurrentObject.Supplier + ')',
+                ID_View: '0ECB95D8-D2A0-4057-A86D-4C6015BBF141',
+                params : {
+                    'ID_BusinessPartner' : _.CurrentObject.ID_Supplier
+                  , 'ID_Details': Enumerable.From(_.CurrentObject.PurchaseReturnDetails).Select('$.ID_DocDetail').ToArray()
+                },
+                onCustomizeColumns : function( columns ) { 
+                    $.each( columns, function(i,c)  { 
+                        if ( c.dataField == "DocumentNo") { 
+                            c.caption = "RR No.";
+                        }
+                        if ( c.dataField == "Date") { 
+                            c.caption = "RR Date";
+                        }
+                    });
+                }
+            }).then( function(Details)  { 
+                if (_.CurrentObject.PurchaseReturnDetails == null) _.CurrentObject.PurchaseReturnDetails = [];
+                $.each(Details,function( i , d ) { 
+                    var detail = { 
+                        ID : -1,
+                        RefID : d.ID,
+                        Code : d.Code,
+                        ItemCode : d.Code,
+                        Quantity : 0.00,
+                        RefQuantity : d.Quantity,
+                        UnitPrice : d.UnitPrice,
+                        TotalAmount : d.TotalAmount,
+                        ID_UOM : d.ID_UOM,
+                        ID_Item : d.ID_Item,
+                        Description : d.Description,
+                        Notes : d.Notes,
+                        ID_TaxScheme : d.ID_TaxScheme,
+                        VatAmt : d.VatAmt,
+                        Item : d.Item,
+                        UOM : d.UOM,
+                        TaxScheme : d.TaxScheme,
+                        ID_DocDetail : d.ID,
+                        Reference : d.DocumentNo + ':' + d.ID,
+                        ID_DocModel: 2142,
+                        DocStatus : ''
+                    }
+                    _.CurrentObject.PurchaseReturnDetails.push(detail);
+                });
+            });
+    }
+    }, true);
+
+
+
+//
+        }
+
+        VC_PurchaseReturn.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPurchaseReturnApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_PurchaseReturn.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPurchaseReturnCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_PurchaseReturn;
+
+    });
+//</script>
+</text> , false);

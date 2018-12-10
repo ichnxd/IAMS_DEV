@@ -1,0 +1,207 @@
+﻿@font-face {
+  font-family: Roboto Black;
+  src: url("Styles/fonts/Roboto/Roboto-Black.ttf");
+}
+@font-face {
+  font-family: Roboto Black Italic;
+  src: url("Styles/fonts/Roboto/Roboto-BlackItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Bold;
+  src: url("Styles/fonts/Roboto/Roboto-Bold.ttf");
+}
+@font-face {
+  font-family: Roboto Bold Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-BoldItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-Italic.ttf");
+}
+@font-face {
+  font-family: Roboto Light;
+  src: url("/Styles/fonts/Roboto/Roboto-Light.ttf");
+}
+@font-face {
+  font-family: Roboto Light Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-LightItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Black;
+  src: url("/Styles/fonts/Roboto/Roboto-Medium.ttf");
+}
+@font-face {
+  font-family: Roboto Medium Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-MediumItalic.ttf");
+}
+@font-face {
+  font-family: Roboto;
+  src: url("/Styles/fonts/Roboto/Roboto-Regular.ttf");
+}
+@font-face {
+  font-family: Roboto Thin;
+  src: url("/Styles/fonts/Roboto/Roboto-Thin.ttf");
+}
+@font-face {
+  font-family: Roboto Thin Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-ThinItalic.ttf");
+}
+.js-grid-container {
+  background-color: #fff!important;
+}
+.js-grid-container .dx-apply-button {
+  display: none!important;
+}
+.js-grid-container .JsClearFilter {
+  color: rgba(221, 221, 221, 0.5);
+}
+.js-grid-container .JsClearFilter:hover {
+  color: #fff;
+  cursor: pointer;
+}
+.js-grid-container .view-header {
+  background-color: #eaeaea;
+}
+.js-grid-container .view-header .dx-menu,
+.js-grid-container .view-header .dx-menu-horizontal {
+  display: inline-block !important;
+  height: 30px!important;
+  background-color: #eaeaea;
+}
+.js-grid-container .view-header .js-grid-toolbar-filter {
+  float: right;
+}
+.js-grid-container .view-header .js-grid-toolbar-filter .dx-menu-horizontal {
+  margin-top: 2px;
+}
+.js-grid-container .system-id {
+  font-size: 10px!important;
+  font-weight: bold;
+}
+.js-grid-container .header {
+  font-size: 17px;
+  padding-left: 2px!important;
+  padding-right: 2px!important;
+}
+.js-grid-container .header .col-md-6 {
+  padding-left: 5px;
+  padding-right: 2px;
+}
+.js-grid-container .header .js-module-close {
+  font-size: 15px;
+}
+.js-grid-container .group-count {
+  float: right;
+  display: inline-block;
+  color: #000!important;
+  font-size: 8px;
+}
+.js-grid-container .searchBox {
+  float: right;
+}
+.js-grid-container .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-cell .dx-dropdowneditor {
+  border-left: solid 1px #ddd;
+}
+.js-grid-container .dx-datagrid-content .dx-datagrid-table .dx-row .dx-editor-cell .dx-dropdowneditor .dx-dropdowneditor-icon {
+  background: #fff!important;
+}
+.js-grid-container .dx-menu-items-container:first-child {
+  /*width:100%!important;*/
+}
+.js-grid-container .dx-datagrid-total-footer {
+  bottom: 0;
+}
+.js-grid-container .dx-datagrid-table-fixed .dx-row.dx-group-row td {
+  font-size: 10px;
+  background-color: #e8e8e8;
+  color: #525252;
+}
+.js-grid-container .dx-datagrid-headers .dx-header-row > td > .dx-datagrid-text-content {
+  white-space: inherit;
+}
+.js-grid-container .dx-datagrid-rowsview .dx-selection.dx-row > td {
+  background-color: #525252 !important;
+  color: #fff!important;
+}
+.js-grid-container .dx-datagrid-rowsview .dx-row > .dx-master-detail-cell {
+  padding: 10px;
+}
+.js-grid-container .dx-data-row.dx-state-hover:not(.dx-selection):not(.dx-row-inserted):not(.dx-row-removed):not(.dx-edit-row) > td:not(.dx-focused) {
+  background-color: rgba(82, 82, 82, 0.5);
+}
+.js-grid-container .internal-grid .dx-data-row.dx-state-hover:not(.dx-selection):not(.dx-row-inserted):not(.dx-row-removed):not(.dx-edit-row) > td:not(.dx-focused) {
+  background-color: transparent;
+}
+.js-grid-container .dx-datagrid-headers .dx-row:first-child {
+  color: #fff;
+  border-color: transparent;
+}
+.js-grid-container .dx-datagrid-headers .dx-row:first-child td {
+  background-color: #808080;
+}
+.js-grid-container .dx-datagrid-headers .dx-datagrid-table .dx-row > td {
+  border-bottom: none;
+  font-weight: normal;
+}
+.js-grid-container .dx-datagrid .dx-datagrid-rowsview .dx-column-lines > td {
+  border-color: transparent!important;
+}
+.js-grid-container .internal-grid.dx-widget {
+  font-size: 10px;
+}
+.js-grid-container .internal-grid .dx-datagrid-headers .dx-row:first-child {
+  color: #232323;
+  font-weight: bold;
+  border-color: transparent;
+  background-color: #fff;
+}
+.js-grid-container .internal-grid .dx-datagrid-headers .dx-row:first-child td {
+  font-weight: bold;
+  font-size: 10px;
+}
+.js-grid-container .dx-datagrid-rowsview .dx-row:not(.dx-group-row) > td {
+  padding: 10px 5px 10px 5px;
+  vertical-align: middle;
+  font-size: 14px;
+}
+.js-grid-container .dx-datagrid-rowsview .dx-row-alt > td {
+  background-color: #ededed;
+}
+.js-grid-container .dx-datagrid-rowsview .inner-details {
+  color: #000;
+}
+.js-grid-container .dx-datagrid-rowsview .dx-master-detail-row:not(.dx-datagrid-edit-form) .dx-master-detail-cell,
+.js-grid-container .dx-datagrid-rowsview .dx-master-detail-row:not(.dx-datagrid-edit-form) > .dx-datagrid-group-space {
+  background-color: lavender;
+}
+.js-grid-container .dx-freespace-row td {
+  border: none;
+}
+.js-grid-container .dx-freespace-row:last-child {
+  background-color: #fff!important;
+}
+.js-grid-container .dx-datagrid-bottom-load-panel {
+  background-color: #efefef;
+}
+.js-grid-container .dx-datagrid-bottom-load-panel .dx-loadindicator-wrapper {
+  display: none;
+}
+.js-grid-container .dx-selection.dx-row > td .btn-row-controller {
+  color: #003e5f;
+}
+.js-grid-container .dx-datagrid-total-footer .dx-datagrid-summary-item {
+  color: #000;
+}
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(1),
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(2),
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(3),
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(4) {
+  white-space: nowrap;
+}
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(1) div,
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(2) div,
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(3) div,
+.js-grid-container .dx-datagrid-total-footer tr td:nth-child(4) div {
+  font-size: 12px;
+  overflow: visible;
+}

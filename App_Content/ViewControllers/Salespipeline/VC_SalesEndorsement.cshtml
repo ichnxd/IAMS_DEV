@@ -1,0 +1,708 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'AcctHelper', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app,AcctHelper, Base) {
+
+        var VC_SalesEndorsement = function () { }
+
+        VC_SalesEndorsement.prototype = Object.create(Base.prototype);
+
+        VC_SalesEndorsement.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+
+            VC.AddToolbarButton({
+                text: 'Create Sales Order',
+                icon: 'mdi mdi-file-document',
+                color: '#009688',
+                //disabled: false,
+                IsDisabled: function () {
+                    var CurrentObject = _.getCurrentObject();
+                    //if (CurrentObject.ID_FilingStatus === 2) return false;
+                    if (CurrentObject.ID_FilingStatus === 42) return false;
+                    return true;
+                },
+                isContextMenu: true,
+                requireMultipleObject: true,
+                onItemClick: function (BaseObjects) {
+                    if (BaseObjects.length != 1) return;
+                    var CurrentObject = BaseObjects[0];
+                    //
+                    //
+                    //
+                    AcctHelper.CreateSalesOrderFromSalesEndorsement(CurrentObject.ID);
+                }
+            });
+
+
+            VC.AddButtonReport({
+                Name: 'Sales Endorsement Form',
+                ID_Report: 3110,
+                requireSingleObject: true
+            });
+
+            // VC.AddButtonReport({
+            //     Name: 'Sales Endorsement Form 2',
+            //     ID_Report: 5273,
+            //     requireSingleObject: true
+            // });
+
+
+
+            if (_.ID_ViewType == 2) {
+
+                VC.AddToolbarButton({
+                    text: 'Cancel & Recreate',
+                    icon: 'mdi mdi-history',
+                    color: '#ff0000',
+                    onItemClick: function (BaseObjects) {
+                        var CurrentObject = _.CurrentObject;
+                        if (CurrentObject.ID == -1) return;
+                        _.PerformCancel([CurrentObject]).then(function () {
+                            var ID_Opporunity = CurrentObject.ID_Opportunity;
+                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pOpporunityCancel")', {
+                                ID_Opportunity : ID_Opporunity
+                            }).then(function () {
+                                AcctHelper.Create_Copy_Opp(ID_Opporunity, CurrentObject.ID);
+                            });
+                        });
+                    },
+                    IsDisabled: function () {
+                        console.log('XXXX',[20,4,5,2].includes(VC.CurrentUser.ID_UserGroup), _.CurrentObject.ID_FilingStatus)
+                        if (([20,4,5,2].includes(VC.CurrentUser.ID_UserGroup)) && _.CurrentObject.ID_FilingStatus !== 36) return false;
+                        return true;
+                    }
+                
+                });
+
+
+                VC.$ID_AccountExecutive_IsDisabled = function () {
+                    if (VC.CurrentUser.ID_UserGroup === 4 || VC.CurrentUser.ID_UserGroup === 20) return true;
+                    return false;
+                }
+                VC.$BillingAddress_IsDisabled = function () {
+                    if(_.CurrentObject.IsSameAsDelivery == true || _.CurrentObject.IsSameAsDelivery == 1) return false;
+                    return true;
+                }
+
+
+                VC.CustomSave = VC.Save;
+
+                VC.Save = function () {
+                    if(_.CurrentObject.PODate !== null && _.CurrentObject.PODate !== undefined){
+                            if(typeof _.CurrentObject.PODate == 'object'){
+                                _.CurrentObject.PODate = _.CurrentObject.PODate.toLocaleDateString()
+                            }
+                        }
+                     if(_.CurrentObject.DeliveryDate !== null && _.CurrentObject.DeliveryDate !== undefined){
+                            if(typeof _.CurrentObject.DeliveryDate == 'object'){
+                                _.CurrentObject.DeliveryDate = _.CurrentObject.DeliveryDate.toLocaleDateString()
+                            }
+                        }
+                    VC.CustomSave();
+                }
+
+                VC.AddToolbarButton({
+                    text: 'Endorse',
+                    icon: 'green mdi mdi-playlist-check',
+                    requireSingleObject: true,
+                    isContextMenu: true,
+                    IsDisabled: function () {
+                        if ( VC.$scope.CurrentObject.ID_FilingStatus === 2 ) return false;
+                        return true;
+                    },
+                    onItemClick: function () {
+                        VC.ConfirmBox("Are you sure?").then(function () {
+                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pSalesEndorsementEndorse")', {
+                                ID: VC.$scope.CurrentObject.ID
+                            }).then(function () {
+                                VC.Reload();
+                            });
+                        });
+                    }
+                });
+             if (VC.CurrentUser.ID == 179 || VC.CurrentUser.ID == 5 ){
+                   VC.AddToolbarButton({
+                    text: 'Done',
+                    icon: 'green mdi mdi-playlist-check',
+                    requireSingleObject: true,
+                    isContextMenu: true,
+                    IsDisabled: function () {
+                        if ( VC.$scope.CurrentObject.ID_FilingStatus === 42 ) return false;
+                        return true;
+                    },
+                    onItemClick: function () {
+                        VC.ConfirmBox("Are you sure?").then(function () {
+                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pSalesEndorsementDone")', {
+                                ID: VC.$scope.CurrentObject.ID
+                            }).then(function () {
+                                VC.Reload();
+                            });
+                        });
+                    }
+                });
+            }
+
+                //
+                //
+
+
+            // SalesEndorsement_PaymentTerms -->  Add Payment Scheme
+
+            var fBrowsePaymentScheme = function(){
+
+               VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT *, NULL AS ID_PaymentTerm FROM tPaymentScheme WHERE isActive = 1 AND ID NOT IN (@ID_PaymentSchemes) ")', {
+                    title: 'Select Payment Scheme',
+                    ID_View: '90CBDDED-A162-4978-8A21-B969592E80BE',
+                    width: 600,
+                    height: 590,
+                    params: {
+                        'ID_PaymentSchemes':Enumerable.From(_.CurrentObject.SalesEndorsement_PaymentTerms).Select('$.ID_PaymentScheme').ToArray()
+                    }
+                }).then(function (records) {
+
+                    AcctHelper.InitArrayedObj(_.CurrentObject.SalesEndorsement_PaymentTerms)
+
+                    $.each(records, function (i, record) {
+
+                        var newDetail = {
+
+                            ID_PaymentScheme : record.ID,
+                            PaymentScheme : record.Name,
+                            Rate :  record.Rate,
+                            ID_PaymentTerm :  record.ID_PaymentTerm,
+                            PaymentTerm : '',
+                            Amount :  0.00,
+                        };
+
+                        _.CurrentObject.SalesEndorsement_PaymentTerms.push(newDetail);
+                        _.Compute();
+
+                    });
+
+                });
+            };
+
+            // VC.AddToolBarButtonOnGrid('SalesEndorsement_PaymentTerms', {
+            //     text: 'Add Payment Scheme',
+            //     icon: 'mdi mdi-package-variant',
+            //     onClick: function () {
+
+            //         fBrowsePaymentScheme();
+            //     }
+            // });
+
+            // END SalesEndorsement_PaymentTerms -->  Add Payment Scheme
+
+            VC.onContextMenuPreparing_SalesEndorsement_Details = function (e) {
+                var item = e.row.data;
+                //console.log(item,'xxx!')
+                e.items.push({
+                    text: "Add Description",
+                    icon: "fa fa-edit",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        app.$GetPopupView().ShowPop({
+                                element: $(e.targetElement).parent(),
+                                background: "#808080",
+                                title: 'Description (' + (item.Name == null || item.Name == undefined ? item.ID : item.Name) + ')',
+                                width: 600,
+                                //height:400,
+                                InitController: function (n) {
+                                    n.Name = item.Name,
+                                    n.dxTextAreaOption = {
+                                        bindingOptions: {
+                                            'value': 'Name'
+                                        },
+                                        maxLength: 300,
+                                        height: '100%',
+                                    }
+                                },
+                                template: function (n) {
+                                    return '<div dx-text-area="dxTextAreaOption" style="font-size:15px"></div>'
+                                },
+                            }).then(function (n) {
+                                e.row.data.Name = n.Name;
+                            });
+                        }
+                });
+
+            };
+                //
+                //
+            VC.onContextMenuPreparing_Opportunity_Details = function (e) {
+                var item = e.row.data;
+                console.log(item,'xxx!')
+                e.items.push({
+                    text: "Add Description",
+                    icon: "fa fa-edit",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        app.$GetPopupView().ShowPop({
+                                element: $(e.targetElement).parent(),
+                                background: "#808080",
+                                title: 'Description (' + (item.Name == null || item.Name == undefined ? item.ID : item.Name) + ')',
+                                width: 600,
+                                //height:400,
+                                InitController: function (n) {
+                                    n.Description = item.Description,
+                                    n.dxTextAreaOption = {
+                                        bindingOptions: {
+                                            'value': 'Description'
+                                        },
+                                        maxLength: 300,
+                                        height: '100%',
+                                    }
+                                },
+                                template: function (n) {
+                                    return '<div dx-text-area="dxTextAreaOption" style="font-size:15px"></div>'
+                                },
+                            }).then(function (n) {
+                                e.row.data.Description = n.Description;
+                            });
+                        }
+                });
+
+            };
+
+                //
+                //
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+
+                    var TotalPTerms = 0.00;
+                    var TotalAmount = _.CurrentObject.TotalContractPrice;
+                    //TotalPriceVatInc
+                    //$.each(_.CurrentObject.SalesEndorsement_Details, function (i, item) {
+                    //    TotalAmount += item.TotalAmount;
+                    //});
+
+                    if( Array.isArray(_.CurrentObject.SalesEndorsement_BOMs) == false ) _.CurrentObject.SalesEndorsement_BOMs = [];
+                    if( Array.isArray(_.CurrentObject.SalesEndorsement_Details) == false ) _.CurrentObject.SalesEndorsement_Details = [];
+                    if( Array.isArray(_.CurrentObject.SalesEndorsement_PaymentTerms) == false ) _.CurrentObject.SalesEndorsement_PaymentTerms = [];
+                    if( Array.isArray(_.CurrentObject.SalesEndorsement_Services) == false ) _.CurrentObject.SalesEndorsement_Services = [];
+
+
+
+
+
+                    $.each(_.CurrentObject.SalesEndorsement_PaymentTerms, function (i, item) {
+                        TotalPTerms += item.Amount;
+                    });
+
+                    //console.log('TotalAmount', TotalAmount);
+                    //console.log('TotalPTerms', TotalPTerms);
+                    // if (TotalAmount != TotalPTerms) {
+                    //     brokenRules.push('Total Amount and Payment Schemes total must be equal');
+                    // }
+
+                    // console.log('_',_.CurrentObject)
+                    // if(_.CurrentObject.ID_OpportunityCategory == 2){
+                    //     if (_.CurrentObject.CustomerContractFile === null || _.CurrentObject.CustomerContractFile === undefined) {
+                    //         brokenRules.push('Contracts is required.');
+                    //     }
+                    //     if (_.CurrentObject.BillOfMaterialsFile === null || _.CurrentObject.BillOfMaterialsFile === undefined) {
+                    //         brokenRules.push('Final BOM is required.');
+                    //     }
+                    // }
+                    // if(_.CurrentObject.ID_BusinessUnit == 1){
+                    //     if (_.CurrentObject.TenderBizFile === null || _.CurrentObject.TenderBizFile === undefined) {
+                    //         brokenRules.push('Tender Biz is required.');
+                    //     }
+                    // }
+                    if (_.CurrentObject.FinalProposalFile === null || _.CurrentObject.FinalProposalFile === undefined) {
+                        if (_.CurrentObject.CustomerPOFile === null || _.CurrentObject.CustomerPOFile === undefined){
+                            brokenRules.push('Attachments: Signed PO or Signed Proposal is required.');
+                        }
+                    }
+
+
+                    if(_.CurrentObject.ID_TaxScheme !== 4){
+                        if(_.CurrentObject.TIN == null || _.CurrentObject.TIN.trim().length == 0){
+                            brokenRules.push('TIN is required');
+                        }
+                    }
+
+
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ContactAcctNo,12) == false){
+                        brokenRules.push('Contact No should be 12 digits');
+                    }
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid: true }
+                })
+
+
+            }
+
+            if (_.ID_ViewType == 2) {
+                // VC['SalesEndorsement_PaymentTerms_onColumnChanged'] = function (e) {
+                //     if (e.dataField == 'Amount') {
+                //         if(e.data !== null && e.data !== undefined){
+                //             e.key.Rate = _.CurrentObject.TotalContractPrice == 0 || _.CurrentObject.TotalContractPrice == null || _.CurrentObject.TotalContractPrice == undefined ? 0.00 : e.data.Amount / _.CurrentObject.TotalContractPrice ;
+                //         }
+                //     }
+                //     _.Compute();
+                // }
+                // VC['onSalesEndorsement_PaymentTerms_RowUpdated'] = function (Grid, Detail) {
+                //     $.each(Detail,function (i,d) {
+
+                //         if(d.Rate == null){
+                //             d.Rate = 0;
+                //         }
+
+                //         if(d.ID < 0 ) d.Amount = d.Rate * _.CurrentObject.TotalContractPrice;
+                //         // nilipat q sa pag add nag Payment Terms para doon na ang trigger ng computation ni Rate
+                //         //2017-10-05 11:13am - Joseph
+                //     });
+                // }
+
+
+            }
+
+
+            VC.SalesEndorsement_Details_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_SalesEndorsement_Details = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+            VC.SalesEndorsement_BOMs_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_SalesEndorsement_BOMs = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+            VC.SalesEndorsement_Services_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_SalesEndorsement_Services = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+            VC.SalesEndorsement_PaymentTerms_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_SalesEndorsement_PaymentTerms = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+
+
+         VC_SalesEndorsement.prototype.onCurrentObjectChanged = function (e) {
+
+                    if(e.dataField == 'IsSameAsDelivery'){
+                        if(_.CurrentObject.IsSameAsDelivery == true || _.CurrentObject.IsSameAsDelivery == 1){
+                            if( _.CurrentObject.BillingAddress !== _.CurrentObject.DeliveryAddress ){
+                                _.CurrentObject.BillingAddress = _.CurrentObject.DeliveryAddress;
+                            }
+                        }
+                    }
+
+                    if(e.dataField == 'DeliveryAddress'){
+                        if(_.CurrentObject.IsSameAsDelivery == true || _.CurrentObject.IsSameAsDelivery == 1){
+                            if( _.CurrentObject.BillingAddress !== _.CurrentObject.DeliveryAddress ){
+                                _.CurrentObject.BillingAddress = _.CurrentObject.DeliveryAddress;
+                            }
+                        }
+                    }
+
+                    if (e.dataField == 'ID_ContactAcctDept') {
+                        if (e.value !== null && e.value !== undefined) {
+                            if (e.value.MobileNo !== undefined) {
+                                VC.$scope.CurrentObject.ContactAcctNo = e.value.MobileNo;
+                            }
+                            if(e.value.EmailAddress !== undefined){
+                                VC.$scope.CurrentObject.ContactAcctEmail = e.value.EmailAddress;
+                            }
+                        } else {
+                            console.log('eval',e.value)
+                            VC.$scope.CurrentObject.ContactAcctNo = null;
+                            VC.$scope.CurrentObject.ContactAcctEmail = null;
+                        }
+                    }
+
+                   if (e.dataField == 'ID_ContactWrhDept') {
+                        if (e.value !== null) {
+                            if (e.value.MobileNo !== undefined) {
+                                VC.$scope.CurrentObject.ContactWrhNo = e.value.MobileNo;
+                            }
+                            if(e.value.EmailAddress !== undefined){
+                                VC.$scope.CurrentObject.ContactWrhEmail = e.value.EmailAddress;
+                            }
+                        } else {
+                                  VC.$scope.CurrentObject.ContactWrhNo = null;
+                                  VC.$scope.CurrentObject.ContactWrhEmail = null;
+                        }
+                    }
+
+                 if (e.dataField == 'ID_ContactPurchsDept') {
+                        if (e.value !== null) {
+                            if (e.value.MobileNo !== undefined) {
+                                VC.$scope.CurrentObject.ContactPurchsNo = e.value.MobileNo;
+                            }
+                            if(e.value.EmailAddress !== undefined){
+                                VC.$scope.CurrentObject.ContactPurchsEmail = e.value.EmailAddress;
+                            }
+                        } else {
+                                  VC.$scope.CurrentObject.ContactPurchshNo = null;
+                                  VC.$scope.CurrentObject.ContactPurchsEmail = null;
+                        }
+                    }
+
+                }
+        }
+
+
+        VC_SalesEndorsement.prototype.onLoad = function () {
+            Base.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = this.VC;
+            //
+            //
+            //
+
+            $(".SalesEndorsement_Details").parent().css("padding","10px");
+            $(".SalesEndorsement_Details").parent().css("padding-left","25px");
+            $(".SalesEndorsement_Details").parent().css("max-width","1087px");
+            $(".SalesEndorsement_BOMs").parent().css("padding","10px");
+            $(".SalesEndorsement_Services").parent().css("padding","10px");
+            $(".SalesEndorsement_PaymentTerms").parent().css("max-width","1100px");
+            if(_.CurrentObject.ID_EndorsedBy == "") _.CurrentObject.ID_EndorsedBy = null;
+            //
+            //
+            //
+            
+            _.Compute();
+            VC.$timeout(function () {
+                console.log('UserGroup',VC.CurrentUser.ID_UserGroup)
+                var result = true;
+                if(_.CurrentObject.ID_FilingStatus == 1 || _.CurrentObject.ID_FilingStatus == 2){ //- filed/appproved
+                    //BU Head, BDM, Sales Admin
+                     result = [4,5,20,2].includes(VC.CurrentUser.ID_UserGroup) == false;
+                }
+                else if(_.CurrentObject.ID_FilingStatus == 42){
+                    // Accounting, BU Head, BDM, Sales Admin
+                     result = [10,2].includes(VC.CurrentUser.ID_UserGroup) == false;
+                }
+                else if(_.CurrentObject.ID_FilingStatus == 36){ // endorse
+                    result = true;
+                }
+
+                console.log('result',result)
+
+                if (VC.$fileUploaders !== undefined) {
+                    $.each(VC.$fileUploaders, function (i, file) {
+                        console.log('file',file)
+                        console.log('component',file.component)
+                        file.component.option('readOnly', result);
+                    });
+                }
+                VC.butSave.disabled = false;
+                VC.RefreshToolBar();
+            });
+       
+        }
+
+        //e
+        //
+
+        VC_SalesEndorsement.prototype.Compute = function () {
+            //Base.prototype.Compute.call(this);
+            var VC = this.VC;
+            var _ = this;
+            console.log('compute')
+
+            // $.each(_.CurrentObject.SalesEndorsement_PaymentTerms,function(i,o){
+            //     o.Rate = _.CurrentObject.TotalContractPrice == 0 || _.CurrentObject.TotalContractPrice == null || _.CurrentObject.TotalContractPrice == undefined ? 0.00 : o.Amount / _.CurrentObject.TotalContractPrice ;
+            // });
+
+
+        }
+
+        VC_SalesEndorsement.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesEndorsementApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_SalesEndorsement.prototype.Cancel = function (Items,Reason) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesEndorsementCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        VC_SalesEndorsement.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+
+            var SQL_AccountExecutive = '';
+            var SQL_BusinessUnit = '';
+
+            switch (VC.CurrentUser.ID_UserGroup) {
+
+                case 4:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+                    break;
+                case 5:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1 AND (ID_AccountExecutive = @ID_AccountExecutive OR ID_CreatedBy = @ID_CreatedBy)")';
+                    break;
+                default:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1")';
+                    break;
+            }
+
+            if (VC.CurrentUser.ID_UserGroup !== 5) {
+
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'BDM',
+                    SQL: SQL_AccountExecutive,
+                    params: {
+                        'ID_CurrentUser': VC.CurrentUser.ID_Employee,
+                        'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit,
+                        'ID_AccountExecutive': VC.CurrentUser.ID_Employee
+                    },
+                    width: 120,
+                    defaultItems: [
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                        {
+                            ID: -1,
+                            Name: 'My Endorsements'
+                        }
+                    ],
+                    value: ( VC.CurrentUser.ID_UserGroup === 5 || VC.CurrentUser.ID_UserGroup === 4 ? -1 : -2  )
+                });
+
+                if (VC.CurrentUser.ID_UserGroup !== 4) {
+                    VC.AddActionFilter({
+                        name: 'VC_BusinessUnit',
+                        caption: 'BU',
+                        SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vBusinessUnit WHERE isActive = 1")',
+                        width: 100,
+                        defaultItems: [
+                            {
+                                ID: -1,
+                                Name: '(All)'
+                            }
+                        ],
+                        value: -1
+                    });
+                }
+            }
+        }
+
+        VC_SalesEndorsement.prototype.onCollectionSource_Load = function (data) {
+
+            Base.prototype.onCollectionSource_Load.call(this, data);
+            var _ = this;
+            var VC = this.VC;
+            var VC_Stages = VC.ActionFilters.VC_Stages;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (ID_UserGroup != 5) {
+                var VC_Employee = VC.ActionFilters.VC_Employee;
+                //console.log(VC_Employee,'VC_Employee')
+
+                if (ID_UserGroup != 4) {
+                    var VC_BusinessUnit = VC.ActionFilters.VC_BusinessUnit;
+                    if (VC_BusinessUnit !== -1) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC_BusinessUnit) //Approved
+                    }
+                }
+                if (VC_Employee !== -2) {
+                    if (VC_Employee == -1) {
+                        WhereCriteria.push("ID_AccountExecutive = " + VC.CurrentUser.ID_Employee) //Approved
+                    } else {
+                        WhereCriteria.push("ID_AccountExecutive = " + VC_Employee) //Approved
+                    }
+                }
+                else {
+                    if (ID_UserGroup == 4) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit)
+                    }
+                }
+
+
+            } else {
+                WhereCriteria.push("ID_AccountExecutive = " + VC.CurrentUser.ID_Employee)
+            }
+
+        }
+
+
+        return VC_SalesEndorsement;
+    });
+//</script>
+</text> , false )
+

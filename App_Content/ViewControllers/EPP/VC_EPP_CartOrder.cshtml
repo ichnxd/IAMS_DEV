@@ -1,0 +1,371 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, BaseClass, AcctHelper) {
+
+        var VC_EPP_CartOrder = function () {
+            var _ = this;
+            _.DefaultFilterValue = 1;
+        }
+        
+        VC_EPP_CartOrder.prototype = Object.create(BaseClass.prototype);
+
+        VC_EPP_CartOrder.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+            var IsDisabled = function () {
+                var SelectedItems = (_.ID_ViewType == 1 ? VC.Grid.getSelectedRowsData() : [VC.$scope.CurrentObject]);
+                if (SelectedItems.length !== 1) return true;
+                //var CurrentObject = SelectedItems[0];
+                //if (CurrentObject.ID_CreatedBy !== VC.CurrentUser.ID) return true;
+                return false;
+            }
+
+            _.butCreateSalesOrder = {
+                text: 'Test',
+                icon: 'mdi mdi-playlist-plus',
+                color: '#009688',
+                IsDisabled: function () {
+                    return false;
+                },
+                isContextMenu: true,
+                onItemClick: function () {
+                    var $http = angular.element(document).injector().get('$http');
+                    $http({
+                        method: 'POST',
+                        url: '/api/Data/AddToCart',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        data: {
+                            CartOrder:[{
+                                CartCode: '123456',
+                                Employee: 'Jefrey Sambile',
+                                TotalAmount: 21343,
+                                CustomerCode: 'CU-02733',
+                                ID_AccountExecutive: 1
+                            }],
+                            CartOrderDetails: [
+                                {
+                                    Code: 'I000015855',
+                                    Quantity: 3,
+                                    SRP: 3600,
+                                    CartCode: '123456',
+                                }, {
+                                    Code: 'I000015855',
+                                    Quantity: 4,
+                                    SRP: 3800,
+                                    CartCode: '123456',
+                                }, {
+                                    Code: 'I000015855',
+                                    Quantity: 5,
+                                    SRP: 2100,
+                                    CartCode: '123456',
+                                }
+                            ]
+                        }
+                    }).then(function (r) {
+
+                    }, function () {
+
+                    });
+                }
+            }
+            
+            VC.AddToolbarButton(_.butCreateSalesOrder);
+
+            if (_.ID_ViewType === 1) {
+                VC.AddActionFilter({
+                    name: 'VC_StatusFilter',
+                    caption: 'Filing Status',
+                    width: '150px',
+                    SQL : '@Html.EncryptSQL("SELECT * FROM vFilingStatusFilter ORDER BY ID")',
+                    //dataSource: [
+                    //      { id: 1, name: '(All)' }, { id: -3, name: '(Pending)' }, { id: -2, name: '(Not Cancelled)' }, { id: 2, name: 'Filed' }
+                    //    , { id: 3, name: 'Approved' }, { id: 4, name: 'Cancelled' }
+                    //    , { id: 5, name: 'Paid' }, { id: 6, name: 'Posted' }],
+                    placeholder: 'Select Status',
+                    value: _.DefaultFilterValue == undefined ? -2 : _.DefaultFilterValue
+                });
+            }
+
+            /*_.IsCanApprove = function () {
+
+                var VC = _.VC;
+                var isDisabled = true;
+
+                if (_.ID_ViewType == 1) {
+
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if (SelectedRows.length != 1) return true;
+
+                    if (SelectedRows[0].ID_CurrentApprovers !== undefined) {
+                        console.log(SelectedRows[0].ID_CurrentApprovers,'x')
+                        if (SelectedRows[0].ID_CurrentApprovers !== null) {
+                            var ID_Approvers = SelectedRows[0].ID_CurrentApprovers.split(",");
+                            if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                return false;
+                            }
+                        } else {
+                            return true;
+                        }
+
+                    } else {
+                        if (SelectedRows[0].ID_FilingStatus === AcctHelper.FilingStatus.Filed) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    if (_.CurrentObject.ID == -1) {
+                        return true;
+                    }
+                    var CurrentObject = _.CurrentObject;
+                    if (CurrentObject.ID_CurrentApprovers !== undefined) {
+                        if (CurrentObject.ID_CurrentApprovers !== null) {
+                            var ID_Approvers = CurrentObject.ID_CurrentApprovers.split(",");
+                            if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                isDisabled = false;
+                            }
+                        } else {
+                            isDisabled = true;
+                        }
+                    } else {
+                       if (_.CurrentObject.ID_FilingStatus == AcctHelper.FilingStatus.Filed) {
+                            isDisabled = false;
+                        }
+                    }
+                }
+
+                return isDisabled;
+            }
+
+            _.IsCanCancel = function () {
+                var isDisabled = true;
+                if (_.ID_ViewType == 1) {
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if (SelectedRows.length == 0) return true;
+                    var _Selected = SelectedRows[0];
+
+                    if (_Selected.ID_FilingStatus === AcctHelper.FilingStatus.Filed || _Selected.ID_FilingStatus === AcctHelper.FilingStatus.Approved) {
+                        return false;
+                    } else {
+                        if (_Selected.ID_CurrentApprovers !== undefined && _Selected.ID_CurrentApprovers !== null) {
+                            if (_Selected.ID_CreatedBy === VC.CurrentUser.ID) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                } else {
+                    if (_.CurrentObject.ID == -1) return true;
+                    var ID_FilingStatus = _.CurrentObject.ID_FilingStatus;
+                    var CurrentObject = _.CurrentObject;
+                    isDisabled = true;
+                    if (ID_FilingStatus == AcctHelper.FilingStatus.Filed || ID_FilingStatus == AcctHelper.FilingStatus.Approved) {
+                        isDisabled = false;
+                    } else {
+                        if (CurrentObject.ID_CurrentApprovers !== undefined && CurrentObject.ID_CurrentApprovers !== null) {
+                            if (CurrentObject.ID_CreatedBy === VC.CurrentUser.ID) {
+                                isDisabled = false;
+                            }
+                        }
+                    }
+                }
+                return isDisabled;
+            }
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                IsDisabled: _.IsCanApprove,
+                isContextMenu: true,
+                onItemClick: function () {
+                    if (_.isApprovedValid() == false) {
+                        return;
+                    }
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformApproved(CurrentObjects);
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                IsDisabled: _.IsCanCancel,
+                isContextMenu: true,
+                onItemClick: function () {
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformCancel(CurrentObjects);
+                }
+            }
+
+            VC.AddToolbarButton(_.butApproved);
+
+            VC.AddToolbarButton(_.butCancel);
+
+            VC.OnDetailGrid_RowDeleted = function (grid) {
+                _.Compute();
+            }*/
+        }
+
+        //
+        //  APPROVED
+        //
+        /*VC_EPP_CartOrder.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var VC = this.VC;
+            if (_.ID_ViewType == 2) {
+                if (VC.$scope.CurrentObject.$dirty === true) {
+                    VC.MsgBox("Pending changes must be save first");
+                    return;
+                };
+            }
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+
+            var fApproved = function () {
+                if (_.Approve !== undefined) {
+                    _.Approve(items).then(function () {
+                        VC.ToastSuccess(Documents + ' Successfully Approved');
+                        if (_.ID_ViewType == 2) {
+                            _.VC.setFormReadOnly(true);
+                            _.VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    });
+                }
+            }
+
+            VC.ConfirmBox("Do you want to approve the following Document: <br>" + Documents + "").then(function () {
+                var CurrentObject = items[0];
+                if (CurrentObject.ID_CurrentApprovers !== undefined) {
+                    if (CurrentObject.ID_CurrentApprovers != null) {
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreApprove")', {
+                            //'ID_User': VC.CurrentUser.ID,
+                            'ID_CurrentObject': CurrentObject.ID,
+                            'ID_Model': VC.ID_Model,
+                            'ID_FilingStatus': 1,
+                            'DocName' : CurrentObject.Name
+                        }).then(function (obj) {
+                            if (obj.isLastApprover == true) {
+                                fApproved();
+                            } else {
+                                if (_.ID_ViewType == 2) {
+                                    _.VC.setFormReadOnly(true);
+                                    _.VC.Reload();
+                                } else {
+                                    VC.Grid.refresh();
+                                }
+                                //
+                                //
+                                //
+                                VC.ToastSuccess(Documents + ' Successfully Approved');
+                            }
+                        });
+                    }
+                } else {
+                    fApproved();
+                }
+            });
+        };
+
+        //
+        //  CANCELED
+
+        VC_EPP_CartOrder.prototype.PerformCancel = function (items) {
+            var _ = this;
+            var VC = this.VC;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            var msg = "Do you want to cancel the following Document: <br>" + Documents + "?";
+
+            VC.ConfirmBox(msg).then(function () {
+                if (_.Cancel !== undefined) {
+                    //
+                    //Cancel
+                    //
+
+                    app.$modal().Show({
+                        Template: '<div dx-text-area="dxTextAreaOption" style="font-size:18px;"></div>',
+                        title: 'Reason of Cancellation',
+                        width: 450,
+                        //height: 250,
+                        closeOnConfirm: false,
+                        InitController: function (s) {
+                            s.Reason = null;
+                            s.dxTextAreaOption = {
+                                bindingOptions: {
+                                    'value': 'Reason'
+                                },
+                                maxLength: 300,
+                                height: '100%'
+                            }
+                            s.onPositiveClick = function (d) {
+
+                                if (VC.IsEmptyString(s.Reason) === true) {
+                                    VC.MsgBox('Reason is required.');
+                                    return;
+                                }
+
+                                var CurrentObject = items[0];
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreCancel")', {
+                                    //'ID_User': VC.CurrentUser.ID,
+                                    'ID': CurrentObject.ID,
+                                    'ID_Model': VC.ID_Model,
+                                    'ID_FilingStatus': 2,
+                                    'DocName': CurrentObject.Name
+                                }).then(function () {
+
+                                    _.Cancel(items, s.Reason).then(function () {
+                                        VC.ToastSuccess(Documents + ' Successfully Cancelled');
+                                        if (_.ID_ViewType == 2) {
+                                            _.VC.setFormReadOnly(true);
+                                            _.VC.Reload();
+                                        } else {
+                                            VC.Grid.refresh();
+                                        }
+                                        d.hide();
+                                        //
+                                        //
+                                        //
+                                    });
+
+                                });
+
+                            }
+                        }
+                    });
+                }
+            });
+        };*/
+
+        return VC_EPP_CartOrder;
+    });
+//</script>
+</text> , false )

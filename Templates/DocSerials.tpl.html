@@ -1,0 +1,16 @@
+﻿<div class="doc-serial-container">
+    <div class="row" style="background:#808080;padding:5px 0 5px 0">
+        <div class="col-md-6" style="padding:0px;">
+            <div dx-file-uploader="fileUploaderOption"></div>
+            
+        </div>
+        <div class="col-md-6">
+            <div class="serial-count" style="color:#fff;font-weight:bold;float:right;line-height:25px">Count : {{CurrentSerialCount}} / {{RequiredSerialCount}}</div>
+        </div>
+    </div>
+    <div style="padding:5px;height:100%!important">
+        <hot-table
+            settings="tblSettings"
+            datarows="items"></hot-table>
+    </div>
+</div>

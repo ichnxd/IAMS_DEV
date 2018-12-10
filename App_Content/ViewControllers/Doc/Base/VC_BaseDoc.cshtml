@@ -1,0 +1,1155 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_BaseDoc = function () {
+            this.ID_UserGroup_ADMINISTRATOR = 1;
+            this.ID_UserGroup_DEVELOPER = 2;
+            this.ID_UserGroup_PROGJECTMANAGER = 3;
+            this.ID_UserGroup_ACCOUNTEXECUTIVE = 5;
+            this.ID_UserGroup_PROJECTMANAGERSPECIALIST = 8;
+            this.ID_UserGroup_ACCOUNTINGADMIN = 10;
+            this.ID_UserGroup_PETTYCASHCUSTODIAN = 11;
+        }
+
+        VC_BaseDoc.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BaseDoc.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            if (this.ID_ViewType === 1) {
+
+                VC.onContextMenuPreparing = function (e) {
+                    var CurrentObject = e.row.data;
+
+                    e.items.push({
+                        text: 'Show Comments',
+                        icon: 'green mdi mdi-comment-plus-outline',
+                        ///template: 'contextItem',
+                        onItemClick: function () {
+
+                            app.$modal().Show({
+                                Template: '<div style="height:100%"><div dx-list="listOption" style="height:80%"></div><div style="height:20%;padding:5px"><div dx-text-area="dxTextAreaOption" style="font-size:13px"></div></div></div>',
+                                title: VC.LvModel.DisplayName + ' (' + CurrentObject[VC.LvModel.DisplayProperty] + ") Comments",
+                                width: 550,
+                                height: $(window).height() * 0.80,
+                                showPositiveButton: true,
+                                cssClass: 'model-comment-window',
+                                showNegativeButton: false,
+                                closeOnConfirm: false,
+                                InitController: function (s) {
+                                    s.Comment = null;
+                                    //
+                                    //
+                                    //
+                                    s.listOption = {
+                                        dataSource: app.$GetDataService().GetSQLDatasource('@Html.EncryptSQL("SELECT * FROM vUserComments WHERE ID_CurrentObject = @ID_CurrentObject AND ID_Model = @ID_Model")', {
+                                            'ID_CurrentObject': CurrentObject.ID,
+                                            'ID_Model': VC.ID_Model
+                                        }),
+                                        selectionMode: 'none',
+                                        bounceEnabled: true,
+                                        pullRefreshEnabled: true,
+                                        noDataText: "No comments to display",
+                                        itemTemplate: function (e) {
+                                            console.log(e);
+                                            if (e.Thumbnail == null) e.Thumbnail = 'default-user.png'
+                                            return '<div class="js-activity-notif div-middle" style="background-color:transparent;width:100%!important;max-width:100%!important;vertical-align:top"><div class="div-middle-content icon-holder" style="vertical-align:top"><div class="image-container" style="border-color:' + e.PrimaryColor + ';border-width:3px"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail
+                                                + '" onerror=""/></div></div><div class="div-middle-content" style="vertical-align:top"><div style="position:absolute;right:15px;font-size:11px">' + e.DateCreated + '</div><div style="font-weight:bold;font-size:10px">' + e.DisplayName + '</div><div style="font-size:15px;font-weight:100;white-space:pre-wrap">' + e.Comment + '</div></div></div>'
+                                        }
+                                    }
+
+                                    //
+                                    //
+                                    //
+                                    s.dxTextAreaOption = {
+                                        bindingOptions: {
+                                            'value': 'Comment'
+                                        },
+                                        onInitialized: function (e) {
+                                            VC.$timeout(function () {
+                                                e.component.focus();
+                                            }, 1000);
+                                        },
+                                        placeholder: 'Type your comment here...',
+                                        maxLength: 300,
+                                        height: '100%'
+                                    }
+                                    s.onPositiveClick = function (d) {
+                                        if (VC.IsEmptyString(s.Comment) === true) {
+                                            VC.MsgBox('Comment is required.');
+                                            return;
+                                        }
+                                        //var CurrentObject = VC.$scope.CurrentObject;
+                                        var JsDataService = app.$GetDataService();
+                                        JsDataService.pGetCurrentObject('@Html.EncryptSQL("pAddUserComment")', {
+                                            ID_CurrentObject: CurrentObject.ID,
+                                            ID_Model: VC.ID_Model,
+                                            Comment: s.Comment,
+                                            DocumentNo: CurrentObject[VC.LvModel.DisplayProperty]
+                                        }).then(function (data) {
+                                            d.hide();
+                                            VC.ToastSuccess('Comment successfully added.');
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                     //console.log('XXXs',CurrentObject.CurrentApprovers)
+                    if (CurrentObject.CurrentApprovers !== undefined && CurrentObject.CurrentApprovers !== null) {
+                        var ID_Approvers = CurrentObject.CurrentApprovers.split(",");
+                       
+                        //var ID_Approvers = CurrentObject.ID_CurrentApprovers.split(",");
+
+                        if (ID_Approvers.length > 0) {
+                            
+
+                            e.items.unshift({
+                                text: "View Approvers",
+                                icon: "mdi mdi-thumbs-up-down",
+                                onItemClick: function () {
+                                    var SQL = '@Html.EncryptSQL("SELECT Approver, ApproverKey FROM vApproverLinkList WHERE IsCurrent = 1 AND ID_Model = @ID_Model AND ID_CurrentObject = @ID_CurrentObject")';
+                                    VC.BrowseDataSet(SQL,
+                                    {
+                                        ID_View: '75BC8FE4-053E-47F7-8AE5-C4D42C6246F6',
+                                        title: 'Approvers (' + CurrentObject.Name + ')',
+                                        width: 700,
+                                        height: 500,
+                                        params: {
+                                            ID_Model: VC.ID_Model,
+                                            ID_CurrentObject: e.row.data.ID
+                                        },
+                                        onDblClick: function (item) {
+                                            var base_url = window.location.origin;
+                                            base_url = base_url + '/ReportView/DocApproval?key=' + item.ApproverKey;
+                                            app.copyTextToClipboard(base_url);
+                                            VC.MsgBox('Copy to clipboard.');
+                                        },
+                                        validate: function (SelectedRows) {
+                                            if (SelectedRows.length !== 1) return;
+                                            return true;
+                                        }
+                                    }
+                                    ).then(function (items) {
+
+                                    });
+                                }
+                            });
+                        }
+                    } else {
+                        var exeptionList = ['ProjectSolution'];
+						if (e.row.data.ID_FilingStatus === 1 && exeptionList.includes(VC.LvModel.ModelName) == false) {
+                            console.log('approver');
+                            e.items.push({
+                                text: "Create Approve Link",
+                                icon: "mdi mdi-thumbs-up-down",
+                                onItemClick: function () {
+                                    var SQL = '@Html.EncryptSQL(@"SELECT
+                                                ID_Employee AS ID,
+                                                Name AS Employee,
+                                                ISNULL(Position, UserGroup) AS Position,
+                                                Department
+                                            FROM    dbo.vUser
+                                            WHERE   IsActive = 1 AND ID <> @ID_CurrentUser")';
+
+                                    VC.BrowseDataSet(SQL, {
+                                        title: "Select Employee to Approve",
+                                        params: {
+                                            ID_CurrentUser: VC.CurrentUser.ID
+                                        },
+                                        onDblClick: function (item) {
+
+                                            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGenerateApproverLink")', {
+                                                ID_Employee: item.ID,
+                                                ID_Model: VC.ID_Model,
+                                                ID_Doc: e.row.data.ID,
+                                                DocumentName: (e.row.data[VC.LvModel.DisplayProperty] !== null ? e.row.data[VC.LvModel.DisplayProperty] : e.row.data.Name)
+                                            }).then(function (d) {
+                                                var base_url = window.location.origin + '/ReportView/DocApproval?key=' + d.ApproversKey;
+                                                _.ShowNote(base_url, 'Copy the link below.').then(function () {
+                                                    app.copyTextToClipboard(base_url);
+                                                    VC.MsgBox('Copy to clipboard.');
+                                                });;
+                                            });
+
+                                        },
+                                        validate: function (SelectedRows) {
+                                            if (SelectedRows.length !== 1) return;
+                                            return true;
+                                        }
+                                    }).then(function () { });
+                                }
+                            });
+                        }
+					}
+                }
+            }
+
+            if (_.ID_ViewType === 1) {
+
+                var JsDataService = app.$GetDataService();
+                JsDataService.pGetCurrentObject('@Html.EncryptSQL("pGetModelFilingStatusAvailable")',{
+                    'ID_Model': VC.ID_Model,
+                }).then(function (data) {
+                    VC.AddActionFilter({
+                        name: 'VC_StatusFilter',
+                        caption: 'Filing Status',
+                        width: '150px',
+                        //SQL: '@Html.EncryptSQL("SELECT * FROM vFilingStatusFilter ORDER BY ID")',
+                        dataSource: data.FilingStatus,
+                        //dataSource: [
+                        //      { id: 1, name: '(All)' }, { id: -3, name: '(Pending)' }, { id: -2, name: '(Not Cancelled)' }, { id: 2, name: 'Filed' }
+                        //    , { id: 3, name: 'Approved' }, { id: 4, name: 'Cancelled' }
+                        //    , { id: 5, name: 'Paid' }, { id: 6, name: 'Posted' }],
+                        placeholder: 'Select Status',
+                        value: _.DefaultFilterValue == undefined ? -2 : _.DefaultFilterValue
+                    });
+                });
+
+
+                
+            }
+
+            _.IsCanApprove = function () {
+
+                var VC = _.VC;
+                var isDisabled = true;
+
+                if (_.ID_ViewType == 1) {
+
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if (_.$isBatchApprove !== true) {
+                        if (SelectedRows.length != 1) return true;
+                    } else {
+                        if (SelectedRows.length == 0) return true;
+                    }
+
+                    if (_.CheckIfPosted === true) {
+                        if (SelectedRows[0].IsPosted !== true && SelectedRows[0].IsPosted !== 1) return true;
+                    }
+                    if (_.$isBatchApprove !== true) {
+                        if (SelectedRows[0].ID_CurrentApprovers !== undefined) {
+                            if (SelectedRows[0].ID_CurrentApprovers !== null) {
+                                var ID_Approvers = SelectedRows[0].ID_CurrentApprovers.split(",");
+                                if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                    return false;
+                                }
+                            } else {
+                                return true;
+                            }
+
+                        } else {
+                            if (SelectedRows[0].ID_FilingStatus === AcctHelper.FilingStatus.Filed) {
+                                return false;
+                            }
+                        }
+                    } else {
+                        if (SelectedRows[0].ID_CurrentApprovers !== undefined) {
+                            var _result = [];
+                            $.each(SelectedRows, function (i, sel) {
+                                if (sel.ID_CurrentApprovers !== null) {
+                                    var ID_Approvers = sel.ID_CurrentApprovers.split(",");
+                                    if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                        _result.push({
+                                            _r : 1
+                                        });
+                                    } else {
+                                        _result.push({
+                                            _r: 0
+                                        });
+                                    }
+                                }
+                            });
+                            return Enumerable.From(_result).Where("$._r === 0").ToArray().length > 0;
+                        } else {
+                            var result = true;
+                            var notFiled = Enumerable.From(SelectedRows).Where("$.ID_FilingStatus !== 1").ToArray();
+                            if (notFiled.length === 0) return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    if (_.CurrentObject.ID == -1) {
+                        return true;
+                    }
+                    var CurrentObject = _.CurrentObject;
+                    if (CurrentObject.ID_CurrentApprovers !== undefined) {
+                        if (CurrentObject.ID_CurrentApprovers !== null) {
+                            var ID_Approvers = CurrentObject.ID_CurrentApprovers.split(",");
+                            if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                isDisabled = false;
+                            }
+                        } else {
+                            isDisabled = true;
+                        }
+                    } else {
+                       if (_.CurrentObject.ID_FilingStatus == AcctHelper.FilingStatus.Filed) {
+                            isDisabled = false;
+                        }
+                    }
+                }
+
+                if (_.CheckIfPosted === true) {
+                    if (_.CurrentObject.IsPosted !== true && _.CurrentObject.IsPosted !== 1) return true;
+                }
+
+                return isDisabled;
+            }
+
+            _.IsCanCancel = function () {
+                var isDisabled = true;
+                if (_.ID_ViewType == 1) {
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if (SelectedRows.length == 0) return true;
+                    var _Selected = SelectedRows[0];
+
+                    if (_Selected.ID_FilingStatus === AcctHelper.FilingStatus.Filed || _Selected.ID_FilingStatus === AcctHelper.FilingStatus.Approved || _Selected.ID_FilingStatus === 42 || _Selected.ID_FilingStatus === 39) {
+                        return false;
+                    } else {
+                        if (_Selected.ID_CurrentApprovers !== undefined && _Selected.ID_CurrentApprovers !== null) {
+                            if (_Selected.ID_CreatedBy === VC.CurrentUser.ID) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                } else {
+                    if (_.CurrentObject.ID == -1) return true;
+                    var ID_FilingStatus = _.CurrentObject.ID_FilingStatus;
+                    var CurrentObject = _.CurrentObject;
+                    isDisabled = true;
+
+                    if (ID_FilingStatus == AcctHelper.FilingStatus.Filed || ID_FilingStatus == AcctHelper.FilingStatus.Approved) {
+                        isDisabled = false;
+                    } else {
+                        if (CurrentObject.ID_CurrentApprovers !== undefined && CurrentObject.ID_CurrentApprovers !== null) {
+                            if (CurrentObject.ID_CreatedBy === VC.CurrentUser.ID) {
+                                isDisabled = false;
+                            }
+                        }
+                    }
+                }
+
+                console.log(isDisabled,'1111111111111111111111111111111111111');
+                return isDisabled;
+            }
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                IsDisabled: _.IsCanApprove,
+                isContextMenu: true,
+                onItemClick: function () {
+                    if (_.isApprovedValid() == false) {
+                        return;
+                    }
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformApproved(CurrentObjects);
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                IsDisabled: _.IsCanCancel,
+                isContextMenu: true,
+                onItemClick: function () {
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformCancel(CurrentObjects);
+                }
+            }
+
+            VC.AddToolbarButton(_.butApproved);
+
+            VC.AddToolbarButton(_.butCancel);
+
+
+            
+            if (_.ID_ViewType === 2) {
+                //if (_.CurrentObject.ID_CreatedBy === VC.CurrentUser.ID) {
+                //alert(_.CurrentObject.IsPosted);
+                //console.log(_.CurrentObject);
+                if (_.CheckIfPosted == true) {
+                    VC.AddToolbarButton({
+                        text: 'Post',
+                        icon : 'green mdi mdi-pencil-box-outline',
+                        //gettext: function () {
+                        //    //alert('text' + CurrentObject.IsPosted);
+                        //    return _.CurrentObject.IsPosted !== 1 ? 'Post' : 'Unpost';
+                        //},
+                        //geticon: function () {
+                        //    //alert('icon' + CurrentObject.IsPosted);
+                        //    return _.CurrentObject.IsPosted !== 1 ? 'green mdi mdi-pencil-box-outline' : 'red mdi mdi-pencil-box-outline';
+                        //},
+                        color: '#FF3D00',
+                        IsDisabled: function () {
+                            if (_.CurrentObject.ID == -1) return true;
+                            var ID_FilingStatus = _.CurrentObject.ID_FilingStatus;
+                            var CurrentObject = _.CurrentObject;
+                            if (_.CurrentObject.ID_CreatedBy !== VC.CurrentUser.ID) return true;
+                            if (ID_FilingStatus !== 1) return true;
+                            if (CurrentObject.IsPosted === 1) return true;
+                            return false;
+                        },
+                        //isContextMenu: FALSE,
+                        onItemClick: function () {
+                            var CurrentObjects = null;
+                            if (_.ID_ViewType == 1) { //ListView
+                                CurrentObjects = VC.Grid.getSelectedRowsData();
+                            } else if (_.ID_ViewType == 2) { //DetailView
+                                CurrentObjects = [VC.$scope.CurrentObject];
+                            }
+                            //
+                            //
+                            //
+
+                            var Doc = CurrentObjects[0];
+                            var JsDataService = app.$GetDataService();
+                            JsDataService.ExecSQLProc(
+                                '@Html.EncryptSQL("pToggleDocPost")',
+                                {
+                                    'ID_Doc': Doc.ID,
+                                    'ID_Model': VC.ID_Model,
+                                    'isPost': _.CurrentObject.IsPosted !== 1 ? true : false
+                                }
+                            ).then(function (response) {
+                                VC.Reload();
+                                //VC.RefreshToolBar();
+                            }, function () {
+
+                            });
+
+                        }
+                    });
+                    //}
+                }
+      
+                VC.ValidationRules.push(function () {
+                    if (_.CurrentObject.ID > 0) {
+                        var JsDataService = app.$GetDataService();
+                        return JsDataService.Validate('@Html.EncryptSQL("pValidateDocFilingStatus")', {
+                            'ID_Object': _.CurrentObject.ID,
+                            'ID_Model': VC.ID_Model,
+                            'ID_FilingStatus': _.CurrentObject.ID_FilingStatus
+                        });
+                    } else {
+                        var defer = VC.$q.defer();
+                        VC.$timeout(function () {
+                            defer.resolve({
+                                isValid : true
+                            });
+                        }, 500);
+                        return defer.promise;
+                    }
+                });
+                
+            }
+            VC.OnDetailGrid_RowDeleted = function (grid) {
+                _.Compute();
+            }
+
+            _.ShowNote = function (Note, Title) {
+                var defer = VC.$q.defer();
+				app.$modal().Show({
+					Template: '<div dx-text-area="dxTextAreaOption" style="font-size:18px;"></div>',
+					title: Title, //data.Approver + "'s Message",
+					width: 450,
+					closeOnConfirm: false,
+					showNegativeButton: false,
+					InitController: function (s) {
+						s.Reason = Note;
+						s.dxTextAreaOption = {
+							bindingOptions: {
+								'value': 'Reason'
+							},
+							disabled: true,
+							maxLength: 300,
+							height: '100%'
+						}
+						s.onPositiveClick = function (d) {
+						    d.hide();
+						    defer.resolve();
+						}
+					}
+				});
+				return defer.promise;
+			}
+			
+            if (_.ID_ViewType == 2) {
+
+                //
+                //
+                //
+                VC.$scope.ModelNotifOption.title = 'Approver Notes';
+                VC.$scope.ModelNotifOption.SQLCount = '@Html.EncryptSQL("SELECT COUNT(ID) as Count FROM vApproverMatrixSummaryMessageNotif WHERE ID_CurrentObject = @ID_CurrentObject AND ID_Model = @ID_Model")';
+                VC.$scope.ModelNotifOption.SQL = '@Html.EncryptSQL("SELECT * FROM vApproverMatrixSummaryMessageNotif WHERE ID_CurrentObject = @ID_CurrentObject AND ID_Model = @ID_Model")';
+                VC.$scope.ModelNotifOption.onItemClick = function (e) {
+                    var data = e.itemData;
+                    _.ShowNote(data.Comment, data.Approver + "'s Note");
+                };
+                VC.$scope.ModelNotifOption.itemTemplate = function (e) {
+                    if (e.Thumbnail === null) e.Thumbnail = 'default-user.png';
+                    var Div = '<div class="Global-Notification"><div class="date">' + e.NotifDate + '</div>' +
+                                '<div class="div-middle">' +
+                                '<div class="div-middle-content">' +
+                                    '<div class="Image" style="background-color:' + e.PrimaryColor + '"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                                '</div>' +
+                                '<div class="div-middle-content Text"><div class="display-name" style="color:' + e.PrimaryColor + '">' + e.DisplayName + '</div><div>' + e.Name + '</div></div>' +
+                            '</div></div>';
+                    return Div;
+                };
+                VC.$scope.ModelNotifOption.onLoadDataSource = function (d) {
+                    d.params = {
+                        'ID_CurrentObject': VC.$scope.CurrentObject.ID,
+                        'ID_Model' : VC.ID_Model
+                    };
+                }
+
+                var CurrentObject = _.CurrentObject;
+                if (CurrentObject.ID_CurrentApprovers !== undefined) {
+                    VC.AddToolbarButton({
+                        text: 'Send Back',
+                        icon: 'mdi mdi-reply',
+                        color: '#FF3D00',
+                        onItemClick: function () {
+                            app.$modal().Show({
+                                Template: '<div dx-text-area="dxTextAreaOption" style="font-size:18px;"></div>',
+                                title: 'Message',
+                                width: 450,
+                                closeOnConfirm: false,
+                                InitController: function (s) {
+                                    s.Reason = null;
+                                    s.dxTextAreaOption = {
+                                        bindingOptions: {
+                                            'value': 'Reason'
+                                        },
+                                        onInitialized: function (e) {
+                                            e.component.focus();
+                                        },
+                                        maxLength: 300,
+                                        height: '100%'
+                                    }
+                                    s.onPositiveClick = function (d) {
+                                        if (VC.IsEmptyString(s.Reason) === true) {
+                                            VC.MsgBox('Message is required.');
+                                            return;
+                                        }
+                                        var CurrentObject = VC.$scope.CurrentObject;
+                                        app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pSendApprovalToRequestor")', {
+                                            ID_CurrentObject: CurrentObject.ID,
+                                            ID_Model: VC.ID_Model,
+                                            Message: s.Reason
+                                        }).then(function () {
+                                            d.hide();
+                                            if(_.OnSendBackClicked !== undefined && CurrentObject.ID_FilingStatus !== 7){
+                                                _.OnSendBackClicked(CurrentObject);
+                                            }else{
+                                                _.VC.setFormReadOnly(true);
+                                                _.VC.Reload();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                //
+                //
+
+                VC.LoadBOM = function (newDetails) {
+                    app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM dbo.vItem_BillOfMaterials WHERE ID_Parent IN (@IDs)")', {
+                        params: {
+                            'IDs': Enumerable.From(newDetails).Select('$.ID_Item').ToArray()
+                        }
+                    }).then(function (data) {
+                        if (data.collection.length == 0) return;
+                        $.each(newDetails, function (i, item) {
+                            var BOMS = Enumerable.From(data.collection).Where("$.ID_Parent ==" + item.ID_Item).ToArray();
+                            if (item.BillOfMaterialss == undefined) item.BillOfMaterialss = [];
+                            if (item.BillOfMaterialss.length == 0) {
+                                $.each(BOMS, function (c, d) {
+                                    var bom = {
+                                        ID: d.ID,
+                                        ID_Parent: d.ID_Parent,
+                                        Code: d.Code,
+                                        Name: d.Name,
+                                        ID_UOM: d.ID_UOM,
+                                        UOM: d.UOM,
+                                        Quantity: d.Quantity
+                                    }
+                                    item.BillOfMaterialss.push(bom);
+                                });
+                            }
+                        });
+                    });
+                }
+
+                if (_.ShowBillOfMaterials == true) {
+                    VC["on" + _.DocDetailPropertyName + '_RowInserted'] = function (grid, newDetails) {
+                        VC.LoadBOM(newDetails);
+                        //console.log('BOM loaded')
+                    };
+                }
+                //
+                //
+                var ID_TaxSchemeOption = VC.GetFormItemOptions("ID_TaxScheme");
+                if (ID_TaxSchemeOption !== null) {
+                    //console.log(ID_TaxSchemeOption);
+                    ID_TaxSchemeOption.showClearButton = false;
+                    ID_TaxSchemeOption.searchEnabled = false;
+                }
+
+                VC.$ID_Currency_IsDisabled = function () {
+                    if (_.CurrentObject.IsImported === true) return true;
+                    return false;
+                }
+                VC.$ExchangeRate_IsDisabled = function () {
+                    if (_.CurrentObject.IsImported === true) return true;
+                    return false;
+                }
+            }
+        
+            if (this.ID_ViewType == 2) {
+                _.VC.$timeout(function () {
+                    if(VC.$scope["IsMenuItemHide"] == true){
+                        //alert(VC.$scope.IsMenuItemHide);
+                        VC.MainToolbar._options.visible = false;
+                        VC.setFormReadOnly = "true";
+                       
+                    }
+                    
+                }, 500);
+            }
+        };
+
+        //
+        // ON LOAD
+        //
+
+        VC_BaseDoc.prototype.onInitDetailView = function () {
+            baseModelHelper.prototype.onInitDetailView.call(this);
+
+            var _ = this;
+            _.VC.$scope.DocFilingStatus = '';
+            _.VC.$scope.IsNewDoc = true;
+            _.VC.$scope.filingStatusClass = '';
+            _.VC.$scope.OnElementInit = function (e) {
+                var $compile = angular.element(document).injector().get('$compile');
+                var _compiled = $compile('<div class="DocFilingStatus {{filingStatusClass}}" ng-hide="IsNewDoc"><span class="{{DocFilingStatusIcon}}"></span> {{DocFilingStatus}}</div>')(_.VC.$scope);
+                e.prepend(_compiled);
+            }
+
+            //
+            //
+            //
+
+
+
+        }
+
+        VC_BaseDoc.prototype.onCollectionSource_Load = function (data) {
+            var VC = this.VC;
+            var filterValue = VC.ActionFilters.VC_StatusFilter == undefined ? -2 : VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+
+            //dataSource: [{ id: 1, name: '(All)' }, { id: 2, name: 'Filed' }, { id: 3, name: 'Approved' }, { id: 4, name: 'Disapproved' }],
+
+            if (filterValue < 0) {
+                switch ( filterValue) {
+                    case -2:
+                        WhereCriteria.push("ID_FilingStatus <> 7"); //Cancelleds
+                        break;
+                    case -3:
+                        WhereCriteria.push("ID_FilingStatus NOT IN (7,10, 38, 37)");
+                        break;
+                }
+            } else {
+                WhereCriteria.push("ID_FilingStatus = " + filterValue) //Cancelled
+            }
+
+            //switch (filterValue) {
+            //    case -3:
+            //        WhereCriteria.push("ID_FilingStatus <> 7 AND ID_FilingStatus <> 10");
+            //        break;
+            //    case -2:
+            //        WhereCriteria.push("ID_FilingStatus <> 7"); //Cancelleds
+            //        break;
+            //    case 2:
+            //        WhereCriteria.push("ID_FilingStatus = 1"); //Filed
+            //        break;
+            //    case 3:
+            //        WhereCriteria.push("ID_FilingStatus = 2") //Approved
+            //        break;
+            //    case 4:
+            //        WhereCriteria.push("ID_FilingStatus = 7") //Cancelled
+            //        break;
+            //    case 5:
+            //        WhereCriteria.push("ID_FilingStatus = 10") //Approved
+            //        break;
+            //    case 6:
+            //        WhereCriteria.push("ID_FilingStatus = 8") //Approved
+            //        break;
+            //    default:
+            //        break;
+            //}
+
+            //if (WhereCriteria.length > 0) {
+            //    data.FilterString = WhereCriteria.join(" AND ");
+            //}
+        };
+
+        VC_BaseDoc.prototype.isApprovedValid = function () {
+            return true;
+        }
+
+        VC_BaseDoc.prototype.onLoad = function () {
+
+            var _ = this;
+
+            var VC = _.VC;
+         if(VC.$scope["IsMenuItemHide"] != true){
+            if (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Filed || (_.CheckIfPosted === true && VC.$scope.CurrentObject.IsPosted == 1)) {
+                VC.butSave.disabled = true;
+                VC.butSaveClose.disabled = true;
+                VC.setFormReadOnly(true);
+            } else {
+                VC.butSave.disabled = false;
+                VC.butSaveClose.disabled = false;
+            }
+         }
+            if (VC.$scope.CurrentObject.ID == -1) {
+                if (VC.IsFormReadOnly != undefined) {
+                    if (VC.IsFormReadOnly == true) {
+                        VC.setFormReadOnly(false);
+                    }
+                }
+                if (_.Compute != undefined) {
+                    _.Compute();
+                }
+            }
+
+            if (VC.$scope.CurrentObject.ID === -1) {
+                VC.$scope.IsNewDoc = true;
+                VC.$scope.DocFilingStatus = '';
+                VC.$scope.DocFilingStatusIcon = '';
+                return;
+            }
+
+            VC.$scope.IsNewDoc = false;
+            VC.$scope.DocFilingStatus = VC.$scope.CurrentObject.FilingStatus;
+
+            var ID_FilingStatus = VC.$scope.CurrentObject.ID_FilingStatus;
+
+            VC.$scope.IsModelNotifShow = false;
+
+            VC.$timeout(function () {
+                //
+                //
+                //
+                //console.log(VC.$scope.CurrentObject.ID_Approver_Summary_Message);
+                if (VC.$scope.CurrentObject.ID > -1) {
+                    if (VC.$scope.CurrentObject.ID_Approver_Summary_Message !== undefined && VC.$scope.CurrentObject.ID_Approver_Summary_Message !== null) {
+                        //
+                        //
+                        //
+
+                        VC.$scope.IsModelNotifShow = true;
+                        VC.ModelNotif.RefreshCount();
+
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.pGetCurrentObject('@Html.EncryptSQL("pGetApproverMatrixMessage")', {
+                            'ID_Message': VC.$scope.CurrentObject.ID_Approver_Summary_Message
+                        }).then(function (data) {
+                            //console.log('pGetApproverMatrixMessage', data);
+                            if (data.ID_Owner !== VC.CurrentUser.ID) return;
+                            _.ShowNote(data.Comment,data.Approver + "'s Note");
+
+                        });
+                    }
+                }
+
+                switch (ID_FilingStatus) {
+                    case AcctHelper.FilingStatus.Filed:
+                        VC.$scope.filingStatusClass = 'Filed';
+                        VC.$scope.DocFilingStatusIcon = 'mdi mdi-check-circle-outline';
+                        break;
+                    case AcctHelper.FilingStatus.Approved:
+                        _.VC.$scope.filingStatusClass = 'Approved';
+                        VC.$scope.DocFilingStatusIcon = 'mdi mdi-thumb-up';
+                        break;
+                    case AcctHelper.FilingStatus.Disapproved:
+                        VC.$scope.filingStatusClass = 'Disapproved';
+                        VC.$scope.DocFilingStatusIcon = 'mdi mdi-thumb-down';
+                        break;
+                    case AcctHelper.FilingStatus.Pending:
+                        break;
+                    case AcctHelper.FilingStatus.Partial:
+                        break;
+                    case AcctHelper.FilingStatus.FullyServed:
+                        break;
+                    case AcctHelper.FilingStatus.Cancelled:
+                        VC.$scope.filingStatusClass = 'Cancelled';
+                        VC.$scope.DocFilingStatusIcon = 'mdi mdi-thumb-down';
+                        break;
+                    case AcctHelper.FilingStatus.Posted:
+                        break;
+                    case AcctHelper.FilingStatus.Payable:
+                        break;
+                    case AcctHelper.FilingStatus.Paid:
+                        break;
+
+                    case AcctHelper.FilingStatus.Applied:
+                        VC.$scope.filingStatusClass = 'Applied';
+                        VC.$scope.DocFilingStatusIcon = 'mdi mdi-check-circle-outline';
+                        break;
+                }
+            });
+            
+          
+        };
+        //
+        //  APPROVED
+        //
+        VC_BaseDoc.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var VC = this.VC;
+            if (_.ID_ViewType == 2) {
+
+                console.log(VC.$scope.CurrentObject.$dirty);
+                
+                if (VC.$scope.CurrentObject.$dirty === true) {
+                    VC.MsgBox("Pending changes must be save first");
+                    return;
+                };
+            }
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+
+            var fApproved = function () {
+                var defer = VC.$q.defer();
+                if (_.Approve !== undefined) {
+                    _.Approve(items).then(function () {
+                        defer.resolve();
+                        VC.ToastSuccess(Documents + ' Successfully Approved');
+                        if (_.ID_ViewType == 2) {
+                            _.VC.setFormReadOnly(true);
+                            _.VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    }, function (r) {
+
+                        d.reject();
+                    });
+                }
+                return defer.promise;
+            }
+
+            VC.ConfirmBox("Do you want to approve the following Document: <br>" + Documents + "").then(function () {
+                var CurrentObject = items[0];
+                if (CurrentObject.ID_CurrentApprovers !== undefined) {
+                    if (CurrentObject.ID_CurrentApprovers != null) {
+                        var JsDataService = app.$GetDataService();
+
+                        JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreApprove")', {
+                            //'ID_User': VC.CurrentUser.ID,
+                            'ID_CurrentObject': CurrentObject.ID,
+                            'ID_Model': VC.ID_Model,
+                            'ID_FilingStatus': 1,
+                            'DocName' : CurrentObject.Name
+                        }).then(function (obj) {
+                            if (obj.isLastApprover == true) {
+                                fApproved().then(function () {
+                                    JsDataService.ExecSQLProc('@Html.EncryptSQL("pUdateApproverMatrix")', {
+                                        ID_Hed: obj.ID_ApproverMatrix,
+                                        ID_Detail: obj.ID_Detail
+                                    }).then(function () {
+                                        if (_.ID_ViewType === 2) {
+                                            _.VC.Reload();
+                                        } else {
+                                            VC.Grid.refresh();
+                                        }
+                                    });
+                                });
+                            } else {
+                                if (_.ID_ViewType == 2) {
+                                    _.VC.setFormReadOnly(true);
+                                    _.VC.Reload();
+                                } else {
+                                    VC.Grid.refresh();
+                                }
+                                //
+                                //
+                                //
+                                VC.ToastSuccess(Documents + ' Successfully Approved');
+                            }
+                        });
+                        // JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreApprove")', {
+                        //     //'ID_User': VC.CurrentUser.ID,
+                        //     'ID_CurrentObject': CurrentObject.ID,
+                        //     'ID_Model': VC.ID_Model,
+                        //     'ID_FilingStatus': 1,
+                        //     'DocName' : CurrentObject.Name
+                        // }).then(function (obj) {
+                        //     if (obj.isLastApprover == true) {
+                        //         fApproved().then(function () {
+                        //             JsDataService.ExecSQLProc('@Html.EncryptSQL("pUdateApproverMatrix")', {
+                        //                 ID_Hed: obj.ID_ApproverMatrix,
+                        //                 ID_Detail: obj.ID_Detail
+                        //             });
+                        //         });
+                        //     } else {
+                        //         if (_.ID_ViewType == 2) {
+                        //             _.VC.setFormReadOnly(true);
+                        //             _.VC.Reload();
+                        //         } else {
+                        //             VC.Grid.refresh();
+                        //         }
+                        //         //
+                        //         //
+                        //         //
+                        //         VC.ToastSuccess(Documents + ' Successfully Approved');
+                        //     }
+                        // });
+                    }
+                } else {
+                    fApproved();
+                }
+            });
+        };
+
+        //
+        //  CANCELED
+
+        VC_BaseDoc.prototype.PerformCancel = function (items) {
+            var _ = this;
+            var VC = this.VC;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            var msg = "Do you want to cancel the following Document: <br>" + Documents + "?";
+            var $q = app.$GetAsync();
+            var defer = $q.defer();
+
+            VC.ConfirmBox(msg).then(function () {
+                if (_.Cancel !== undefined) {
+                    //
+                    //Cancel
+                    //
+
+                    app.$modal().Show({
+                        Template: '<div dx-text-area="dxTextAreaOption" style="font-size:18px;"></div>',
+                        title: 'Reason of Cancellation',
+                        width: 450,
+                        //height: 250,
+                        closeOnConfirm: false,
+                        InitController: function (s) {
+                            s.Reason = null;
+                            s.dxTextAreaOption = {
+                                bindingOptions: {
+                                    'value': 'Reason'
+                                },
+                                maxLength: 300,
+                                height: '100%'
+                            }
+                            s.onPositiveClick = function (d) {
+
+                                if (VC.IsEmptyString(s.Reason) === true) {
+                                    VC.MsgBox('Reason is required.');
+                                    return;
+                                }
+
+                                var CurrentObject = items[0];
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreCancel")', {
+                                    //'ID_User': VC.CurrentUser.ID,
+                                    'ID': CurrentObject.ID,
+                                    'ID_Model': VC.ID_Model,
+                                    'ID_FilingStatus': 2,
+                                    'DocName': CurrentObject.Name
+                                }).then(function () {
+                                    _.Cancel(items, s.Reason).then(function () {
+                                        VC.ToastSuccess(Documents + ' Successfully Cancelled');
+                                        if (_.ID_ViewType == 2) {
+                                            _.VC.setFormReadOnly(true);
+                                            _.VC.Reload();
+                                        } else {
+                                            VC.Grid.refresh();
+                                        }
+                                        d.hide();
+                                        //
+                                        //
+                                        //
+                                        defer.resolve();
+                                    });
+
+                                });
+
+                            }
+                        }
+                    });
+                }
+            });
+            return defer.promise;
+        };
+        //
+        //
+        //
+
+        VC_BaseDoc.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+
+            var VC = _.VC;
+
+            if (VC.IsFormReadOnly === true) {
+                return;
+            }
+
+            if (e.value === undefined) return;
+
+            if (e.dataField === "IsImported") {
+                if (e.value == false) {
+                    VC.$timeout(function () {
+                        console.log('import');
+                        VC.$scope.CurrentObject.ID_Currency = 1;
+                        VC.$scope.CurrentObject.ExchangeRate = 1.00;
+                        VC.$scope.CurrentObject.Currency = 'Philippine Peso'
+                        //console.log('Imported')
+                    });
+                    return;
+                }
+                if (e.value == true) {
+                    VC.$timeout(function () {
+                        if(_.IsCurrencyFromItem == true && VC.$scope.CurrentObject.ID_Currency > 1){
+                            VC.$scope.CurrentObject.ExchangeRate = 0.00;
+                        }
+                    });
+                    return;
+                }
+            }
+
+            if (e.dataField === "ID_Currency") {
+                if (VC.$scope.CurrentObject.ExchangeRate !== undefined) {
+                    VC.$timeout(function () {
+                        console.log('currency changed')
+                        if(_.IsExchangeRateFixed == true){
+                            _.IsExchangeRateFixed = false;
+                            return;
+                        }
+                        VC.$scope.CurrentObject.ExchangeRate = (e.value == null ? 1.00 : e.value.Conversion);
+                        if(_.IsCurrencyFromItem == true && VC.$scope.CurrentObject.ID_Currency > 1 ){
+                            VC.$scope.CurrentObject.ExchangeRate = 0.00;
+                        }
+                    });
+                }
+                return;
+            }
+
+            if (e.dataField === 'ID_BusinessPartner') {
+                if (e.value != null) {
+
+                    if (e.value.Address !== undefined) {
+                        var txtAddress = VC.GetDxControl('Address');
+                        if (txtAddress !== undefined && txtAddress != null) txtAddress.option('value', e.value.Address);
+                        VC.$scope.CurrentObject.Address = e.value.Address;
+
+                    } else {
+
+                    }
+
+                    if (e.value.ID_PaymentTerm != undefined) {
+                        if (e.value.ID_PaymentTerm !== null) {
+                            var PaymentTerm = VC.GetDxControl('ID_PaymentTerm');
+                            if (PaymentTerm !== undefined && PaymentTerm != null) {
+                                PaymentTerm.option('value', e.value.ID_PaymentTerm);
+                            }
+                            VC.$scope.CurrentObject.ID_PaymentTerm = e.value.ID_PaymentTerm;
+                        } else {
+                            var PaymentTerm = VC.GetDxControl('ID_PaymentTerm');
+                            if (PaymentTerm !== undefined && PaymentTerm != null) PaymentTerm.option('value', null);
+                            VC.$scope.CurrentObject.ID_PaymentTerm = null;
+                        }
+                    }
+
+                    var dxContact = VC.GetDxControl('ID_Contact');
+                    if (dxContact !== undefined && dxContact !== null) {
+                        if (e.value.ID_Contact !== null) {
+                            VC.$scope.CurrentObject.ID_Contact = e.value.ID_Contact;
+                            dxContact.option('selectedItem', {
+                                ID: e.value.ID_Contact,
+                                Name: e.value.DefaultContact
+                            });
+                        } else {
+                            VC.$scope.CurrentObject.ID_Contact = null;
+                            dxContact.option('selectedItem', null);
+                        }
+                        //console.log(e.value.DefaultContact, '.name')
+                        //console.log(VC.$scope.CurrentObject.ID_Contact, 'contact')
+
+                    }
+
+                } else {
+                    //VC.$scope.CurrentObject.Address = null;
+                    //VC.$scope.CurrentObject.ID_PaymentTerm = null;
+                    //VC.$scope.CurrentObject.ID_Con
+                }
+
+             var ID_TaxScheme = VC.GetDxControl('ID_TaxScheme');
+             if (ID_TaxScheme !== undefined && ID_TaxScheme != null) {
+                 if(e.value.ID_TaxScheme !== null && e.value.ID_TaxScheme !== undefined){
+                     ID_TaxScheme.option('value', e.value.ID_TaxScheme);
+                 }
+                 else{
+                     VC.$scope.CurrentObject.ID_TaxScheme = null;
+                 }
+             }
+            }
+
+            VC.$timeout(function () {
+                _.Compute();
+            });
+        }
+
+
+
+        VC_BaseDoc.prototype.Compute = function () {
+
+        }
+
+        return VC_BaseDoc;
+    });
+//</script>
+</text> , false)

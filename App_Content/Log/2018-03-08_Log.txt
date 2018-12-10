@@ -1,0 +1,44 @@
+3/8/2018 8:51:37 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tDocumentSeries'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 8:51:41 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tDocumentSeries'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 8:52:01 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tDocumentSeries'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 9:17:57 AM:  ---> Cannot insert the value NULL into column 'IsDell', table 'IAMS_DEV_20180305.dbo.tCustomerLead'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 9:19:44 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+3/8/2018 9:19:46 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+3/8/2018 9:19:48 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+3/8/2018 9:22:10 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+3/8/2018 9:37:44 AM:  ---> Cannot insert the value NULL into column 'Code', table 'IAMS_DEV_20180305.dbo.tCustomer'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 9:39:33 AM:  ---> Cannot insert the value NULL into column 'Comment', table 'IAMS_DEV_20180305.dbo.tCustomer'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 9:42:17 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomer' with unique index 'IX_Customer_Code'. The duplicate key value is (<NULL>).
+The statement has been terminated..
+3/8/2018 9:43:23 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomer' with unique index 'IX_Customer_Code'. The duplicate key value is (<NULL>).
+The statement has been terminated..
+3/8/2018 11:05:15 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/8/2018 11:17:50 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 3:18:22 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 3:20:24 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 5:23:48 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 5:23:48 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 5:23:49 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 6:14:56 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomerLead'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 6:15:14 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomerLead'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/8/2018 6:15:34 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomerLead'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

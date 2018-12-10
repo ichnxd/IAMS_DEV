@@ -1,0 +1,104 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Warranty = function () {
+            this.DocDetailPropertyName = 'Warranty_Details';
+            this.ShowBillOfMaterials = true;
+            this.SerialsEnabled = true;
+            this.AddItemWithInventory = true;
+     //       this.SerialReferenceDR = { Column: 'ID_DocDetail' }
+    
+        }
+
+        VC_Warranty.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Warranty.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+        
+           VC.AddButtonReport({
+                Name: 'Warranty Form',
+                ID_Report: 3152,
+                requireSingleObject: true
+            });
+            //
+            if(_.ID_ViewType == 2)
+            {
+                var ContactAOption = VC.GetFormItem('ID_Contact');
+                ContactAOption.editorOptions.onCreateNewObject = function (data) {
+                        ID_BusinessPartner: VC.$scope.CurrentObject.ID_Customer
+                    if (VC.$scope.CurrentObject.ID_Customer == null) {
+                        VC.MsgBox("Please Select a Customer");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_BusinessPartner: VC.$scope.CurrentObject.ID_Customer
+                    };
+            };
+            }
+
+            //
+        }
+       
+        VC_Warranty.prototype.onLoad = function () {
+            var VC = this.VC;
+          if (VC.IsNew() == true){
+              var _ = this;
+            
+            var ID_DocDetail = Enumerable.From(_.CurrentObject.Warranty_Details).Select("$.ID_DeliveryReceipt_Detail").ToArray();
+            console.log(ID_DocDetail)
+            if(ID_DocDetail.length > 0){
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vDeliveryReceipt_Detail_Serial WHERE ID_DeliveryReceipt_Detail IN ( @ID_DocDetail )")';
+                var JsDataService = app.$GetDataService();
+                JsDataService.Query(sql,{
+                    params : {
+                    'ID_DocDetail' : ID_DocDetail
+                    }
+                }).then(function(data){
+                    var serials = data.collection;
+                    if(serials.length > 0){
+                        $.each(_.CurrentObject.Warranty_Details,function(i,d){
+                         var SerialNo = Enumerable.From(serials).Where('$.ID_DeliveryReceipt_Detail === ' + d.ID_DeliveryReceipt_Detail).ToArray();
+                         d.Warranty_Detail_Serials =[];
+                         $.each(SerialNo, function(x,s){
+                             d.Warranty_Detail_Serials.push({
+                                 ID : -1,
+                                 Name : s.Name,
+                                 Code : s.Code
+                             })
+
+                         })
+                        })
+                    }
+                });
+            }
+          }
+        }
+
+
+
+        return VC_Warranty;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+
+

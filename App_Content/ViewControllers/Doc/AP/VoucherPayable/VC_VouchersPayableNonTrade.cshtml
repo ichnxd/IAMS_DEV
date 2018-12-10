@@ -1,0 +1,62 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, VC_BaseDoc) {
+
+        var VC_VouchersPayableNonTrade = function () { }
+        //
+
+
+        VC_VouchersPayableNonTrade.Trade = 1
+        VC_VouchersPayableNonTrade.NonTrade = 2;
+
+        VC_VouchersPayableNonTrade.prototype = Object.create(VC_BaseDoc.prototype);
+        //
+        VC_VouchersPayableNonTrade.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+                
+              
+            };
+
+           
+        }
+
+        VC_VouchersPayableNonTrade.prototype.onCurrentObjectChanged = function (e) {
+            VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+              var _ = this;
+              var VC = _.VC;
+              if (e.dataField === 'ID_COA') {                  
+                  if (e.value != null) {
+                      
+                      if(e.value.Description !== undefined){     
+                            if(e.value.Description !== undefined) _.CurrentObject.Name = e.value.Description;
+                      }
+                      if(e.value.Name !== undefined){
+                            if(e.value.Name !== undefined)  _.CurrentObject.Code = e.value.Name;
+                      }
+
+                      if(e.value.ID_SubsidiaryType !== undefined){                          
+                            _.CurrentObject.ID_SubsidiaryType = e.value.ID_SubsidiaryType;
+                      }
+                      
+                      if(e.value.Description !== undefined) _.CurrentObject.ID_Subsidiary = null;
+                      
+                  }
+              }
+        }
+
+        return VC_VouchersPayableNonTrade;
+
+    });
+      //</script>
+</text> , false);

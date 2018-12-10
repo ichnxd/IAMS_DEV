@@ -1,0 +1,93 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocDetailViewStatus");
+    var StockRequisition = Url.Encode("Doc/AP/StockRequisition/StockRequisition");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@{@StockRequisition}','/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}'
+                      , 'AcctHelper'], function (StockRequisition,BaseClass,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            _.Approve = function() {
+                return StockRequisition.Approve( [_.$scope.CurrentObject]);
+            };
+
+            _.Cancel = function() {
+                return StockRequisition.Cancel( [_.$scope.CurrentObject] );
+            };
+
+            _.AddToolBarButtonOnGrid('StockRequisitionDetails', {
+                    text: 'Add Item',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        _.BrowseDataSet('@Html.EncryptSQL(@"SELECT Code, Name, Description, ID,
+                                                SRP, ID_UOM, PrimaryUOM FROM vItem WHERE IsActive = 1 AND IsSold = 1")', {
+                                         title: 'Select Items',
+                                         ID_View: 'EA822ECF-6044-40B7-9B8E-B983A8E447C4',
+                                         Columns : [
+                                             "ID", "Description",  "PrimaryUOM",
+                                            {
+                                                dataField : "SRP",
+                                                customizeText : function( e ) {
+                                                    return Globalize.format( e.value, "n2");
+                                                }
+                                            },
+
+                                         ],
+                                         onCustomizeColumns : function( Columns ) {
+
+
+
+                                         }
+                            }).then(function (Items) {
+                                $.each(Items, function (i, Item) {
+
+                                    var NewDetail = {
+                                          ID_Item : Item.ID
+                                        , Description : Item.Name
+                                        , ItemCode : Item.Code
+                                        , ID : -1
+                                        , Cost : 0.00
+                                        , ID_ItemSupplier : null
+                                        , Supplier : ''
+                                    };
+
+                                    if (_.$scope.CurrentObject.StockRequisitionDetails == null) _.$scope.CurrentObject.StockRequisitionDetails = [];
+
+                                    _.$scope.CurrentObject.StockRequisitionDetails.push(NewDetail);
+
+                                });
+                            });
+                }
+            },true);
+
+            _.StockRequisitionDetails_onColumnChanged  = function( e ) {
+                if ( e.dataField == 'ID_ItemSupplier' ) {
+
+                    _.$scope.CurrentObject.StockRequisitionDetails[e.rowIndex].Cost = e.data != null ? e.data.Cost : 0.00;
+
+
+                }
+            };
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

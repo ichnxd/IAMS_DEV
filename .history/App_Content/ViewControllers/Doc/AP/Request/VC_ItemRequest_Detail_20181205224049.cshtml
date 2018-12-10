@@ -1,0 +1,67 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_BPContact = function () {
+          //  this.DocDetailPropertyName = "Contacts";
+        }
+        
+        VC_BPContact.prototype = Object.create(baseDoc.prototype);
+          
+        VC_BPContact.prototype.Init = function (VC) {
+
+            baseDoc.prototype.Init.call(this, VC);
+
+
+                var _ = this;
+
+            if(_.ID_ViewType == 2){
+
+               var formItem_Email = VC.GetFormItem("EmailAddress");
+
+               formItem_Email.validationRules = [];
+               formItem_Email.validationRules.push({
+                    type: "email" 
+                });
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+                    var formItem_Email = VC.GetFormItem("EmailAddress");
+
+                    formItem_Email.validationRules.forEach(function(rule) {
+                
+                        if(rule.isValid == false && brokenRules.length == 0){
+                            brokenRules.push(rule.message);
+                        }
+                    });
+
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                });
+                
+             }
+       
+        }
+                    
+        VC_BPContact.prototype.onLoad = function (VC) {
+
+            baseDoc.prototype.onLoad(this, VC);
+        }
+
+        return VC_BPContact;
+    });
+//</script>
+</text> , false )

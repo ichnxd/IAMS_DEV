@@ -1,0 +1,165 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, Base,AcctHelper) {
+
+        var VC_Event = function () { }
+
+        VC_Event.prototype = Object.create(Base.prototype);
+
+        VC_Event.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+
+
+        }
+
+        VC_Event.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+
+            var JsDataService = app.$GetDataService();
+            VC.AddToolbarButton({
+                text: 'Generate Inquiry Template',
+                icon: 'mdi mdi-clipboard-arrow-down',
+                IsDisabled: function () {
+                    return false;
+                },
+                onItemClick: function () {
+                        AcctHelper.CreateTemplate('Customer,Contact,Visited_Date,Product_Interest','Template.csv','text/csv');
+                }
+            });
+
+
+            if(_.ID_ViewType == 2){
+                if(_.CurrentObject.Event_Saless == undefined || _.CurrentObject.Event_Saless == null ) _.CurrentObject.Event_Saless = []; 
+                if(_.CurrentObject.Event_Expensess == undefined || _.CurrentObject.Event_Expensess == null ) _.CurrentObject.Event_Expensess = []; 
+                if(_.CurrentObject.Event_Inquirys == undefined || _.CurrentObject.Event_Inquirys == null ) _.CurrentObject.Event_Inquirys = []; 
+                                
+                _.Compute();
+                VC['onEvent_Saless_RowUpdated'] = function (Grid, Detail) {
+                    _.Compute();
+                }
+                VC['onEvent_Expensess_RowUpdated'] = function (Grid, Detail) {
+                    _.Compute();
+                }
+                VC['onEvent_Inquirys_RowUpdated'] = function (Grid, Detail) {
+                    _.Compute();
+                }
+
+                VC['Event_Expensess_OnRowInserted'] = function(Detail){
+                    _.Compute();
+                }
+                VC['Event_Inquirys_OnRowInserted'] = function(Detail){
+                    _.Compute();
+                }
+                VC['Event_Saless_OnRowInserted'] = function(Detail){
+                    _.Compute();
+                }
+
+                VC.AddToolbarButton({
+                    text: 'Import Inquiry',
+                    icon: 'mdi mdi-cloud-upload',
+                    IsDisabled: function () {                        
+                        return false;
+                    },
+                    onItemClick: function () {
+                        //
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("")', 
+                            null, 
+                            'Import Inquiry'
+                        ).then(function (data) {
+                            var ImportedData = data['_'];
+
+                            if(ImportedData == null) ImportedData = [];
+                            $.each(ImportedData, function (i, item) {
+                                var NewDetail = {
+                                    ID: -1,
+                                    CustomerName: item.Customer,
+                                    ContactName: item.Contact,
+                                    Date: item.Visited_Date,
+                                    ProductInterest: item.Product_Interest
+                                };
+                                _.CurrentObject.Event_Inquirys.push(NewDetail);
+                            });
+
+                        },function(error){
+                            console.log(error)
+                        });
+                        //
+
+                    }
+                });
+
+            }
+
+            
+
+        };
+        VC_Event.prototype.Compute = function () {
+            var _ = this;
+
+            _.CurrentObject.TotalSales = _.CurrentObject.Event_Saless.length;
+            _.CurrentObject.TotalInquiry = _.CurrentObject.Event_Inquirys.length;
+            //_.CurrentObject.TotalExpenses =  _.CurrentObject.Event_Expensess.length;
+        }
+        VC_Event.prototype.onDetailRowUpdated = function (Detail) { 
+            Base.prototype.onDetailRowUpdated.call(Detail);
+            var _ = this;
+            _.Compute()
+        }
+        
+
+        VC_Event.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+            var SelesGrid =  VC.GetGridOption('Event_SalesGrid');
+            
+        }
+
+        VC_Event.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+                       
+            if(e.dataField == 'ID_Customer'){
+                
+                _.CurrentObject.ID_Contact = null;
+
+                if(e.value.Address !== undefined){
+                    _.CurrentObject.Address = e.value.Address;
+                }
+                if(e.value.PhoneNo !== undefined){
+                    _.CurrentObject.PhoneNo = e.value.PhoneNo;
+                }
+                if(e.value.EmailAddress !== undefined){
+                    _.CurrentObject.Email = e.value.EmailAddress;
+                }
+                if(e.value.Website !== undefined){
+                    _.CurrentObject.Website = e.value.Website;
+                }
+            }
+
+            if(e.dataField == 'StartDate' || e.dataField == 'EndDate'){
+
+            }
+
+        }
+
+        VC_Event.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            //
+            //
+            //
+            
+        }
+
+        return VC_Event;
+    });
+//</script>
+</text> , false )

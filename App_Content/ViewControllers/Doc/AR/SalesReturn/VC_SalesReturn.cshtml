@@ -1,0 +1,469 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_SalesReturn = function () {
+            this.DocDetailPropertyName = 'SalesReturn_Details';
+            //this.SerialsEnabled = true;
+            //this.SerialReference = { Column: 'RefID', ID_Model: AcctHelper.SalesReturn  }
+        }
+
+        VC_SalesReturn.prototype = Object.create(baseModelHelper.prototype);
+
+        
+        VC_SalesReturn.prototype.Init = function (VC) {
+            var _ = this;
+            VC.AddButtonReport({
+                Name: 'Sales Return Form',
+                ID_Report: 1026,
+                requireSingleObject: true
+            });
+            _.IsAddItemDisabled = true;
+        
+
+            baseModelHelper.prototype.Init.call(this, VC);   
+        }
+
+        VC_SalesReturn.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+            if (_.CurrentObject.SalesReturn_Details == null) _.CurrentObject.SalesReturn_Details = [];
+            if(_.CurrentObject.SalesReturn_Details.length  > 0){
+                var dxCustomer =  VC.GetDxControl('ID_Customer');
+                if(dxCustomer !==null){
+                    dxCustomer.option('disabled', true);
+                }
+            }else{
+                var dxCustomer =  VC.GetDxControl('ID_Customer');
+                if(dxCustomer !==null){
+                    dxCustomer.option('disabled', false);
+                }
+            }
+        }
+        VC_SalesReturn.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+            VC.AddToolBarButtonOnGrid('SalesReturn_Details', {
+                text: 'Browse Reference SI',
+                icon: 'mdi mdi-package-variant',
+                onClick: function () {
+                    if (_.CurrentObject.SalesReturn_Details == null) _.CurrentObject.SalesReturn_Details = [];
+                    if (_.CurrentObject.SalesReturn_Details.length > 0){
+                        if(_.CurrentObject.SalesReturn_Details[0].ID_DocDetailParentModel !== 3249){
+                            VC.MsgBox('Cannot add record with different reference', 'Sales Return');
+                            return;
+                        }
+                    }
+                    if (_.CurrentObject.ID_Customer == null || _.CurrentObject.ID_Customer == 0) {
+                        VC.MsgBox('Please select a customer', 'Sales Return');
+                        return;
+                    }
+                    VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vSalesReturn_ReferenceSI WHERE Balance > 0 AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN( @ID_Details )")', {
+                        title: 'Select Sales Invoice (' + _.CurrentObject.Customer + ')',
+                        ID_View: '0ECB95D8-D2A0-4057-A86D-4C6015BBF141',
+                        params: {
+                            'ID_BusinessPartner': _.CurrentObject.ID_Customer
+						  , 'ID_Details': Enumerable.From(_.CurrentObject.SalesReturn_Details).Select('$.ID_DocDetail').ToArray()
+                        },
+                        onCustomizeColumns: function (columns) {
+                            $.each(columns, function (i, c) {
+                                if (c.dataField == "DocumentNo") {
+                                    c.caption = "SI No.";
+                                }
+                                if (c.dataField == "Date") {
+                                    c.caption = "SI Date";
+                                }
+                            });
+                        },
+                        validate: function (items) {
+                            
+                            var isValid = true;
+                            if(_.CurrentObject.SalesReturn_Details.length > 0){
+                                $.each(items,function(i,o){
+                                    if(o.ID_SalesInvoice !== _.CurrentObject.SalesReturn_Details[0].ID_SalesInvoice){
+                                        isValid = false
+                                    }
+                                });
+                            }else{
+                                var dt = Enumerable.From(items).Select("$.ID_SalesInvoice").Distinct().ToArray();
+                                if(dt.length > 1){
+                                    isValid = false
+                                }
+                            }
+                            
+
+                            if(!isValid){
+                                VC.MsgBox('Cannot add different SI','Sales Return');
+                                return false;
+                            }
+
+
+
+
+                            return true;
+                        }
+                    }).then(function (Details) {
+                        
+                        $.each(Details, function (i, d) {
+                            var detail = {
+                                ID: -1,
+                                ID_DocDetail: d.ID,
+                                ID_DocDetailParentModel: 3249,
+                                RefID: d.ID,
+                                Code: d.ItemCode,
+                                ItemCode: d.ItemCode,
+                                Quantity: 0,
+                                RefQty: d.Balance,
+                                UnitPrice: d.UnitPrice,
+                                TotalAmount: d.TotalAmount,
+                                ID_UOM: d.ID_UOM,
+                                ID_Item: d.ID_Item,
+                                Description: d.Description,
+                                Notes: d.Notes,
+                                ID_TaxScheme: d.ID_TaxScheme,
+                                VatAmt: d.VatAmt,
+                                Item: d.Item,
+                                UOM: d.UOM,
+                                TaxScheme: d.TaxScheme,
+                                ID_SalesInvoice: d.ID_SalesInvoice,
+                                SalesInvoice: d.DocumentNo,
+                                Name: d.DocumentNo,
+                                IsSerialized: d.IsSerialized,
+                                ID_Brand: d.ID_Brand,
+                                NonInventoriable : d.NonInventoriable,
+                                Conversion: d.Conversion
+                            }
+                            _.CurrentObject.SalesReturn_Details.push(detail);
+                        });
+
+                        _.Compute();
+                    });
+                }
+            }, true);
+
+
+            VC.AddToolBarButtonOnGrid('SalesReturn_Details', {
+                text: 'Browse Reference DR',
+                icon: 'mdi mdi-package-variant',
+                onClick: function () {
+
+                    if (_.CurrentObject.SalesReturn_Details.length > 0){
+                        if(_.CurrentObject.SalesReturn_Details[0].ID_DocDetailParentModel !== 2168){
+                            VC.MsgBox('Cannot add record with different reference', 'Sales Return');
+                            return;
+                        }
+                    }
+                    if (_.CurrentObject.ID_Customer == null || _.CurrentObject.ID_Customer == 0) {
+                        VC.MsgBox('Please select a customer', 'Sales Return');
+                        return;
+                    }
+                    VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vDeliveryReceipt_Detail WHERE DRBalance > 0 AND ISNULL(IsInvoiced,0) = 0 AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN( @ID_Details )")', {
+                        title: 'Select Delivery Receipt (' + _.CurrentObject.Customer + ')',
+                        ID_View: 'D1546EBE-B70B-4477-9637-A8BDDB609A59',
+                        params: {
+                            'ID_BusinessPartner': _.CurrentObject.ID_Customer
+						  , 'ID_Details': Enumerable.From(_.CurrentObject.SalesReturn_Details).Select('$.ID_DocDetail').ToArray()
+                        },
+                        onCustomizeColumns: function (columns) {
+                            $.each(columns, function (i, c) {
+                                if (c.dataField == "DocumentNo") {
+                                    c.caption = "DR No.";
+                                }
+                                if (c.dataField == "Date") {
+                                    c.caption = "DR Date";
+                                }
+                            });
+                        },
+                        validate: function (items) {
+                            
+                            var isValid = true;
+                            if(_.CurrentObject.SalesReturn_Details.length > 0){
+                                $.each(items,function(i,o){
+                                    if(o.ID_DeliveryReceipt !== _.CurrentObject.SalesReturn_Details[0].ID_DeliveryReceipt){
+                                        isValid = false
+                                    }
+                                });
+                            }else{
+                                var dt = Enumerable.From(items).Select("$.ID_DeliveryReceipt").Distinct().ToArray();
+                                if(dt.length > 1){
+                                    isValid = false
+                                }
+                            }
+                            
+
+                            if(!isValid){
+                                VC.MsgBox('Cannot add different DR','Sales Return');
+                                return false;
+                            }
+
+
+
+
+                            return true;
+                        }
+
+                    }).then(function (Details) {
+                        if (_.CurrentObject.SalesReturn_Details == null) _.CurrentObject.SalesReturn_Details = [];
+                        $.each(Details, function (i, d) {
+                            var detail = {
+                                ID: -1,
+                                ID_DocDetail: d.ID,
+                                ID_DocDetailParentModel: 2168,
+                                RefID: d.ID,
+                                Code: d.ItemCode,
+                                ItemCode: d.ItemCode,
+                                Quantity: 0,
+                                RefQty: d.DRBalance,
+                                UnitPrice: d.UnitPrice,
+                                TotalAmount: d.TotalAmount,
+                                ID_UOM: d.ID_UOM,
+                                ID_Item: d.ID_Item,
+                                Description: d.Description,
+                                Notes: d.Notes,
+                                ID_TaxScheme: d.ID_TaxScheme,
+                                VatAmt: d.VatAmt,
+                                Item: d.Item,
+                                UOM: d.UOM,
+                                TaxScheme: d.TaxScheme,
+                                ID_DeliveryReceipt: d.ID_DeliveryReceipt,
+                                SalesInvoice: d.DocumentNo,
+                                Name: d.DocumentNo,
+                                IsSerialized: d.IsSerialized,
+                                ID_Brand: d.ID_Brand,
+                                NonInventoriable : d.NonInventoriable,
+                                Conversion: d.Conversion,
+                                IsFree: d.IsFree
+                            }
+                            _.CurrentObject.SalesReturn_Details.push(detail);
+                        });
+
+                        _.Compute();
+                    });
+                }
+            }, true);
+
+            //
+        }
+
+        VC_SalesReturn.prototype.onInitDetailView = function () {
+            baseModelHelper.prototype.onInitDetailView.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+
+            
+            VC.ValidationRules.push(function () {
+                var brokenRules = [];
+                $.each(VC.$scope.CurrentObject.SalesReturn_Details, function (i, item) {
+
+                    if (item.RefQty !== null) {
+                        if (item.Quantity > item.RefQty) {
+                            brokenRules.push('Cannot accept excess Quantity for item (' + item.Item + ')');
+                        }
+                    }
+                });
+
+                if (brokenRules.length > 0) return { isValid: false, brokenRules: brokenRules };
+                return { isValid: true };
+            });
+
+            VC.ValidationRules.push(function () {
+                var brokenRules = [];
+
+                $.each(VC.$scope.CurrentObject.SalesReturn_Details, function (i, item) {
+                    if(item.IsSerialized == true){
+
+                        item.SalesReturn_Detail_Serials = AcctHelper.InitArrayedObj(item.SalesReturn_Detail_Serials);
+
+                        if (item.Quantity > item.SalesReturn_Detail_Serials.length) {                        
+                            brokenRules.push('Insuficient serials for item (' + item.Item + ')');                        
+                        }
+                    }
+                });
+
+                if (brokenRules.length > 0) return { isValid: false, brokenRules: brokenRules };
+                return { isValid: true };
+            });
+
+            VC.onContextMenuPreparing_SalesReturn_Details = function (e) {
+
+                var Detail = e.row.data;
+                e.items.unshift({
+                    text: "Edit Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        
+                        fBrowseSerialsFromDocDetail(Detail, e.component, _);
+                    }
+                });
+            }
+
+        }
+
+        var fBrowseSerialsFromDocDetail = function(Item, grid , _){
+
+            var VC = _.VC;
+
+            grid.deselectAll();
+
+            VC._DeletedItems = AcctHelper.InitArrayedObj(VC._DeletedItems);
+            VC._DeletedItems["SalesReturn_Detail_Serials"] = AcctHelper.InitArrayedObj(VC._DeletedItems["SalesReturn_Detail_Serials"]);
+
+            if(Item.Quantity == 0 || Item.Quantity == null){
+                return;
+            }
+
+            if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                var NewSerials = [];
+
+
+                var SQL = '';
+                
+                if(Item.ID_DocDetailParentModel == 2168){ //DR
+                    SQL = '@Html.EncryptSQL("SELECT ID,SerialNo FROM vSalesInvoiceSerials WHERE ID_DeliveryReceipt_Detail = @ID_DocDetail")';
+                }
+                if(Item.ID_DocDetailParentModel == 3249){ //SI
+                    SQL = '@Html.EncryptSQL("SELECT ID,SerialNo FROM vSalesInvoiceSerials WHERE ID_Item = @ID_Item AND ID_SalesInvoice_Detail = @ID_DocDetail")';
+                }
+
+
+
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_DocDetail: Item.ID_DocDetail
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: 'AB8B4149-AB26-48A6-B8F9-DE6BBF4FD352',
+                    title: 'Select Item Serial (' + Item.Quantity + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+
+                    if (Item.SalesReturn_Detail_Serials !== null && Item.SalesReturn_Detail_Serials !== undefined) {
+                    
+                        $.each(Item.SalesReturn_Detail_Serials, function (i, s) {
+                            if (s.ID > 0) {
+                                VC._DeletedItems["SalesReturn_Detail_Serials"].push(s);
+                                console.log(s.ID );
+                            }
+                        });
+                    }
+                
+                    Item.SalesReturn_Detail_Serials = [];
+
+                    $.each(Serials, function (i, d) {
+                        Item.SalesReturn_Detail_Serials.push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Item
+                        });
+                    });
+                    //
+                    //
+                    //
+
+                    _.VC.$timeout(function () {
+
+                        for (i = 0; i < _.CurrentObject.SalesReturn_Details.length; i++) { 
+
+                            grid.selectRowsByIndexes([i]);
+                        }
+                    }, 500);
+                });
+
+
+            }
+
+
+        };
+
+
+        VC_SalesReturn.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            var Item = e.key;
+            
+            if (e.dataField === 'Quantity') {
+
+                fBrowseSerialsFromDocDetail(Item, e.grid, _);
+            }
+        }
+
+        //VC_SalesReturn.prototype.onLoad = function () {
+        //    baseModelHelper.prototype.onLoad.call(this);
+        //    var VC = this.VC;   
+        //}
+
+        VC_SalesReturn.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesReturnApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_SalesReturn.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesReturnCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_SalesReturn;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+

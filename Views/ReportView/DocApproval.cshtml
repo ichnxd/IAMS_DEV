@@ -1,0 +1,400 @@
+﻿@model DevExpress.XtraReports.UI.XtraReport
+@using System.Web.Mvc.Html;
+@using DevExpress.Web.Mvc.UI;
+@using DevExpress.Web.Mvc;
+@using System.Web.Optimization;
+@{
+    Layout = null;
+    string ID_CurrentObject = ViewBag.ID_CurrentObject.ToString();
+}
+<!DOCTYPE html>
+<html ng-app="JSWebApp" style="height:100%!important">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="@Url.Content("~/Content/img/AppIcon.ico")" />
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Styles.Render("~/Content/bootstrap")
+    @Styles.Render("~/Content/dx")
+    @Scripts.Render("~/bundles/angular")
+
+    @*@Scripts.Render("~/bundles/dxReport")*@
+
+    @Html.DevExpress().GetScripts(
+        new Script { ExtensionSuite = ExtensionSuite.Report }
+    )
+    
+    @Html.DevExpress().GetStyleSheets(
+        new StyleSheet { ExtensionSuite = ExtensionSuite.Report }
+    )
+    @Styles.Render("~/Content/appcss")
+    <style>
+        form {
+            height:100%!important
+        }
+        body {
+            height:100%; margin:0px;
+        }
+        #JSWebApp .dx-datagrid-rowsview .dx-row:not(.dx-group-row) > td {
+            font-size:17px;
+        }
+        #JSWebApp .dx-datagrid-headers td {
+           background-color:dimgray;
+           color:#fff;
+           font-size:15px;
+        }
+    </style>
+    <script type="text/javascript">
+
+        var User = {
+            Username: '@ViewBag.Username',
+            Password: null
+        }
+
+        function PasswordDialog() {
+            var Modal = angular.element(document).injector().get('JsWizardView');
+            var JsDataService = angular.element(document).injector().get('JSDataService');
+            var $http = angular.element(document).injector().get('$http');
+            var $q = angular.element(document).injector().get('$q');
+            var defer = $q.defer();
+            Modal.Show({
+                title: "Enter Password",
+                Template: '<div dx-form="dxFormOption" style="margin:10px"></div>',
+                width:$(window).width * 0.30,
+                height:$(window).height * 0.30,
+                showNegativeButton: false,
+                InitController:function(s) {
+                    s.dxFormOption = {
+                        formData: User,
+                        showColonAfterLabel: false,
+                        onEditorEnterKey: function () {
+                            //OnSubmitButton();
+                        },
+                        onInitialized: function (e) {
+                            FormLogin = e.component;
+                        },
+                        items: [
+                            {
+                                dataField: 'Password',
+                                validationRules: [{
+                                    type: 'required',
+                                    message: 'Password is required'
+                                }],
+                                label: {
+                                    visible: false
+                                },
+                                editorOptions: {
+                                    mode: 'password',
+                                    placeholder: 'Password',
+                                    showClearButton: true,
+                                    onInitialized: function (e) {
+                                        e.component.focus();
+                                    },
+                                    onValueChanged: function (e) {
+                                        User.Password = e.value;
+                                    }
+                                }
+
+                            }
+                        ]
+                    };
+
+                    s.onPositiveClick = function (d) {
+                        var req = {
+                            method: 'POST',
+                            url: '/Login/SignIn',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            transformRequest: function (obj) {
+                                var str = [];
+                                for (var p in obj)
+                                    str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                                return str.join("&");
+                            },
+                            data: User
+                        }
+
+                        $http(req).then(function (obj) {
+                            var data = JSON.parse(obj.data);
+                            if (data.Status == -1) {
+                                alert(data.Message);
+                                return;
+                            }
+                            //
+                            //
+                            //
+                            d.hide();
+                            defer.resolve(data);
+                        });
+                    };
+                }
+            });
+            return defer.promise;
+        }
+
+        function DocumentViewer_onError(sender, e) {
+
+        }
+
+        function Approve(data) {
+            var JsDataService = angular.element(document).injector().get('JSDataService');
+            JsDataService.pGetCurrentObject('@Html.EncryptSQL("pPreApprove")', {
+                'ID_CurrentObject': @ViewBag.ID_CurrentObject,
+                'ID_Model':@ViewBag.ID_Model,
+                'ID_FilingStatus': 1,
+                'DocName': '@ViewBag.DocumentName',
+                'ID_Session': data.ID_Session
+            }).then(function (obj) {
+                if (obj.isLastApprover == true) {
+
+                    JsDataService.ExecSQLProc(
+                        '@ViewBag.ApprovalSQL',
+                        {
+                            'IDs': [@ViewBag.ID_CurrentObject],
+                            'ID_Session': data.ID_Session
+                        }
+                    ).then(function (response) {
+
+
+                        JsDataService.ExecSQLProc('@Html.EncryptSQL("pUdateApproverMatrix")', {
+                            ID_Hed: obj.ID_ApproverMatrix,
+                            ID_Detail: obj.ID_Detail
+                        });
+
+                        DevExpress.ui.dialog.alert('Approved Successfully', '@ViewBag.DocumentName').then(function(){
+                            window.location.reload(true);
+                        });
+                    }, function () {
+
+                    });
+                } else {
+                    DevExpress.ui.dialog.alert('Approved Successfully', '@ViewBag.DocumentName').then(function(){
+                        window.location.reload(true);
+                    });
+                }
+            });
+        }
+
+        function OnApprovedClick() {
+            //
+            //
+            //
+            if ( @ViewBag.ID_Model === 3201 ) {// PURCHASE REQUEST
+                PasswordDialog().then(function(userData) { 
+                    var JsDataService = angular.element(document).injector().get('JSDataService');
+                    JsDataService.Query('@Html.EncryptSQL("SELECT * FROM vPurchaseRequest_Detail WHERE ID_PurchaseRequest = " + ID_CurrentObject)')
+                            .then(function(data) {
+                                var Grid = null;
+                        var Modal = angular.element(document).injector().get('JsWizardView');
+                        Modal.Show({
+                            Template: '<div dx-data-grid="GridOption"></div>',
+                            title: 'Purchase Request Items (@ViewBag.DocumentName)',
+                            fullScreen: true,
+                            closeOnConfirm: false,
+                            InitController: function (s) {
+                                s.GridOption = {
+                                    onInitialized: function(e) {
+                                        Grid = e.component;
+                                    },
+                                    dataSource: data.collection,
+                                    columns:[{
+                                        dataField: 'ID',
+                                        width:80,
+                                    },{
+                                        dataField: 'Brand',
+                                        width:120,
+                                    },{
+                                        dataField: 'Description',
+                                        width:400,
+                                    },{
+                                        dataField: 'Quantity',
+                                        caption: 'Required Qty',
+                                        width:100,
+                                    },{
+                                        dataField: 'UnitPrice',
+                                        caption: 'Expected Price',
+                                        width:100,
+                                    },{
+                                        dataField: 'Comment'
+                                    }],
+                                    wordWrapEnabled : true,
+                                    scrolling: {
+                                        mode: "infinite"
+                                    },
+                                    sorting: {
+                                        mode : "single"
+                                    },
+                                    loadPanel: {
+                                        enabled: false
+                                    },
+                                    paging: {
+                                        pageSize: 300
+                                    },
+                                    selection: {
+                                        mode: 'multiple',
+                                        showCheckBoxesMode: 'always'
+                                    },
+                                    showRowLines : true,
+                                    showColumnLines : true,
+                                    rowAlternationEnabled: true,
+                                    showBorders: true,
+                                    editing:{
+                                        editEnabled: false,
+                                        removeEnabled: false,
+                                        insertEnabled: false,
+                                        mode: 'cell',
+                                        allowUpdating: true,
+                                        allowAdding: true,
+                                        allowDeleting: false,
+                                        errorRowEnabled: true,
+                                    }
+                                };
+                                s.onPositiveClick = function (d) {
+                                    var SelectedRows = Grid.getSelectedRowsData();
+                                    if ( SelectedRows.length  == 0 ) {
+                                        DevExpress.ui.dialog.alert('Please check items to approve.', '@ViewBag.DocumentName');
+                                        return;
+                                    };
+
+                                    var q = [
+                                        JsDataService.ExecSQLProc('@Html.EncryptSQL("pCheckPurchaseRequestDetail")',{
+                                            'IDs' : Enumerable.From(SelectedRows).Select('$.ID').ToArray()
+                                        }),
+                                        JsDataService.ExecSQLProc('@Html.EncryptSQL("pPurchaseRequestChecked")',{
+                                            'ID_Session' : userData.ID_Session,
+                                            'ID': @ViewBag.ID_CurrentObject
+                                        })
+                                    ];
+                                    var $q = angular.element(document).injector().get('$q');
+                                    $q.all(q).then(function(_){  
+                                        d.hide();
+                                        Approve(userData);
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
+            } else {
+                PasswordDialog().then(function(data) {
+                    Approve(data);
+                });
+            }
+        };
+
+        function onbutSendBackToOwnerClick() {
+            var Modal = angular.element(document).injector().get('JsWizardView');
+            Modal.Show({
+                Template: '<div dx-text-area="dxTextAreaOption" style="font-size:18px;"></div>',
+                title: 'Message',
+                fullScreen: true,
+                closeOnConfirm: false,
+                InitController: function (s) {
+                    s.Reason = null;
+                    s.dxTextAreaOption = {
+                        bindingOptions: {
+                            'value': 'Reason'
+                        },
+                        onInitialized: function (e) {
+                            e.component.focus();
+                        },
+                        maxLength: 300,
+                        height: '100%'
+                    }
+                    s.onPositiveClick = function (d) {
+                        if (s.Reason === undefined || s.Reason === null) {
+                            DevExpress.ui.dialog.alert('Reason is Required', '@ViewBag.DocumentName');
+                            return;
+                        }
+                        PasswordDialog().then(function(data){
+                            var JsDataService = angular.element(document).injector().get('JSDataService');
+                            JsDataService.pGetCurrentObject('@Html.EncryptSQL("pSendApprovalToRequestor")', {
+                                ID_CurrentObject: @ViewBag.ID_CurrentObject,
+                                ID_Model:@ViewBag.ID_Model,
+                                Message : s.Reason,
+                                'ID_Session': data.ID_Session
+                            }).then(function () {
+                                d.hide();
+                                DevExpress.ui.dialog.alert('Send Back to Owner', '@ViewBag.DocumentName').then(function(){
+                                    window.location.reload(true);
+                                });
+                            });
+                        });
+                    }
+                }
+            });
+
+        }
+    </script>
+</head>
+<body id="JSWebApp" ng-controller="HomeController">
+    <div class="loadingStatusMessage outer-div">
+        <div class="inner-div">
+            <div class="loader" style="position:absolute"></div>
+            <div style="display:inline-block">
+                <span class="FontInSys" style="font-size:50px"></span>
+            </div>
+            <div class="message">Please Wait...</div>
+        </div>
+    </div>
+    <div style="height:10%;background-color:@ViewBag.PrimaryColor;padding:5px;color:#fff;font-weight:bold;">
+        <h4 style="margin:5px;font-weight:bold;line-height:40px">@ViewBag.Title - @ViewBag.FilingStatus</h4>
+    </div>
+    <div style="height:70%">
+        @using (Html.BeginForm())
+        {
+            @Html.DevExpress().WebDocumentViewer(settings => {
+               settings.Name = "documentViewer";
+               settings.Height = Unit.Percentage( 100 );
+               //settings.ClientSideEvents.Init = "DocumentViewer_Init";
+               settings.MobileMode = true;
+               settings.ClientSideEvents.CallbackError = "DocumentViewer_onError";
+            }).Bind(Model).GetHtml()
+        }
+    </div>
+    <div style="height:20%;padding:10px;background:#404040">
+       @Html.DevExpress().Button(but => {
+          but.Text = "Approve";
+          but.Name = "butApprove";
+          but.ClientSideEvents.Click = "OnApprovedClick";
+          but.Style.Add("font-size", "20px");
+          but.Style.Add("font-weight", "bold");
+          but.Style.Add("border-radius", "5px");
+          but.Style.Add("margin-bottom", "5px");
+          but.Enabled = ViewBag.IsApproved == false;
+          but.Height = Unit.Percentage(48);
+          but.Width = Unit.Percentage(100);
+      }).GetHtml()
+
+        @Html.DevExpress().Button(but => {
+          but.Text = "Add Comment";
+          but.Name = "butSendBackToOwner";
+          but.ClientSideEvents.Click = "onbutSendBackToOwnerClick";
+          but.Style.Add("font-size", "20px");
+          but.Style.Add("font-weight", "bold");
+          but.Style.Add("border-radius", "5px");
+          but.Enabled = ViewBag.IsApproved == false;
+          but.Height = Unit.Percentage(48);
+          but.Width = Unit.Percentage(100);
+        }).GetHtml()
+    </div>
+    <div id="popup"></div>
+    <script src="~/Content/js/_JSWebApp.js"></script>
+    <script src="~/Content/js/JS_WizardView.js"></script>
+    <script src="~/Content/js/JS_PopupView.js"></script>
+    <script src="~/Content/js/JS_AppConfig.js"></script>
+    <script src="~/Content/js/JS_DataService.js"></script>
+    <script>
+        app.controller('HomeController', ['$http', '$scope', '$timeout', 'JSDataService', function (h, s, t, js) { 
+        
+        
+        
+        }]);
+    </script>
+</body>
+</html>
+
+
+

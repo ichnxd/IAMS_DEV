@@ -1,0 +1,9 @@
+5/10/2018 9:09:07 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity WON/LOSS.
+5/10/2018 9:09:56 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity WON/LOSS.
+5/10/2018 10:19:29 AM: _pGetDataSet ---> Invalid column name 'IsFixed'..
+5/10/2018 11:45:05 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (<NULL>, 9888).
+The statement has been terminated..
+5/10/2018 11:45:06 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (ProductInterest, 9888).
+The statement has been terminated..
+5/10/2018 11:45:06 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (ProductInterest, 9888).
+The statement has been terminated..

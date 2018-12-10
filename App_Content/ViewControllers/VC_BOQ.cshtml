@@ -1,0 +1,512 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+        // <script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseDoc, AcctHelper) {
+
+        var VC_BOQ = function () {
+        }
+
+        VC_BOQ.prototype = Object.create(baseDoc.prototype);
+
+        VC_BOQ.prototype.Init = function (VC) {
+            baseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+            VC.AddToolbarButton({
+                text: 'Generate Template',
+                icon: 'mdi mdi-clipboard-arrow-down',
+                IsDisabled: function () {
+                    return false;
+                },
+                onItemClick: function () {
+                    window.open('/JsApp/DownloadExcelFile?ID=' + -1);
+                }
+            });
+            if (_.ID_ViewType === 2) {
+            var ID_ITEMGROUP_EQUIPMENT = 1;
+            var ID_ITEMGROUP_MATERIAL = 2;
+            var ID_ITEMGROUP_LABOR = 3;
+            var ID_ITEMGROUP_SOFTWARE = 6;
+            var ID_ITEMGROUP_FURNITURE = 4;
+            var ID_ITEMGROUP_OFFICE = 5;
+
+
+            if (_.ID_ViewType === 2) {
+
+                VC.AddToolbarButton({
+                    text: 'Donwload Template',
+                    icon: 'mdi mdi-clipboard-arrow-down',
+                    IsDisabled: function () 
+                    {
+                        if(_.CurrentObject.TemplatePath == null || _.CurrentObject.ID == -1)
+                        {
+                             return true                          
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+ 
+                        window.open('/JsApp/DownloadExcelFile?ID=' + _.CurrentObject.ID);
+                    }
+                });
+
+                VC.AddToolbarButton({
+                    text: 'Import Items',
+                    icon: 'mdi mdi-clipboard-arrow-down',
+                    onItemClick: function () {
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.UploadItemExcel(
+                        'Import',
+                         12511 /// ID_MODEL ng BOQT
+                        ).then(function (d) {
+                            if(d.Validations !== undefined)
+                            {
+                                var brokenRules = [];
+                                $.each(d.Validations,function(i,v) {
+                                    brokenRules.push({
+                                        message: v,
+                                        type: 'custom'
+                                    });
+                                });
+                                VC.ShowValidation(brokenRules);
+                                return;
+                            }
+
+                            if(d.SQLValidations !== undefined)
+                            {
+                                var brokenRules = [];
+                                $.each(d.SQLValidations,function(i,v) {
+                                    brokenRules.push({
+                                        message: v,
+                                        type: 'custom'
+                                    });
+                                });
+                                VC.ShowValidation(brokenRules);
+                                return;
+                            }
+                            _.CurrentObject.TemplatePath = d.FilePath;
+                           // if (_.CurrentObject.BillOfQuantity_Equipments == undefined || _.CurrentObject.BillOfQuantity_Equipments == null) _.CurrentObject.ProjectSolution_Details = [];
+                           // if (_.CurrentObject.BillOfQuantity_Materialss == undefined || _.CurrentObject.BillOfQuantity_Materialss == null) _.CurrentObject.ProjectSolution_BOMs = [];
+                           // if (_.CurrentObject.BillOfQuantity_Servicess == undefined || _.CurrentObject.BillOfQuantity_Servicess == null) _.CurrentObject.ProjectSolution_Services = [];
+
+                            var DeleteDetails = Enumerable.From(_.CurrentObject.BillOfQuantity_Equipments).Where('$.ID > 0 ').ToArray();
+
+                            if (VC._DeletedItems['BillOfQuantity_Equipments'] == null || VC._DeletedItems['BillOfQuantity_Equipments'] == undefined) VC._DeletedItems['BillOfQuantity_Equipments'] = [];
+                            $.each(DeleteDetails, function (i, o) {
+                                VC._DeletedItems['BillOfQuantity_Equipments'].push(o);
+                            });
+
+                            DeleteDetails = Enumerable.From(_.CurrentObject.BillOfQuantity_Materialss).Where('$.ID > 0 ').ToArray();
+
+                            if (VC._DeletedItems['BillOfQuantity_Materialss'] == null || VC._DeletedItems['BillOfQuantity_Materialss'] == undefined) VC._DeletedItems['BillOfQuantity_Materialss'] = [];
+                            $.each(DeleteDetails, function (i, o) {
+                                VC._DeletedItems['BillOfQuantity_Materialss'].push(o);
+                            });
+
+                            DeleteDetails = Enumerable.From(_.CurrentObject.BillOfQuantity_Servicess).Where('$.ID > 0 ').ToArray();
+
+                            if (VC._DeletedItems['BillOfQuantity_Servicess'] == null || VC._DeletedItems['BillOfQuantity_Servicess'] == undefined) VC._DeletedItems['BillOfQuantity_Servicess'] = [];
+                            $.each(DeleteDetails, function (i, o) {
+                                VC._DeletedItems['BillOfQuantity_Servicess'].push(o);
+                            });
+
+
+                            _.CurrentObject.BillOfQuantity_Equipments = [];
+                            _.CurrentObject.BillOfQuantity_Materialss = [];
+                            _.CurrentObject.BillOfQuantity_Servicess = [];
+
+                            $.each(d._, function (i, item) {
+                                console.log('itemB',item.ID)
+                                if(item.ID_ItemGroup == 1 || item.ID_ItemGroup == 6){
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Name: item.Name,
+                                        Item: item.Name,
+                                        Code : item.Code,
+                                        Name: item.Description,
+                                        DisplayName : item.I_Description,
+                                        Quantity: item.Quantity,
+                                        UnitPrice: item.I_SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.UOM,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        ModelCode : item.ModelCode,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        SKUcode: item.SKUCode,
+                                        SupplierCode : item.SupplierCode,
+                                        PartNo : item.PartNo,
+                                        Unitprice: item.Unitprice,
+                                        ID_ItemCategory: item.ID_ItemCategory,
+                                        ID_ItemSubCategory: item.ID_ItemSubCategory,
+                                        ItemCategory: item.ItemCategory,
+                                        ItemSubCategory: item.ItemSubCategory,
+
+                                    };
+                                    _.CurrentObject.BillOfQuantity_Equipments.push(NewDetail);
+                                }
+                                if(item.ID_ItemGroup == 2){
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Name: item.Name,
+                                        Item: item.Name,
+                                        Code : item.Code,
+                                        Name: item.Description,
+                                        DisplayName : item.I_Description,
+                                        Quantity: item.Quantity,
+                                        UnitPrice: item.I_SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.UOM,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        ModelCode : item.ModelCode,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        SKUcode: item.SKUCode,
+                                        SupplierCode: item.SupplierCode,
+                                        ID_ItemCategory: item.ID_ItemCategory,
+                                        ID_ItemSubCategory: item.ID_ItemSubCategory,
+                                        ItemCategory: item.ItemCategory,
+                                        ItemSubCategory: item.ItemSubCategory,
+                                    };
+                                    _.CurrentObject.BillOfQuantity_Materialss.push(NewDetail);
+                                }
+
+                                if(item.ID_ItemGroup == 3){
+                                    var NewDetail = {
+                                        ID: -1,
+                                        Code: item.Code,
+                                        Name: item.Name,
+                                        DisplayName: item.I_Description,
+                                        ID_Item: item.ID,
+                                        Name: item.Description,
+                                        ManHours: item.Quantity,
+                                        Amount: item.I_SRP,
+                                        LineTotal: 0.00,
+                                        SKUcode: item.SKUCode,
+                                        ModelCode : item.ModelCode,
+                                        SupplierCode: item.SupplierCode,
+                                        ID_ItemCategory: item.ID_ItemCategory,
+                                        ID_ItemSubCategory: item.ID_ItemSubCategory,
+                                        ItemCategory : item.ItemCategory,
+                                        ItemSubCategory : item.ItemSubCategory,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        ID_UOM : item.ID_UOM,
+                                        UOM : item.UOM
+                                    }
+                                    _.CurrentObject.BillOfQuantity_Servicess.push(NewDetail);
+                                }
+
+
+
+                            });
+
+
+                            if (d.Items.length > 0) {
+                                VC.$timeout(function () {
+                                    _.Compute();
+                                }, 500);
+                            }
+                        });
+                        //
+                    }
+                });
+            }
+
+
+//
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+ 
+                    var Equipment = Enumerable.From(_.CurrentObject.BillOfQuantity_Equipments).ToArray();
+                    var BOM = Enumerable.From(_.CurrentObject.BillOfQuantity_Materialss).ToArray();
+                    var Services = Enumerable.From(_.CurrentObject.BillOfQuantity_Servicess).ToArray();
+             
+                   
+                    if(Equipment.length == 0 && BOM.length == 0 && Services.length == 0){
+                         brokenRules.push('Detail must have atleast one record.')
+                    }
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                })
+//           
+            }
+
+        }
+         VC_BOQ.prototype.onCollectionSource_Load = function (data) {
+            var VC = this.VC;
+            var filterValue = VC.ActionFilters.VC_StatusFilter == undefined ? -2 : VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (filterValue < 0) {
+                switch ( filterValue) {
+                    case -2:
+                        WhereCriteria.push("ID_FilingStatus <> 7"); //Cancelleds
+                        break;
+                    case -3:
+                        WhereCriteria.push("ID_FilingStatus NOT IN (7,10, 38, 37,2)");
+                        break;
+                }
+            } else {
+                WhereCriteria.push("ID_FilingStatus = " + filterValue) //Cancelled
+            }
+
+        };
+
+        VC_BOQ.prototype.onInitDetailView = function (VC) {
+            // Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            //
+            //
+            //
+
+            //GridBUtton
+            // VC.AddGridActionButton('BillOfQuantity_Equipments', {
+            //     //
+            //     icon: 'red mdi mdi-account-plus',
+            //     onClick: function (option) {
+            //         console.log('option',option.key);
+            //         VC.OpenOnNewWindowByID(10479, -1, {
+            //             fullScreen: false,
+            //             InitController: function (scope) {
+            //                 console.log('XXX',scope)
+            //             },
+            //             IsEditingOnly: true,
+            //             Width: $(window).width() * 0.20,
+            //             shading: true
+            //         }).then(function (currentPayment) {
+
+            //             if (_.CurrentObject['BillOfQuantity_Equipments'] == undefined || _.CurrentObject['BillOfQuantity_Equipments'] == null) {
+            //                 _.CurrentObject['BillOfQuantity_Equipments'] = [];
+            //             }
+            //             _.Compute();
+
+            //         });
+            //     }
+            //     //
+
+            // })
+            VC.AddToolBarButtonOnGrid('BillOfQuantity_Equipments', {
+                    text: 'Add Item',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem_Generic WHERE IsActive = 1 AND ID_ItemGroup IN (@ID_ItemGroup) and ID NOT IN (@ID_Items)")', {
+                            title: 'Select Equipment',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                            ModelName: 'Item',
+                            width: 1150,
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            params: {
+                                'ID_ItemGroup': [1,6,4],
+                                'ID_Items' : Enumerable.From(_.CurrentObject.BillOfQuantity_Equipments).Select('$.ID_Item').ToArray()
+                            }
+                            }).then(function (Items) {
+                                if(_.CurrentObject.BillOfQuantity_Equipments == undefined || _.CurrentObject.BillOfQuantity_Equipments == null) _.CurrentObject.BillOfQuantity_Equipments = [];
+                                if( Array.isArray(_.CurrentObject.BillOfQuantity_Equipments) == false ) _.CurrentObject.BillOfQuantity_Equipments = [];
+
+                                $.each(Items, function (i, item) {
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Name: item.Name,
+                                        Item: item.Name,
+                                        Code : item.Code,
+                                        Name: item.Description,
+                                        DisplayName : item.Description,
+                                        Quantity: 0,
+                                        UnitPrice: item.SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.PrimaryUOM,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        ModelCode : item.ModelCode,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        SKUcode: item.SKUCode,
+                                        SupplierCode : item.SupplierCode,
+                                        Unitprice : 0,
+                                        ID_ItemSubCategory : item.ID_ItemSubCategory,
+                                        ItemSubCategory : item.SubCategory,
+                                        ItemCategory : item.ItemCategory,
+                                        ID_ItemCategory : item.ID_ItemCategory
+                                        ///
+                                    };
+                                    _.CurrentObject.BillOfQuantity_Equipments.push(NewDetail);
+                                });
+                            });
+                    }
+               });
+            //===========================================================================================
+            VC.AddToolBarButtonOnGrid('BillOfQuantity_Materialss', {
+                    text: 'Add Item',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem_Generic WHERE IsActive = 1  AND ID_ItemGroup  IN (@ID_ItemGroup) AND ID NOT IN (@ID_Items)")', {
+                            title: 'Select Materials',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                            ModelName: 'Item',
+                            width: 1150,
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            params: {
+                                'ID_ItemGroup': [2, 5],
+                                'ID_Items' : Enumerable.From(_.CurrentObject.BillOfQuantity_Materialss).Select('$.ID_Item').ToArray()
+
+                            },
+                            validate : function(items){
+                                var x = Enumerable.From(items).Where("$.ID_Brand === null").ToArray()
+                                if(x.length > 0){
+                                    VC.MsgBox('Select items must set Brand','Invalid');
+                                    return false;
+                                }
+                                return true;
+                            }
+                            }).then(function (Items) {
+                                if(_.CurrentObject.BillOfQuantity_Materialss == undefined || _.CurrentObject.BillOfQuantity_Materialss == null) _.CurrentObject.BillOfQuantity_Materialss = [];
+                                if( Array.isArray(_.CurrentObject.BillOfQuantity_Materialss) == false ) _.CurrentObject.BillOfQuantity_Materialss = [];
+
+                                $.each(Items, function (i, item) {
+
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Name: item.Name,
+                                        Item: item.Name,
+                                        Code : item.Code,
+                                        Name: item.Description,
+                                        DisplayName : item.Description,
+                                        Quantity: 0,
+                                        UnitPrice: item.SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.PrimaryUOM,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        ModelCode : item.ModelCode,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        SKUcode: item.SKUCode,
+                                        SupplierCode : item.SupplierCode,
+                                        Unitprice : 0,
+                                        ID_ItemSubCategory : item.ID_ItemSubCategory,
+                                        ItemSubCategory : item.SubCategory,
+                                        ItemCategory : item.ItemCategory,
+                                        ID_ItemCategory : item.ID_ItemCategory
+                                    };
+                                    _.CurrentObject.BillOfQuantity_Materialss.push(NewDetail);
+                                });
+                            });
+                    }
+               });
+            VC.AddToolBarButtonOnGrid('BillOfQuantity_Servicess', {
+                    text: 'Add Services',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vItem_Generic WHERE IsActive = 1 AND ID_ItemGroup IN (@ID_ItemGroup) AND ID NOT IN (@ID_Items)")', {
+                            title: 'Select Services',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                            width: 1150,
+                            ModelName: 'Item',
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            params: {
+                                'ID_ItemGroup': [3, 6],
+                                'ID_Items' : Enumerable.From(_.CurrentObject.BillOfQuantity_Servicess).Select('$.ID_Item').ToArray()
+                            },
+                        }).then(function (Items) {
+                            if(_.CurrentObject.BillOfQuantity_Servicess == undefined || _.CurrentObject.BillOfQuantity_Servicess == null) _.CurrentObject.ProjectSolution_Services = [];
+                            if( Array.isArray(_.CurrentObject.BillOfQuantity_Servicess) == false ) _.CurrentObject.BillOfQuantity_Servicess = [];
+
+                            $.each(Items, function (i, item) {
+                                _.CurrentObject.BillOfQuantity_Servicess.push({
+                                    ID: -1,
+                                    ID_ItemSubCategory : item.ID_ItemSubCategory,
+                                    ItemSubCategory : item.SubCategory,
+                                    ItemCategory : item.ItemCategory,
+                                    ID_ItemCategory : item.ID_ItemCategory,
+                                    ID_ItemType : item.ID_ItemType,
+                                    ItemType : item.ItemType,
+                                    ID_UOM : item.ID_UOM,
+                                    UOM : item.PrimaryUOM,
+                                    Code: item.Code,
+                                    Name: item.Name,
+                                    DisplayName: item.Name,
+                                    ID_Item: item.ID,
+                                    Name: item.Name,
+                                    ManHours: 0,
+                                    Amount: 0.00,
+                                    LineTotal: 0.00,
+                                    SKUcode: item.SKUCode,
+                                    ModelCode : item.ModelCode
+                                });
+                            });
+                        });
+
+                    }
+            })
+        }
+
+        VC_BOQ.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBillofQuantityApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_BOQ.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBillofQuantityCancelled")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+            return defer.promise;
+        }
+
+
+        return VC_BOQ;
+    });
+//</script>
+</text> , false)

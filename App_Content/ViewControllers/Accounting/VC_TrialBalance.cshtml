@@ -1,0 +1,235 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Accounting/VC_BaseCustomAccounting");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_TrialBalance = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);            
+
+            _.DateFilter = [];
+            var onRowClick = function(e){
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: e.data.Name,
+                    ID_ViewType: 5,
+                    ViewID: 11021,
+                    ImageName: 'fa fa-book',
+                    icon:'',
+                    params: {
+                        ID: e.data.ID,
+                        VC_DateFilter:_.DateFilter,
+                        CurrentObject: e.data
+                    }
+                    //$Tab.params
+                });
+            };
+            ///---------------
+            var getParams = function(){
+                return {
+                    'ID': app.getRandomInt(),
+                    'StartDate': _.DateFilter.startDate,
+                    'EndDate': _.DateFilter.endDate,
+                    'ID_Period': _.DateFilter.ID_Period
+                }
+            }
+
+            $scope.TrialBalanceData = [];
+            
+            $scope.BaseMenuOptionItems.push({
+                text: 'View Report',
+                icon: 'jspp-icon js-file-2',
+                isReport: true,
+                reportData: {
+                    Caption: 'Trial Balance Report',
+                    ID_Report: 3125,
+                    ParamsFunction: getParams
+                }
+            });
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_DateFilter',
+                caption: 'Period',
+                width: 120,
+                isActionDateRange: true,
+                value : 4 // CURRENT MONTH
+            });           
+
+            _.RefreshData = function (FilterName) {     
+                _.DateFilter = _.ActionFilters.VC_DateFilter;
+                
+                _.JSDataService.pGetCurrentObject('@Html.EncryptSQL("pGetTrialBalance")', {
+                    'StartDate': _.DateFilter.startDate,
+                    'EndDate': _.DateFilter.endDate,
+                    'ID_Period': _.DateFilter.ID_Period
+                }).then(function (d) {
+                    if(d.TrialBalance == null){
+                        $scope.TrialBalanceData = [];
+                    }else{
+                        $scope.TrialBalanceData = angular.copy(d.TrialBalance);
+                    }
+           
+                    $scope.TrialBalanceGridOption.dateCaption = ' - ' + d.Caption;
+
+                    var TrialBalanceGrid = $('#TrialBalanceGrid').dxDataGrid('instance');
+                    TrialBalanceGrid.refresh();
+                });
+            }
+
+            _.columns = [
+                //{ dataField: 'ID', dataType: 'number', caption: 'ID' },
+                { dataField: 'Code', dataType: 'string', caption: 'Account Code' },
+                { dataField: 'Name', dataType: 'string', caption: 'Account Title' },
+                { dataField: 'BegBal', dataType: 'string', caption: 'Beg Balance',  alignment: 'right'},
+                //{ dataField: 'BegDebit', dataType: 'number', caption: 'Beg. Debit' },
+                //{ dataField: 'BegCredit', dataType: 'number', caption: 'Beg. Credit' },
+                { dataField: 'Debit', dataType: 'number', caption: 'Trans. Debit' },
+                { dataField: 'Credit', dataType: 'number', caption: 'Trans. Credit' },
+                //{ dataField: 'EndDebit', dataType: 'number', caption: 'Ending Debit' },
+                //{ dataField: 'EndCredit', dataType: 'number', caption: 'Ending Credit' }
+                { dataField: 'EndBal', dataType: 'string', caption: 'Ending Balance',  alignment: 'right'}
+            ];
+
+            _.summary = [];
+            _.summary.push({ showInColumn: 'BegBal',name: 'BegBal' , summaryType:'custom' ,
+                customizeText: function(data) {
+                    return data.value < 0 ? '( ' + Globalize.format( -1 * data.value, "n2") + ' )' : Globalize.format(data.value, "n2");
+                }
+            });  
+            _.summary.push({ showInColumn: 'EndBal',name: 'EndBal' , summaryType:'custom' ,
+                customizeText: function(data) {
+                    return data.value < 0 ? '( ' + Globalize.format( -1 * data.value, "n2") + ' )' : Globalize.format(data.value, "n2");
+                }
+            });     
+            $.each(_.columns,function(i,o){
+
+                o['filterOperations'] = [];
+                o['selectedFilterOperation'] = 'contains';
+
+                
+                //if(o.dataType == 'string'){
+                //    o['selectedFilterOperation'] = 'contains';
+                //}
+                //if(o.dataType == 'number'){
+                //    o['selectedFilterOperation'] = 'contains';//between
+                //}
+                //if(o.dataType == 'date'){
+                //    o['selectedFilterOperation'] = 'contains';//between
+                //}
+
+                if(o.dataType == 'number' && o.dataField !== 'ID'){
+                    o['format'] = 'fixedPoint';
+                    o['precision'] = 2;
+                    _.summary.push({ column: o.dataField , summaryType:'sum' , valueFormat: 'fixedPoint' , precision: 2, displayFormat: '{0}' });
+                }                
+            });
+
+
+            $scope.filterRow = {
+                visible: true,
+                applyFilter: "auto"
+            };
+            
+            $scope.headerFilter = {
+                visible: true
+            };
+
+
+            $scope.TrialBalanceGridOption = {
+                title: 'Trial Balance',
+                dateCaption: '',
+                columnAutoWidth: true,
+                rowAlternationEnabled: true,
+                hoverStateEnabled: true,
+                height: $(window).height() - 180,
+                showBorders: true,
+                bindingOptions : {
+                    'dataSource' : 'TrialBalanceData',
+                    'filterRow': "filterRow",
+                    'headerFilter': "headerFilter"
+                },
+                paging: {
+                    enabled: false
+                },
+                columns: _.columns,
+                summary:{
+                    totalItems: _.summary,
+                    calculateCustomSummary: function(options){
+                        if (options.name === "BegBal" || options.name === "EndBal") {
+                            if (options.summaryProcess === "start") {
+                                options.totalValue = 0;
+                            }
+                            if (options.summaryProcess === "calculate") {   
+                                          
+                                var valex = options.value[options.name];
+                                valex = valex.replace('(','-')
+                                valex = valex.replace(')','')
+                                valex = valex.replace(' ','')
+                                valex = valex.split(',').join('');
+                                
+                                options.totalValue = options.totalValue + parseFloat(valex)                           
+                            }
+                            if (options.summaryProcess === "finalize") {
+                                
+                            }
+                        }
+                   
+                    }
+                },
+                selection: {
+                    mode: 'single' // 'multiple'
+                },
+                onRowClick: function(e){
+                    _.doubleClick(onRowClick,e);
+                },
+                onContextMenuPreparing: function(e){
+                    
+                    if (e.row.rowType === "data") {
+                        var row = e.row;
+                        e.items = [{
+                            text: "Open",
+                            icon: 'mdi mdi-tab',
+                            onItemClick: function () {
+                                onRowClick(row);
+                            }
+                        }];
+                    }
+                }
+                //
+    
+            }
+            
+            /*setTimeout(function(){
+                _.RefreshData(null);
+            },1000);*/
+        }
+
+        VC_TrialBalance.prototype = Object.create(BaseClass.prototype);
+
+        VC_TrialBalance.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+        }
+
+        VC_TrialBalance.prototype.OnFilterValueChanged = function (FilterName,e) {
+            this.RefreshData(FilterName);
+        };
+
+        VC_TrialBalance.prototype.onMenuInitialized = function (e) {
+            this.RefreshData(null);
+        };
+        
+        return VC_TrialBalance;
+
+    });
+//</script>
+</text> , false )

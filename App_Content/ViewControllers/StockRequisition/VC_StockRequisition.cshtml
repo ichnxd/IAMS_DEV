@@ -1,0 +1,32 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, baseModelHelper) {
+
+        var VC_StockRequisition = function () {
+             this.DocDetailPropertyName = 'StockRequisitionDetails';
+         }
+
+        VC_StockRequisition.prototype = Object.create(baseModelHelper.prototype);
+        
+        VC_StockRequisition.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+        }
+
+        VC_StockRequisition.prototype.onLoad = function(){
+            baseModelHelper.prototype.onLoad.call(this);
+            var _ = this;
+
+        }
+        return VC_StockRequisition;
+
+    });
+//</script>
+</text> , false);

@@ -1,0 +1,144 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper'], function (app, baseModelHelper) {
+
+        function ReportViewController() { };
+
+        ReportViewController.prototype = baseModelHelper;
+
+        ReportViewController.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            VC.AddToolbarButton({
+                text: 'Report Designer',
+                icon: 'mdi mdi-file-document',
+                color: '#009688',
+                disabled: false,
+                isContextMenu : true,
+                requireSingleObject : true,
+                onItemClick: function (BaseObjects) {
+
+                    var ID_Report;
+
+                    if (_.ID_ViewType == 1) {
+                        ID_Report =  BaseObjects[0].ID;
+                    } else {
+                        ID_Report =  VC.$scope.CurrentObject.ID;
+                    }
+
+                    window.open('/ReportDesigner?ID_Report=' + ID_Report);
+                }
+            });
+
+            if (this.ID_ViewType === 1) {
+                VC.AddToolbarButton({
+                    text: 'Generate Layout',
+                    icon: 'mdi mdi-file-document',
+                    color: '#009688',
+                    disabled: false,
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        window.open('/ReportDesigner/GenerateLayoutReport?ID_Report=' + BaseObjects[0].ID);
+
+                    }
+                });
+
+                VC.AddToolbarButton({
+                    text: 'View Report',
+                    icon: 'mdi mdi-file-document',
+                    color: '#009688',
+                    disabled: false,
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        window.open('/ReportDesigner/GenerateLayoutReport?ID_Report=' + BaseObjects[0].ID);
+                    }
+                });
+            } else {
+             
+
+                VC.AddToolbarButton({
+                    text: 'Generate Layout',
+                    icon: 'mdi mdi-file-document',
+                    color: '#009688',
+                    disabled: false,
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        window.open('/ReportDesigner/GenerateLayoutReport?ID_Report=' + VC.$scope.CurrentObject.ID);
+
+                    }
+                });
+
+                VC.AddToolbarButton({
+                    text: 'Generate Fields',
+                    icon: 'mdi mdi-package-variant',
+                    disabled: false,
+                    onItemClick: function () {
+
+                        if (VC.$scope.CurrentObject.ID == -1) return;
+
+                        //var Grid = _.GetGridEditor('Datasourcefields');
+                        console.log(`Report Object`, VC.$scope.CurrentObject);
+                        if (VC.$scope.CurrentObject.Datasources.length == 0) return;
+
+                        VC.ConfirmBox("Generate Fields?", "Report").then(function () {
+
+                            $.each(VC.$scope.CurrentObject.Datasources, function (index, d) {
+
+
+                                VC.JSDataService.Post('/ReportView/GeSQLSchema', {
+                                    SQL: d.SQLQuery
+                                }).then(function (response) {
+                                    var Fields = JSON.parse(response.data);
+                                    $.each(Fields, function (i, f) {
+
+                                        if (VC.$scope.CurrentObject.Parameters == null || VC.$scope.CurrentObject.Parameters === undefined) {
+                                            VC.$scope.CurrentObject.Parameters = [];
+                                        }
+
+                                        if (index === 0) {
+                                            VC.$scope.CurrentObject.Parameters.push({
+                                                Name: f.ColumnName,
+                                                IsActive: 0
+                                            });
+                                        }
+
+                                        if (d.Datasourcefields == undefined || d.Datasourcefields == null) d.Datasourcefields = [];
+
+                                        d.Datasourcefields.push({
+                                            ID: -1,
+                                            Name: f.ColumnName,
+                                            IsActive : 0
+                                        });
+
+                                    });
+
+                                });
+                            });
+
+                        });
+                    }
+                });
+
+            }
+            
+        }
+
+        ReportViewController.prototype.OnFormInitialized = function (VC) {
+            VC.GetGridEditor('Datasourcefields').option('headerFilter.visible', true);
+        }
+
+
+        return ReportViewController;
+    });
+//</script>
+</text> , false )

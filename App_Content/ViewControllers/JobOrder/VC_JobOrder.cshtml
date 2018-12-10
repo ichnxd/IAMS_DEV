@@ -1,0 +1,47 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        function VC_JobOrder() { }
+
+        VC_JobOrder.prototype = Object.create(BaseClass.prototype);
+
+        VC_JobOrder.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+        }
+
+        VC_JobOrder.prototype.Approve = function (Items) {
+            return JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pJobOrderStatusApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            );
+        }
+
+
+        VC_JobOrder.prototype.Cancel = function (Items) {
+            return JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pJobOrderStatusCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            );
+        }
+
+        return VC_JobOrder;
+    });
+//</script>
+</text> , false);
+

@@ -1,0 +1,56 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_AuditTrail = function () { }
+
+        VC_AuditTrail.prototype = Object.create(baseDoc.prototype);
+
+        VC_AuditTrail.prototype.Init = function (VC) {
+            baseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+            //
+            //
+            //
+            if (_.ID_ViewType == 1) {
+                //alert('xxx');
+                VC.AddToolbarButton({
+                    text: 'Open Transaction',
+                    isContextMenuOnly: true,
+                    IsDisabled: function () {
+                        return false;
+                    },
+                    icon: 'mdi mdi-note-text',
+                    onClick: function (Item) {
+                        var Items = VC.Grid.getSelectedRowsData();
+                        if (Items.length !== 1) return;
+                        //
+                        //
+                        //
+                        var SelectedRow = Items[0];
+
+                        var $rootScope = app.$rootScope();
+                        $rootScope.$emit("CallNewTabMethod", {
+                            ID: app.getRandomInt(),
+                            //Caption: data.Caption == undefined ? "New" : data.Caption,
+                            ID_ViewType: 2,
+                            ViewID: SelectedRow.ID_DetailView,
+                            //ImageName: data.ImageName,
+                            ID_CurrentObject: SelectedRow.ID_CurrentObject,
+                            //params: data.params
+                        });
+                    }
+                });
+            }
+        }
+
+        return VC_AuditTrail;
+    });
+//</script>
+</text> , false)

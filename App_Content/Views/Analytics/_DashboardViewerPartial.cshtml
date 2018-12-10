@@ -1,0 +1,10 @@
+﻿@model DevExpress.DashboardWeb.Mvc.DashboardSourceModel
+@{
+    string DashboardFilePath = ViewBag.DashboardFilePath;
+}
+@Html.DevExpress().DashboardViewer(settings => {
+    settings.Name = "DashboardViewer";
+    settings.CallbackRouteValues = new { Controller = "Analytics", Action = "DashboardViewerPartial", DashboardFileName = DashboardFilePath };
+    settings.ExportRouteValues = new { Controller = "Analytics", Action = "DashboardViewerPartialExport", DashboardFileName = DashboardFilePath };
+    settings.FullscreenMode = true;
+}).BindToSource(Model).GetHtml()

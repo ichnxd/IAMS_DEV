@@ -1,0 +1,50 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.ListViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocListView");
+    var PurchaseInvoice = Url.Encode("Doc/Purchase/Invoice/PurchaseInvoice");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@{@PurchaseInvoice}' , '/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}', 'AcctHelper'],
+        function (PurchaseInvoice,BaseClass,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            //
+            //
+
+            _.Approve = function(items) {
+                return PurchaseInvoice.Approve( items );
+            };
+
+            _.Cancel = function(items) {
+                return PurchaseInvoice.Cancel( items );
+            };
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.onContextMenuPreparing = function (e) {
+            BaseClass.prototype.onContextMenuPreparing.call( this , e );
+
+            var itemsSelected = this.Grid.getSelectedRowsData();
+            if ( itemsSelected.length == 0 ) return;
+
+        }
+
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+    });
+//</script>
+</text> , false )

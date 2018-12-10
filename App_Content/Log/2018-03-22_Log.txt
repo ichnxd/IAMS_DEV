@@ -1,0 +1,21 @@
+3/22/2018 10:53:04 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:18 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:21 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:25 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:31 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:34 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 11:00:47 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 2:10:50 PM: _pGetDataSet ---> Invalid column name 'colspan'..
+3/22/2018 2:10:57 PM: _pGetDataSet ---> Invalid column name 'colspan'..
+3/22/2018 2:27:49 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 2:30:44 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+3/22/2018 3:14:28 PM: _pGetDataSet ---> Invalid column name 'cssCalss'..

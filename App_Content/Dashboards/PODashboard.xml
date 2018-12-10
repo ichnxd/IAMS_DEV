@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Purchase Order" Alignment="Left" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="http://192.168.1.8:8001/msmdpump.dll_IAMSAnalytics_AccountsPayable" ConnectionString="provider=msolap;data source=http://192.168.1.8:8001/msmdpump.dll;initial catalog=IAMSAnalytics;timeout=1200;Cube Name=AccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="Purchase Order Dashboard" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem3] In ('[DimFilingStatus].[Name].&amp;[Applied]', '[DimFilingStatus].[Name].&amp;[Cancelled]', '[DimFilingStatus].[Name].&amp;[Canvassed]', '[DimFilingStatus].[Name].&amp;[Check Replacement]', '[DimFilingStatus].[Name].&amp;[Checked]', '[DimFilingStatus].[Name].&amp;[Cleared]', '[DimFilingStatus].[Name].&amp;[Closed]', '[DimFilingStatus].[Name].&amp;[Denied]', '[DimFilingStatus].[Name].&amp;[Disapproved]', '[DimFilingStatus].[Name].&amp;[Filed]', '[DimFilingStatus].[Name].&amp;[For Vouchers Payable]', '[DimFilingStatus].[Name].&amp;[Fully Served]', '[DimFilingStatus].[Name].&amp;[Liquidated]', '[DimFilingStatus].[Name].&amp;[Ordered]')">
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="Descending" SortByMeasure="DataItem1" TopNCount="10" TopNMeasure="DataItem2" DefaultId="DataItem0" />
+        <Measure DataMember="[Measures].[PO TotalAmount]" DefaultId="DataItem1" />
+        <Measure DataMember="[Measures].[PO Count]" DefaultId="DataItem2" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem3" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension DefaultId="DataItem3" />
+      </HiddenDimensions>
+      <Arguments>
+        <Argument DefaultId="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" Title="POD TotalAmount" />
+          <SecondaryAxisY TitleVisible="false" Title="PO Count" />
+          <Series>
+            <Simple Name="Total Amount">
+              <Value DefaultId="DataItem1" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+            <Simple Name="Count" PlotOnSecondaryAxis="true" ShowPointMarkers="true" SeriesType="Spline">
+              <Value DefaultId="DataItem2" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <ChartLegend IsInsidePosition="true" InsidePosition="TopRightVertical" OutsidePosition="BottomRightVertical" />
+      <AxisX Visible="false" EnableZooming="true" LimitVisiblePoints="true" />
+    </Chart>
+    <Grid ComponentName="gridDashboardItem2" Name="Grid 2" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem2] = '[DimFilingStatus].[Name].&amp;[Cancelled]'">
+      <DataItems>
+        <Measure DataMember="[Measures].[PO DetailCount]" DefaultId="DataItem3" />
+        <Measure DataMember="[Measures].[PO TotalAmount]" DefaultId="DataItem4">
+          <NumericFormat FormatType="Number" Unit="Thousands" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimPurchaseOrder].[PONo].[PONo]" SortOrder="None" DefaultId="DataItem0" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" SortOrder="None" DefaultId="DataItem2" />
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" DefaultId="DataItem1" />
+        <Dimension DataMember="[DimPurchaseOrder].[PODate].[PODate]" DefaultId="DataItem5" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="PO No" Weight="57.892980119865115">
+          <Dimension DefaultId="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="PO Date" Weight="73.935613165128942">
+          <Dimension DefaultId="DataItem5" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="Supplier" Weight="213.25524451086193" FixedWidth="66.9455337524414" WidthType="FixedWidth">
+          <Dimension DefaultId="DataItem1" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Count" Weight="91.373257779546137">
+          <Measure DefaultId="DataItem3" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="77.423142088012384">
+          <Measure DefaultId="DataItem4" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="56.49796855071174">
+          <Dimension DefaultId="DataItem2" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+  </Items>
+  <ColorScheme>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-12731392">
+      <MeasureKey>
+        <Definition DataMember="[Measures].[PR Count]" />
+      </MeasureKey>
+      <DimensionKeys>
+        <DimensionKey>
+          <Definition DataMember="[DimFilingStatus].[Name].[Name]" />
+          <Value Type="System.String" Value="[DimFilingStatus].[Name].&amp;[Purchased]" />
+        </DimensionKey>
+      </DimensionKeys>
+    </Entry>
+  </ColorScheme>
+  <LayoutTree>
+    <LayoutGroup Orientation="Vertical">
+      <LayoutItem DashboardItem="chartDashboardItem1" Weight="55.923344947735188" />
+      <LayoutItem DashboardItem="gridDashboardItem2" Weight="44.076655052264812" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

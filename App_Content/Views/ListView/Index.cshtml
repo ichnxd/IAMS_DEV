@@ -1,0 +1,79 @@
+﻿@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.ViewModelObject as dynamic;
+    bool IsModal = ViewBag.IsModal;
+    string FormId = HtmlHelperExtensions.RandomString();
+    string PrimaryColor = ModelObject.PrimaryColor;
+    //string PrimaryLightColor = HtmlHelperExtensions.setSecondaryColor(ModelObject.PrimaryColor);
+    string PrimaryLightColor = HtmlHelperExtensions.SetColorBrightness(ModelObject.PrimaryColor, 0.4f);
+    string ControllerName = ViewBag.ControllerName;
+}
+<style>
+    #@FormId .header {
+        background-color: @PrimaryColor
+    }
+
+    #@FormId .dx-datagrid-total-footer td,
+    #@FormId .dx-datagrid-total-footer {
+        background-color: @PrimaryLightColor;
+    }
+    #@FormId .js-grid-toolbar,
+    {
+        background-color: @PrimaryLightColor;
+    }
+
+    #@FormId .dx-datagrid-headers .dx-datagrid-table .dx-header-row td {
+        border-bottom-color:@PrimaryColor;
+        border-bottom-width : 2px;
+    }
+
+    @if (IsModal) {
+        @Html.Raw("#" + FormId + " .js-bottom-container {  background-color: " + PrimaryColor + " }")
+    }
+</style>
+<div id="@FormId" class="js-grid-container js-themes" style="height:100%" init-view>
+<div class="view-header">
+@{
+    if (IsModal == false)
+    {
+    <div class="header row">
+        <div class="col-md-6">
+            <span class="@ModelObject.Icon" /> @ModelObject.DisplayName {{Name}}
+        </div>
+        <div class="col-md-6">
+            <div class="JsClearFilter" style="display:inline-block;float:right;margin-left:5px" ng-click="ClearFilter()"><span class="mdi mdi-filter-remove"></span></div>
+            <div class="searchBox" dx-text-box="txtSearhBoxOption"></div>
+            <div dx-select-box="searchBoxColumnOption" style="margin-right:5px;float:right"></div>
+        </div>
+    </div>
+    }
+}
+    <div dx-menu="GridContextMenuOption" class="js-grid-toolbar">
+        <div data-options="dxTemplate: { name: 'item' }">
+            <span class="icon {{icon}}"></span> <span>{{name}}</span>
+        </div>
+    </div>
+
+     <div dx-menu="FilterContextMenuOption" class="js-grid-toolbar-filter">
+        <div data-options="dxTemplate: { name: 'item' }">
+            <span class="icon {{icon}}"></span> <span>{{name}}</span>
+        </div>
+    </div>
+
+</div>
+
+    <div id="@{ @ModelObject.Name }GridContainer" dx-data-grid="dataGridOptions">
+
+        <div data-options="dxTemplate:{ name:'contextItem' }">
+            <div class="JsdxContextMenu">
+                <div class="dxContainer">
+                    <span ng-hide="items == undefined" class="JsMenuArrow fa fa-caret-right"></span>
+                    <div class="Icon"><span class="{{(icon == undefined) ? 'FontInSys' : icon}}"></span></div> 
+                    <div class="Text">{{text}}</div>
+                   
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,580 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '@BaseVCUrl', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_EPPOpportunity = function () { 
+            var _ = this;
+            _.DocDetailPropertyName = "EPP_Opportunity_Details";
+        }
+
+        VC_EPPOpportunity.AGING_COUNT = 15;
+
+        VC_EPPOpportunity.prototype = Object.create(Base.prototype);
+        VC_EPPOpportunity.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+
+            var _ = this;
+            var VC = _.VC;
+
+
+            VC.onRowPrepared = function (info) {
+                if (info.rowType === 'data') {
+                    if (info.data.Aging >= VC_EPPOpportunity.AGING_COUNT) {
+                        info.rowElement.addClass('OverAged')
+                    }
+                }
+            };
+
+
+            if (_.ID_ViewType == 2) {
+
+                VC.AddToolBarButtonOnGrid('EPP_Opportunity_Details',{
+                    text: 'Add Item',
+                    icon: 'mdi mdi-note-plus-outline',
+                    onItemClick: function(){
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem WHERE IsActive = 1")', {
+                            title: 'Select Items',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                            ModelName: 'Item',
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            validate : function(items){
+                                var x = Enumerable.From(items).Where("$.ID_Brand === null").ToArray()
+                                if(x.length > 0){
+                                    VC.MsgBox('Select items must set Brand','Invalid');
+                                    return false;
+                                }
+                                return true;
+                            }
+                        }).then(function (Items) {
+                           if(_.CurrentObject.EPP_Opportunity_Details == undefined || _.CurrentObject.EPP_Opportunity_Details == null) _.CurrentObject.EPP_Opportunity_Details = [];
+                           $.each(Items, function (i, item) {
+
+                               var NewDetail = _NewItem(item);
+                               console.log(NewDetail);
+                               _.CurrentObject.EPP_Opportunity_Details.push(NewDetail);
+                               
+                           });
+
+                           _.Compute();
+                        });
+                    }
+                });
+
+                VC.AddToolBarButtonOnGrid('EPP_Opportunity_Activitys',{
+                   text: 'Add Activity',
+                   icon: 'mdi mdi-note-plus-outline',
+                   onItemClick: function () {
+                      VC.OpenOnNewWindowByID(9407, -1, {
+                    fullScreen: false,
+                    IsEditingOnly: true,
+                    width: $(window).width() * 0.50,
+                    shading: true
+                }).then(function (Activity) {
+
+                    if (_.CurrentObject.EPP_Opportunity_Activitys === null || _.CurrentObject.EPP_Opportunity_Activitys === undefined) {
+                        _.CurrentObject.EPP_Opportunity_Activitys = [];
+                    }
+
+                    _.CurrentObject.EPP_Opportunity_Activitys.push(Activity);
+                });
+                    }
+                });
+
+               
+                if (_.ID_ViewType === 2) {
+                    VC.AddToolbarButton({
+                        text: 'Generate Template',
+                        icon: 'mdi mdi-clipboard-arrow-down',
+                        IsDisabled: function () {
+                            return false;
+                        },
+                        onItemClick: function () {
+                            AcctHelper.CreateTemplate('Code,Name,Quantity,SRP', 'Template.csv', 'text/csv');
+                        }
+                    });
+                }
+
+                var _NewItem = function (item) {
+                    return {
+                        ID: -1,
+                        ID_Item: item.ID,
+                        Name: item.Name,
+                        Description: item.Name,
+                        Item: item.Name,
+                        ItemCode: item.Code,
+                        Code: item.Code,
+                        SupplierCode: item.SupplierCode,
+                        PartNo: item.PartNo,
+                        Description: item.Description,
+                        Quantity: 0,
+                        UnitPrice: _.$isHidePrice == true ? 0.00 : item.SRP,
+                        SRP: _.$isHidePrice == true ? 0.00 : item.SRP,
+                        ID_UOM: item.ID_UOM,
+                        UOM: item.PrimaryUOM,
+                        VatAmt: 0.00,
+                        IsFree: false,
+                        TaxScheme: 'VAT Inclusive',
+                        ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                        IsSerialized: item.IsSerialized,
+                        TotalAmount: 0.00,
+                        DocStatus: 'Pending',
+                        ID_DocStatus: 1,
+                        IsCanvassed: false,
+                        ID_Customer: null,
+                        Customer: '',
+                        NonInventoriable: item.NonInventoriable,
+                        Reference: '',
+                        Comment: null,
+                        ID_Brand: item.ID_Brand,
+                        Brand: item.Brand,
+                        ModelCode: item.ModelCode
+                    };
+                }
+
+                VC.AddToolBarButtonOnGrid('EPP_Opportunity_Details', {
+                    text: 'Import Items',
+                    icon: 'mdi mdi-file-excel',
+                    onClick: function () {
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_Items")', null,
+                                'Import opening balance.'
+                        ).then(function (d) {
+                            $.each(d.Items, function (i, item) {
+                                var NewDetail = _NewItem(item);
+                                NewDetail.Quantity = item.Quantity;
+                                NewDetail.SRP = item.I_SRP;
+                                if (item.NonInventoriable == true) {
+                                    if (item.I_Description != null) {
+                                        NewDetail.Description = ite.I_Description;
+                                    }
+                                }
+                                _.CurrentObject.EPP_Opportunity_Details.push(NewDetail);
+                            });
+                            if (d.Items.length > 0) {
+                                VC.$timeout(function () {
+                                    _.Compute();
+                                }, 500);
+                            }
+                        });
+                    }
+                });
+
+      
+            }
+
+
+            var UpdateStage = function (ID_Opportunity, Stage) {
+
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+                    var IsValid = true;
+                    var Msg = '';
+ 
+                app.$modal().Show({
+                    Template: '<div dx-text-area="dxTextAreaOption"></div>',
+                    title: 'Update Stage to (' + Stage.text + ')',
+                    width: 350,
+                    //height: '100%',
+                    closeOnConfirm: true,
+                    InitController: function (s) {
+                        s.NextStep =  Selecteds[0].NextStep ;
+                        s.dxTextAreaOption = {
+                            bindingOptions: {
+                                'value': 'NextStep'
+                            },
+                            maxLength: 300,
+                            height: '100%',
+                        }
+                        s.onPositiveClick = function (d) {
+
+                            VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pEPPOpportunityUpdateStage")', {
+                                ID_Stage: Stage.ID_Stage,
+                                ID: Selecteds[0].ID,
+                                NextStep: null
+                            }).then(function (d) {
+
+                                VC.ToastSuccess('Update Stage Successfully.');
+
+                                if (_.ID_ViewType == 2) {
+                                    VC.Reload();
+                                } else {
+                                    VC.Grid.refresh();
+                                }
+
+                                //
+                                //
+                            });
+                        }
+                    }
+                });
+            };
+
+            if (_.ID_ViewType === 2) {
+
+                app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("_pGetDataSet")', {
+                    'SQL': 'SELECT * FROM dbo.tEPP_Stage WHERE IsActive = 1 ORDER By ID'
+                }).then(function (data) {
+                    console.log(data)
+                    var dataset = data.DataSets == null ? [] : data.DataSets;
+                    var Stages = [];
+                    $.each(dataset, function (i, item) {
+                        Stages.push({ ID_Stage: item.ID, onItemClick: function () { VC.onMenuItemClick(this) }, icon: '', text: item.Name });
+                    });
+
+                    VC.AddToolbarButton({
+                        text: 'Stages',
+                        icon: 'mdi mdi-trending-up',
+                        requireSingleObject: true,
+                        isContextMenu: true,
+                        IsDisabled: function () {
+
+                            var Selecteds = null;
+                            if (_.ID_ViewType == 2) {
+                                Selecteds = [_.CurrentObject];
+                            } else {
+                                Selecteds = _.Grid.getSelectedRowsData();
+                            }
+
+
+                            var selectedRecord = Enumerable.From(Selecteds).Where("$.ID > 0").ToArray();
+
+
+                            if (selectedRecord.length > 0) {
+                                if (Selecteds[0].IsEndorsed != true) {
+                                    return false;
+                                }
+                            }
+
+
+                            return true;
+                        },
+                        items: Stages
+                    });
+                });
+
+            }
+
+                VC.onMenuItemClick = function (data) {
+                if (_.ID_ViewType === 1) {
+                    if (VC.Grid.getSelectedRowsData().length === 0) return;
+                }
+                console.log(data)
+                var ID_Opportunity = _.ID_ViewType == 2 ? _.VC.$scope.CurrentObject.ID : VC.Grid.getSelectedRowsData()[0].ID;
+                if (data.ID_Stage == undefined) return;
+                UpdateStage(ID_Opportunity, data)
+            }
+        }
+       
+        VC_EPPOpportunity.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+            if (e.dataField == 'ID_Customer') {
+
+                if (e.value !== null) {
+                    if (e.value.ID_Contact !== undefined) {
+                        if (e.value.ID_Contact !== null) {
+                            VC.$timeout(function () {
+                                VC.$scope.CurrentObject.ContactPerson = e.value.Contact;
+                                VC.$scope.CurrentObject.ID_Contact = e.value.ID_Contact
+                            });
+                        } else {
+                            VC.$scope.CurrentObject.ContactPerson = null;
+                            VC.$scope.CurrentObject.ID_Contact = null;
+                        }
+                    }
+                } else {
+                        VC.$scope.CurrentObject.ContactPerson = null;
+                        VC.$scope.CurrentObject.ID_Contact = null;
+                }
+
+
+                if (e.value !== null) {
+                    if (e.value.ID_TaxScheme !== undefined) _.CurrentObject.ID_TaxScheme = e.value.ID_TaxScheme
+                } else {
+                    _.CurrentObject.ID_TaxScheme = null;
+                }
+            }
+            console.log('change')
+            _.Compute();
+
+        }
+
+
+        VC_EPPOpportunity.prototype.OnDetail_ColumnChanged = function (e) {
+
+            var _ = this;
+            var VC = _.VC;
+
+            //console.log('change')
+            //_.Compute();
+        }
+
+
+        VC_EPPOpportunity.prototype.isColumnGridEditable = function (PropertyName, e) {
+            if (e.column.dataField === 'Description') {
+                if (e.data.NonInventoriable === true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        VC_EPPOpportunity.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+            var SQL = '';
+            switch (VC.CurrentUser.ID_UserGroup) {
+                case 4:
+                    SQL = '@Html.EncryptSQL("SELECT  U.ID AS ID, U.Name FROM vEmployee E LEFT JOIN dbo.tUser U ON E.ID = U.ID_Employee WHERE U.isActive = 1 AND E.ID_BusinessUnit = @ID_BusinessUnit")';
+                    break;
+                default:
+                    SQL = '@Html.EncryptSQL("SELECT  U.ID AS ID, U.Name FROM vEmployee E LEFT JOIN dbo.tUser U ON E.ID = U.ID_Employee WHERE U.isActive = 1")';
+                    break;
+            }
+
+            if (VC.CurrentUser.ID_UserGroup !== 5) {
+
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'Sales Person',
+                    SQL: SQL,
+                    params: {
+                        'ID_CurrentUser': VC.CurrentUser.ID_Employee,
+                        'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit
+                    },
+                    width: 250,
+                    defaultItems: [
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                        {
+                            ID: -1,
+                            Name: '(My Opportunities)'
+                        }
+                    ],
+                    value: -1
+                });
+                if (VC.CurrentUser.ID_UserGroup !== 4) {
+                    VC.AddActionFilter({
+                        name: 'VC_BusinessUnit',
+                        caption: 'Business Unit',
+                        SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vBusinessUnit WHERE isActive = 1")',
+                        width: 120,
+                        defaultItems: [
+                            {
+                                ID: -1,
+                                Name: '(All)'
+                            }
+                        ],
+                        value: -1
+                    });
+                }
+            }
+            //
+            //
+            //
+
+            VC.JSDataService.Query('@Html.EncryptSQL("SELECT ID,Name FROM tEPP_Stage WHERE isActive = 1 ORDER By ID")', {}).then(function (Data) {
+                Data.collection.unshift({
+                    ID: -1,
+                    Name: '(All)'
+                });
+
+                VC.AddActionFilter({
+                    name: 'VC_Stages',
+                    caption: 'Stages',
+                    width: 150,
+                    dataSource: Data.collection,
+                    isLoadData: true,
+                    displayExpr: 'Name',
+                    valueExpr: 'ID',
+                    value: -1,
+                });
+            });
+
+            //
+            //
+            //
+
+            VC.onContextMenuPreparing = function (e) {
+                e.items.push({
+                    text: 'View Customer',
+                    icon: 'mdi mdi-account-edit',
+                    onItemClick: function () {
+                        var Opporunity = e.row.data;
+                        AcctHelper.OpenDetailView({
+                            ID_View: 6249,
+                            ID_CurrentObject: Opporunity.ID_Customer
+                        });
+                    }
+                });
+            }
+        }
+
+        VC_EPPOpportunity.prototype.onCollectionSource_Load = function (data) {
+
+            var _ = this;
+            var VC = this.VC;
+            var VC_Stages = VC.ActionFilters.VC_Stages;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (VC_Stages !== -1 && VC_Stages !== undefined) {
+                WhereCriteria.push("ID_EPP_Stage = " + VC_Stages) //Approved
+            }
+            if (ID_UserGroup != 5) {
+                var VC_Employee = VC.ActionFilters.VC_Employee;
+                if (ID_UserGroup != 4) {
+                    var VC_BusinessUnit = VC.ActionFilters.VC_BusinessUnit;
+                    if (VC_BusinessUnit !== -1) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC_BusinessUnit) //Approved
+                    }
+                }
+                if (VC_Employee !== -2) {
+                    if (VC_Employee == -1) {
+                        WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID) //Approved
+                    } else {
+                        WhereCriteria.push("ID_CreatedBy = " + VC_Employee) //Approved
+                    }
+                }
+                else {
+                    if (ID_UserGroup == 4) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit)
+                    }
+                }
+
+
+            } else {
+                WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID)
+
+            }
+
+        }
+        VC_EPPOpportunity.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+
+        };
+
+        VC_EPPOpportunity.prototype.Compute = function () {
+            var _ = this;
+            var VC = _.VC;
+            if (this.VC.$scope.CurrentObject === null) return;
+            var TotalAmt = 0.00;
+            var SubTotal = 0.00;
+
+            if(_.CurrentObject.EPP_Opportunity_Details == undefined || _.CurrentObject.EPP_Opportunity_Details == null) _.CurrentObject.EPP_Opportunity_Details = [];
+            $.each(this.VC.$scope.CurrentObject.EPP_Opportunity_Details, function (i, item) {
+                var TotalAmount = item.Quantity * item.SRP;
+                item.LineTotal = TotalAmount;
+                item.TotalAmount = TotalAmount;
+                TotalAmt += TotalAmount;
+            });
+
+            SubTotal = TotalAmt;
+            console.log(TotalAmt)
+            _.CurrentObject.TotalAmount = TotalAmt;
+            //
+            //
+            //
+
+
+
+            //this.VC.$scope.CurrentObject.TotalVatEx = TotalAmt + parseFloat(AcctHelper.GetTaxAmt(1, VATRate, TotalAmt));
+
+            //this.VC.$scope.CurrentObject.TotalVatInc = TotalAmt
+
+            //this.VC.$scope.CurrentObject.TotalAmount = TotalAmt;
+            //this.VC.$scope.CurrentObject.TotalVatEx = TotalAmt - parseFloat(AcctHelper.GetTaxAmt(1, VATRate, TotalAmt));
+            //this.VC.$scope.CurrentObject.FinalVatEx = this.VC.$scope.CurrentObject.TotalVatEx
+            //this.VC.$scope.CurrentObject.FinalVatInc = this.VC.$scope.CurrentObject.TotalVatInc
+            var VATRate = 12;
+            var TotalVAT = parseFloat(AcctHelper.GetTaxAmt(_.CurrentObject.ID_TaxScheme, VATRate, TotalAmt))
+            this.VC.$scope.CurrentObject.TotalVat = TotalVAT;
+            this.VC.$scope.CurrentObject.Subtotal = SubTotal;
+            this.VC.$scope.CurrentObject.TotalContractPrice = SubTotal - this.VC.$scope.CurrentObject.TotalDiscount;
+
+            var TotalVATInc = 0.00;
+            var TotalVATEx = 0.00;
+            switch (_.CurrentObject.ID_TaxScheme) {
+                case 1:
+                    TotalVATEx = this.VC.$scope.CurrentObject.TotalContractPrice;
+                    TotalVATInc = this.VC.$scope.CurrentObject.TotalContractPrice + TotalVAT;
+                    this.VC.$scope.CurrentObject.TotalContractPrice = TotalVATInc;
+
+                    break;
+                case 2:
+                    TotalVATEx = this.VC.$scope.CurrentObject.TotalContractPrice - TotalVAT;
+                    TotalVATInc = this.VC.$scope.CurrentObject.TotalContractPrice;
+                    break;
+                case 3:
+                case 4:
+                    TotalVATEx = this.VC.$scope.CurrentObject.TotalContractPrice;
+                    TotalVATInc = this.VC.$scope.CurrentObject.TotalContractPrice;
+                    break;
+            }
+
+            this.VC.$scope.CurrentObject.TotalVatEx = TotalVATEx;
+            this.VC.$scope.CurrentObject.TotalVatInc = TotalVATInc;
+        }
+
+        VC_EPPOpportunity.prototype.onLoad = function () {
+            var _ = this;
+            var Stages = _.VC.GetDxControl('ID_EPP_Stage');
+            Stages.option('readOnly', (_.VC.$scope.CurrentObject.ID !== -1));
+            //var NextStep = _.VC.GetDxControl('NextStep');
+            //NextStep.option('readOnly', (_.VC.$scope.CurrentObject.ID_OpportunityStage == 5));
+            console.log(_.VC.$scope.CurrentObject.ID,'ID')
+            if (_.VC.$scope.CurrentObject.ID > -1) {
+                if (_.VC.$scope.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                    _.VC.setFormReadOnly(true);
+                }else{
+                    if (_.CurrentObject.IsEndorsed == true){
+                        _.VC.setFormReadOnly(true);
+                        //NextStep.option('readOnly', true);
+                    }
+                    else{
+                        //NextStep.option('readOnly', false);
+                         _.VC.setFormReadOnly(false);
+                    }
+                }
+            } else {
+                _.VC.setFormReadOnly(false);
+            }
+            //
+            //
+            //
+            var VC = _.VC;
+            if (_.CurrentObject.ID_Customer == null) {
+                VC.$timeout(function () {
+                    VC.FormInstance.getEditor('ID_Customer').focus();
+                }, 500);
+            }
+        }
+
+        return VC_EPPOpportunity;
+    });
+//</script>
+</text> , false )
+

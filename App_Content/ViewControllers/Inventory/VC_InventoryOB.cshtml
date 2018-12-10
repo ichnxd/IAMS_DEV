@@ -1,0 +1,189 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, VC_BaseDoc,AcctHelper) {
+
+        var VC_InventoryOB = function () { 
+            this.DocDetailPropertyName = 'InventoryOB_Details';
+            this.SerialsEnabled = true;
+            this.NewSerials = true;
+        }
+
+        VC_InventoryOB.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_InventoryOB.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+
+            var _ = this;
+            var JsDataService = app.$GetDataService();
+
+            VC.AddToolbarButton({
+                  text: 'Generate Template',
+                  icon: 'mdi mdi-clipboard-arrow-down',
+                  IsDisabled: function () {
+                      return false;
+                  },
+                  onItemClick: function () {
+                        AcctHelper.CreateTemplate('Code,Quantity,Cost,Serial,Customer','Template.csv','text/csv');
+                  }
+            });
+
+            if (_.ID_ViewType === 2) {
+
+                VC.ValidationRules.push(function () {
+                    var Serials = [];
+
+
+                    $.each(_.CurrentObject.InventoryOB_Details, function (index, item) {
+                        if(item.InventoryOB_Detail_Serials == undefined || item.InventoryOB_Detail_Serials == null) item.InventoryOB_Detail_Serials = [];
+                        $.each(item.InventoryOB_Detail_Serials,function(i,o){
+                            Serials.push({
+                                ID: o.ID,
+                                Name: o.Name,
+                                ID_Model: 5257
+                            }); 
+                        });
+                    });
+                    console.log('pValidateSerial',VC.JSDataService.Validate('@Html.EncryptSQL("pValidateSerial")', {
+                        'Serial': Serials
+                    }))
+                    return VC.JSDataService.Validate('@Html.EncryptSQL("pValidateSerial")', {
+                        'Serial': Serials
+                    });
+
+                });
+
+                  VC.AddToolbarButton({
+                      text: 'Import',
+                      IsDisabled: function () {
+                          if(_.CurrentObject.ID_FilingStatus != 1){
+                            return true;
+                          }
+
+                          return false;
+                      },
+                      onItemClick: function () {
+                            //
+                            JsDataService.UploadCSV(
+                                    '@Html.EncryptSQL("pImport_OpeningBalance")', 
+                                    null, 
+                                    'Import opening balance.'
+                                ).then(function (data) {
+                                    
+                              var ImportedData = data['_'];
+                              $.each(ImportedData, function (i, item) {
+                                  var NewDetail = {
+                                      ID: -1,
+                                      ID_Item: item.ID,
+                                      Item: item.Name,
+                                      Name: item.Name,
+                                      ItemCode: item.Code,
+                                      Code: item.Code,
+                                      SupplierCode: item.SupplierCode,
+                                      PartNo: item.PartNo,
+                                      Description: item.Description,
+                                      Quantity: item.Quantity,
+                                      UnitPrice: item.UploadedCost,
+                                      UnitCost: item.UploadedCost,
+                                      ID_UOM: item.ID_UOM,
+                                      UOM: item.PrimaryUOM,
+                                      VatAmt: 0.00,
+                                      IsFree: false,
+                                      TaxScheme: 'VAT Inclusive',
+                                      ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                                      IsSerialized: item.IsSerialized,
+                                      TotalAmount: 0.00,
+                                      DocStatus: '',
+                                      ID_DocStatus: null,
+                                      IsCanvassed: false,
+                                      ID_Customer: item.ID_Customer,
+                                      Customer: '',
+                                      Reference: '',
+                                      Comment: null,
+                                      Conversion: item.Conversion,
+                                      NonInventoriable: item.NonInventoriable,
+                                      ID_BusinessPartner: item.ID_Customer,
+                                      BusinessPartner: item.Customer
+                                  };
+                             
+                                  console.log(item,data['Serials'],'asd')
+                                  var Serials = Enumerable.From(data['Serials']).Where("$.ID ==" + NewDetail.ID_Item + " &&  $.Cost == " + NewDetail.UnitCost + " && $.ID_Customer == " +  NewDetail.ID_Customer ).ToArray();
+                                  var NewSerials = [];
+                                
+                                  $.each(Serials,function(i,item){
+                                        NewSerials.push({
+                                                ID: -1,
+                                                Name: item.Serial,
+                                                Code: item.Code,
+                                                ID_BusinessPartner: item.ID_Customer,
+                                                BusinessPartner: item.Customer
+                                        });
+                                  });
+                              
+                                  NewDetail['InventoryOB_Detail_Serials'] = NewSerials;
+                                  console.log(NewDetail['InventoryOB_Detail_Serials'],'serial')
+                                  VC.$timeout(function () {
+                                      _.CurrentObject.InventoryOB_Details.push(NewDetail);
+                                  }, 500);
+                              });
+                          });
+                          //
+
+                      }
+                  });
+            }
+        }
+
+
+        VC_InventoryOB.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("ptInventoryOBApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_InventoryOB.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+        
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pInventoryOBCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_InventoryOB;
+    });
+//</script>
+</text> , false);
+

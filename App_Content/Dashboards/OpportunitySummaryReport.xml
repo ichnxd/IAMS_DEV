@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Opportunity Summary Report" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="local_IAMSAnalysis_vSalespipeline" ConnectionString="provider=msolap;data source=local;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vSalespipeline;" />
+  </DataSources>
+  <Items>
+    <Pivot ComponentName="pivotDashboardItem1" Name="Summary" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[OPP Count]" Name="Count" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[OPP FinalVATInc]" Name="Total VAT Inc" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimBusinessUnit].[BusinessUnit].[BusinessUnit]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimEmployee].[Name].[Name]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" UniqueName="DataItem4">
+          <DateTimeFormat YearFormat="Abbreviated" />
+        </Dimension>
+        <Dimension DataMember="[DimCustomerLead].[Customer Name].[Customer Name]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem6" />
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" SortOrder="Descending" UniqueName="DataItem5" />
+        <Measure DataMember="[Measures].[OPP FinalVATEx]" Name="Total VAT Ex" UniqueName="DataItem7">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension UniqueName="DataItem5" />
+      </HiddenDimensions>
+      <Columns>
+        <Column UniqueName="DataItem4" />
+      </Columns>
+      <Rows>
+        <Row UniqueName="DataItem0" />
+        <Row UniqueName="DataItem3" />
+        <Row UniqueName="DataItem6" />
+      </Rows>
+      <Values>
+        <Value UniqueName="DataItem1" />
+        <Value UniqueName="DataItem2" />
+        <Value UniqueName="DataItem7" />
+      </Values>
+      <AutoExpandColumnGroups>true</AutoExpandColumnGroups>
+    </Pivot>
+    <Card ComponentName="cardDashboardItem1" Name="Business Units" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessUnit].[BusinessUnit].[BusinessUnit]" SortOrder="Descending" SortByMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[OPP TotalVATInc]" UniqueName="DataItem1">
+          <NumericFormat FormatType="Number" Unit="Thousands" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension UniqueName="DataItem0" />
+      </SeriesDimensions>
+      <Card>
+        <ActualValue UniqueName="DataItem1" />
+      </Card>
+    </Card>
+    <ListBox ComponentName="listBoxDashboardItem1" Name="Stages" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" UniqueName="DataItem0" />
+      </DataItems>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem0" />
+      </FilterDimensions>
+    </ListBox>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="11.042311661506709" />
+      <LayoutGroup Orientation="Vertical" Weight="88.9576883384933">
+        <LayoutItem DashboardItem="cardDashboardItem1" Weight="24.015009380863038" />
+        <LayoutItem DashboardItem="pivotDashboardItem1" Weight="75.984990619136966" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

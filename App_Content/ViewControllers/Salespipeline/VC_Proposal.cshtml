@@ -1,0 +1,463 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");//Url.Encode("Salespipeline/VC_BaseSalespipeline");//Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_Proposal = function () {
+            //this.DocDetailPropertyName = 'Proposal_Details';
+        }
+
+        VC_Proposal.prototype = Object.create(Base.prototype);
+
+        VC_Proposal.prototype.Init = function (VC) {
+
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+
+            var proposalGrid = null;
+
+            VC.AddButtonReport({
+                    Name: 'Proposal Form',
+                    ID_Report: 5245,
+                    requireSingleObject: true,
+                    isValid: function(CurrentObject){
+                        var isValid = CurrentObject.$dirty == false;
+                        if(isValid != true){
+                            VC.MsgBox("Please save first the current record.");
+                        }
+                        return isValid
+                    }
+            });
+
+            if (_.ID_ViewType === 2) {
+                var _Save = VC.Save;
+                VC.Save = function () {
+                    if (_.FilesToUpLoad.length > 0) {
+                        $.each(_.FilesToUpLoad, function (i, f) {
+                            VC.$FilesToUpload.push({
+                                parentPropertyName: 'Proposal_Details',
+                                propertyName: 'ImagePath',
+                                fileName: f.name,
+                                file: f,
+                                isImage: true,
+                                //isResize: true,
+                                //height: 800,
+                                //width: 1100,
+                                ID_Ref: f.ID_Ref,
+                                isSaveThumbnail: true
+                                //isSaveThumbnail : true
+                            });
+                        });
+                    }
+                    _Save.call(VC);
+                };
+            }
+
+            VC.onGridInitialized_Proposal_Details = function (e) {
+
+                proposalGrid = e.component;
+
+                e.columnOption("ImagePath", "cellTemplate", function (container, options) {
+                    var data = options.row.data;
+                    var img = $('<img class="dx-image-view" scr="" style="height:50px"></img>');
+                    var parent = $('<div class="parent-view"></div>');
+
+                    if (data.Image !== null) {
+                        var thumbnailPath = data.Image.split("/")[data.Image.split("/").length - 1];
+                        img.attr('src', "App_Content/Image/Thumbnails/" + thumbnailPath);
+                    }
+
+                    img.on('click', function (evt) {
+
+                        if(_.CurrentObject.ID_FilingStatus !== 1){
+                            return;
+                        }
+
+                        evt.stopPropagation();
+                        evt.preventDefault();
+                        //
+                        //
+                        //
+
+                        VC.JSDataService.UploadFile({
+                            height: 550,
+                            accept: 'image/x-png,image/gif,image/jpeg',
+                            closeOnConfirm: false
+                        }).then(function (evt) {
+                            evt.component.hide();
+                            var reader = new FileReader();
+                            reader.onload = function (f) {
+                                img.attr('src', f.target.result);
+                            };
+
+                            var file = evt.files[0];
+                            file.ID_Ref = data.ID;
+                            reader.readAsDataURL(file);
+                            _.FilesToUpLoad.push(file);
+                        });
+
+                    });
+
+                    img.appendTo(parent);
+                    parent.appendTo(container);
+                });
+                
+            };
+
+            VC.Proposal_Details_IsCanDelete = function(selectedRows){
+                return false;
+            }
+
+            VC.onContextMenuPreparing_Proposal_Details = function (e) {
+                if (e.row === undefined) return;
+                if (e.row.data === undefined) return;
+
+                var item = e.row.data;
+                if (e.row.data.ID_Item !== undefined) {
+                    e.items.unshift({
+                        text: "View Item",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            AcctHelper.ViewItem(e.row.data.ID_Item);
+                        }
+                    });
+                }
+
+                if (e.row.data.ImagePath !== undefined && e.row.data.ImagePath !== null) {
+                    e.items.unshift({
+                        text: "Remove Image",
+                        icon: "fa fa-edit",
+                        onItemClick: function () {
+                            VC.ConfirmBox('Do you want to remove image?', 'Proposal').then(function () {
+                                e.row.data.ImagePath = null;
+                                e.row.data.Image = null;
+                                proposalGrid.refresh();
+                            });
+                        }
+                    });
+                }
+            }
+
+            //VC.onContextMenuPreparing_Proposal_Details = function(e){
+
+            //    var isHasbrowseImageMenu = false;
+
+            //    console.log(e);
+
+            //    $.each(e.items,function(i,item){
+
+            //        if(item.text == "Delete item"){
+            //            e.items.splice(i,1);
+            //        }
+            //        return;
+            //    });
+
+            //    $.each(e.items,function(i,item){
+
+            //        if(item.text == "Browse an Image") isHasbrowseImageMenu = true;
+                    
+            //    });
+
+            //    if(isHasbrowseImageMenu == false){
+
+                 //var fBrowseUploadImage = function(){
+
+                 //    VC.JSDataService.UploadFile({
+                 //        height: 550,
+                 //        accept: 'image/x-png,image/gif,image/jpeg',
+                 //        closeOnConfirm: false
+                 //    }).then(function (data) {
+
+                 //        var record = e.row.data;
+                       
+                 //        if (data.files.length == 0) return;
+                 //        data.component.hide();
+               
+                 //        var Details = [];
+                 //        $.each(data.files, function (i, f) {
+                          
+                 //           _.FilesToUpLoad.push(f);
+                 //           record.ImageName = f.name;
+                 //           record.ImagePath = f.name;
+                 //           record.AutoImagePath = f.name;
+                 //        });
+                       
+                 //    });
+
+                 //};
+
+            //        var browseImageMenu = {
+            //            icon : "fa fa-image",
+            //            text : "Browse an Image",
+            //            onItemClick :function(obj){
+
+            //                if(e.row.rowType == "data"){
+
+            //                    fBrowseUploadImage();
+            //                }
+
+            //            },
+            //        };
+
+            //        e.items.push(browseImageMenu);
+
+            //        return;
+            //    }
+
+                
+
+            //}
+
+            VC.Proposal_BOMs_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_Proposal_BOMs = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+            VC.Proposal_Services_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_Proposal_Services = function(e){
+
+
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+            VC.Proposal_PaymentTerms_IsCanDelete = function(selectedRows){
+                return false;
+            }
+            VC.onContextMenuPreparing_Proposal_PaymentTerms = function(e){
+                $.each(e.items,function(i,item){
+                    if(item.text == 'Delete item'){
+                        e.items.splice(i,1);
+                    }
+                    return;
+                });
+            }
+
+            
+
+        }
+
+        VC_Proposal.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+
+
+            var SQL_AccountExecutive = '';
+            var SQL_BusinessUnit = '';
+
+            switch (VC.CurrentUser.ID_UserGroup) {
+
+                case 4:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+                    break;
+                case 5:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1 AND (ID_AccountExecutive = @ID_AccountExecutive OR ID_CreatedBy = @ID_CreatedBy)")';
+                    break;
+                default:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1")';
+                    break;
+            }
+
+            if (VC.CurrentUser.ID_UserGroup !== 5) {
+
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'BDM',
+                    SQL: SQL_AccountExecutive,
+                    params: {
+                        'ID_CurrentUser': VC.CurrentUser.ID_Employee,
+                        'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit,
+                        'ID_AccountExecutive': VC.CurrentUser.ID_Employee
+                    },
+                    width: 120,
+                    defaultItems: [
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                        {
+                            ID: -1,
+                            Name: 'My Proposals'
+                        }
+                    ],
+                    value: -1 //( VC.CurrentUser.ID_UserGroup === 5 || VC.CurrentUser.ID_UserGroup === 4 ? -1 : -2  )
+                });
+
+                if (VC.CurrentUser.ID_UserGroup !== 4) {
+                    VC.AddActionFilter({
+                        name: 'VC_BusinessUnit',
+                        caption: 'BU',
+                        SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vBusinessUnit WHERE isActive = 1")',
+                        width: 100,
+                        defaultItems: [
+                            {
+                                ID: -1,
+                                Name: '(All)'
+                            }
+                        ],
+                        value: -1
+                    });
+                }
+            }
+
+        }    
+
+        VC_Proposal.prototype.onCurrentObjectSaved = function (CurrentObject) {
+
+            Base.prototype.onCurrentObjectSaved.call(CurrentObject, this);
+
+            var _ = this;
+            var VC = _.VC;
+        }
+
+        VC_Proposal.prototype.onCollectionSource_Load = function (data) {
+           Base.prototype.onCollectionSource_Load.call(this, data);
+            var _ = this;
+            var VC = this.VC;
+            var VC_Stages = VC.ActionFilters.VC_Stages;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+     
+            if (ID_UserGroup != 5) {
+                var VC_Employee = VC.ActionFilters.VC_Employee;
+                if (ID_UserGroup != 4) {
+                    var VC_BusinessUnit = VC.ActionFilters.VC_BusinessUnit;
+                    if (VC_BusinessUnit !== -1) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC_BusinessUnit) //Approved
+                    }
+                }
+                if (VC_Employee !== -2) {
+                    if (VC_Employee == -1) {
+                        WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID) //Approved
+                    } else {
+                        WhereCriteria.push("ID_CreatedBy = " + VC_Employee) //Approved
+                    }
+                }
+                else {
+                    if (ID_UserGroup == 4) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit)
+                    }
+                }
+
+
+            } else {
+                WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID)
+            }
+
+        }
+
+        VC_Proposal.prototype.onLoad = function () {
+            var _ = this;
+            var VC = _.VC;
+            _.FilesToUpLoad = [];
+            _.Compute();
+
+            if(_.ID_ViewType == 2){
+
+                
+              console.log(VC.CurrentObject);
+
+                if (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Filed) {
+                    
+                    VC.butSave.disabled = true;
+                    VC.butSaveClose.disabled = true;
+                    VC.setFormReadOnly(true);
+                } 
+
+            }
+
+        }
+
+        VC_Proposal.prototype.Compute = function () {
+            // var _ = this;
+            // var VC = _.VC;
+
+            // var TotalAmt = 0.00;
+            // var SubTotal = 0.00;
+            // if (this.VC.$scope.CurrentObject.Proposal_Details !== null) {
+            //     $.each(this.VC.$scope.CurrentObject.Proposal_Details, function (i, item) {
+            //         var TotalAmount = item.Quantity * item.UnitPrice;
+            //         item.LineTotal = TotalAmount;
+            //         TotalAmt += TotalAmount;
+            //     });
+            // }
+
+            // SubTotal = TotalAmt;
+
+            // var VATRate = 12;
+            // var TotalVAT = parseFloat(AcctHelper.GetTaxAmt(_.CurrentObject.ID_TaxScheme, VATRate, TotalAmt));
+            // _.CurrentObject.VATAmt = TotalVAT;
+            // _.CurrentObject.Subtotal = SubTotal;
+            // _.CurrentObject.TotalAmount = SubTotal - this.VC.$scope.CurrentObject.Discount;
+            // _.CurrentObject.SubTotal = SubTotal;
+          
+        }
+
+
+        VC_Proposal.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProposalApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_Proposal.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProposalCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_Proposal;
+    });
+//</script>
+</text> , false )

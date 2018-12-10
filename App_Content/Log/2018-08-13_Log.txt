@@ -1,0 +1,40 @@
+8/13/2018 3:30:59 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:30:59 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (ItemIssuance, 3375).
+The statement has been terminated..
+8/13/2018 3:30:59 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:31:00 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:31:00 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:31:01 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:25 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:25 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:26 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (ModelCode, 3348).
+The statement has been terminated..
+8/13/2018 3:54:26 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (ModelCode, 3348).
+The statement has been terminated..
+8/13/2018 3:54:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:54:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:19 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:19 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:20 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:20 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:21 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+8/13/2018 3:55:21 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180813_94716_LIVE.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

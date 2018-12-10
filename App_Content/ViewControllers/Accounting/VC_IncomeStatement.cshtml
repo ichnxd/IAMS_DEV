@@ -1,0 +1,433 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Accounting/VC_BaseCustomAccounting");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_IncomeStatement = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);            
+
+            _.DateFilter = [];
+            var onRowClick = function(e){
+                var $rootScope = app.$rootScope();
+
+                /*$rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: e.data.Name,
+                    ID_ViewType: 5,
+                    ViewID: 11021,
+                    ImageName: 'fa fa-book',
+                    icon:'',
+                    params: {
+                        ID: e.data.ID,
+                        VC_DateFilter:_.DateFilter,
+                        CurrentObject: e.data
+                    }
+                    //$Tab.params
+                });
+                */
+            };
+            ///---------------
+            var getParams = function(){
+                return {
+                    'ID': app.getRandomInt(),
+                    'StartDate': _.DateFilter.startDate,
+                    'EndDate': _.DateFilter.endDate,
+                    'ID_Period': _.DateFilter.ID_Period
+                }
+            }
+
+            $scope.IncomeStatementData = [];
+            
+            /*$scope.BaseMenuOptionItems.push({
+                text: 'View Report',
+                icon: 'jspp-icon js-file-2',
+                isReport: true,
+                reportData: {
+                    Caption: 'Trial Balance Report',
+                    ID_Report: 3125,
+                    ParamsFunction: getParams
+                }
+            });*/
+
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_DateFilter',
+                caption: 'Period',
+                width: 120,
+                isActionDateRange: true,
+                value : 4 // CURRENT MONTH
+            });           
+
+            _.RefreshData = function (FilterName) {     
+                _.DateFilter = _.ActionFilters.VC_DateFilter;
+                
+                _.JSDataService.pGetCurrentObject('@Html.EncryptSQL("pGetIncomeStatement")', {
+                    'StartDate': _.DateFilter.startDate,
+                    'EndDate': _.DateFilter.endDate,
+                    'ID_Period': _.DateFilter.ID_Period
+                }).then(function (d) {
+                    var COA = angular.copy(d.ChartOfAccount);
+                    var Parent = Enumerable.From(angular.copy(d.IncomeStatement)).ToArray();
+                    var IncomeStatementTemp = angular.copy(d.IncomeStatement);
+                    $scope.IncomeStatementData = IncomeStatementTemp;
+                    //-----------------------------------------------
+                    
+                    /*var getChilds = function(ResultData,ParentObject,ID_Child,Spacing){
+                        
+
+                        if(ID_Child !== null && ID_Child !== undefined){
+ 
+                            var c1 = Enumerable.From(COA).Where('$.ID_COA == ' + ID_Child).ToArray();
+
+                            if(c1 == undefined) c1 = [];
+                            $.each(c1,function(index1,item1){
+                                var c2 = Enumerable.From(IncomeStatementTemp).Where('$.ID == ' + item1.ID + ' && $.IsLess !== true').ToArray();
+
+                                if(c2 == undefined) c2 = [];
+                                if(c2.length > 0){
+                                    var p = Enumerable.From(COA).Where('$.ID == ' + ID_Child).ToArray();
+                                    if(p.length > 0 ){
+                                        var isExist = false;
+                                        $.each(ResultData,function(ix,io){
+                                            if(io.OrigName === p[0].Name){
+                                                isExist = true;
+                                            }
+                                        })
+                                        if(isExist == false){
+                                            ResultData.push( { ID_Parent: ParentObject.ID_Parent ,Parent: ParentObject.Parent,Name: Spacing + ':' + p[0].Name, Amount: null, OrigName: p[0].Name });
+                                        }
+                                          
+                                    }
+
+                                    var TotalP = 0.00;
+                                    $.each(c2,function(index2,item2){
+                                        var c3 = angular.copy(item2);
+                                        c3.Name = Spacing + '>>' + c3.Name 
+                                        ResultData.push(c3);
+                                        TotalP += c3.Amount;
+                                    });
+
+
+                                    if(p.length > 0){
+                                        ResultData.push( {
+                                            ID_Parent: ParentObject.ID_Parent ,
+                                            Parent: ParentObject.Parent,
+                                            Name:Spacing + ':Total ' + p[0].Name, 
+                                            OrigName: p[0].Name,
+                                            Amount: TotalP
+                                        });
+                                    }
+
+
+                                }else{
+                                    getChilds(ResultData,ParentObject,item1.ID,Spacing + '>>');                               
+                                }
+
+                            });
+
+                            //-------------------------------------------
+
+
+
+                        }
+
+                    }
+
+
+
+                    $scope.IncomeStatementData = [];
+
+                    var CurrentParentID = null;
+                    $.each(Parent,function(ip,ParentObject){
+                        if(ParentObject.ID_Parent !== CurrentParentID){
+                            CurrentParentID = ParentObject.ID_Parent;
+                            getChilds($scope.IncomeStatementData,ParentObject,CurrentParentID,'>>');
+
+                            //Less
+                            var less = Enumerable.From(IncomeStatementTemp).Where('$.IsLess === true && $.ID_Parent == ' + CurrentParentID).ToArray();
+                            if(less.length > 0){
+
+                                $scope.IncomeStatementData.push( {
+                                    ID_Parent: ParentObject.ID_Parent ,
+                                    Parent: ParentObject.Parent,
+                                    Name:'', Amount: null, 
+                                    OrigName: ParentObject.Parent + ':Space',
+                                    Amount: null
+                                });
+
+                                $.each(less,function(il,ol){
+                                    if(ol.Amount == undefined) ol.Amount = null;
+                                    var olx = angular.copy(ol);
+                                    olx.Name = '>>>>' + olx.Name 
+                                    $scope.IncomeStatementData.push(olx);
+                                });
+                            }
+                            //---------------------------------------------
+
+
+
+                            var TotalAmount = 0.00;
+                            var TotalAmountName =  ':Total ' + ParentObject.Parent;
+                            switch(CurrentParentID) {
+                                case 16:
+                                    TotalAmountName =  ':Net Sales';
+                                    TotalAmount = d.NetSales;
+                                    break;
+                                case 17:
+                                    TotalAmountName =  ':Gross Margin';
+                                    TotalAmount = d.GrossMargin;
+                                    break;
+                                case 18:
+                                    TotalAmountName =  ':Net Operating Income / (Loss)';
+                                    TotalAmount = d.NetOperatingIncome;
+                                    break;
+
+                                default:
+                                    TotalAmountName =  ':Total ' + ParentObject.Parent;
+                            }
+                            
+
+                            $scope.IncomeStatementData.push( { // Spacing
+                                ID_Parent: ParentObject.ID_Parent ,
+                                Parent: ParentObject.Parent,
+                                Name:'', Amount: null, 
+                                OrigName: ParentObject.Parent + ':Space',
+                                Amount: null
+                            });
+
+                            if([16,17,18].includes(CurrentParentID) == true ){
+                                $scope.IncomeStatementData.push( {
+                                    ID_Parent: ParentObject.ID_Parent ,
+                                    Parent: ParentObject.Parent,
+                                    Name:TotalAmountName , 
+                                    OrigName: 'TotalAmount:'+ ParentObject.Parent,
+                                    Amount: TotalAmount
+                                });
+                            }
+
+
+
+                        }
+                    });
+
+                    $scope.IncomeStatementData.push( { // Spacing
+                        ID_Parent: Parent[Parent.length -1].ID_Parent ,
+                        Parent: Parent[Parent.length -1].Parent,
+                        Name:'', Amount: null, 
+                        OrigName: Parent[Parent.length -1].Parent + ':Space',
+                        Amount: null
+                    });
+                    $scope.IncomeStatementData.push( {
+                        ID_Parent: Parent[Parent.length -1].ID_Parent ,
+                        Parent: Parent[Parent.length -1].Parent,
+                        Name: ':NET INCOME / (LOSS)' , 
+                        OrigName: 'NetIncome',
+                        Amount: NetIncomeLost
+                    });
+
+
+                
+                    */
+
+           
+                    $scope.IncomeStatementGridOption.dateCaption = ' - ' + d.Caption;
+
+                    var IncomeStatementGrid = $('#IncomeStatementGrid').dxDataGrid('instance');
+                    IncomeStatementGrid.refresh();
+                });
+            }
+
+            _.columns = [
+                {   dataField: 'ID_Parent', 
+                    dataType: 'number', 
+                    caption: '', 
+                    groupIndex: 0, 
+                    sortOrder: 'asc',
+                    customizeText: function (cellInfo) {
+                        var Parent = '';
+                        $.each($scope.IncomeStatementData,function(i,o){
+                            if(o.ID_Parent === cellInfo.value){
+                                Parent = o.Parent;
+                            }
+                        });
+                        return Parent.toUpperCase();
+                    }
+                },
+                {   dataField: 'Sub1', 
+                    dataType: 'string', 
+                    caption: '', 
+                    groupIndex: 1, 
+                    sortOrder: 'asc'
+                },
+                /*{   dataField: 'Sub2', 
+                    dataType: 'string', 
+                    caption: '', 
+                    groupIndex: 1, 
+                    sortOrder: 'asc'
+                },*/
+                //{ dataField: 'Parent', dataType: 'string', caption: '', groupIndex: 1 },
+                { dataField: 'Name', dataType: 'string', caption: 'Account Title' },
+                { dataField: 'Amount', dataType: 'number', caption: 'Amount', width: 200},
+            ];
+
+            _.summary = [];
+            /*_.summary.push({ showInColumn: 'BegBal',name: 'BegBal' , summaryType:'custom' ,
+                customizeText: function(data) {
+                    return data.value < 0 ? '( ' + Globalize.format( -1 * data.value, "n2") + ' )' : Globalize.format(data.value, "n2");
+                }
+            });  
+            _.summary.push({ showInColumn: 'EndBal',name: 'EndBal' , summaryType:'custom' ,
+                customizeText: function(data) {
+                    return data.value < 0 ? '( ' + Globalize.format( -1 * data.value, "n2") + ' )' : Globalize.format(data.value, "n2");
+                }
+            });*/     
+            $.each(_.columns,function(i,o){
+
+                o['filterOperations'] = [];
+                o['selectedFilterOperation'] = 'contains';
+
+                
+                //if(o.dataType == 'string'){
+                //    o['selectedFilterOperation'] = 'contains';
+                //}
+                //if(o.dataType == 'number'){
+                //    o['selectedFilterOperation'] = 'contains';//between
+                //}
+                //if(o.dataType == 'date'){
+                //    o['selectedFilterOperation'] = 'contains';//between
+                //}
+
+                if(o.dataType == 'number' && o.dataField !== 'ID'){
+                    o['format'] = 'fixedPoint';
+                    o['precision'] = 2;
+                    //_.summary.push({ column: o.dataField , summaryType:'sum' , valueFormat: 'fixedPoint' , precision: 2, displayFormat: '{0}' });
+                }                
+            });
+
+
+            $scope.filterRow = {
+                visible: true,
+                applyFilter: "auto"
+            };
+            
+            $scope.headerFilter = {
+                visible: true
+            };
+
+            var replaceAll = function(target,search, replacement) {                                
+                return target.split(search).join(replacement);
+            };
+            var Count = function(s1,s2) { 
+                if(s1 == null) s1 = '';
+                if(s2 == null) s1 = '';
+                return (s1.length - s1.replace(new RegExp(s2,"g"), '').length) / s2.length;
+            }
+
+
+            $scope.IncomeStatementGridOption = {
+                title: 'Income Statement',
+                dateCaption: '',
+                columnAutoWidth: true,
+                //rowAlternationEnabled: true,
+                hoverStateEnabled: true,
+                height: $(window).height() - 180,
+                showBorders: true,
+                bindingOptions : {
+                    'dataSource' : 'IncomeStatementData',
+                    'filterRow': "filterRow",
+                    'headerFilter': "headerFilter"
+                },
+                paging: {
+                    enabled: false
+                },
+                columns: _.columns,
+                customizeColumns: function(columns){
+
+                    $.each(columns,function(i,o){
+                        o.cellTemplate = function(container,options){
+                            
+                            var data = options.data;
+                            container.html(data[o.dataField])
+
+                            var Name = replaceAll(data.Name,'>','');
+                            Name = replaceAll(Name,':','')                            
+
+                            if(o.dataField == 'Name'){
+                                container.html(Name)
+                                container.css({ 'padding-left' :  (Count(data.Name,'>') * 15) + 'px' });  
+
+                            }
+
+                            if(o.dataField == 'Amount'){
+                                container.html(Globalize.format( data[o.dataField] , "n2"))
+                                if(Name == 'Total'){
+                                    container.css({ 'border-top' : 'thin solid black' }  ); 
+                                }
+                            }
+                            if(Count(data.OrigName,':Space') > 0){      
+                                container.css({ 'background' :  '#cccccc' });
+                            }         
+                            if(Count(data.Name,':') > 0){      
+                                //container.css({ 'background' :  '#ececec' });
+                                container.css({ 'font-weight' :  'bold' });
+                            }
+                        }
+                    });
+                },
+                selection: {
+                    mode: 'single' // 'multiple'
+                },
+                onRowClick: function(e){
+                    _.doubleClick(onRowClick,e);
+                },
+                onContextMenuPreparing: function(e){
+                    
+                    if (e.row.rowType === "data") {
+                        var row = e.row;
+                        e.items = [{
+                            text: "Open",
+                            icon: 'mdi mdi-tab',
+                            onItemClick: function () {
+                                //onRowClick(row);
+                            }
+                        }];
+                    }
+                }
+                //
+    
+            }
+            
+            /*setTimeout(function(){
+                _.RefreshData(null);
+            },1000);*/
+        }
+
+        VC_IncomeStatement.prototype = Object.create(BaseClass.prototype);
+
+        VC_IncomeStatement.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+        }
+
+        VC_IncomeStatement.prototype.OnFilterValueChanged = function (FilterName,e) {
+            this.RefreshData(FilterName);
+        };
+
+        VC_IncomeStatement.prototype.onMenuInitialized = function (e) {
+            this.RefreshData(null);
+        };
+        
+        return VC_IncomeStatement;
+
+    });
+//</script>
+</text> , false )

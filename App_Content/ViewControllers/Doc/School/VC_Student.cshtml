@@ -1,0 +1,76 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Student = function () { }
+
+        VC_Student.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Student.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+        
+
+        VC_Student.prototype.onInitDetailView = function (VC) {
+        
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+           var _ = this;
+
+           var fBrowseSubjects = function(){
+
+				var query = '@Html.EncryptSQL(@"SELECT * FROM dbo.tSubject WHERE ID NOT IN (@ID_Subjects) ")';
+
+				var ID_Subjects = AcctHelper.fGetSelectedObjectValuesNumeric(VC.$scope.CurrentObject.Student_Subjects,'ID_Subject');
+
+                console.log(ID_Subjects);
+
+                VC.BrowseDataSet(query, {
+                    title: 'Select Subject',
+                    ID_View: '7529F901-4122-41F6-9931-DBCDC00CE7BD',
+                    width: '80%',
+                    params: {
+
+                        'ID_Subjects': ID_Subjects,
+                    }
+                }).then(function (selectedItems) {
+
+                    selectedItems.forEach(function(selectedItem) {
+                                        
+                        var newItem = {
+
+                            ID_Subject: selectedItem.ID,
+                            Subject:  selectedItem.Name
+                        };
+
+                        VC.$scope.CurrentObject.Student_Subjects.push(newItem);
+                    });
+
+                });
+            }
+
+            var btnAddItem = {
+
+                text: 'Add Subject',
+                onClick: function(e){
+
+                    fBrowseSubjects();
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('Student_Subjects',btnAddItem);
+
+            
+        }
+
+        return VC_Student;
+    });
+//</script>
+</text> , false)
+

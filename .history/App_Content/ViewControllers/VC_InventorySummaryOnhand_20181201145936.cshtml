@@ -1,0 +1,78 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+
+        var VC_InventorySummaryOnhand = function () { }
+
+        VC_InventorySummaryOnhand.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_InventorySummaryOnhand.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+
+
+        VC_InventorySummaryOnhand.prototype.onInitDetailView = function (VC) {
+
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+
+            console.log('vvcvcvcvc', VC);
+
+
+
+            var _onContextMenuPreparing_InventorySummaryPerWarehouses = VC.onContextMenuPreparing_InventorySummaryPerWarehouses;
+
+            VC.onContextMenuPreparing_InventorySummaryPerWarehouses = function (e) {
+      
+                //
+                //
+                //
+                e.items.unshift({
+                    text: "Transactions",
+                    icon: "fa fa-th-list",
+                    //template: "contextItem",
+                    onItemClick: function () {
+
+                        var $rootScope = app.$rootScope();
+
+                        $rootScope.$emit("CallNewTabMethod", {
+
+                            ID: app.getRandomInt(),
+                            Caption: 'Purchase Order (New)',
+                            ID_ViewType: 2,
+                            ViewID: 1026,
+                            CurrentObject: {
+
+                                ID: 1,
+                            },
+                            ImageName: '',
+                        });
+                    }
+                });
+
+                
+                //
+                //
+            }
+
+        }
+
+        VC_InventorySummaryOnhand.prototype.onLoad = function (VC) {
+
+        }
+
+
+        return VC_InventorySummaryOnhand;
+    });
+//</script>
+</text> , false)
+

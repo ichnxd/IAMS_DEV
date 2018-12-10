@@ -1,0 +1,213 @@
+﻿@using System.Web.Mvc;
+@using InsysWebAccounting.Utility;
+
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.ListViewModelObject as dynamic;
+    string Columns = ViewBag.DataColumns;
+    string ListViewHeight = ModelObject.Height == null ? "null" : "'" + ModelObject.Height + "'";
+
+    //string ControllerName = ModelObject.ViewControllerName;
+    string ContextMenus = ViewBag.GridContextMenus;
+    bool IsBase = ViewBag.IsBase;
+    //if (IsBase)
+    //{
+    //    ControllerName = "JsBase" + ControllerName;
+    //}
+
+    string ID_ModelDetailView = ModelObject.ID_View == null ? "null" : ModelObject.ID_View.ToString();
+    string ModelHelperController = null;
+    if (ModelObject.ModelViewController != null)
+    {
+        ModelHelperController = "'/JsApp/GetScript?Url=" + Url.Encode(ModelObject.ModelViewController.ToString()) + "'";
+    }
+    string ModelViewController = null;
+    if (ModelObject.ViewController != null) {
+        ModelViewController = "'/JsApp/GetScript?Url=" + Url.Encode(ModelObject.ViewController.ToString()) + "'";
+    }
+    string SQL = ModelObject.DataSource.ToString();
+}
+
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseListViewController'
+        @{
+            if (ModelHelperController != null)
+            {
+               @:,@Html.Raw(ModelHelperController)
+            }
+            if (ModelViewController != null)
+            {
+               @:,@Html.Raw(ModelViewController)
+            }
+        }], function (app, BaseListViewController
+            @{
+                if (ModelHelperController != null)
+                {
+                    @:,ViewModelHelper
+                }
+
+                if (ModelViewController != null)
+                {
+                    @:,ViewHelper
+                        }
+            }
+        ) {
+
+    @if (IsBase == false) {
+
+            @:var ListViewController = function() {
+                                    @:var _ = this;
+                                    @:var Args = arguments;
+                            //@{
+        if (ModelHelperController != null) {
+                        @:_.ModelHelper = new ViewModelHelper();
+                                        @:_.ModelHelper.ID_ViewType = 1;
+                                    }
+
+        if (ModelViewController != null) {
+                        @:_.ViewHelper = new ViewHelper();
+                                        @:_.ViewHelper.ID_ViewType = 1;
+                                    }
+        //}
+            @:_.Init(Args[0], Args[1], Args[2]);
+            @:}
+
+    } else {
+
+             @:var ListViewController= function() {  };
+    }
+
+
+    ListViewController.prototype = Object.create( BaseListViewController.prototype );
+
+    ListViewController.prototype.Init = function($scope,ViewStateName,ViewAccess) {
+
+        var _ = this;
+        _.$scope = $scope;
+        @{
+            if (IsBase != false) {
+
+                if (ModelHelperController != null)
+                {
+                    @:_.ModelHelper = new ViewModelHelper();
+                                    @:_.ModelHelper.ID_ViewType = 1;
+                                };
+
+                if (ModelViewController != null)
+                {
+                    @:_.ViewHelper = new ViewHelper();
+                                    @:_.ViewHelper.ID_ViewType = 1;
+                                };
+            }
+
+        }
+
+        _ListViewModel = {
+
+            ID_ModelObject : @ModelObject.ID
+
+          , ModelViewName : '@ModelObject.Name'
+
+                , StateName : ViewStateName
+
+                , ID_View : @ModelObject.ID_ModelView
+
+                , ModelName : '@ModelObject.Model.Name'
+
+                , Icon : '@ModelObject.Icon'
+
+                , DisplayName : '@ModelObject.DisplayName'
+
+                , ID_ModelDetailView : @ID_ModelDetailView
+
+                , ID_ViewType : @ModelObject.ID_ViewType
+
+                , ViewControllerName : '@ModelObject.DetailViewControllerName'
+
+                , ID_Model : @ModelObject.Model.ID
+
+                , DisplayProperty : '@ModelObject.DisplayProperty'
+
+                , Height : @Html.Raw(ListViewHeight)
+
+                , PageSize : @ModelObject.PageSize
+
+                , IsWordWrap : @ModelObject.IsWordWrap.ToString().ToLower()
+
+                , DataSource : '@Html.EncryptSQL(SQL)'
+
+                , SQLUpdateProc : '@Html.EncryptSQL("_pUpdateObjectReference")'
+        };
+
+        _.$isAllowAdd =  @ModelObject.IsAllowAdd.ToString().ToLower();
+        _.$isAllowEdit =  @ModelObject.IsAllowEdit.ToString().ToLower();
+        _.$isAllowDelete = @ModelObject.IsAllowDelete.ToString().ToLower();
+
+
+        _.ModelName = '@ModelObject.Model.Name';
+        _.IsDeveloperMode = @ModelObject.IsDeveloperMode.ToString().ToLower();
+
+        $scope.ContextMenuItems = [];
+        var SummaryColumns = [];
+
+        @Html.Raw(ContextMenus);
+
+        BaseListViewController.prototype.Init.call(this ,$scope,ViewStateName,_ListViewModel, ViewAccess);
+
+        _.$scope.dataGridOptions.columns = @Html.Raw(Columns);
+
+        _.$SearchColumns = @Html.Raw(ViewBag.SearchColumns);
+
+        _.$SearchColumns.unshift({
+            ID : -1,
+            Caption : '(All)'
+        });
+
+        _.$scope.ColumnSearchExpr = -1;
+
+        _.$scope.searchBoxColumnOption = {
+            dataSource : _.$SearchColumns,
+            displayExpr: "Caption",
+            valueExpr: "ID",
+            width:130,
+            value: -1,
+            onValueChanged:function(e) { 
+                _.$scope.ColumnSearchExpr = e.value;
+            },
+            onInitialized : function(e) { 
+                if ( _.$SearchColumns.length < 2 ) e.component.option('visible',false);
+            }
+        }
+
+        var firstColumn = null;
+        if (  _.IsDeveloperMode == true ) {
+            firstColumn = "ID";
+            _.LvModel.firstColumn = "ID";
+        } else {
+            firstColumn = Enumerable.From(_.$scope.dataGridOptions.columns).Where("$.visible == true").ToArray()[0];
+            firstColumn.width = 100;
+            _.LvModel.firstColumn = firstColumn.dataField;
+        }
+
+        _.$SummaryColumnName = firstColumn.dataField;
+
+        _.$scope.dataGridOptions.summary.totalItems.push({
+            name: "SelectedRowsSummary",
+            showInColumn: _.IsDeveloperMode == true ? "ID" : firstColumn.dataField,
+            summaryType: "custom",
+            customizeText: function () {
+                return _.TotalRecordCount + " Record" + (_.TotalRecordCount > 1 ? "s" : "" ) + " found";
+            }
+        });
+        
+        $.each(SummaryColumns, function(i, o) {
+            _.$scope.dataGridOptions.summary.totalItems.push( o );
+        });
+
+    };
+
+    return ListViewController;
+});
+    //</script>
+</text> , false)

@@ -1,0 +1,2383 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '@BaseVCUrl', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_Opportunity = function () { }
+
+        VC_Opportunity.AGING_COUNT = 15;
+
+        VC_Opportunity.prototype = Object.create(Base.prototype);
+        VC_Opportunity.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+
+            VC.$PromptBeforeSave = false;
+
+            var _ = this;
+            var VC = _.VC;
+
+            VC._onControl_Initialized = function(PropertyName, e){
+                if(PropertyName == 'ID_OpportunityReason'){
+                    if (_.CurrentObject.ID_OpportunityStage !== 6){
+                        e.component.option('disabled', true);
+                    }
+                }
+            }; 
+            VC.$ID_OpportunityReason_IsDisabled = function () {
+                if (_.CurrentObject.ID_OpportunityStage === 6) return true;
+                return false;
+            }
+
+
+            VC.onRowPrepared = function (info) {
+                if (info.rowType === 'data') {
+                    if (info.data.Aging >= VC_Opportunity.AGING_COUNT) {
+                        info.rowElement.addClass('OverAged')
+                    }
+                }
+            };
+
+            VC.onCustomizeColumns = function (Columns) {
+
+                VC.Grid.columnOption('Aging', 'cellTemplate', function (container, options) {
+                    if (options.key.ID_OpportunityStage === 5 || options.key.ID_OpportunityStage === 6) {
+                        $(container).html('-');
+                    } else {
+                        $(container).html(options.value);
+                        if (options.value >= VC_Opportunity.AGING_COUNT) {
+                            $(container).addClass('OppAging');
+                        }
+                    }
+
+                });
+
+            }
+
+            if (_.ID_ViewType == 2) {
+                //
+                // 
+
+
+           
+            VC.onContextMenuPreparing_Opportunity_Details = function (e) {
+
+                  
+
+                // var item = e.row.data;
+                // console.log(item,'xxx!')
+                // e.items.push({
+                //     text: "Add Description",
+                //     icon: "fa fa-edit",
+                //     //template: "contextItem",
+                //     onItemClick: function () {
+                //         app.$GetPopupView().ShowPop({
+                //                 element: $(e.targetElement).parent(),
+                //                 background: "#808080",
+                //                 title: 'Description (' + (item.Name == null || item.Name == undefined ? item.ID : item.Name) + ')',
+                //                 width: 600,
+                //                 //height:400,
+                //                 InitController: function (n) {
+                //                     n.Description = item.Description,
+                //                     n.dxTextAreaOption = {
+                //                         bindingOptions: {
+                //                             'value': 'Description'
+                //                         },
+                //                         maxLength: 300,
+                //                         height: '100%',
+                //                     }
+                //                 },
+                //                 template: function (n) {
+                //                     return '<div dx-text-area="dxTextAreaOption" style="font-size:15px"></div>'
+                //                 },
+                //             }).then(function (n) {
+                //                 e.row.data.Description = n.Description;
+                //             });
+                //         }
+                // });
+                
+            };
+
+            VC.ValidationRules.push(function () {
+                var JsDataService =  app.$GetDataService();
+
+                return JsDataService.Validate( '@Html.EncryptSQL("pValidateOppotunityStage")',
+                    {
+                        'ID': _.CurrentObject.ID,
+                        'ID_Stage': _.CurrentObject.ID_OpportunityStage,
+                    }
+                );
+            });
+
+            VC.ValidationRules.push(function () {
+                var JsDataService =  app.$GetDataService();
+
+                return JsDataService.Validate( '@Html.EncryptSQL("pValidateOppotunityBOM")',
+                    {
+                        'ID_Opportunity': _.CurrentObject.ID,
+                        'ID_BOM': _.CurrentObject.ID_BOM,
+                    }
+                );
+            });
+
+            // VC.ValidationRules.push(function () {
+            //     var JsDataService =  app.$GetDataService();
+
+            //     return JsDataService.Validate( '@Html.EncryptSQL("pValidateOppotunityIsBomExist")',
+            //         {
+            //             'ID': _.CurrentObject.ID,
+            //             'ID_BOM': _.CurrentObject.ID_BOM
+            //         }
+            //     );
+            // });
+
+
+        /*
+            VC.Opportunity_Details_IsCanDelete = function(selectedRows){
+                if(_.CurrentObject.ID_BOM !== undefined && _.CurrentObject.ID_BOM !== null){
+                    VC.MsgBox('Cannot delete equipment. BOM is already created','Opportunity');
+                    return false;
+                }
+                return true;
+            } 
+
+            VC.Opportunity_BOMs_IsCanDelete = function(selectedRows){
+                if(_.CurrentObject.ID_BOM !== undefined && _.CurrentObject.ID_BOM !== null){
+                    VC.MsgBox('Cannot delete material. BOM is already created','Opportunity');
+                    return false;
+                }
+                return true;
+            } 
+
+            VC.Opportunity_Services_IsCanDelete = function(selectedRows){
+                if(_.CurrentObject.ID_BOM !== undefined && _.CurrentObject.ID_BOM !== null){
+                    VC.MsgBox('Cannot delete service. BOM is already created','Opportunity');
+                    return false;
+                }
+                return true;
+            } */
+
+
+
+                //
+                //
+                VC.ValidationRules.push(function () {
+                        if (_.CurrentObject.ID_OpportunityStage == 5 && _.CurrentObject.ID_PaymentTerm == null) {
+                                return {
+                                    isValid: false,
+                                    message: 'Payment Terms is Required'
+                                };
+                        }
+                        return { isValid: true };
+                    });
+                
+                VC.ValidationRules.push(function () {
+                        if (_.CurrentObject.ID_OpportunityStage == 11) {
+                                return {
+                                    isValid: false,
+                                    message: 'CANCELLED stage is not applicable. Please select the LOSS stage.'
+                                };
+                        }
+                        return { isValid: true };
+                    });
+
+
+                VC.ValidationRules.push(function () {
+                    if (_.CurrentObject.ID_Stage >= 3) {
+                        if (_.CurrentObject.TargerCloseDate == null) {
+                            return {
+                                isValid: false,
+                                message: 'Target close date is required.'
+                            };
+                        }
+                    }
+                    return { isValid: true };
+                });
+
+                VC.$ProjectName_IsDisabled = function () {
+                    return (_.CurrentObject.ID_OpportunityCategory != 1 && _.CurrentObject.ID_OpportunityCategory != null);
+                }
+
+
+                VC.CustomSave = VC.Save;
+
+                VC.Save = function () {
+
+                    var $q = app.$GetAsync();
+                    var defer = $q.defer();
+
+                    
+
+                    VC.JSDataService.Validate('@Html.EncryptSQL("pOpportunityIsNewStage")',
+                    {
+                        'ID': VC.$scope.CurrentObject.ID,
+                        'ID_Stage': VC.$scope.CurrentObject.ID_OpportunityStage
+                    }
+                    ).then(function(result){
+                        if (result.IsNewStage == true) {
+                            if (VC.$scope.CurrentObject.ID_OpportunityStage !== 5 && VC.$scope.CurrentObject.ID_OpportunityStage !== 6) {
+                                VC.JSDataService.Query('@Html.EncryptSQL("SELECT ID, Name FROM tDiaryType WHERE isActive = 1")').then(function (data) {
+                                    var DiaryTypes = data.collection;
+                                    app.$modal().Show({
+                                        Template: '<div dx-form="FormOptions" style="padding:10px"></div>',
+                                        title: 'To Do',
+                                        width: 350,
+                                        //height: '100%',
+                                        closeOnConfirm: false,
+                                        InitController: function (s) {
+    
+                                            var Form = null;
+    
+                                            s.CurrentObject = {
+                                                Date: new Date(),
+                                                ID_Type: null,
+                                                Note: null
+                                            }
+    
+                                            s.FormOptions = {
+                                                bindingOptions: {
+                                                    'formData.Date': 'CurrentObject.Date',
+                                                    'formData.ID_Type': 'CurrentObject.ID_Type',
+                                                    'formData.Note': 'CurrentObject.Note',
+    
+                                                },
+                                                formData: s.CurrentObject,
+                                                showColonAfterLabel: false,
+                                                onInitialized: function (e) {
+                                                    Form = e.component;
+                                                },
+                                                items: [
+                                                    {
+                                                        dataField: 'Date',
+                                                        editorType: 'dxDateBox',
+                                                        validationRules: [{
+                                                            type: 'required',
+                                                            message: 'Date is required'
+                                                        }],
+                                                        editorOptions: {
+    
+                                                        }
+                                                    }, {
+                                                        dataField: 'ID_Type',
+                                                        editorType: 'dxSelectBox',
+                                                        validationRules: [{
+                                                            type: 'required',
+                                                            message: 'Type is required'
+                                                        }],
+                                                        editorOptions: {
+                                                            items: DiaryTypes,
+                                                            valueExpr: 'ID',
+                                                            displayExpr: 'Name',
+    
+                                                        },
+                                                        label: {
+                                                            text: 'Type',
+                                                        }
+                                                    }, {
+                                                        dataField: 'Note',
+                                                        editorType: 'dxTextArea',
+                                                        validationRules: [{
+                                                            type: 'required',
+                                                            message: 'Note is required'
+                                                        }],
+                                                        editorOptions: {
+                                                            maxLength: 300,
+                                                            height: 160,
+                                                        }
+                                                    }
+                                                ]
+                                            }
+    
+                                            s.onPositiveClick = function (d) {
+                                                var result = DevExpress.validationEngine.validateGroup(Form);
+                                                if (result.isValid == true) {
+                                                    d.hide();
+
+                                                    console.log('followup',s)
+                                                    VC.$scope.CurrentObject.ID_FollowUpType = s.CurrentObject.ID_Type;
+                                                    VC.$scope.CurrentObject.FollowUpDate = s.CurrentObject.Date;
+                                                    VC.$scope.CurrentObject.FollowUpNote = s.CurrentObject.Note;
+                                                    VC.CustomSave().then(function(){
+                                                        defer.resolve();
+                                                    },function(){
+                                                        defer.reject();
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                                
+                            }else{
+                                VC.CustomSave().then(function(){
+                                    defer.resolve();
+                                },function(){
+                                    defer.reject();
+                                });
+                            }
+                        }else{
+                            VC.CustomSave().then(function(){
+                                defer.resolve();
+                            },function(){
+                                defer.reject();
+                            });
+                        }
+                    });
+
+                    //if (VC.$scope.CurrentObject.ID === -1) {
+						//alert(VC.$scope.CurrentObject.ID_Stage);
+                        
+                    //}//
+                    //VC.CustomSave();
+
+
+                    return defer.promise;
+                }
+
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+
+                    if(_.CurrentObject.Opportunity_Details == null || _.CurrentObject.Opportunity_Details == undefined ){
+                        _.CurrentObject.Opportunity_Details = [];
+                    }
+
+                    if(_.CurrentObject.Opportunity_Details == null || _.CurrentObject.Opportunity_Details == undefined ){
+                        _.CurrentObject.Opportunity_Details = [];
+                    }
+                    if(_.CurrentObject.Opportunity_BOMs == null || _.CurrentObject.Opportunity_BOMs == undefined ){
+                        _.CurrentObject.Opportunity_BOMs = [];
+                    }
+                    if(_.CurrentObject.Opportunity_Services == null || _.CurrentObject.Opportunity_Services == undefined ){
+                        _.CurrentObject.Opportunity_Services = [];
+                    }
+
+
+
+                    if(_.CurrentObject.ID_OpportunityStage !== 1 && _.CurrentObject.ID_OpportunityStage !== 2  && _.CurrentObject.ID_OpportunityStage !== 9 && _.CurrentObject.ID_OpportunityStage !== 6){
+                        var hasDetail = false;
+
+                        // if(_.CurrentObject.Opportunity_Details.length == 0){
+                        //     brokenRules.push('Equipment is required');
+                        // }
+                        // if(_.CurrentObject.Opportunity_BOMs.length == 0){
+                        //     brokenRules.push('Material is required');
+                        // }
+                        // if(_.CurrentObject.Opportunity_Services.length == 0){
+                        //     brokenRules.push('Service is required');
+                        // }
+                        if(_.CurrentObject.Opportunity_PaymentTermss == undefined) _.CurrentObject.Opportunity_PaymentTermss = []; 
+                        
+                        if(_.CurrentObject.Opportunity_Details.length > 0){
+                            hasDetail = true;
+                        }
+                        if(_.CurrentObject.Opportunity_BOMs.length > 0){
+                            hasDetail = true;
+                        }
+                        if(_.CurrentObject.Opportunity_Services.length > 0){
+                            hasDetail = true;
+                        }
+
+                        if(hasDetail == false){
+                            brokenRules.push('Details is required');
+                        }
+
+                        if(_.CurrentObject.Opportunity_PaymentTermss.length == 0){
+                            brokenRules.push('Payment Scheme is required');
+                        }
+                        
+
+       
+
+              
+
+                    }
+
+                    if(_.CurrentObject.ID_OpportunityStage == 6){
+                        if(_.CurrentObject.ID_OpportunityReason == null || _.CurrentObject.ID_OpportunityReason == undefined){
+                            brokenRules.push('Others Tab: Reason for Losing is required.');
+                        }
+                    }
+
+                    if(_.CurrentObject.Opportunity_PaymentTermss.length > 0){
+                        // if(_.CurrentObject.TotalPaymentScheme !== _.CurrentObject.TotalContractPrice){
+                        //     brokenRules.push('Payment Scheme is must be equal to Total Contract Price');
+                        // }                        
+                    }
+
+                    if(_.CurrentObject.ID_OpportunityStage === 5){
+                        if(_.CurrentObject.ID_TaxScheme !== 4){
+                            if(_.CurrentObject.TIN == null || _.CurrentObject.TIN.trim().length == 0){
+                                brokenRules.push('TIN is required');
+                            }
+                        }
+                    }
+                    if(_.CurrentObject.ID_OpportunityStage > 2 && _.CurrentObject.ID_OpportunityStage !== 9){
+                        if(_.CurrentObject.Opportunity_BOMs.length > 0){
+                            $.each(_.CurrentObject.Opportunity_BOMs,function(i,item){
+                                if(item.Quantity == 0) brokenRules.push('Material Tab: Quantity is required for (' + item.Description + ')');
+                                if( !(item.SRP > 0) && item.IsFree !== true) brokenRules.push('Material Tab: SRP is required for (' + item.Description + ')');   
+                                if( !(item.UnitPrice > 0) && item.IsFree !== true) brokenRules.push('Material Tab: Unit Price is required for (' + item.Description + ')');       
+                            });
+                        }
+                        if(_.CurrentObject.Opportunity_Details.length > 0){
+                            $.each(_.CurrentObject.Opportunity_Details,function(i,item){
+                                if(item.Quantity == 0) brokenRules.push('Equipment Tab: Quantity is required for (' + item.Description + ')');
+                                if( !(item.SRP > 0) && item.IsFree !== true) brokenRules.push('Equipment Tab: SRP is required for (' + item.Description + ')');     
+                                if( !(item.UnitPrice > 0) && item.IsFree !== true) brokenRules.push('Equipment Tab: Unit Price is required for (' + item.Description + ')');     
+                            });
+                        }
+                        if(_.CurrentObject.Opportunity_Services.length > 0){
+                            $.each(_.CurrentObject.Opportunity_Services,function(i,item){
+                                if(item.Amount == 0 && item.IsFree !== true) brokenRules.push('Service Tab: Amount is required for (' + item.Description + ')');  
+                            });
+                        }
+                    }
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                });
+
+
+                VC_Opportunity.prototype.onCurrentObjectChanged = function (e) {
+                    if (e.dataField == "ID_OpportunityCategory") {
+                        if (e.value == null || e.value.ID == 1) {
+                            VC.$scope.CurrentObject.ProjectName = '';
+                        }
+                    }
+                    if (e.dataField == 'ID_TaxScheme' || e.dataField == 'TotalDiscount') {
+                        VC.$timeout(function () {
+                            _.Compute();
+                        }, 500);
+                    }
+                    if (e.dataField == 'Equipment_DiscountAmt'){
+                        _.Compute(e.dataField);
+                    }
+                    if (e.dataField == 'Equipment_DiscountRate'){
+                        _.Compute(e.dataField);
+                    }
+
+
+                    if (e.dataField == 'BOM_DiscountAmt'){
+                        _.Compute(e.dataField);
+                    }
+                    if (e.dataField == 'BOM_DiscountRate'){
+                        _.Compute(e.dataField);
+                    }
+
+                    if (e.dataField == 'Service_DiscountAmt'){
+                        _.Compute(e.dataField);
+                    }
+                    if (e.dataField == 'Service_DiscountRate'){
+                        _.Compute(e.dataField);
+                    }
+                    if (e.dataField == 'Service_TotalAmount'){
+                        _.Compute();
+                    }
+                    if (e.dataField == 'BOM_TotalAmount'){
+                        _.Compute();
+                    }
+                    if (e.dataField == 'Service_IsLot'){
+                        _.Compute();
+                    }
+                    if (e.dataField == 'BOM_IsLot'){
+                        _.Compute();
+                    }
+
+                    if (e.dataField == 'ID_Customer') {
+                        // if(VC.GetDxControl('ID_Branch') !== null){
+                        //     VC.GetDxControl('ID_Branch').$dirty = true;
+                        //     VC.GetDxControl('ID_Branch').Clear();
+                        // }
+                        if (e.value !== null) {
+                            if (e.value.ID_PaymentTerm !== undefined) {
+                                VC.$scope.CurrentObject.ID_PaymentTerm = e.value.ID_PaymentTerm;
+                            }
+                            if (e.value.TIN !== undefined) {
+                                if (e.value.TIN !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.TIN = e.value.TIN;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.TIN = null;
+                                }
+                            }
+                            if (e.value.ParentCompany !== undefined) {
+                                if (e.value.ParentCompany !== null) {
+                                    VC.$timeout(function () {
+                                        //VC.$scope.CurrentObject.ID_ParentCompany = e.value.ID_Parent;
+                                        VC.$scope.CurrentObject.ParentCompany = e.value.ParentCompany;
+                                    });
+                                } else {
+                                    //VC.$scope.CurrentObject.ID_ParentCompany = null;
+                                    VC.$scope.CurrentObject.ParentCompany = null;
+                                }
+                            }
+                            if (e.value.RegisteredCompanyName !== undefined) {
+                                if (e.value.RegisteredCompanyName !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.RegisteredCompany = e.value.RegisteredCompanyName;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.RegisteredCompany = null;
+                                }
+                            }
+                            if (e.value.Management !== undefined) {
+                                if (e.value.Management !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.Management = e.value.Management;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.Management = null;
+                                }
+                            }
+                            if (e.value.TradeName !== undefined) {
+                                if (e.value.TradeName !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.TradeName = e.value.TradeName;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.TradeName = null;
+                                }
+                            }
+                            if (e.value.Branch !== undefined) {
+                                if (e.value.Branch !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.Branch = e.value.Branch;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.Branch = null;
+                                }
+                            }
+                            
+
+
+                            // if(VC.GetDxControl('ID_ContactB') !== null){
+                            //     VC.GetDxControl('ID_ContactB').$dirty = true;
+                            //     VC.GetDxControl('ID_ContactB').Clear();
+                            // }
+                            // if(VC.GetDxControl('ID_ContactC') !== null){
+                            //     VC.GetDxControl('ID_ContactC').$dirty = true;
+                            //     VC.GetDxControl('ID_ContactC').Clear();
+                            // }
+                            if (e.value.ID_Contact !== undefined) {
+                                if (e.value.ID_Contact !== null) {
+                                    VC.$timeout(function () {
+                                        VC.$scope.CurrentObject.ContactA = e.value.Contact;
+                                        VC.$scope.CurrentObject.ID_ContactA = e.value.ID_Contact;
+                                    });
+                                } else {
+                                    VC.$scope.CurrentObject.ContactA = null;
+                                    VC.$scope.CurrentObject.ID_ContactA = null;
+                                    if(VC.GetDxControl('ID_ContactA') !== null){
+                                        VC.GetDxControl('ID_ContactA').$dirty = true;
+                                        VC.GetDxControl('ID_ContactA').Clear();
+                                    }
+                                }
+                            }
+
+                        } else {
+                            VC.$scope.CurrentObject.ID_PaymentTerm = null;
+                            //if (e.value.ID_Contact !== undefined) {
+                                VC.$scope.CurrentObject.ContactA = null;
+                                VC.$scope.CurrentObject.ContactB = null;
+                                VC.$scope.CurrentObject.ContactC = null;
+                                VC.$scope.CurrentObject.ID_ContactA = null;
+                                VC.$scope.CurrentObject.ID_ContactB = null;
+                                VC.$scope.CurrentObject.ID_ContactC = null;
+                                VC.$scope.CurrentObject.TIN = null;
+                            //}
+                        }
+
+
+                        if (e.value !== null) {
+                            if (e.value.ID_TaxScheme !== undefined) _.CurrentObject.ID_TaxScheme = e.value.ID_TaxScheme
+                        } else {
+                            _.CurrentObject.ID_TaxScheme = null;
+                        }
+                    }
+
+                }
+
+                if (_.ID_ViewType === 2) {
+                    VC.AddToolbarButton({
+                        text: 'Generate Template',
+                        icon: 'mdi mdi-clipboard-arrow-down',
+                        IsDisabled: function () {
+                            return false;
+                        },
+                        onItemClick: function () {
+
+                            AcctHelper.CreateTemplate('Code,Name,Quantity,SRP', 'Template.csv', 'text/csv');
+                        }
+                    });
+
+                    VC.AddToolbarButton({
+                    text: 'Import',
+                    icon: 'mdi mdi-clipboard-arrow-down',
+                    IsDisabled: function () {
+                        return false;
+                    },
+                    onItemClick: function () {
+                      //
+                      if(_.ID_ViewType == 2)
+                      {
+                      var JsDataService = app.$GetDataService();
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_Opportunity")', null,
+                            'Import'
+                        ).then(function (d) {
+                           
+                           $.each(d.Items, function(i,d){
+                               if([1,6,4].includes(d.ID_ItemGroup)){
+                                var detail = {
+                                    SKUCode : d.SKUCode,
+                                    ID_ItemType : d.ID_ItemType,
+                                    ItemType : d.ItemType,
+                                    PartNo : d.PartNo,
+                                    ModelCode : d.ModelCode,
+                                    Description : d.Name,
+                                    DisplayName : d.Name,
+                                    ID_UOM : d.ID_UOM,
+                                    UOM : d.UOM,
+                                    SRP : d.SRP,
+                                    UnitPrice : d.SRP,
+                                    ID_Item : d.ID_Item,
+                                    Quantity : d.Quantity,
+                                    Discount : 0,
+                                    IsFree : 0,
+                                    Brand : d.Brand,
+                                    ID_Brand : d.ID_Brand,
+                                    Name : d.Name
+                                }
+                                _.CurrentObject.Opportunity_Details.push(detail);
+                               }
+                               // here
+                               else if ([2,5].includes(d.ID_ItemGroup)){
+                                   var detail = {
+                                    SKUCode : d.SKUCode,
+                                    ID_ItemType : d.ID_ItemType,
+                                    ItemType : d.ItemType,
+                                    PartNo : d.PartNo,
+                                    ModelCode : d.ModelCode,
+                                    Description : d.Name,
+                                    DisplayName : d.Name,
+                                    ID_UOM : d.ID_UOM,
+                                    UOM : d.UOM,
+                                    SRP : d.SRP,
+                                    UnitPrice : d.SRP,
+                                    ID_Item : d.ID_Item,
+                                    Quantity : d.Quantity,
+                                    Discount : 0,
+                                    IsFree : 0,
+                                    Brand : d.Brand,
+                                    ID_Brand : d.ID_Brand,
+                                    Name : d.Name
+                                }
+                                 _.CurrentObject.Opportunity_BOMs.push(detail);
+
+                               }
+                           });
+             
+                        });
+                      //
+                      // -end
+                    }
+                    }
+                });
+                }
+
+                var _NewItem = function (item) {
+                    return {
+                        ID: -1,
+                        ID_Item: item.ID,
+                        DisplayName: item.Name,
+                        Name: item.Name,
+                        Description: item.Name,
+                        Item: item.Name,
+                        ItemCode: item.Code,
+                        Code: item.Code,
+                        SupplierCode: item.SupplierCode,
+                        PartNo: item.PartNo,
+                        Description: item.Description,
+                        Quantity: 0,
+                        UnitPrice: _.$isHidePrice == true ? 0.00 : item.SRP,
+                        SRP: _.$isHidePrice == true ? 0.00 : item.SRP,
+                        ID_UOM: item.ID_UOM,
+                        UOM: item.PrimaryUOM,
+                        VatAmt: 0.00,
+                        IsFree: false,
+                        TaxScheme: 'VAT Inclusive',
+                        ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                        IsSerialized: item.IsSerialized,
+                        TotalAmount: 0.00,
+                        DocStatus: 'Pending',
+                        ID_DocStatus: 1,
+                        IsCanvassed: false,
+                        ID_Customer: null,
+                        Customer: '',
+                        NonInventoriable: item.NonInventoriable,
+                        Reference: '',
+                        Comment: null,
+                        ID_Brand: item.ID_Brand,
+                        Brand: item.Brand,
+                        ModelCode: item.ModelCode,
+                        ID_ItemType: item.ID_ItemType,
+                        ItemType: item.ItemType,
+                        Discount: 0.00,
+                        DiscountRate: 0.00,
+                        SKUCode: item.SKUCode
+                    };
+                }
+
+
+                VC.OnDetailGrid_RowDeleted = function (Grid) {
+                    _.Compute();
+                }
+
+                VC.onOpportunity_Services_RowUpdated = function (Grid) {
+                    _.Compute();
+                }
+                VC.onOpportunity_Details_RowUpdated = function (Grid) {
+                    _.Compute();
+                }
+                VC.onOpportunity_BOMs_RowUpdated = function (Grid) {
+                    _.Compute();
+                }
+   
+                VC.onOpportunity_PaymentTermss_RowUpdated = function (Grid) {
+                    _.Compute();
+                }
+
+                // VC.$BOM_TotalAmount_IsDisabled = function () {
+                //     if (_.CurrentObject.BOM_IsLot === true) return true;
+                //     return false;
+                // }
+                // VC.$Service_TotalAmount_IsDisabled = function () {
+                //     if (_.CurrentObject.Service_IsLot === true) return true;
+                //     return false;
+                // }
+
+
+                // VC.$BOM_DiscountAmt_IsDisabled = function () {
+                //     if (_.CurrentObject.BOM_IsLot !== true) return true;
+                //     return false;
+                // }
+                // VC.$Service_DiscountAmt_IsDisabled = function () {
+                //     if (_.CurrentObject.Service_IsLot !== true) return true;
+                //     return false;
+                // }
+
+                // VC.$BOM_DiscountRate_IsDisabled = function () {
+                //     if (_.CurrentObject.BOM_IsLot !== true) return true;
+                //     return false;
+                // }
+                // VC.$Service_DiscountRate_IsDisabled = function () {
+                //     if (_.CurrentObject.Service_IsLot !== true) return true;
+                //     return false;
+                // }
+
+
+                VC.AddToolBarButtonOnGrid('Opportunity_Services', {
+                    text: 'Add Services',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vItem WHERE IsActive = 1 AND ID_ItemGroup IN (@ID_ItemGroup)")', {
+                            title: 'Select Items',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                            params: {
+                                'ID_ItemGroup': [ID_ITEMGROUP_LABOR, ID_ITEMGROUP_SOFTWARE]
+                            },
+                            width: 1150,
+                            ModelName: 'Item',
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID'
+                        }).then(function (Items) {
+                            if(_.CurrentObject.Opportunity_Services == undefined || _.CurrentObject.Opportunity_Services == null) _.CurrentObject.Opportunity_Services = [];
+                            if( Array.isArray(_.CurrentObject.Opportunity_Services) == false ) _.CurrentObject.Opportunity_Services = [];
+                            
+                            $.each(Items, function (i, item) {
+                                _.CurrentObject.Opportunity_Services.push({
+                                    ID: -1,
+                                    Code: item.Code,
+                                    Name: item.Name,
+                                    DisplayName: item.Name,
+                                    ID_Item: item.ID,
+                                    Description: item.Name,
+                                    Discount: 0.00,
+                                    DiscountRate: 0.00,
+                                    ManHours: 0,
+                                    NonInventoriable : item.NonInventoriable,
+                                    Amount: 0.00,
+                                    LineTotal: 0.00,
+                                    SKUCode: item.SKUCode
+                                });
+
+                                _.CurrentObject.ID_BOM = null,
+                                _.CurrentObject.BOM = ''
+                            });
+                            _.Compute();                            
+                        });
+
+                    }
+            });
+
+                // VC.AddToolBarButtonOnGrid('Opportunity_Details', {
+                //     text: 'Import Items',
+                //     icon: 'mdi mdi-file-excel',
+                //     onClick: function () {
+                //         var JsDataService = app.$GetDataService();
+                //         JsDataService.UploadCSV(
+                //             '@Html.EncryptSQL("pImport_Items")', null,
+                //                 'Import opening balance.'
+                //         ).then(function (d) {
+                //             $.each(d.Items, function (i, item) {
+                //                 var NewDetail = _NewItem(item);
+                //                 NewDetail.Quantity = item.Quantity;
+                //                 NewDetail.SRP = item.I_SRP;
+                //                 if (item.NonInventoriable == true) {
+                //                     if (item.I_Description != null) {
+                //                         NewDetail.Description = ite.I_Description;
+                //                     }
+                //                 }
+                //                 _.CurrentObject.Opportunity_Details.push(NewDetail);
+                //             });
+                //             if (d.Items.length > 0) {
+                //                 VC.$timeout(function () {
+                //                     _.Compute();
+                //                 }, 500);
+                //             }
+                //         });
+                //     }
+                // });
+
+
+                
+            var ID_ITEMGROUP_EQUIPMENT = 1;
+            var ID_ITEMGROUP_MATERIAL = 2;
+            var ID_ITEMGROUP_LABOR = 3;
+            var ID_ITEMGROUP_SOFTWARE = 6;
+            var ID_ITEMGROUP_FURNITURE = 4;
+            var ID_ITEMGROUP_OFFICE = 5;
+
+               VC.AddToolBarButtonOnGrid('Opportunity_Details', {
+                    text: 'Add Item',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vItem WHERE IsActive = 1 AND ID_ItemGroup IN (@ID_ItemGroup)")', {
+                            title: 'Select Items',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            //ID_DetailView: 2,
+                            params: {
+                                'ID_ItemGroup': [ID_ITEMGROUP_EQUIPMENT,ID_ITEMGROUP_SOFTWARE,ID_ITEMGROUP_FURNITURE]
+                            },
+                            ModelName: 'Item',
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            width: 1150,
+                            validate : function(items){
+                                var x = Enumerable.From(items).Where("$.ID_Brand === null").ToArray()
+                                if(x.length > 0){
+                                    VC.MsgBox('Select items must set Brand','Invalid');
+                                    return false;
+                                }
+                                return true;
+                            }
+                            }).then(function (Items) {
+                                if(_.CurrentObject.Opportunity_Details == undefined || _.CurrentObject.Opportunity_Details == null) _.CurrentObject.Opportunity_Details = [];
+                                if( Array.isArray(_.CurrentObject.Opportunity_Details) == false ) _.CurrentObject.Opportunity_Details = [];
+                                
+                                $.each(Items, function (i, item) {
+
+                                    //var NewDetail = {
+                                    //    ID: -1,
+                                    //    ID_Item: item.ID,
+                                    //    Name: item.Name,
+                                    //    Description: item.Name,
+                                    //    Item: item.Name,
+                                    //    ItemCode: item.Code,
+                                    //    Code : item.Code,
+                                    //    SupplierCode: item.SupplierCode,
+                                    //    PartNo : item.PartNo,
+                                    //    Description: item.Description,
+                                    //    Quantity: 0,
+                                    //    UnitPrice: _.$isHidePrice == true ? 0.00 : item.SRP,
+                                    //    SRP: _.$isHidePrice == true ? 0.00 : item.SRP,
+                                    //    ID_UOM: item.ID_UOM,
+                                    //    UOM: item.PrimaryUOM,
+                                    //    VatAmt: 0.00,
+                                    //    IsFree : false,
+                                    //    TaxScheme: 'VAT Inclusive',
+                                    //    ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                                    //    IsSerialized : item.IsSerialized,
+                                    //    TotalAmount: 0.00,
+                                    //    DocStatus: 'Pending',
+                                    //    ID_DocStatus: 1,
+                                    //    IsCanvassed: false,
+                                    //    ID_Customer: null,
+                                    //    Customer: '',
+                                    //    NonInventoriable : item.NonInventoriable,
+                                    //    Reference: '',
+                                    //    Comment: null,
+                                    //    ID_Brand: item.ID_Brand,
+                                    //    Brand: item.Brand,
+                                    //    ModelCode : item.ModelCode
+                                    //};
+
+                                    var NewDetail = _NewItem(item);
+                                    _.CurrentObject.Opportunity_Details.push(NewDetail);
+                                    _.CurrentObject.ID_BOM = null,
+                                    _.CurrentObject.BOM = ''
+                                });
+                            });
+                    }
+               });
+               //
+                VC.AddToolBarButtonOnGrid('Opportunity_BOMs', {
+                    text: 'Add Item',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem WHERE IsActive = 1  AND ID_ItemGroup  IN (@ID_ItemGroup) ")', {
+                            title: 'Select Items',
+                            ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                            ID_DetailView: 2,
+                             params: {
+                                'ID_ItemGroup': [ID_ITEMGROUP_MATERIAL, ID_ITEMGROUP_OFFICE]
+                            },
+                            ModelName: 'Item',
+                            width: 1150,
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            validate : function(items){
+                                var x = Enumerable.From(items).Where("$.ID_Brand === null").ToArray()
+                                if(x.length > 0){
+                                    VC.MsgBox('Select items must set Brand','Invalid');
+                                    return false;
+                                }
+                                return true;
+                            }
+                            }).then(function (Items) {
+                                if(_.CurrentObject.Opportunity_BOMs == undefined || _.CurrentObject.Opportunity_BOMs == null) _.CurrentObject.Opportunity_BOMs = [];
+                                if( Array.isArray(_.CurrentObject.Opportunity_BOMs) == false ) _.CurrentObject.Opportunity_BOMs = [];
+                                
+                                $.each(Items, function (i, item) {
+
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        DisplayName: item.Name,
+                                        Name: item.Name,
+                                        Description: item.Name,
+                                        Item: item.Name,
+                                        ItemCode: item.Code,
+                                        Code : item.Code,
+                                        SupplierCode: item.SupplierCode,
+                                        PartNo : item.PartNo,
+                                        Description: item.Description,
+                                        Quantity: 0,
+                                        //UnitPrice: _.$isHidePrice == true ? 0.00 : item.SRP,
+                                        //SRP: _.$isHidePrice == true ? 0.00 : item.SRP,
+                                        UnitPrice: item.SRP,
+                                        SRP: item.SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.PrimaryUOM,
+                                        VatAmt: 0.00,
+                                        IsFree : false,
+                                        TaxScheme: 'VAT Inclusive',
+                                        ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                                        IsSerialized : item.IsSerialized,
+                                        TotalAmount: 0.00,
+                                        // DocStatus: 'Pending',
+                                        // ID_DocStatus: 1,
+                                        // IsCanvassed: false,
+                                        // ID_Customer: null,
+                                        // Customer: '',
+                                        NonInventoriable : item.NonInventoriable,
+                                        // Reference: '',
+                                        Comment: null,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        ModelCode : item.ModelCode,
+                                        ID_ItemType : item.ID_ItemType,
+                                        ItemType : item.ItemType,
+                                        Discount : 0,
+                                        DiscountRate : 0.00,
+                                        SKUCode: item.SKUCode
+                                    };
+
+                                   // var NewDetail = _NewItem(item);
+                                  //  console.log(item,'xx')
+                                  console.log( 'push',_.CurrentObject);
+                                    _.CurrentObject.Opportunity_BOMs.push(NewDetail);
+                                    _.CurrentObject.ID_BOM = null,
+                                    _.CurrentObject.BOM = ''
+                                });
+                            });
+                    }
+               });
+
+
+               //
+            }
+
+
+
+            _.PopSalesEndorsement = function(ID_OpportunityStage,CurrentObject){
+
+                if(ID_OpportunityStage == 5 ||  ID_OpportunityStage == 10){ //add repeat orders
+                    if(_.CurrentObject.ID_TaxScheme !== 4){
+                        if(_.CurrentObject.TIN == null || _.CurrentObject.TIN.trim().length == 0){
+                            VC.MsgBox("TIN is required");
+                            return;
+                        }
+                    }
+                    VC.ConfirmBox('Do you want to create Sales Endor[sement?', 'Opportunity').then(function () {
+                           
+                           
+                        AcctHelper.CreateSalesEndorsement(CurrentObject, function(currentObject){
+                            VC.Reload();
+                        });
+                    });
+
+                    //app.$modal().Show({
+                    //    Template: '<div style="padding:10px">Do you want to create Sales Endorsement?</div>',
+                    //    title: 'Opportunity',
+                    //    width: 300,
+                    //    height: 130,
+                    //    closeOnConfirm: true,
+                    //    InitController: function (s) {
+                    //        s.onPositiveClick = function (d) {
+                    //            AcctHelper.CreateSalesEndorsement(CurrentObject);
+                    //        };
+                    //    }
+                    //});
+
+                }
+
+
+            }
+
+            var UpdateStage = function (ID_Opportunity, Stage) {
+
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+                    var IsValid = true;
+                    var Msg = '';
+                    if(Stage.ID_Stage === 5 || Stage.ID_Stage === 10){
+                        if (_.CurrentObject.ID_PaymentTerm == null){
+                            VC.MsgBox("Payment Terms is Required");
+                            return;
+                        }
+                        if(_.ID_ViewType == 2){
+                            if(_.CurrentObject.Opportunity_Details == undefined) {_.CurrentObject.Opportunity_Details = []}
+                           
+                            if(_.CurrentObject.ID_OpportunityCategory == 2 || _.CurrentObject.ID_OpportunityStage == 1 || _.CurrentObject.ID_OpportunityStage == 9){
+
+                            }
+                            else{
+                                if(_.CurrentObject.Opportunity_Details.length == 0){
+                                    VC.MsgBox('Items is required')
+                                    return;
+                                }
+                            }
+
+
+                            $.each(_.CurrentObject.Opportunity_Details,function(i,item){
+                                if(!(item.ID > 0)){
+                                    IsValid = false;
+                                    Msg = 'Please save first';
+                                }
+                                if(!(item.SRP > 0)){
+                                    IsValid = false;
+                                    Msg = 'SRP is required';
+                                }
+                                if(!(item.UnitPrice > 0)){
+                                    IsValid = false;
+                                    Msg = 'Unit Price is required';
+                                }
+                            });
+                        }else{
+                            VC.MsgBox('Cannot directly update WON status on listview. Please open the record')
+                            return;
+                        }
+                    }
+                    if(IsValid == false){
+                        VC.MsgBox(Msg)
+                        return;
+                    }
+                app.$modal().Show({
+                    Template: (Stage.ID_Stage === 5 || Stage.ID_Stage === 10 ? '<span style="margin-left:5px">Won Date :</span> <div dx-date-box="dxDateBoxOption" style="display:inline-grid;margin:5px 5px 5px"></div>' : '') + '<div dx-text-area="dxTextAreaOption"></div>',
+                    title: 'Update Stage to (' + Stage.text + ')',
+                    width: 450,
+                    //height: '100%',
+                    closeOnConfirm: false,
+                    InitController: function (s) {
+                        s.NextStep = null;//Selecteds[0].NextStep ;
+                        if (Stage.ID_Stage === 5 || Stage.ID_Stage === 10) {
+                            s.WonLostDate = null;
+                            s.dxDateBoxOption = {
+                                width:200,
+                                bindingOptions: {
+                                    'value': 'WonLostDate'
+                                }
+                            }
+                        }
+                        s.dxTextAreaOption = {
+                            bindingOptions: {
+                                'value': 'NextStep'
+                            },
+                            maxLength: 300,
+                            height: '70%',
+                        }
+                        s.onPositiveClick = function (modal) {
+
+                            if (Stage.ID_Stage === 5) {
+                                if (s.WonLostDate == null) {
+                                    VC.MsgBox("Won date is required.");
+                                    return;
+                                }
+                            }
+
+                            VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pOpportunityUpdateStage")', {
+                                ID_Stage: Stage.ID_Stage,
+                                ID: Selecteds[0].ID,
+                                NextStep: s.NextStep,
+                                WonLostDate : s.WonLostDate
+                            }).then(function (d) {
+
+                                modal.hide();
+
+                                VC.ToastSuccess('Update Stage Successfully.');
+
+                                if (_.ID_ViewType == 2) {
+                                    VC.Reload();
+                                } else {
+                                    VC.Grid.refresh();
+                                }
+                                if(Selecteds[0].IsEndorsed != true){
+                                    VC.$timeout(function(){
+                                        _.PopSalesEndorsement(Stage.ID_Stage,Selecteds[0]);
+                                    },500);
+                                }
+
+                                //
+                                //
+                            });
+                        }
+                    }
+                });
+            };
+
+            if (_.ID_ViewType === 2) {
+
+                // app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("_pGetDataSet")', {
+                //     'SQL': 'SELECT * FROM dbo.tStage WHERE IsActive = 1 ORDER By SeqNo'
+                // }).then(function (data) {
+                //     var dataset = data.DataSets
+                //     var Stages = [];
+                //     $.each(dataset, function (i, item) {
+                //         Stages.push({ ID_Stage: item.ID, onItemClick: function () { VC.onMenuItemClick(this) }, icon: '', text: item.Name });
+                //     });
+                //     VC.AddToolbarButton({
+                //         text: 'Stages',
+                //         icon: 'mdi mdi-trending-up',
+                //         requireSingleObject: true,
+                //         isContextMenu: true,
+                //         IsDisabled: function () {
+                //             var Selecteds = null;
+                //             if (_.ID_ViewType == 2) {
+                //                 Selecteds = [_.CurrentObject];
+                //             } else {
+                //                 Selecteds = _.Grid.getSelectedRowsData();
+                //             }
+                //             var selectedRecord = Enumerable.From(Selecteds).Where("$.ID > 0").ToArray();
+                //             if (selectedRecord.length > 0) {
+                //                 if (Selecteds[0].IsEndorsed != true) {
+                //                     return false;
+                //                 }
+                //             }
+                //             return true;
+                //         },
+                //         items: Stages
+                //     });
+                // });
+
+            }
+
+			if ( _.ID_ViewType === 2 ){
+				VC.AddToolbarButton({
+					text: 'New Diary',
+					icon: 'green mdi mdi-asterisk',
+					IsDisabled: function () {
+						var Selecteds = null;
+						if (_.ID_ViewType == 2) {
+							Selecteds = [_.CurrentObject];
+						} else {
+							Selecteds = _.Grid.getSelectedRowsData();
+						}
+						if (Selecteds.length > 0) {
+							if (Selecteds[0].ID > 0) {
+								return false;
+							}
+						}
+						return true;
+					},
+					isContextMenu: true,
+					onItemClick: function () {
+						var Selecteds = null;
+						if (_.ID_ViewType == 2) {
+							Selecteds = [_.CurrentObject];
+						} else {
+							Selecteds = _.Grid.getSelectedRowsData();
+						}
+
+						AcctHelper.CreateDiaryFromOpportunity(Selecteds);
+					}
+				});
+
+				VC.AddToolbarButton({
+					text: 'For Sales Endorsement',
+					icon: 'green mdi mdi-asterisk',
+					IsDisabled: function () {
+						// var Selecteds = null;
+						// if (_.ID_ViewType == 2) {
+						// 	Selecteds = [_.CurrentObject];
+						// } else {
+						// 	Selecteds = _.Grid.getSelectedRowsData();
+						// }
+						// if (Selecteds.length > 0) {
+						// 	if (Selecteds[0].ID > 0) {
+						// 		return false;
+						// 	}
+                        // }
+                        
+                        if(_.CurrentObject.ID == -1){
+                            return true;
+                        }
+                        if(_.CurrentObject.ID_OpportunityStage !== 5 && _.CurrentObject.ID_OpportunityStage !== 10 ){
+                            return true;
+                        }
+                        if (_.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                            return true;
+                        }
+						return false;
+					},
+					isContextMenu: true,
+					onItemClick: function () {
+						var CurrentOpportunity = null;
+						if (_.ID_ViewType === 2) {
+							CurrentOpportunity = _.CurrentObject;
+						} else if (_.ID_ViewType === 1) {
+							var ItemSelected = VC.GetSelectedRows();
+							if (ItemSelected.length !== 1) return;
+							CurrentOpportunity = ItemSelected[0];
+						}
+
+						if (CurrentOpportunity.IsEndorsed == true) {
+							VC.MsgBox('Opportunity is already endorsed', 'Opportunity');
+							return;
+						}
+
+						if (CurrentOpportunity.ID_OpportunityStage !== 5 && CurrentOpportunity.ID_OpportunityStage !== 10) {
+							VC.MsgBox('Only WON opportunity is allowed.', 'Opportunity');
+							return;
+						}
+
+						if(CurrentOpportunity.ID_OpportunityStage == 5 || CurrentOpportunity.ID_OpportunityStage == 10){
+                            if(_.CurrentObject.ID_TaxScheme !== 4){
+                                if(CurrentOpportunity.TIN == null || CurrentOpportunity.TIN.trim().length == 0){
+                                    VC.MsgBox("TIN is required", 'Opportunity');
+                                    return;
+                                }
+                            }
+                        }
+
+						//
+						//
+						//
+
+						AcctHelper.CreateSalesEndorsement(CurrentOpportunity);
+					}
+				});
+			}
+
+            if (_.ID_ViewType === 2) {
+                //VC.AddToolbarButton({
+                //    text: 'Create Proposal',
+                //    icon: 'mdi mdi-file-outline',
+                //    requireSingleObject: true,
+                //    isContextMenu: true,
+                //    IsDisabled: function () {
+                //        if(_.CurrentObject.ID == -1){
+                //            return true;
+                //        }                    
+
+                //        if(_.CurrentObject.ID_OpportunityStage == 5 || _.CurrentObject.ID_OpportunityStage == 6 || _.CurrentObject.ID_OpportunityStage == 10){
+                //            return true;
+                //        }
+
+                //        if (_.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                //            return true;
+                //        }
+                //        return false;
+                //    },
+                //    onItemClick: function () {
+
+                //        // console.log(VC.CustomSave)
+                //        // return;
+                //        if(_.CurrentObject.$dirty == true){
+
+                //            VC.MsgBox("Please save first the current record.");
+                //            return;
+                //        }
+
+                        
+                //        if(_.CurrentObject.ID_OpportunityStage == 1 || _.CurrentObject.ID_OpportunityStage == 2 || _.CurrentObject.ID_OpportunityStage == 9){
+                            
+                //            var ID_OpportunityStage = _.CurrentObject.ID_OpportunityStage;
+                //            _.CurrentObject.ID_OpportunityStage = 8;
+
+                //            VC.PerformValidation().then(function(validator){
+                //                if(validator.isValid == true){
+                //                    VC.CustomSave().then(function(){
+                //                        VC.OpenOnNewTab({
+                //                            ID_View: 9389, //Proposal DetailView
+                //                            params: {
+                //                                'ID_Opportunity': VC.$scope.CurrentObject.ID
+                //                            }
+                //                        });
+                //                    });
+                //                }else{
+                //                    _.CurrentObject.ID_OpportunityStage = ID_OpportunityStage;
+                //                    VC.PerformSave();
+                //                }
+                //            });
+
+                //        }else{
+                //            VC.OpenOnNewTab({
+                //                ID_View: 9389, //Proposal DetailView
+                //                params: {
+                //                    'ID_Opportunity': VC.$scope.CurrentObject.ID
+                //                }
+                //            });
+                //        }
+                //    }
+                //});
+
+                VC.AddToolbarButton({
+                    text: 'Create Work Order',
+                    icon: 'mdi mdi-file-outline',
+                    requireSingleObject: true,
+                    isContextMenu: true,
+                    IsDisabled: function () {
+                        if(_.CurrentObject.ID == -1){
+                            return true;
+                        }                    
+      
+                        if (_.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+                        if(_.CurrentObject.$dirty == true){
+
+                            VC.MsgBox("Please save first the current record.");
+                            return;
+                        }
+                        VC.JSDataService.Validate('@Html.EncryptSQL("pOpportunityIsWorkClosed")',
+                        {
+                            'ID': _.CurrentObject.ID,
+                            'ID_WorkOrder': null
+                        }
+                        ).then(function(result){
+                            console.log(result)
+                            if(result.IsClosed == true || result.IsClosed == 1){
+                                AcctHelper.CreateWorkOrder(_.CurrentObject);
+                            }else{
+                                VC.MsgBox('There are still pending Work Order for this Opportunity','Opportunity');
+                                return;
+                            }
+                        });
+                        
+                    }
+                });
+
+
+                VC.AddToolbarButton({
+                    text: 'Load BOM',
+                    icon: 'mdi mdi-file-outline',
+                    selection: {
+                        mode: 'single' // 'multiple'
+                    },
+                    requireSingleObject: true,
+                    isContextMenu: true,
+                    IsDisabled: function () {
+                        if(_.CurrentObject.ID == -1){
+                            return true;
+                        }
+                        if(_.CurrentObject.ID_OpportunityStage == 5 || _.CurrentObject.ID_OpportunityStage == 6){
+                            return true;
+                        }
+                        if (_.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+
+                        if(_.CurrentObject.$dirty == true){
+                            VC.MsgBox("Pending changes must be save first");
+                            return;
+                        }
+
+                               var JsDataService =  app.$GetDataService();
+                               var JsPopUpView = app.$GetPopupView();
+                               JsPopUpView.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,Name,ProjectName, Opportunity,Category as Template, BDM, CreatedBy  FROM vBOM_ForOppotunity WHERE ID_Opportunity = @ID_Opportunity")', {
+                                     params: {
+                                         ID_Opportunity : _.CurrentObject.ID,
+                                         ID_BOM: _.CurrentObject.ID_BOM == undefined || _.CurrentObject.ID_BOM == null ? -1 : _.CurrentObject.ID_BOM
+                                     },
+                                     validate: function (SelectedRows) {
+
+                                        if (SelectedRows.length !== 1 ) {
+                                            VC.MsgBox("Please select 1 BOM only");
+                                            return false;
+                                        }
+                                        return true;
+                                    },
+                                         title: 'Select Template',
+                                         ID_View: 'B76EFAD2-236B-4E05-9A88-95E7C1DD1OPP'
+                                     }).then(function (Items) {
+                                        if(Items.length > 0){
+                                            JsDataService.ExecSQLProc(
+                                                '@Html.EncryptSQL("pOpportunity_LoadBOM")',
+                                                {
+                                                    'ID_BOM': Items[0].ID,
+                                                    'ID_Opportunity': _.CurrentObject.ID
+                                                }
+                                            ).then(function (response) {
+                                                _.VC.Reload();
+                                                VC.ToastSuccess('Load BOM done');
+                                            });
+                                        }           
+                            });
+                    }
+                });
+            }
+
+
+
+            VC.onMenuItemClick = function (data) {
+                if (_.ID_ViewType === 1) {
+                    if (VC.Grid.getSelectedRowsData().length === 0) return;
+                }
+                var ID_Opportunity = _.ID_ViewType == 2 ? _.VC.$scope.CurrentObject.ID : VC.Grid.getSelectedRowsData()[0].ID;
+                if (data.ID_Stage == undefined) return;
+                UpdateStage(ID_Opportunity, data)
+            }
+        }
+        
+
+        VC_Opportunity.prototype.isColumnGridEditable = function (PropertyName, e) {
+            
+            var _ = this;
+            var VC = _.VC;
+
+          //  console.log('alert',PropertyName);
+            
+            if (e.column.dataField === 'Description') {
+                if (e.data.NonInventoriable === true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+   
+            if(PropertyName == 'Opportunity_Details' || PropertyName == 'Opportunity_BOMs' || PropertyName == 'Opportunity_Services'){
+             //  console.log('editable',_.CurrentObject.ID_BOM)
+                if(_.CurrentObject.ID_BOM !== undefined && _.CurrentObject.ID_BOM !== null){
+                    if (e.column.dataField === 'Description' ||
+                    //e.column.dataField === 'DisplayName' ||
+                    e.column.dataField === 'ID_UOM' ||
+                    e.column.dataField === 'Quantity' ||
+                    //e.column.dataField === 'DiscountRate' ||
+                    //e.column.dataField === 'Discount' ||
+                    e.column.dataField === 'ManHours'
+                
+                        ) {
+                        return false;
+                    }
+                }
+
+            }
+
+            return true;
+        }
+
+        VC_Opportunity.prototype.onCurrentObjectSaved = function(CurrentObject){
+            //Base.prototype.CurrentObject.call(CurrentObject);
+            var _ = this;
+            var VC = _.VC;
+            console.log(_.CurrentObject);
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pCreateDiaryFromOpp")',
+                {
+                    'ID_Opportunity':   CurrentObject.ID
+                }
+            ).then(function (response) {
+                //VC.ToastSuccess("To Do's Successfully Created");
+            });
+
+            if(CurrentObject.IsEndorsed !== true){
+                VC.$timeout(function(){
+                    _.PopSalesEndorsement(CurrentObject.ID_OpportunityStage,CurrentObject);
+                },500);
+            }
+
+            if (VC.$scope.$Tab !== undefined) {
+                if (VC.$scope.$Tab.$forceClose == true) return; //Jefrey Sambile
+            }
+
+            //if(CurrentObject.ID_OpportunityStage == 1 || CurrentObject.ID_OpportunityStage == 2 || CurrentObject.ID_OpportunityStage == 9 ){
+                //VC.ConfirmBox('Do you want to create Proposal?', 'Opportunity').then(function () {
+                //    if(CurrentObject.Opportunity_Details == undefined) CurrentObject.Opportunity_Details = []; 
+                //    if(CurrentObject.Opportunity_BOMs == undefined) CurrentObject.Opportunity_BOMs = []; 
+                //    if(CurrentObject.Opportunity_Services == undefined) CurrentObject.Opportunity_Services = []; 
+                //    var brokenRules = [];
+                //    if((CurrentObject.ID_TaxScheme == undefined || CurrentObject.ID_TaxScheme == null  || CurrentObject.ID_TaxScheme == 0))  {
+                //        brokenRules.push({ type: 'Required', message: 'Tax Scheme is required' })
+                //    }
+                //    if(CurrentObject.Opportunity_Details.length == 0 && CurrentObject.Opportunity_BOMs.length == 0 && CurrentObject.Opportunity_Services.length == 0){
+                //        brokenRules.push({ type: 'Required', message: 'Detail is required' })
+                //    } 
+                //    if(CurrentObject.Opportunity_Details.length > 0){
+                //        $.each(CurrentObject.Opportunity_Details,function(i,item){
+                //            if(item.Quantity == 0 ){
+                //                brokenRules.push({ type: 'Required', message: 'Equipment Tab: Quantity is required for (' + item.Description + ')' })
+                //            } 
+                //            if(  ( !(item.SRP > 0) && item.IsFree !== true ) )  {  
+                //                brokenRules.push({ type: 'Required', message: 'Equipment Tab: SRP is required for (' + item.Description + ')' })
+                //            }
+                //            if(  ( !(item.UnitPrice > 0) && item.IsFree !== true ) )  {  
+                //                brokenRules.push({ type: 'Required', message: 'Equipment Tab: Unit Price is required for (' + item.Description + ')' })
+                //            }
+                //        });
+                //    }
+                //    if(CurrentObject.Opportunity_BOMs.length > 0){
+                //        $.each(CurrentObject.Opportunity_BOMs,function(i,item){
+                //            if(item.Quantity == 0){
+                //                brokenRules.push({ type: 'Required', message: 'Material Tab: Quantity is required for (' + item.Description + ')' })
+                //            } 
+                //            if(  ( !(item.SRP > 0) && item.IsFree !== true ) )  {
+                //                brokenRules.push({ type: 'Required', message: 'Material Tab: SRP is required for (' + item.Description + ')' })
+                //            }
+                //            if(  ( !(item.UnitPrice > 0) && item.IsFree !== true ) )  {
+                //                brokenRules.push({ type: 'Required', message: 'Material Tab: Unit Price is required for (' + item.Description + ')' })
+                //            }
+                //        });
+                //    }
+                //    if(CurrentObject.Opportunity_Services.length > 0){
+                //        $.each(CurrentObject.Opportunity_Services,function(i,item){
+                //            if(!(item.Amount > 0) && item.IsFree !== true ){
+                //                brokenRules.push({ type: 'Required', message: 'Service Tab: Amount is required for (' + item.Description + ')' })
+                //            }
+                //        });
+                //    }
+                //    if(_.CurrentObject.Opportunity_PaymentTermss.length == 0){
+                //        brokenRules.push({ type: 'Required', message: 'Payment Scheme is required.' })
+                //    }
+                //    if(brokenRules.length > 0){
+                //        VC.ShowValidation(brokenRules);
+                //    }else{
+                //        AcctHelper.CreateProposal(CurrentObject,function(currentObject){                            
+                //            VC.Reload();
+                //        });
+                //    }
+                //});
+
+
+            //}
+
+        }
+
+        VC_Opportunity.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+
+            VC.OnFilterValueChanged = function (name, e) { 
+                if (name === "VC_BusinessUnit") {
+                    if (VC.VC_Employee !== undefined) {
+                        VC.VC_Employee.option('value', -2)
+                        VC.VC_Employee._options.reload();
+                        //alert('xx');
+                    }
+                }
+            }
+
+            var _ = this;
+            var SQL = '';
+            switch (VC.CurrentUser.ID_UserGroup) {
+                case 4:
+                    SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+                    break;
+                case 5:
+                    SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE ID = @ID_CurrentUser")';  
+                    break;
+                default:
+                    SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @VC_BusinessUnit")';
+                    break;
+            }
+
+            if (VC.CurrentUser.ID_UserGroup !== 5) {
+
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'BDM',
+                    SQL: SQL,
+                    params: function () {
+                        if (VC.ActionFilters.VC_BusinessUnit == undefined) {
+                            return {
+                                'ID_CurrentUser': VC.CurrentUser.ID_Employee,
+                                'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit
+                            }
+                        } else {
+                            var VC_BusinessUnit = (VC.ActionFilters != undefined ? VC.ActionFilters.VC_BusinessUnit : -1);
+                            return {
+                                'ID_CurrentUser': VC.CurrentUser.ID_Employee,
+                                'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit,
+                                'VC_BusinessUnit': VC_BusinessUnit
+                            }
+                        }
+                    },
+                    width: 250,
+                    defaultItems: [
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                        {
+                            ID: -1,
+                            Name: '(My Opportunities)'
+                        }
+                    ],
+                    value:  (VC.CurrentUser.ID_UserGroup === 4 || VC.CurrentUser.ID_UserGroup === 5 ? -1 : -2)
+                });
+                if (VC.CurrentUser.ID_UserGroup !== 4) {
+                    VC.AddActionFilter({
+                        name: 'VC_BusinessUnit',
+                        caption: 'Business Unit',
+                        SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vBusinessUnit WHERE isActive = 1")',
+                        width: 120,
+                        defaultItems: [
+                            {
+                                ID: -1,
+                                Name: '(All)'
+                            }
+                        ],
+                        value: -1
+                    });
+                }
+            }
+            //
+            //
+            //
+
+            VC.JSDataService.Query('@Html.EncryptSQL("SELECT ID,Name FROM tStage WHERE isActive = 1 ORDER By SeqNo")', {}).then(function (Data) {
+			
+				Data.collection.unshift({
+                    ID: -2,
+                    Name: '(All)'
+                });
+
+                Data.collection.unshift({
+                    ID: -1,
+                    Name: '(Pending)'
+                });
+
+                VC.AddActionFilter({
+                    name: 'VC_Stages',
+                    caption: 'Stages',
+                    width: 150,
+                    dataSource: Data.collection,
+                    isLoadData: true,
+                    displayExpr: 'Name',
+                    valueExpr: 'ID',
+                    value: -1,
+                });
+            });
+
+            //
+            //
+            //
+
+            VC.onContextMenuPreparing = function (e) {
+                e.items.push({
+                    text: 'View Customer',
+                    icon: 'mdi mdi-account-edit',
+                    onItemClick: function () {
+                        var Opporunity = e.row.data;
+                        AcctHelper.OpenDetailView({
+                            ID_View: 6249,
+                            ID_CurrentObject: Opporunity.ID_Customer
+                        });
+                    }
+                });
+            };
+
+			var _onContextMenuPreparing = VC.onContextMenuPreparing;
+			VC.onContextMenuPreparing = function (e) {
+			    _onContextMenuPreparing.call(this,e);
+			    var Opporunity = e.row.data;
+			    e.items.push({
+			        text: "Copy Doc",
+			        icon: "fa fa-edit",
+			        //template: "contextItem",
+			        onItemClick: function () {
+			            var itemsSelected = _.Grid.getSelectedRowsData();
+                        console.log(itemsSelected[0].ID)
+			            AcctHelper.Create_Copy_Opp(Opporunity.ID , itemsSelected[0].ID_OpportunityStage == 11 ? itemsSelected[0].ID : -1);
+
+			        }
+			    });
+			};
+        }
+
+        VC_Opportunity.prototype.onCollectionSource_Load = function (data) {
+
+            var _ = this;
+            var VC = this.VC;
+            var VC_Stages = VC.ActionFilters.VC_Stages;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+            console.log(VC_Stages,'Stages')
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (VC_Stages !== -1 && VC_Stages !== -2 && VC_Stages !== undefined) {
+                WhereCriteria.push("ID_OpportunityStage = " + VC_Stages) //Approved
+            } else if (VC_Stages === -2) {
+                //WhereCriteria.push("ID_OpportunityStage <> 6 AND ISNULL(IsEndorsed,0) <> 1") //Approved
+                WhereCriteria.push("ID_OpportunityStage <> 6") //Approved
+            }
+            else if(VC_Stages === -1){
+                WhereCriteria.push("ID_OpportunityStage NOT IN (6,5,10,11)")
+            }
+			
+            if (ID_UserGroup != 5) {
+                var VC_Employee = VC.ActionFilters.VC_Employee;
+                if (ID_UserGroup != 4) {
+                    var VC_BusinessUnit = VC.ActionFilters.VC_BusinessUnit;
+                    if (VC_BusinessUnit !== -1) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC_BusinessUnit) //Approved
+                    }
+                }
+                if (VC_Employee !== -2) {
+                    if (VC_Employee == -1) {
+                        WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID) //Approved
+                    } else {
+                        WhereCriteria.push("ID_CreatedBy = " + VC_Employee) //Approved
+                    }
+                }
+                else {
+                    if (ID_UserGroup == 4) {
+                        WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit)
+                    }
+                }
+
+
+            } else {
+                WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID)
+
+            }
+
+        }
+        VC_Opportunity.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            //
+            //
+            //
+            VC.$ID_Customer_OnValueChanged = function (e) {
+                _.CurrentObject.ID_ContactA = null;
+                _.CurrentObject.ID_ContactB = null;
+                _.CurrentObject.ID_ContactC = null;
+
+                if (e.value != null) {
+                    _.CurrentObject.TradeName = e.value.TradeName;
+                    _.CurrentObject.Branch = e.value.Branch;
+                } else {
+                    _.CurrentObject.TradeName = null;
+                    _.CurrentObject.Branch = null;
+                }
+            }
+
+            VC.Opportunity_Details_onColumnChanged = function (ev) {
+                _.Compute(ev.dataField);
+            };
+            VC.Opportunity_BOMs_onColumnChanged = function (ev) {
+                _.Compute(ev.dataField);
+            };
+            VC.Opportunity_Services_onColumnChanged = function (ev) {
+                _.Compute(ev.dataField);
+            };
+            VC.Opportunity_PaymentTermss_onColumnChanged = function (ev) {
+                _.Compute();
+            };
+
+            var CustomerOption = VC.GetFormItem('ID_Customer');
+            if(CustomerOption !== null && CustomerOption !== undefined){
+                CustomerOption.editorOptions.onCreateNewObject = function (data) {
+                    // if (VC.$scope.CurrentObject.ID_BusinessUnit == null) {
+                    //     VC.MsgBox("Please Select a Client Trade Name");
+                    //     data.cancel = true;
+                    //     return;
+                    // }
+                    data.params = {
+                        ID_BusinessUnit: VC.$scope.CurrentObject.ID_BusinessUnit
+                    };
+                };
+            }
+
+            var ContactAOption = VC.GetFormItem('ID_ContactA');
+            if(ContactAOption !== null && ContactAOption !== undefined){
+                ContactAOption.editorOptions.onCreateNewObject = function (data) {
+                    if (VC.$scope.CurrentObject.ID_Customer == null) {
+                        VC.MsgBox("Please Select a Client Trade Name");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_Customer: VC.$scope.CurrentObject.ID_Customer
+                    };
+                };
+            }
+            var ContactBOption = VC.GetFormItem('ID_ContactB');
+            console.log('ID_ContactB',ContactBOption)
+            if(ContactBOption !== null && ContactBOption !== undefined){
+                ContactBOption.editorOptions.onCreateNewObject = function (data) {
+                    if (VC.$scope.CurrentObject.ID_Customer == null) {
+                        VC.MsgBox("Please Select a Client Trade Name");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_Customer: VC.$scope.CurrentObject.ID_Customer
+                    };
+                };
+            }
+
+            var ContactCOption = VC.GetFormItem('ID_ContactC');
+            if(ContactCOption !== null && ContactCOption !== undefined){
+                ContactCOption.editorOptions.onCreateNewObject = function (data) {
+                    if (VC.$scope.CurrentObject.ID_Customer == null) {
+                        VC.MsgBox("Please Select a Client Trade Name");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_Customer: VC.$scope.CurrentObject.ID_Customer
+                    };
+                };
+            }
+            
+            var BranchOption = VC.GetFormItem('ID_Branch');
+            if(BranchOption !== null){
+                BranchOption.editorOptions.onCreateNewObject = function (data) {
+                    if (VC.$scope.CurrentObject.ID_Customer == null) {
+                        VC.MsgBox("Please Select a Customer");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_Customer: VC.$scope.CurrentObject.ID_Customer
+                    };
+                };
+            }
+
+
+
+             var fRemoveID_BOMRef_By_DeleteDetail = function(){
+
+                var isAllowRemoveBOMRef = true;
+
+                var Current_ID_BOM = _.CurrentObject.ID_BOM;
+
+                if(Current_ID_BOM !== undefined && Current_ID_BOM !== null){
+
+                    Current_ID_BOM = 0;
+                }
+
+                $.each( _.CurrentObject.Opportunity_Details,function(i,item){
+
+                    if(item.ID_BOM == undefined || item.ID_BOM == null || item.ID_BOM == 0){  item.ID_BOM = 0; }
+
+                    if(Current_ID_BOM != 0 && item.ID_BOM == Current_ID_BOM){
+
+                        isAllowRemoveBOMRef = false;
+                    }   
+                });
+
+                $.each( _.CurrentObject.Opportunity_BOMs,function(i,item){
+
+                    if(item.ID_BOM == undefined || item.ID_BOM == null || item.ID_BOM == 0){  item.ID_BOM = 0; }
+
+                    if(Current_ID_BOM != 0 && item.ID_BOM == Current_ID_BOM){
+
+                        isAllowRemoveBOMRef = false;
+                    }   
+                });
+
+                $.each( _.CurrentObject.Opportunity_Services,function(i,item){
+
+                    if(item.ID_BOM == undefined || item.ID_BOM == null || item.ID_BOM == 0){  item.ID_BOM = 0; }
+
+                    if(Current_ID_BOM != 0 && item.ID_BOM == Current_ID_BOM){
+
+                        isAllowRemoveBOMRef = false;
+                    }   
+                });
+
+                if(isAllowRemoveBOMRef == true){
+
+                    _.CurrentObject.ID_BOM = null;
+                    _.CurrentObject.BOM = '';
+                    
+                    _.CurrentObject.ScopeOfWork = null;
+                    _.CurrentObject.Notations = '';
+                }
+
+        
+            };
+
+            VC.OnDetailGrid_RowDeleted = function (grid) {
+                if(grid.PropertyName == "Opportunity_Details" || grid.PropertyName == "Opportunity_BOMs" || grid.PropertyName == "Opportunity_Services"){
+                    fRemoveID_BOMRef_By_DeleteDetail();
+                }
+            }
+
+        };
+
+        VC_Opportunity.prototype.Compute = function (ColumnName) {
+	
+
+            var _ = this;
+            var VC = _.VC;
+            if (_.CurrentObject === null) return;
+
+            if(_.CurrentObject.Opportunity_PaymentTermss == undefined){
+                _.CurrentObject.Opportunity_PaymentTermss = [];
+            }
+
+
+
+            var TotalAmt = 0.00;
+            var SubTotal = 0.00;
+            var TotalDiscount = 0.00;
+            var TotalPaymentScheme = 0.00;
+
+            if(_.CurrentObject.Equipment_DiscountRate == null || _.CurrentObject.Equipment_DiscountRate == "" ){
+                _.CurrentObject.Equipment_DiscountRate = 0;
+            }
+
+            if(_.CurrentObject.BOM_DiscountRate == null || _.CurrentObject.BOM_DiscountRate == "" ){
+                _.CurrentObject.BOM_DiscountRate = 0;
+            }
+
+            if(_.CurrentObject.Service_DiscountRate == null || _.CurrentObject.Service_DiscountRate == "" ){
+                _.CurrentObject.Service_DiscountRate = 0;
+            }
+
+            if(_.CurrentObject.Opportunity_PaymentTermss == undefined || _.CurrentObject.Opportunity_PaymentTermss == null) _.CurrentObject.Opportunity_PaymentTermss = [];
+            if( Array.isArray(_.CurrentObject.Opportunity_PaymentTermss) == false ) _.CurrentObject.Opportunity_PaymentTermss = [];
+                            
+            $.each(_.CurrentObject.Opportunity_PaymentTermss, function (i, item) {
+                TotalPaymentScheme += item.Amount;
+            });
+            _.CurrentObject.TotalPaymentScheme = TotalPaymentScheme;
+
+
+
+            if( Array.isArray(_.CurrentObject.Opportunity_Details) == false ) _.CurrentObject.Opportunity_Details = [];
+              
+            $.each(_.CurrentObject.Opportunity_Details, function (i, item) {
+                //item.UnitPrice = item.IsFree == true ? 0.00 : item.Quantity * item.SRP;
+                if(ColumnName == 'SRP'){
+                    item.UnitPrice = item.SRP;
+                }
+
+                if(ColumnName !== 'DiscountRate'){
+                    if(item.Discount > item.UnitPrice){
+                        item.Discount = item.UnitPrice;
+                    }
+                    item.DiscountRate = 100 * (item.Discount /  (item.UnitPrice == 0 ? 1 : item.UnitPrice));
+                    item.DiscountRate = parseFloat(item.DiscountRate.toFixed(2));
+
+                }else{
+                    var DiscountRate = 100 * (item.Discount /  (item.UnitPrice == 0 ? 1 : item.UnitPrice));
+                    DiscountRate = parseFloat(DiscountRate.toFixed(2));
+
+                    if(DiscountRate !== parseFloat(item.DiscountRate.toFixed(2))){
+                        item.Discount = item.UnitPrice * (item.DiscountRate / 100);
+                        item.Discount = parseFloat(item.Discount.toFixed(2));
+                    }
+
+                }
+
+                if ( item.IsFree === true ){
+                    item.DiscountRate = 0.00;
+                    item.Discount = 0.00;
+                    //Jefrey Sambile BUG #121
+                }
+
+                item.GrossAmount = item.IsFree == true ? 0.00 : item.Quantity * item.UnitPrice;
+                item.LineDiscount = item.IsFree == true ? 0.00 : item.UnitPrice - item.Discount;
+                item.LineTotal = item.IsFree == true ? 0.00 : item.Quantity * item.LineDiscount ;
+                TotalAmt += item.IsFree == true ? 0.00 : item.LineTotal;
+                TotalDiscount += item.IsFree == true ? 0.00 : item.Quantity * item.Discount;
+                SubTotal += item.IsFree == true ? 0.00 : item.GrossAmount;
+            });
+            //
+            _.CurrentObject.Equipment_SubTotal = TotalAmt;
+            if(ColumnName !== 'Equipment_DiscountRate'){
+                if(_.CurrentObject.Equipment_DiscountAmt > _.CurrentObject.Equipment_SubTotal){
+                    _.CurrentObject.Equipment_DiscountAmt = _.CurrentObject.Equipment_SubTotal;
+                }
+                var DiscountRate = 100 * (_.CurrentObject.Equipment_DiscountAmt /  (_.CurrentObject.Equipment_SubTotal == 0 ? 1 : _.CurrentObject.Equipment_SubTotal));
+                _.CurrentObject.Equipment_DiscountRate = parseFloat(DiscountRate.toFixed(2));
+            }else{
+                var DiscountRate = 100 * (_.CurrentObject.Equipment_DiscountAmt /  (_.CurrentObject.Equipment_SubTotal == 0 ? 1 : _.CurrentObject.Equipment_SubTotal));
+                DiscountRate = parseFloat(DiscountRate.toFixed(2));
+
+                if(DiscountRate !== parseFloat(_.CurrentObject.Equipment_DiscountRate.toFixed(2))){
+                    _.CurrentObject.Equipment_DiscountAmt = _.CurrentObject.Equipment_SubTotal * (_.CurrentObject.Equipment_DiscountRate / 100);
+                    _.CurrentObject.Equipment_DiscountAmt = parseFloat(_.CurrentObject.Equipment_DiscountAmt.toFixed(2));
+                }
+            }
+
+            _.CurrentObject.Equipment_TotalAmount = _.CurrentObject.Equipment_SubTotal - _.CurrentObject.Equipment_DiscountAmt;
+            //
+            //
+            //
+            if( Array.isArray(_.CurrentObject.Opportunity_BOMs) == false ) _.CurrentObject.Opportunity_BOMs = [];
+                            
+            var BOM_SubTotal = 0.00;
+            var BOM_TotalAmount = 0.00;
+            $.each(_.CurrentObject.Opportunity_BOMs, function (i, item) {
+                //item.UnitPrice = item.IsFree == true ? 0.00 : item.Quantity * item.SRP;
+                if(ColumnName == 'SRP'){
+                    item.UnitPrice = item.SRP;
+                }
+                if(ColumnName !== 'DiscountRate'){
+                    if(item.Discount > item.UnitPrice){
+                        item.Discount = item.UnitPrice;
+                    }
+                    item.DiscountRate = 100 * (item.Discount / (item.UnitPrice == 0 ? 1 : item.UnitPrice));
+                    item.DiscountRate = parseFloat(item.DiscountRate.toFixed(2));
+                }else{
+                    var DiscountRate = 100 * (item.Discount /  (item.UnitPrice == 0 ? 1 : item.UnitPrice));
+                    DiscountRate = parseFloat(DiscountRate.toFixed(2));
+
+                    if(DiscountRate !== parseFloat(item.DiscountRate.toFixed(2))){
+                        item.Discount = item.UnitPrice * (item.DiscountRate / 100);
+                        item.Discount = parseFloat(item.Discount.toFixed(2));
+                    }
+                }
+
+                if ( item.IsFree === true ){
+                    item.DiscountRate = 0.00;
+                    item.Discount = 0.00;
+                    //Jefrey Sambile BUG #121
+                }
+
+                item.GrossAmount = item.IsFree == true ? 0.00 : item.Quantity * item.UnitPrice;
+                item.LineDiscount = item.IsFree == true ? 0.00 : item.UnitPrice - item.Discount;
+                item.LineTotal = item.IsFree == true ? 0.00 : item.Quantity * item.LineDiscount ;
+
+                BOM_SubTotal += item.IsFree == true ? 0.00 : item.LineTotal;
+                TotalDiscount += item.IsFree == true ? 0.00 : item.Quantity * item.Discount;
+                SubTotal += item.IsFree == true ? 0.00 : item.GrossAmount;
+            });
+            //
+            _.CurrentObject.BOM_SubTotal = BOM_SubTotal;
+            if(ColumnName !== 'BOM_DiscountRate'){
+                if(_.CurrentObject.BOM_DiscountAmt > _.CurrentObject.BOM_SubTotal){
+                    _.CurrentObject.BOM_DiscountAmt = _.CurrentObject.BOM_SubTotal;
+                }
+                var DiscountRate = 100 * (_.CurrentObject.BOM_DiscountAmt /  (_.CurrentObject.BOM_SubTotal == 0 ? 1 : _.CurrentObject.BOM_SubTotal));
+                _.CurrentObject.BOM_DiscountRate = parseFloat(DiscountRate.toFixed(2));
+            }else{
+                var DiscountRate = 100 * (_.CurrentObject.BOM_DiscountAmt /  (_.CurrentObject.BOM_SubTotal == 0 ? 1 : _.CurrentObject.BOM_SubTotal));
+                DiscountRate = parseFloat(DiscountRate.toFixed(2));
+
+                if(DiscountRate !== parseFloat(_.CurrentObject.BOM_DiscountRate.toFixed(2))){
+                    _.CurrentObject.BOM_DiscountAmt = _.CurrentObject.BOM_SubTotal * (_.CurrentObject.BOM_DiscountRate / 100);
+                    _.CurrentObject.BOM_DiscountAmt = parseFloat(_.CurrentObject.BOM_DiscountAmt.toFixed(2));
+                }
+            }
+			_.CurrentObject.BOM_TotalAmount = _.CurrentObject.BOM_SubTotal - _.CurrentObject.BOM_DiscountAmt;
+            //-------------`
+            
+            if( Array.isArray(_.CurrentObject.Opportunity_Services) == false ) _.CurrentObject.Opportunity_Services = [];
+             
+            var Service_SubTotal = 0.00;    
+            var Service_TotalAmount = 0.00;
+            $.each(_.CurrentObject.Opportunity_Services, function (i, item) {
+                //item.Amount = 0.00;
+           
+                if(ColumnName !== 'DiscountRate'){
+                    if(item.Discount > item.Amount){
+                        item.Discount = item.Amount;
+                    }
+                    item.DiscountRate = 100 * (item.Discount / (item.Amount == 0 ? 1 : item.Amount));
+                    item.DiscountRate = parseFloat(item.DiscountRate.toFixed(2)) ;
+                }else{
+                    var DiscountRate = 100 * (item.Discount / (item.Amount == 0 ? 1 : item.Amount));
+                    DiscountRate = parseFloat(DiscountRate.toFixed(2));
+    
+                    if(DiscountRate !== parseFloat(item.DiscountRate.toFixed(2))){
+                        item.Discount = item.Amount * (item.DiscountRate / 100);
+                        item.Discount = parseFloat(item.Discount.toFixed(2));
+                    }
+                }
+
+                if ( item.IsFree === true ){
+                    item.DiscountRate = 0.00;
+                    item.Discount = 0.00;
+                    //Jefrey Sambile BUG #121
+                }
+
+                item.LineTotal = item.IsFree == true ? 0.00 : item.Amount - item.Discount;
+                Service_SubTotal += item.IsFree == true ? 0.00 : item.LineTotal;   
+                TotalDiscount += item.IsFree == true ? 0.00 : item.Discount;
+                SubTotal += item.IsFree == true ? 0.00 : item.Amount;
+                
+
+            });
+            //
+            _.CurrentObject.Service_SubTotal = Service_SubTotal;
+            if(ColumnName !== 'Service_DiscountRate'){
+                if(_.CurrentObject.Service_DiscountAmt > _.CurrentObject.Service_SubTotal){
+                    _.CurrentObject.Service_DiscountAmt = _.CurrentObject.Service_SubTotal;
+                }
+                var DiscountRate = 100 * (_.CurrentObject.Service_DiscountAmt /  (_.CurrentObject.Service_SubTotal == 0 ? 1 : _.CurrentObject.Service_SubTotal));
+                _.CurrentObject.Service_DiscountRate = parseFloat(DiscountRate.toFixed(2));
+            }else{
+                var DiscountRate = 100 * (_.CurrentObject.Service_DiscountAmt /  (_.CurrentObject.Service_SubTotal == 0 ? 1 : _.CurrentObject.Service_SubTotal));
+                DiscountRate = parseFloat(DiscountRate.toFixed(2));
+
+                if(DiscountRate !== parseFloat(_.CurrentObject.Service_DiscountRate.toFixed(2))){
+                    _.CurrentObject.Service_DiscountAmt = _.CurrentObject.Service_SubTotal * (_.CurrentObject.Service_DiscountRate / 100);
+                    _.CurrentObject.Service_DiscountAmt = parseFloat(_.CurrentObject.Service_DiscountAmt.toFixed(2));
+                }
+            }
+			_.CurrentObject.Service_TotalAmount = _.CurrentObject.Service_SubTotal - _.CurrentObject.Service_DiscountAmt;
+            //-------------`
+
+
+            var VATRate = 12;
+
+  
+            _.CurrentObject.TotalContractPrice =  _.CurrentObject.Equipment_TotalAmount + _.CurrentObject.BOM_TotalAmount + _.CurrentObject.Service_TotalAmount;//- _.CurrentObject.TotalDiscount;
+            var TotalVAT = parseFloat(AcctHelper.GetTaxAmt(_.CurrentObject.ID_TaxScheme, VATRate, _.CurrentObject.TotalContractPrice ))
+          
+            _.CurrentObject.TotalVat = TotalVAT;
+            _.CurrentObject.Subtotal = SubTotal ;//+ _.CurrentObject.BOM_SubTotal + _.CurrentObject.Service_SubTotal;
+            _.CurrentObject.TotalDiscount = TotalDiscount + _.CurrentObject.Equipment_DiscountAmt + _.CurrentObject.Service_DiscountAmt + _.CurrentObject.BOM_DiscountAmt;
+            
+
+            var TotalVATInc = 0.00;
+            var TotalVATEx = 0.00;
+            switch (_.CurrentObject.ID_TaxScheme) {
+                case 1:
+                    TotalVATEx = _.CurrentObject.TotalContractPrice;
+                    TotalVATInc = _.CurrentObject.TotalContractPrice + TotalVAT;
+                    _.CurrentObject.TotalContractPrice = TotalVATInc;
+
+                    break;
+                case 2:
+                    TotalVATEx = _.CurrentObject.TotalContractPrice - TotalVAT;
+                    TotalVATInc = _.CurrentObject.TotalContractPrice;
+                    break;
+                case 3:
+                case 4:
+                    TotalVATEx = _.CurrentObject.TotalContractPrice;
+                    TotalVATInc = _.CurrentObject.TotalContractPrice;
+                    break;
+            }
+
+            if(_.CurrentObject.Equipment_DiscountAmt == null || _.CurrentObject.Equipment_DiscountAmt == "" ){
+                _.CurrentObject.Equipment_DiscountAmt = 0;
+            }
+
+            if(_.CurrentObject.BOM_DiscountAmt == null || _.CurrentObject.BOM_DiscountAmt == "" ){
+                _.CurrentObject.BOM_DiscountAmt = 0;
+            }
+
+            if(_.CurrentObject.Service_DiscountAmt == null || _.CurrentObject.Service_DiscountAmt == "" ){
+                _.CurrentObject.Service_DiscountAmt = 0;
+            }
+
+            _.CurrentObject.TotalVatEx = TotalVATEx;
+            _.CurrentObject.TotalVatInc = TotalVATInc;
+        }
+
+        VC_Opportunity.prototype.onLoad = function () {
+            var _ = this;
+            var Stages = _.VC.GetDxControl('ID_OpportunityStage');
+            var Reason = _.VC.GetDxControl('ID_OpportunityReason');
+       //     var DownPaymentGrid = VC.GetFormItem('ID_AccountExecutive');
+            var aeSQL ;
+            console.log(_.VC.CurrentUser.ID_UserGroup)
+            switch(_.VC.CurrentUser.ID_UserGroup ){
+                case 5 : 
+                aeSQL = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives where ID_User = @ID_CurrentUser")';
+                break ;
+                case 6 : 
+                aeSQL = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives where ID_BusinessUnit = @ID_BusinessUnit")';
+                break;
+                case 4 : 
+                aeSQL ='@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives where ID_BusinessUnit = @ID_BusinessUnit")';
+                break;
+                default:
+                aeSQL = '@Html.EncryptSQL("SELECT ID, Name FROM titem")';
+                break;
+                
+            }
+          //  var AccountExecutives = _.VC.GetDxControl('ID_AccountExecutive');
+            var x =  _.VC.GetFormItem('ID_AccountExecutive');
+            x.editorOptions.SQL = '@Html.EncryptSQL("SELECT ID, Name FROM titem")';
+            x.editorOptions.onInitialized = function(Grid){
+                    console.log('XX',Grid);
+            }
+            // x.editorOptions.onLoad = function(data) {
+            //     console.log('data',data)
+            //     if (data.params == undefined) data.params = {  };
+            //         data.params.ID_BusinessUnit = _.VC.CurrentUser.ID_BusinessUnit;
+            //         data.params.ID_CurrentUser = _.VC.CurrentUser.ID;
+            //  }
+
+            _.Compute();
+            // if(Stages !== null){
+            //     if(_.CurrentObject.ID > -1){
+            //         if(_.CurrentObject.ID_OpportunityStage == 5 || _.CurrentObject.ID_OpportunityStage == 6){
+            //             Stages.option('readOnly',true);
+            //             _.VC.setFormReadOnly(true);
+            //         }else{
+            //             Stages.option('readOnly',false);
+            //         }
+            //     }else{
+            //         Stages.option('readOnly',false);
+            //     }
+            // }
+            //var NextStep = _.VC.GetDxControl('NextStep');
+            //NextStep.option('readOnly', (_.VC.$scope.CurrentObject.ID_OpportunityStage == 5));
+
+
+
+            if(_.CurrentObject.ID > -1){
+                if(_.CurrentObject.ID_OpportunityStage == 5 || _.CurrentObject.ID_OpportunityStage == 6 ||  _.CurrentObject.ID_OpportunityStage == 10){
+                    Stages.option('readOnly',true);
+                    _.VC.setFormReadOnly(true);
+                }else{
+                    Stages.option('readOnly',false);
+                }
+            }else{
+                Stages.option('readOnly',false);
+            }
+
+            if (_.CurrentObject.ID > -1) {
+                if (_.CurrentObject.ID_CreatedBy !== _.VC.CurrentUser.ID) {
+                    _.VC.setFormReadOnly(true);
+                }else{
+                    if(_.CurrentObject.ID_OpportunityStage == 5 || _.CurrentObject.ID_OpportunityStage == 6 ||  _.CurrentObject.ID_OpportunityStage == 10){
+                        _.VC.setFormReadOnly(true);
+                    }else{
+                        if (_.CurrentObject.IsEndorsed == true){
+                            _.VC.setFormReadOnly(true);
+                        }
+                        else{
+                             _.VC.setFormReadOnly(false);
+                             //
+                            //  if(_.CurrentObject.ID_BOM !== null && _.CurrentObject.ID_BOM !== undefined ){
+                            //     _.VC.$scope.Opportunity_Details_MenuOptions[0].disabled = true;
+                            //     //_.VC.$scope.Opportunity_Details_MenuOptions[1].disabled = true;
+                            //     _.VC.$scope.Opportunity_BOMs_MenuOptions[0].disabled = true;
+                            //     _.VC.$scope.Opportunity_Services_MenuOptions[0].disabled = true;
+                            //  }else{
+                            //     _.VC.$scope.Opportunity_Details_MenuOptions[0].disabled = false;
+                            //     //_.VC.$scope.Opportunity_Details_MenuOptions[1].disabled = false;
+                            //     _.VC.$scope.Opportunity_BOMs_MenuOptions[0].disabled = false;
+                            //     _.VC.$scope.Opportunity_Services_MenuOptions[0].disabled = false;
+                            //  }
+                        }                        
+                    }
+
+                }
+            } else {
+                _.VC.setFormReadOnly(false);
+                // _.VC.$scope.Opportunity_Details_MenuOptions[0].disabled = false;
+                // //_.VC.$scope.Opportunity_Details_MenuOptions[1].disabled = false;
+                // _.VC.$scope.Opportunity_BOMs_MenuOptions[0].disabled = false;
+                // _.VC.$scope.Opportunity_Services_MenuOptions[0].disabled = false;
+            }
+
+            //  console.log('xo',_.VC.$scope.Opportunity_BOMs_MenuOptions)
+            //  console.log('xa',_.VC.$scope.Opportunity_Services_MenuOptions)
+            //
+            //
+            //
+            var VC = _.VC;
+            if (_.CurrentObject.ID_Customer == null) {
+                VC.$timeout(function () {
+                    VC.FormInstance.getEditor('ID_Customer').focus();
+                }, 500);
+            }
+            var AccountExecutive = VC.GetDxControl('ID_AccountExecutive');
+            console.log('XXX',AccountExecutive)
+            var SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives")';
+            AccountExecutive._options.onLoad = function(data) {
+
+                    if([20,4].includes(VC.CurrentUser.ID_UserGroup)){
+                        SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+                    }
+                    else if(VC.CurrentUser.ID_UserGroup == 5){
+                        SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives WHERE ID_User = @ID_User")';  
+                    }
+                    else{
+                        SQL = '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vAccountExecutives")';  
+                    }
+                    
+                    if (data.params == undefined) data.params = {  };
+                    data.params.ID_User =  VC.CurrentUser.ID;
+                    data.params.ID_BusinessUnit = VC.CurrentUser.ID_BusinessUnit;
+
+                    AccountExecutive._options.SQL = SQL ; 
+            }
+
+        
+        }
+
+        return VC_Opportunity;
+    });
+//</script>
+</text> , false )
+

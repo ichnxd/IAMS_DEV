@@ -1,0 +1,87 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_InventoryPerWarehouse = function () {         
+      
+        }
+
+        VC_InventoryPerWarehouse.prototype = Object.create(baseModelHelper.prototype);
+        
+        VC_InventoryPerWarehouse.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            VC.OnOpenDetailView = function(data,CurrentObject){
+
+
+                data.params = {   
+                                ID_Session: null,
+                                ID_Warehouse: VC.$scope.CurrentObject.ID_Warehouse 
+                              }
+
+            }
+
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("_pGetDataSet")',{ 
+                'SQL':'Select ID as id, Name as name From tWarehouse Where IsActive = 1 and ISNULL(isBranch,0) = 0'
+            }).then(function(data){
+                var dataset = data.DataSets
+                dataset.unshift({ id: -1 , name: '(All)' })
+
+                if (_.ID_ViewType === 1) {
+                      VC.AddActionFilter({
+                          name: 'VC_InventoryWarehouse',
+                          caption: 'Warehouse',
+                          width : '150px',
+                          dataSource: dataset,
+                          placeholder: 'Select Warehouse',
+                          value: -1
+                      });
+                  }
+            });
+        }//end
+
+        VC_InventoryPerWarehouse.prototype.onCollectionSource_Load = function (data) {
+            //baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+            
+            var VC = this.VC;
+            var id_warehouse = VC.ActionFilters.VC_InventoryWarehouse;
+            
+            if (id_warehouse > 0 ){
+              data.WhereCriteria.push("ID_Warehouse = " + String(id_warehouse) );
+            }
+
+        }
+
+
+
+        return VC_InventoryPerWarehouse;
+    });
+//</script>
+</text> , false )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

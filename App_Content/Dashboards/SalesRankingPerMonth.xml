@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Sales Ranking Per Month" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vSalespipeline" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vSalespipeline;" />
+  </DataSources>
+  <Items>
+    <Pivot ComponentName="pivotDashboardItem1" Name="Pivot 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[OPP TotalVATInc]" Name="Total VAT Inc" UniqueName="DataItem1">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimOpportunity].[Account Executive].[Account Executive]" SortOrder="None" SortByMeasure="DataItem2" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimBusinessUnit].[BusinessUnit].[BusinessUnit]" SortOrder="None" UniqueName="DataItem3" />
+        <Measure DataMember="[Measures].[SalesRankingByVatInc]" Name="Rank" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Precision="0" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" UniqueName="DataItem5" />
+        <Measure DataMember="[Measures].[OPP TotalVATEx]" Name="Total VAT Ex" UniqueName="DataItem6">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[OPP Count]" Name="Opp Count" UniqueName="DataItem7" />
+      </DataItems>
+      <FormatRules>
+        <PivotItemFormatRule Name="FormatRule 1" DataItem="DataItem0">
+          <FormatConditionExpression Expression="[DataItem2] = 1.0m">
+            <IconSettings IconType="IndicatorGreenCheck" />
+          </FormatConditionExpression>
+          <PivotItemFormatRuleLevel />
+        </PivotItemFormatRule>
+      </FormatRules>
+      <Columns>
+        <Column UniqueName="DataItem5" />
+      </Columns>
+      <Rows>
+        <Row UniqueName="DataItem3" />
+        <Row UniqueName="DataItem0" />
+      </Rows>
+      <Values>
+        <Value UniqueName="DataItem2" />
+        <Value UniqueName="DataItem7" />
+        <Value UniqueName="DataItem1" />
+        <Value UniqueName="DataItem6" />
+      </Values>
+      <ShowRowTotals>false</ShowRowTotals>
+    </Pivot>
+    <ListBox ComponentName="listBoxDashboardItem1" Name="Stages" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions IgnoreMasterFilters="false" />
+      <DataItems>
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[OPP TotalVATInc]" UniqueName="DataItem1" />
+      </DataItems>
+      <HiddenMeasures>
+        <Measure UniqueName="DataItem1" />
+      </HiddenMeasures>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem0" />
+      </FilterDimensions>
+    </ListBox>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="10.909090909090908" />
+      <LayoutItem DashboardItem="pivotDashboardItem1" Weight="89.0909090909091" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

@@ -1,0 +1,152 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+        "use strict"
+        function VC_BorrowedCash() { };
+
+        VC_BorrowedCash.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_BorrowedCash.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+            //console.log(_)
+
+            if(_.ID_ViewType == 2){
+                VC.AddToolbarButton({
+                    text: 'Release',
+                    icon: 'mdi mdi-pencil-box',
+                    color: '#009688',
+                    isContextMenu: true,
+                    IsDisabled: function(){
+                        if(_.CurrentObject.ID > 0 &&  _.CurrentObject.ID_FilingStatus == 2){
+                            if(VC.CurrentUser.IsPettyCashCustodian == true && VC.CurrentUser.ID_PettyCashWarehouse == _.CurrentObject.ID_Warehouse){
+                                return false;
+                            }
+                        }
+                        return true;
+                    },
+                    onItemClick: function () {
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.ExecSQLProc(
+                            '@Html.EncryptSQL("pBorrowedCashRelease")',
+                            {
+                                'IDs': [_.CurrentObject.ID],
+                                'ID_CurrentUser': '#ID_CurrentUser'
+                            }
+                        ).then(function (response) {
+                            VC.Reload();
+                            //
+                            VC.ToastSuccess('Successfully Released');
+                        }, function (error) {
+                            //VC.ToastSuccess(error);
+                        });
+                    }
+                });
+            }
+            _.butCancel.text = 'Disapprove';
+            _.butCancel.IsDisabled = function(){
+                var IsDisabled = false;
+                var Selected = [];
+                if(_.ID_ViewType == 1){
+                    Selected = VC.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    if(VC.IsNew() == true){
+                        return true;
+                    }
+                    Selected = [_.CurrentObject];
+                }
+
+                if(Selected.length > 0){
+                    if(Selected[0].ID_FilingStatus !== 1){
+                        return true;
+                    }
+                }
+
+                return _.IsCanCancel();
+            }
+            _.butApproved.IsDisabled = function(){
+                var IsDisabled = false;
+                var Selected = [];
+                if(_.ID_ViewType == 1){
+                    Selected = VC.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    if(VC.IsNew() == true){
+                        return true;
+                    }
+                    Selected = [_.CurrentObject];
+                }
+
+                if(Selected.length > 0){
+                    if(Selected[0].ID_FilingStatus !== 1){
+                        return true;
+                    }
+                }
+
+                return _.IsCanApprove();
+            }
+        }
+
+        VC_BorrowedCash.prototype.onCollectionSource_Load = function (data) {
+            VC_BaseDoc.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+            WhereCriteria.push(" ID_CreatedBy = " + VC.CurrentUser.ID + " OR ID_Warehouse = " + VC.CurrentUser.ID_PettyCashWarehouse );
+        }
+
+        VC_BorrowedCash.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBorrowedCashApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_BorrowedCash.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBorrowedCashDisapproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_BorrowedCash;
+    });
+//</script>
+</text> , false);

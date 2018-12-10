@@ -1,0 +1,123 @@
+4/3/2018 8:40:46 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+4/3/2018 8:40:48 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+4/3/2018 8:41:19 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+4/3/2018 8:41:31 AM:  ---> Cannot insert duplicate key row in object 'dbo.tCustomerLead' with unique index 'IX_CustomerLead_Code'. The duplicate key value is (               ).
+The statement has been terminated..
+4/3/2018 9:03:45 AM:  ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+The statement has been terminated..
+4/3/2018 9:04:19 AM:  ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+The statement has been terminated..
+4/3/2018 9:07:10 AM:  ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+The statement has been terminated..
+4/3/2018 10:21:37 AM:  ---> Invalid column name 'ID_Parent'..
+4/3/2018 10:23:11 AM: _pGetDataSet ---> Invalid column name 'ID_Model'..
+4/3/2018 10:24:18 AM:  ---> Invalid column name 'ID_Parent'..
+4/3/2018 10:42:22 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:42:51 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:43:58 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:45:17 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:45:23 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:46:14 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:46:46 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:46:51 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:50:36 AM: pWorkOrderApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:52:15 AM: pWorkOrderApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:55:21 AM: pWorkOrderApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 10:58:27 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:00:21 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:00:26 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:01:17 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:01:20 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:05:59 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:06:57 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:07:01 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:07:06 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:07:46 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:07:51 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:08:35 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:08:43 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:09:26 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:09:30 AM:  ---> Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'.
+Invalid object name 'dbo_tNotification_2471fbed-e251-4fab-8f9b-e1189520b6c4'..
+4/3/2018 11:09:43 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:14:32 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:26:36 AM: pProposalApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:46:26 AM: pWorkOrderApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..
+4/3/2018 11:49:01 AM: pWorkOrderApprove ---> The current transaction cannot be committed and cannot support operations that write to the log file. Roll back the transaction.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2.
+Uncommittable transaction is detected at the end of the batch. The transaction is rolled back..

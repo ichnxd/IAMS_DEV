@@ -1,0 +1,4 @@
+2/9/2018 11:58:46 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180130_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+2/9/2018 11:58:47 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180130_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

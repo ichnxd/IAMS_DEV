@@ -1,0 +1,1533 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+      define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Liquidation = function () {
+            this.DocDetailPropertyName = '';
+            this.CheckIfPosted = false;
+        }
+        var isPageLoadDone = false;
+
+        VC_Liquidation.AGING_COUNT = 2;
+
+        VC_Liquidation.prototype = Object.create(baseModelHelper.prototype);
+
+
+        VC_Liquidation.ID_UserGroup_ADMINISTRATOR = 1;
+        VC_Liquidation.ID_UserGroup_DEVELOPER = 2;
+        VC_Liquidation.ID_UserGroup_PROGJECTMANAGER = 3;
+        VC_Liquidation.ID_UserGroup_ACCOUNTEXECUTIVE = 5;
+        VC_Liquidation.ID_UserGroup_PROJECTMANAGERSPECIALIST = 8;
+        VC_Liquidation.ID_UserGroup_ACCOUNTINGADMIN = 10;
+        VC_Liquidation.ID_UserGroup_PETTYCASHCUSTODIAN = 11;
+		VC_Liquidation.ID_UserGroup_BUSINESSUNITHEAD = 4;
+
+        var Allowed_ID_UserGroups = [
+
+            VC_Liquidation.ID_UserGroup_ADMINISTRATOR,
+            VC_Liquidation.ID_UserGroup_DEVELOPER ,
+            VC_Liquidation.ID_UserGroup_PROGJECTMANAGER ,
+            VC_Liquidation.ID_UserGroup_ACCOUNTINGADMIN ,
+            VC_Liquidation.ID_UserGroup_PETTYCASHCUSTODIAN ,
+			VC_Liquidation.ID_UserGroup_BUSINESSUNITHEAD
+
+        ];
+
+        VC_Liquidation.prototype.Init = function (VC) {
+			//this.DefaultFilterValue = 1;
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            if(_.ID_ViewType == 1){
+            
+            var _onContextMenuPreparing = VC.onContextMenuPreparing;
+			 VC.onContextMenuPreparing = function (e) {
+					_onContextMenuPreparing.call(this,e);
+					  var LQ = e.row.data;
+
+					  e.items.push({
+						  text: "Copy Doc",
+						  icon: "fa fa-edit",
+						  //template: "contextItem",
+						  onItemClick: function () {
+                              if(LQ.ID_CashAdvanceRequest !== null){
+                                  return;
+                              }
+                              else{
+                                  console.log(LQ.ID,'xxx')
+                                  var itemsSelected = _.Grid.getSelectedRowsData();
+							       AcctHelper.Create_Copy_LQ(LQ.ID);
+                              }
+							 
+
+						  }
+					  });
+
+				};
+            }
+
+            //remove na ung aging di naman nagagamit
+            // VC.onRowPrepared = function (info) {
+            //     if (info.rowType === 'data') {
+            //         if (info.data.Aging >= VC_Liquidation.AGING_COUNT) {
+            //             info.rowElement.addClass('OverAged')
+            //         }
+            //     }
+            // };
+
+            var NotAllowIDStatus = [1,7];
+
+            _.butApproved.IsDisabled = function () {
+                var IsDisabled = false;
+                var Selected = [];
+                if(_.ID_ViewType == 1){
+                    Selected = VC.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    if(VC.IsNew() == true){
+                        return true;
+                    }
+                    Selected = [_.CurrentObject];
+                }
+
+                /*if(Selected.length > 0){
+                    if(Selected[0].ID_FilingStatus !== 33){
+                        return true;
+                    }
+                  //  else{
+                  //      return false;
+                  //  }
+                }*/
+
+                return _.IsCanApprove();
+            }
+
+            _.butCancel.IsDisabled = function () {
+
+                var _isCanCancel = _.IsCanCancel();
+
+                /*if (_.ID_ViewType == 2) {
+
+                    if ( _.CurrentObject.ID_FilingStatus == 2 && Allowed_ID_UserGroups.includes(VC.CurrentUser.ID_UserGroup) == true){
+
+                        return false;
+                    }
+                }*/
+
+                // var IsDisabled = false;
+                // var Selected = [];
+                // if(_.ID_ViewType == 1){
+                //     Selected = VC.Grid.getSelectedRowsData();
+                // }
+                // if(_.ID_ViewType == 2){
+                //     if(VC.IsNew() == true){
+                //         return true;
+                //     }
+                //     Selected = [_.CurrentObject];
+                // }
+
+                var Selecteds = null;
+                if (_.ID_ViewType == 2) {
+                    Selecteds = [_.CurrentObject];
+                } else {
+                    Selecteds = _.Grid.getSelectedRowsData();
+                }
+
+                if(Selecteds.length !== 1){
+                    return true;
+                }
+
+                if(Selecteds[0].ID_CreatedBy !== VC.CurrentUser.ID){
+                    return true;
+                }
+
+
+                /*if(Selected.length > 0){
+                    if([1,2].includes(Selected[0].ID_FilingStatus) == true ){
+                        return false;
+                    }else{
+                        return true;
+                    }
+                }*/
+
+                return _isCanCancel;
+            }
+
+            if (_.ID_ViewType == 1) {
+                var DefaultFilterValue = -1;
+                if(VC.CurrentUser.IsPettyCashCustodian == true){
+                    DefaultFilterValue = VC.CurrentUser.ID_PettyCashWarehouse; //.toString();
+                    //console.log(_.DefaultFilterValue)
+                }
+                VC.AddActionFilter({
+                    name: 'VC_LocationFilter',
+                    caption: 'Location',
+                    width: '150px',
+                    SQL : '@Html.EncryptSQL("SELECT * FROM dbo.vWarehouseFilter ORDER BY ID")',
+                    placeholder: 'Select Location',
+                    value: DefaultFilterValue
+                });
+            }
+
+            if (_.ID_ViewType == 2) {
+
+                VC.ValidationRules.push(function () {
+                    var JsDataService =  app.$GetDataService();
+
+                    return JsDataService.Validate( '@Html.EncryptSQL("pLiquidation_ValidateBeforeSave")',
+                        {
+                            'ID': _.CurrentObject.ID,
+                            'ID_FilingStatus': _.CurrentObject.ID_FilingStatus
+                        }
+                    );
+                });
+
+              VC.$ManualLocation_IsDisabled = function () {
+                  if (_.CurrentObject.IsCourtesyVisit === true) return true;
+                  return false;
+              }
+
+                //VC.AddToolbarButton({
+                //    text: 'Check',
+                //    icon: 'mdi mdi-pencil-box',
+                //    color: '#009688',
+                //    isContextMenu: true,
+                //    IsDisabled: function(){
+                //        if(_.CurrentObject.ID > 0 &&  _.CurrentObject.ID_FilingStatus == 1 && _.CurrentObject.IsChecked !== true){
+                //            return false;
+                //        }
+                //        return true;
+                //    },
+                //    onItemClick: function () {
+                //        var JsDataService = app.$GetDataService();
+                //        JsDataService.ExecSQLProc(
+                //            '@Html.EncryptSQL("pLiquidationCheck")',
+                //            {
+                //                'ID_Liquidation': _.CurrentObject.ID,
+                //                'ID_CurrentUser': '#ID_CurrentUser'
+                //            }
+                //        ).then(function (response) {
+                //            VC.Reload();
+                //            //
+                //            VC.ToastSuccess('Successfully Checked');
+                //        }, function (error) {
+                //            //VC.ToastSuccess(error);
+                //        });
+                //    }
+                //});
+
+                var ReleaseStatus = function(ID_Location){
+
+                    if(_.CurrentObject.ChangeAmount > 0){
+                        VC.MsgBox('Cannot release with change amount');
+                        return;
+                    }
+                    if(!(_.CurrentObject.Reimbursement > 0)){
+                        VC.MsgBox('Cannot release with zero reimbursement');
+                        return;
+                    }
+                    
+
+                    var JsDataService = app.$GetDataService();
+                    JsDataService.pGetCurrentObject(
+                        '@Html.EncryptSQL("pLiquidationRelease")',
+                        {
+                            'ID_Liquidation': _.CurrentObject.ID,
+                            'ID_Location': ID_Location
+                        }
+                    ).then(function (response) {
+                        VC.Reload();
+                        //
+                        VC.ToastSuccess(response.Message);
+                    }, function (error) {
+                        //VC.ToastSuccess(error);
+                    });
+                }
+
+                VC.onContextMenuPreparing_Liquidation_Details = function (e) {
+
+                    if(_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 35){
+                        e.items.unshift({
+                            text: "Enable/Disable Input Vat",
+                            icon: "mdi mdi-menu",
+                            //template: "contextItem",
+                            onItemClick: function () {
+                                var Item = _.CurrentObject.Liquidation_Details[e.rowIndex];
+                                if(Item.IsVatable == undefined || Item.IsVatable == null) Item.IsVatable = false;
+                                Item.IsVatable = !(Item.IsVatable);
+                                VC.GetGridEditor('Liquidation_Details').refresh();
+                                _.Compute();
+                            }
+                        });
+                    }
+                }
+
+                /*
+                VC.AddToolbarButton({
+                    text: 'Release',
+                    IsDisabled: function () {
+                        if(VC.CurrentUser.IsPettyCashCustodian !== true){
+                            return true;
+                        }
+                        if ( _.CurrentObject.ID_FilingStatus == 2  && VC.CurrentUser.ID > 0 ) {//
+                            //if(_.CurrentObject.IsDirectLiquidation !== true){
+                                return false;
+                            //}
+                        }
+                        return true;
+                    },
+                    items:[
+                        {
+                            text: 'Head Office',
+                            icon: 'mdi mdi-package-variant',
+                            onClick:function () {
+                                ReleaseStatus(1)
+                            }
+                        },
+                        {
+                            text: 'Cebu Office',
+                            icon: 'mdi mdi-package-variant',
+                            onClick:function () {
+                                ReleaseStatus(3)
+                            }
+                        },
+                        {
+                            text: 'Service Center',
+                            icon: 'mdi mdi-package-variant',
+                            onClick:function () {
+                                ReleaseStatus(4)
+                            }
+                        }
+                    ]
+                });*/
+
+                VC.AddToolbarButton({
+                    text: 'Update Status',
+                    IsDisabled: function () {
+                        if(VC.CurrentUser.IsPettyCashCustodian !== true){
+                            return true;
+                        }
+                        if ( _.CurrentObject.ID_FilingStatus == 2 && VC.CurrentUser.ID > 0  ) {
+                            return false;
+                        }   
+                        return true;
+                    },
+                    items:[
+                    {
+                        text: 'Release',
+                        items:[
+                            {
+                                text: 'Head Office',
+                                icon: 'mdi mdi-package-variant',
+                                onClick:function () {
+									// if(VC.$scope.CurrentObject.$dirty == true){
+									// 	VC.MsgBox('Please save document first');
+									// 	return;
+									// }
+                                    ReleaseStatus(1)
+                                }
+                            },
+                            {
+                                text: 'Cebu Office',
+                                icon: 'mdi mdi-package-variant',
+                                onClick:function () {
+									// if(VC.$scope.CurrentObject.$dirty == true){
+									// 	VC.MsgBox('Please save document first');
+									// 	return;
+									// }
+                                    ReleaseStatus(3)
+                                }
+                            },
+                            {
+                                text: 'Service Center',
+                                icon: 'mdi mdi-package-variant',
+                                onClick:function () {
+									// if(VC.$scope.CurrentObject.$dirty == true){
+									// 	VC.MsgBox('Please save document first');
+									// 	return;
+									// }
+                                    ReleaseStatus(4)
+                                }
+                            },{
+                                text: 'Executive Office',
+                                icon: 'mdi mdi-package-variant',
+                                onClick:function () {
+									// if(VC.$scope.CurrentObject.$dirty == true){
+									// 	VC.MsgBox('Please save document first');
+									// 	return;
+									// }
+                                    ReleaseStatus(28)
+                                }
+                            }
+                        ]
+                    },{
+                        text: 'Received Change',
+                        icon: 'mdi mdi-package-variant',
+                        onClick:function () {
+							// if(VC.$scope.CurrentObject.$dirty == true){
+							// 	VC.MsgBox('Please save document first');
+							// 	return;
+							// }
+                            if(!(_.CurrentObject.ChangeAmount > 0  )){
+                                VC.MsgBox('Invalid change amount');
+                                return;
+                            }
+                            if(_.CurrentObject.IsReceived == true){
+                                VC.MsgBox('Change already received');
+                                return;
+                            }
+                            var JsDataService = app.$GetDataService();
+                            JsDataService.pGetCurrentObject(
+                                '@Html.EncryptSQL("pLiquidationReceived")',
+                                {
+                                    'ID_Liquidation': _.CurrentObject.ID
+                                }
+                            ).then(function (response) {
+                                VC.Reload();
+                                //
+                                VC.ToastSuccess(response.Message);
+                            }, function (error) {
+                                //VC.ToastSuccess(error);
+                            });
+                            
+                        }
+                    },{
+                        text: 'For Salary Deduction',
+                        icon: 'mdi mdi-package-variant',
+                        onClick:function () {
+							// if(VC.$scope.CurrentObject.$dirty == true){
+							// 	VC.MsgBox('Please save document first');
+							// 	return;
+							// }
+                            if(!(_.CurrentObject.ChangeAmount > 0  )){
+                                VC.MsgBox('Invalid change amount');
+                                return;
+                            }
+                            if(_.CurrentObject.IsReceived == true){
+                                VC.MsgBox('Change already received');
+                                return;
+                            }
+                            var JsDataService = app.$GetDataService();            
+                            JsDataService.ExecSQLProc(
+                                '@Html.EncryptSQL("pLiquidationDeduction")',
+                                {
+                                    'IDs': [_.CurrentObject.ID],
+                                    'ID_CurrentUser': '#ID_CurrentUser'
+                                }
+                            ).then(function (response) {
+                                VC.Reload();
+                                VC.ToastSuccess("For Salary Deduction");
+                            }, function () {
+                            });                            
+                        }
+                    },{
+                        text: 'For Replenishment',
+                        icon: 'mdi mdi-package-variant',
+                        onClick:function () {
+							// if(VC.$scope.CurrentObject.$dirty == true){
+							// 	VC.MsgBox('Please save document first');
+							// 	return;
+							// }
+							
+                            if(_.CurrentObject.ChangeAmount > 0 || _.CurrentObject.Reimbursement > 0){
+                                VC.MsgBox('Only zero change and reimbursement are allowed');
+                                return;
+                            }          
+
+                            var JsDataService = app.$GetDataService();            
+                            JsDataService.pGetCurrentObject(
+                                '@Html.EncryptSQL("pLiquidationForReplenishment")',
+                                {
+                                    'ID_Liquidation': _.CurrentObject.ID//,
+                                    //'ID_CurrentUser': '#ID_CurrentUser'
+                                }
+                            ).then(function (response) {
+                                VC.Reload();
+                                VC.ToastSuccess(response.Message);
+                            }, function () {
+                                
+                            });     
+                        }
+                    }
+
+
+                    ]
+                });
+                /* VC.AddToolbarButton({
+                    text: 'Received Change',
+                    IsDisabled: function () {
+                        if(_.CurrentObject.ID_FilingStatus == 2){
+                            if(_.CurrentObject.IsReceived !== true && (_.CurrentObject.ChangeAmount > 0  ) ){
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    },
+                    onClick: function(){
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.pGetCurrentObject(
+                            '@Html.EncryptSQL("pLiquidationReceived")',
+                            {
+                                'ID_Liquidation': _.CurrentObject.ID
+                            }
+                        ).then(function (response) {
+                            VC.Reload();
+                            //
+                            VC.ToastSuccess(response.Message);
+                        }, function (error) {
+                            //VC.ToastSuccess(error);
+                        });
+                    }
+                });
+                VC.AddToolbarButton({
+                    text: 'For Salary Deduction',
+                    IsDisabled: function () {
+                        if(VC.CurrentUser.IsPettyCashCustodian !== true){
+                            return true;
+                        }
+                        if ( _.CurrentObject.ID_FilingStatus == 2 && VC.CurrentUser.ID > 0  ) {
+                            return false;
+                        }   
+
+                        return true;
+                    },
+                    onItemClick: function(){
+                        var $q = app.$GetAsync();
+                        var JsDataService = app.$GetDataService();
+            
+                        JsDataService.ExecSQLProc(
+                            '@Html.EncryptSQL("pLiquidationDeduction")',
+                            {
+                                'IDs': [_.CurrentObject.ID],
+                                'ID_CurrentUser': '#ID_CurrentUser'
+                            }
+                        ).then(function (response) {
+                            VC.Reload();
+                            VC.ToastSuccess("For Salary Deduction");
+                        }, function () {
+                        });
+                    }
+                }); 
+
+                VC.AddToolbarButton({
+                    text: 'For Replenishment',
+                    IsDisabled: function () {
+                        if(VC.CurrentUser.IsPettyCashCustodian !== true){
+                            return true;
+                        }
+                        if ( _.CurrentObject.ID_FilingStatus == 2 && VC.CurrentUser.ID > 0  ) {
+                            if(_.CurrentObject.ChangeAmount == 0 && _.CurrentObject.Reimbursement == 0){
+                                return false;
+                            }
+                        }   
+
+                        return true;
+                    },
+                    onItemClick: function(){
+                        var $q = app.$GetAsync();
+                        var JsDataService = app.$GetDataService();
+            
+                        JsDataService.pGetCurrentObject(
+                            '@Html.EncryptSQL("pLiquidationForReplenishment")',
+                            {
+                                'ID_Liquidation': _.CurrentObject.ID
+                            }
+                        ).then(function (response) {
+                            VC.Reload();
+                            VC.ToastSuccess(response.Message);
+                        }, function () {
+                            
+                        });
+                    }
+                });  */
+
+
+            };
+
+
+
+          VC.AddButtonReport({
+              Name: 'Liquidation Form',
+              ID_Report: 4191,
+              requireSingleObject: true
+          });
+		 
+			//LQ 2
+			VC.AddButtonReport({
+                Name: 'Liquidation Form with PCV',
+                ID_Report: 4208,
+                requireSingleObject: true
+            });
+
+
+            if (_.ID_ViewType == 2) {
+
+                VC['Liquidation_Details_ID_Means_onColumnDataSourceLoad'] = function(data,e){
+                        data.params.ID_Type = e.ID_Itinerary == undefined ? null: e.ID_Itinerary;
+                }
+                VC['Liquidation_Details_ID_RefDoc_onColumnDataSourceLoad'] = function(data,e){
+                        console.log(e)
+                        data.params.Reference = e.ID_RefModel == undefined ? null: e.ID_RefModel;
+                }
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    if(_.CurrentObject.TotalLiquidationCost == 0){
+                         brokenRules.push('Total Liquidation Cost is zero');
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+                    var currentTime = new Date();
+
+                    currentTime.setMinutes(0);
+                    currentTime.setSeconds(0);
+
+                    var currentTimeStart = new Date(_.CurrentObject.StartTime);
+                    var currentTimeEnd = new Date(_.CurrentObject.EndTime);
+                    // var dateCA = new Date(_.CurrentObject.DateCashAdvanceRequest);
+
+
+
+
+
+
+                    //if( _.CurrentObject.TotalLiquidationCost == null||  _.CurrentObject.TotalLiquidationCost == 0  ){ // Transportation
+                    //        brokenRules.push('Total Liquidation Cost is required.');
+                    //        isErrorMeans = true;
+                    //}
+
+
+                    var isErrorMeans = false;
+                    var isErrorProjectCost = false;
+                    var isErrorDetails = false;
+                    var IsForAP = false;
+                    var IsForBorrow = false;
+                    var TotalCA = 0;
+
+                    if(_.CurrentObject.IsCourtesyVisit === true){
+                        if(_.CurrentObject.ManualLocation == undefined || _.CurrentObject.ManualLocation == null){
+                            brokenRules.push('Location is required.');
+                        }else{
+                            if(_.CurrentObject.ManualLocation.trim().length === 0 ){
+                                brokenRules.push('Location is required.');
+                            }
+                        }
+                    }
+
+                    $.each(_.CurrentObject.Liquidation_Details, function (i, cashAdvance) {
+                        if(cashAdvance.ProjectCost == undefined || cashAdvance.ProjectCost == null) cashAdvance.ProjectCost = 0.00;
+                        TotalCA = TotalCA + cashAdvance.ProjectCost;
+                        
+                        if(cashAdvance.ActualCost == undefined || cashAdvance.ActualCost == null) cashAdvance.ActualCost = 0.00;
+                        if(cashAdvance.Cost == undefined || cashAdvance.Cost == null) cashAdvance.Cost = 0.00;
+                        if(cashAdvance.ActualCost > cashAdvance.Cost ){
+                            brokenRules.push('Approved Cost cannot exceed actual cost');
+                            return {
+                                isValid: false,
+                                brokenRules: brokenRules
+                            }
+                        }
+                        console.log(cashAdvance.ID_Itinerary)
+                        if(cashAdvance.ID_Itinerary == undefined || cashAdvance.ID_Itinerary == null || !(cashAdvance.ID_Itinerary > 0) ){
+                            brokenRules.push('Category is required.');
+                        }
+                        if(isErrorMeans == false && [1,2].includes(cashAdvance.ID_Itinerary) && (cashAdvance.ID_Means == 0 || cashAdvance.ID_Means == null) ){ // Transportation
+                             brokenRules.push('Type is required.');
+                             isErrorMeans = true;
+                        }
+
+
+                        if(isErrorDetails == false && (cashAdvance.ID_Itinerary !== 2 ) && (cashAdvance.Details == null || cashAdvance.Details.trim().length == 0 ) ){
+                            brokenRules.push('Details is required.');
+                            isErrorDetails = true;
+                        }
+
+                        if(cashAdvance.ID_Itinerary == 5 && cashAdvance.ID_RefDoc == null){
+                            brokenRules.push('Ref # is required.');
+                        }
+
+                  //   if(cashAdvance.ID_Itinerary == 1){
+                  //       if(cashAdvance.StartTime == null || cashAdvance.StartTime == undefined){
+                  //           brokenRules.push('Start Time is required.');
+                  //       }
+                  //       if(cashAdvance.EndTime == null || cashAdvance.EndTime == undefined){
+                  //           brokenRules.push('End Time is required.');
+                  //       }
+                  //   }
+
+                    //   if(cashAdvance.ID_Itinerary == 1 || cashAdvance.ID_Itinerary == 2){
+                    //       if(cashAdvance.Date == null || cashAdvance.Date == undefined){
+                    //           brokenRules.push('Date is required.');
+                    //       }
+                    //   }
+
+                        if(cashAdvance.ID_Itinerary == 5){
+                            IsForAP = true;
+                            var RefDocAmount = cashAdvance.RefDocAmount == null || cashAdvance.RefDocAmount == undefined ? 0.00:cashAdvance.RefDocAmount;
+                            var ActualCost =  cashAdvance.ActualCost == null || cashAdvance.ActualCost == undefined ? 0.00:cashAdvance.ActualCost;
+
+                            if( parseFloat(ActualCost.toFixed(2)) !== parseFloat(RefDocAmount.toFixed(2)) ){
+                                brokenRules.push('Actual Cost must equal to Ref Amount');
+                            }
+                        }
+                        if(cashAdvance.ID_Itinerary == 7){
+                            IsForBorrow = true;
+                        }
+                    });
+
+                    if(_.CurrentObject.TotalCashAdvance > 0){
+                        console.log('mismatch check', TotalCA ,_.CurrentObject.TotalCashAdvance )
+                        if(parseFloat(TotalCA.toFixed(2)) !== parseFloat(_.CurrentObject.TotalCashAdvance)){
+                            brokenRules.push('CA Amount mismatch! Please check your entry.');
+                        }
+                    }
+
+                    if(IsForBorrow == false){
+                        if( currentTimeEnd < currentTimeStart ){
+                            brokenRules.push('End Date/Time must not less than Start Date/Time');
+                        }else{
+                            var diff = currentTimeEnd - currentTimeStart;
+                            var minutes = Math.floor((diff/1000)/60);
+                            if( minutes < 30 ){
+                                brokenRules.push('End Date/Time must have atleast 30 minutes ahead to Start Date/Time');
+                            }
+                        }
+                    }
+
+
+                    if(IsForAP == false && IsForBorrow == false){
+                        if(_.CurrentObject.IsCourtesyVisit !== true){
+                            if(_.CurrentObject.ID_Client == undefined || _.CurrentObject.ID_Client == null){
+                                brokenRules.push('Client is required.');
+                            }
+                            if(_.CurrentObject.Address == undefined || _.CurrentObject.Address == null){
+                                brokenRules.push('Address is required.');
+                            }
+                        }
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+            }
+
+        }
+
+
+       var GetFormattedTime = function (date) {
+
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                var ampm = hours >= 12 ? 'pm' : 'am';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+                minutes = minutes < 10 ? '0'+minutes : minutes;
+                var strTime = hours + ':' + minutes + ' ' + ampm;
+                return  strTime;
+        }
+
+        VC_Liquidation.prototype.onLoad = function(){
+            baseModelHelper.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+            if(_.CurrentObject.ID > 0){
+
+                if( _.CurrentObject.ID_FilingStatus == 1){
+                    VC.IsFormReadOnly = false;
+                }
+                else if(_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 35){
+                    
+                    if(VC.CurrentUser.IsPettyCashCustodian == true){
+                        VC.IsFormReadOnly = false;
+                    }else{
+                        var isLevel2 = true;
+                        if(_.CurrentObject.Level2Approvers == undefined || _.CurrentObject.Level2Approvers == null ){
+                            isLevel2 = false;
+                        }else{
+                            var ID_Approvers = _.CurrentObject.Level2Approvers.split(",");
+                            if (!ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                isLevel2 = false;
+                            }
+                        }
+                        if(_.CurrentObject.ID_FilingStatus > 1){
+                            if([1,2,35].includes(_.CurrentObject.ID_FilingStatus) && (VC.CurrentUser.ID == 274 || VC.CurrentUser.ID == 32 || isLevel2 == true)){
+                                VC.IsFormReadOnly = false;
+                            }else{
+                                VC.IsFormReadOnly = true;
+                            }
+                        }
+                    }
+                     
+
+                   // VC.IsFormReadOnly = false;
+                }else{
+                    VC.IsFormReadOnly = true;
+                }
+               //if(_.CurrentObject.ID_FilingStatus == 33){
+               //    if(_.CurrentObject.ID_CurrentApprovers == undefined || _.CurrentObject.ID_CurrentApprovers == null){
+               //    
+               //    }else{
+               //        var ID_Approvers = _.CurrentObject.ID_CurrentApprovers.split(",");
+               //        if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+               //            VC.IsFormReadOnly = false;
+               //        }
+               //    }
+               //}
+				//
+
+                if(_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 35){
+                    var isVatableExist = false;
+                    $.each(_.CurrentObject.Liquidation_Details,function(i,o){
+                        if(o.IsVatable == true){
+                            isVatableExist = true;
+                        }
+                    });
+                    if(isVatableExist == true){
+                        //VC.setFormReadOnly(true);
+                    }
+                }
+
+            }
+
+        }
+
+        VC_Liquidation.prototype.onDetailRowUpdated = function () {
+                var VC = this.VC;
+                if ( this.CACompanionGrid !== undefined ){
+                    this.CACompanionGrid.refresh();
+                }
+        }
+
+        VC_Liquidation.prototype.onInitDetailView = function (VC) {
+
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+
+
+             var  fLoadCashAdvanceDetail = function(ID){
+
+                    app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM vCashAdvanceRequest_CashAdvance where ID_CashAdvanceRequest IN (@ID_CashAdvanceRequests)")',
+                    {
+                        params:
+                        {
+                            'ID_CashAdvanceRequests': ID
+                        }
+                    }).then(function (data)
+                    {
+
+                        if (_.CurrentObject.Liquidation_Details == undefined) {
+                                _.CurrentObject.Liquidation_Details = []
+                        }
+
+                        if (VC._DeletedItems['Liquidation_Details']  == undefined) {
+                            VC._DeletedItems['Liquidation_Details'] = [];
+                        }
+
+
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.Liquidation_Details).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['Liquidation_Details'].push(o);
+                        });
+                        VC.$scope.CurrentObject.Liquidation_Details = [];
+
+                        $.each(data.collection, function (i, record)
+                        {
+
+                            var NewDetail = {
+                                                ID: _.rndID(),
+                                                ID_Itinerary: record.ID_Itinerary,
+                                                Itinerary:  record.Itinerary,
+                                                ID_Means: record.ID_Means,
+                                                Means: record.Means,
+                                                Details: record.Details,
+                                                ProjectCost: record.ProjectCost,
+                                                ActualCost: 0.00,
+                                                ID_CashAdvanceRequest : record.ID_CashAdvanceRequest,
+                                                ID_DocDetail: record.ID,
+                                                ID_DocDetailParentModel: AcctHelper.Model_ID_Liquidation,
+                                                ID_RefModel: record.ID_Model,
+                                                ID_RefDoc: record.ID_Doc,
+                                                RefDoc: record.Doc,
+                                                RefDocAmount: record.DocAmount,
+                                                Client: VC.$scope.CurrentObject.Client,
+                                                ID_Client: VC.$scope.CurrentObject.ID_Client,
+                                                IsVatable: record.IsVatable,
+                                                VatAmount: record.VatAmount,
+                                                Date: record.Date
+                                            };
+
+                            _.CurrentObject.Liquidation_Details.push(NewDetail);
+
+
+                        });
+
+
+                        _.Compute();
+
+                    });
+
+
+            };
+
+
+             var  fLoadCACompanion= function(ID){
+
+                    app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM vCashAdvanceRequest_Companion where ID_CashAdvanceRequest IN (@ID_CashAdvanceRequests) ")',
+                    {
+                        params:
+                        {
+                            'ID_CashAdvanceRequests': ID
+                        }
+                    }).then(function (data)
+                    {
+
+                        if (_.CurrentObject.Liquidation_CompanionPersons == undefined) {
+                                _.CurrentObject.Liquidation_CompanionPersons = []
+                            }
+
+                        if (VC._DeletedItems['Liquidation_CompanionPersons']  == undefined) {
+                            VC._DeletedItems['Liquidation_CompanionPersons'] = [];
+                        }
+
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.Liquidation_CompanionPersons).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['Liquidation_CompanionPersons'].push(o);
+                        });
+
+                        VC.$scope.CurrentObject.Liquidation_CompanionPersons = [];
+
+
+
+                        $.each(data.collection, function (i, record)
+                        {
+
+                             var NewDetail = {
+                                    ID: _.rndID(),
+                                    ID_Employee: record.ID_Employee,
+                                    Employee: record.Employee,
+                                    ID_Position: record.ID_Position,
+                                    ID_User: record.ID_User,
+                                    Position: record.Position
+                                };
+
+                                _.CurrentObject.Liquidation_CompanionPersons.push(NewDetail);
+
+
+                        });
+
+
+
+                    });
+
+
+            };
+
+
+            var fBrowseCashAdvance = function(){
+
+
+                var ID_Employee =   VC.CurrentUser.ID_Employee;
+                var IDs = [-1];
+                $.each(_.CurrentObject.Liquidation_Details,function(i,o){
+                    if(o.ID_CashAdvanceRequest !== null && o.ID_CashAdvanceRequest !== undefined){
+                        IDs.push(o.ID_CashAdvanceRequest)
+                    }
+                });
+
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM vAllowedCashAdvanceRequest WHERE ID NOT IN(@IDs) AND ID_Employee IN (@ID_Employee)  ")';
+                var filterParam = {
+                     'ID_Employee': VC.CurrentUser.ID_Employee,
+                     'IDs': IDs
+                };
+
+                var browseDataSetParam =
+                {
+                    title: 'Browse Cash Advance',
+                    ID_View: 'F9299364-03DF-4023-938A-A0CD8DBA6A64',
+                    params: filterParam
+                };
+
+                var browseDataSetThen = function(selectedRecord){
+
+                    if (selectedRecord.length > 1){
+
+                        VC.MsgBox("Select only 1 Cash Advance Record", "Browse Cash Advance");
+
+                        return;
+                    }
+
+                    if(selectedRecord.length > 0){
+
+                        var currentCA = selectedRecord[0];
+
+
+
+                        /*
+                        var objCA =  VC.GetDxControl('ID_CashAdvanceRequest');
+                        objCA.option('selectedItem', {
+                                        ID:  currentCA.ID ,
+                                        Name:  currentCA.Name
+                                    });
+                        objCA.refresh();
+                        */
+
+                        var objClient =  VC.GetDxControl('ID_Client');
+                        objClient.option('selectedItem', {
+                                ID: currentCA.ID_Client,
+                                Name: currentCA.Client
+                            });
+                        objClient.refresh();
+
+
+                        VC.$scope.CurrentObject.ID_Location = currentCA.ID_Location;
+                        VC.$scope.CurrentObject.VatRate = currentCA.VatRate;
+                        VC.$scope.CurrentObject.Client =  currentCA.Client;
+                        VC.$scope.CurrentObject.ID_Client =  currentCA.ID_Client;
+                        VC.$scope.CurrentObject.IsCourtesyVisit =  currentCA.IsCourtesyVisit;
+                        VC.$scope.CurrentObject.ManualLocation =  currentCA.ManualLocation;
+
+                        VC.$scope.CurrentObject.StartTime = currentCA.StartTime;
+                        VC.$scope.CurrentObject.EndTime = currentCA.EndTime ;
+
+
+                        
+
+                        VC.$scope.CurrentObject.Purpose =  currentCA.Purpose;
+                        VC.$scope.CurrentObject.Project =  currentCA.Project;
+
+
+                        VC.$scope.CurrentObject.ID_CashAdvanceRequest =  currentCA.ID ;
+                        VC.$scope.CurrentObject.CashAdvanceRequest =  currentCA.Name ;
+
+                        VC.$scope.CurrentObject.TotalCashAdvance =  currentCA.CA_Amt ;
+
+                        VC.$scope.CurrentObject.DateCashAdvanceRequest =  currentCA.Date;
+
+                        VC.$timeout(function(){
+                            VC.$scope.CurrentObject.Address =  currentCA.Address;
+                        });
+                        fLoadCashAdvanceDetail(currentCA.ID);
+                        fLoadCACompanion(currentCA.ID);
+
+
+
+
+                    }
+
+                }
+
+                VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+
+            }
+
+            var fBrowseCompanion = function(){
+
+                var employeeIDs = Enumerable.From(_.CurrentObject['Liquidation_CompanionPersons']).Select("$.ID_Employee").ToArray();
+
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM vEmployee WHERE ID NOT IN ( @ID_Employees ) AND ID <> @ID_CurrentUser")';
+                var filterParam = {
+                    'ID_Employees': employeeIDs,
+                        'ID_CurrentUser': VC.CurrentUser.ID
+                };
+
+                var browseDataSetParam =
+                {
+                    title: 'Add Employee',
+                    ID_View: '172FDFDC-8978-453D-A8F6-60E6C664CB41',
+                    params: filterParam
+                };
+
+                var browseDataSetThen = function(selectedRecord){
+
+                }
+
+                VC.BrowseDataSet(sql, browseDataSetParam).then(fAddSelectedCompanion);
+
+            }
+
+            var fAddSelectedCompanion = function(selectedRecord){
+
+                if (_.CurrentObject.Liquidation_CompanionPersons == undefined) {
+                    _.CurrentObject.Liquidation_CompanionPersons = []
+                }
+
+                $.each(selectedRecord, function (i, record) {
+
+                    var NewDetail = {
+                        ID: _.rndID(),
+                        ID_Employee: record.ID,
+                        Employee: record.Name,
+                        ID_Position: record.ID_Position,
+                        ID_User: record.ID_User,
+                        Position: record.Position
+                    };
+
+                    _.CurrentObject.Liquidation_CompanionPersons.push(NewDetail);
+
+                });
+            }
+
+             var fAddItineraryRow = function(){
+
+                if (_.CurrentObject.Liquidation_Details == undefined) {
+                    _.CurrentObject.Liquidation_Details = []
+                }
+
+                var NewDetail = {
+                                ID: _.rndID(),
+                                ID_Itinerary: null,
+                                Itinerary:  '',
+                                ID_Means: null,
+                                Means: '',
+                                Details: '',
+                                ProjectCost: 0.00,
+                                ActualCost: 0.00,
+                                Cost: 0.00,
+                                ID_Client: null,
+                                Client: null,
+                                StartTime: new Date(),
+                                EndTime: new Date(),
+                                ID_DocDetailParentModel: AcctHelper.Model_ID_Liquidation,
+                                DocAmount: 0.00,
+                                ID_RefDoc: null,
+                                RefDoc: null,
+                                ID_RefModel: null,
+                                ID_CashAdvanceRequest: null,
+                                IsVatable: false,
+                                VatAmount:0.00,
+                                Date : new Date()
+                            };
+
+                _.CurrentObject.Liquidation_Details.push(NewDetail);
+            };
+
+
+            VC.AddToolBarButtonOnGrid('Liquidation_CompanionPersons', {
+                text: 'Add Employee',
+                icon: 'mdi mdi-package-variant',
+                onClick: fBrowseCompanion
+            }, true);
+
+
+            VC.AddToolBarButtonOnGrid('Liquidation_Details', {
+                text: 'Add Entry',
+                icon: 'mdi mdi-package-variant',
+                onClick: fAddItineraryRow
+            }, true);
+
+
+
+          if (_.ID_ViewType == 2) {
+
+                VC.AddToolbarButton({
+                    text: 'Browse Cash Advance',
+                    onItemClick: fBrowseCashAdvance,
+                    IsDisabled: function () {
+
+                        if (_.CurrentObject.ID_FilingStatus == 1) return false;
+
+                        return true;
+                    }
+                });
+
+         }
+
+
+        }
+                          // var ID_Approvers = SelectedRows[0].ID_CurrentApprovers.split(",");
+                          // if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                          //     return false;
+                          // }
+
+        VC_Liquidation.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            /*
+            var StartDate = VC.GetDxControl('Date');
+            var dateCreated = _.CurrentObject.ID > 0 ?  _.CurrentObject.DateCreated:  new Date();
+            StartDate._options.min = dateCreated;*/
+
+            VC.Liquidation_Details_onColumnChanged = function (e) {
+                if(e.dataField === 'ID_Itinerary'){
+
+                    e.key.ID_Means = null;
+                    e.key.Means = null;
+                }
+                if(e.dataField === 'ID_Means'){
+
+                    e.key.ID_RefDoc = null;
+                    e.key.RefDoc = null;
+                    e.key.RefDocAmount = 0.00;
+
+                    if(e.data !== undefined && e.data !== null) {
+                        if(e.data.Code !== undefined){
+
+                            if(e.key.ID_Itinerary == 5){
+                                e.key.ID_RefModel = e.data.Code == null ? null : parseInt(e.data.Code);
+                            }
+                        }
+                        //console.log(e.key)
+                    }
+
+                }
+
+                if(e.dataField === 'ID_RefDoc'){
+                    if(e.data !== undefined && e.data !== null) {
+                        if(e.data.TotalAmount !== undefined){
+                            e.key.RefDocAmount = e.data.TotalAmount == null ? 0.00 : e.data.TotalAmount;
+                            e.key.Supplier = e.data.Supplier;
+                        }
+                    }
+
+                }
+
+                if(e.dataField === 'Cost'){
+                    e.key.ActualCost = e.key.Cost;
+                }
+                _.Compute();
+
+            };
+
+        }
+
+         VC_Liquidation.prototype.onCurrentObjectChanged = function (e) {
+           baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = _.VC;
+
+
+
+            if ( e.dataField == 'ID_Client'  ) {
+                console.log(e.value)
+               if ( e.value !== null  && VC.$scope.CurrentObject.$dirty != undefined ){
+                    if(e.value.FullAddress !== undefined){
+                        VC.$scope.CurrentObject.Address = e.value.FullAddress;
+                    }
+
+                } else {
+
+                    if( VC.$scope.CurrentObject.$dirty == true){
+
+                        VC.$scope.CurrentObject.Address = null;
+                    }
+                }
+				
+				if(VC.$scope.CurrentObject.$dirty != undefined){
+                    if(VC.GetDxControl('ID_Project_Branch') !== null){
+                        VC.GetDxControl('ID_Project_Branch').Clear();
+                        VC.GetDxControl('ID_Project_Branch').$dirty = true;
+                    }
+                    if(VC.GetDxControl('ID_Project') !== null){
+                        VC.GetDxControl('ID_Project').Clear();
+                        VC.GetDxControl('ID_Project').$dirty = true;
+                    }
+				}
+            }
+
+			if(e.dataField == "ID_Project"){
+                if(VC.GetDxControl('ID_Project_Branch') !== null){
+                    VC.GetDxControl('ID_Project_Branch').Clear();
+                    VC.GetDxControl('ID_Project_Branch').$dirty = true;
+                }		
+			}
+			
+            if(e.dataField == "StartTime"){
+                _.CurrentObject.DateCashAdvanceRequest = _.CurrentObject.StartTime;
+                if(new Date(_.CurrentObject.StartTime) > new Date(_.CurrentObject.EndTime )){
+                    _.CurrentObject.EndTime = _.CurrentObject.StartTime;
+                }
+            }
+            /*
+
+            if ( e.dataField == 'ID_CashAdvanceRequest' ) {
+
+                if ( e.value !== null && VC.$scope.CurrentObject.$dirty != undefined  ){
+
+
+
+                    VC.$scope.CurrentObject.$dirty = false;
+
+                    _.CurrentObject.Client = e.value.Client;
+                    _.CurrentObject.Address = e.value.Address;
+                    _.CurrentObject.ID_Client = e.value.ID_Client;
+
+
+                } else {
+
+
+                    if(VC.$scope.CurrentObject.$dirty != undefined){
+
+                        if (VC._DeletedItems['Liquidation_Details']  == undefined) {
+                            VC._DeletedItems['Liquidation_Details'] = [];
+                        }
+
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.Liquidation_Details).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['Liquidation_Details'].push(o);
+                        });
+
+                        VC.$scope.CurrentObject.Liquidation_Details = [];
+
+                        _.CurrentObject.ID_Client = null;
+                        _.CurrentObject.Client = null;
+                        _.CurrentObject.Address = null;
+
+                    }
+
+                }
+            }*/
+
+
+
+        }
+
+
+         VC_Liquidation.prototype.onCollectionSource_Load = function (data) {
+
+            baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+
+            var filterValue = VC.ActionFilters.VC_LocationFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+
+            var criteria = '';  
+
+            if (filterValue < 0) {
+                
+            } else {
+                WhereCriteria.push(" ISNULL(ID_Location,ID_Warehouse) = " + filterValue) //Cancelled
+            }
+
+
+            if(Allowed_ID_UserGroups.includes(VC.CurrentUser.ID_UserGroup) == false && VC.CurrentUser.ID != 4 ){
+
+                //criteria += "ID_Employee = " + VC.CurrentUser.ID_Employee.toString() ;
+                //if(VC.CurrentUser.IsPettyCashCustodian == true){
+                //    criteria += " OR  ISNULL(ID_Location,ID_Warehouse) = " + VC.CurrentUser.ID_PettyCashWarehouse.toString(); 
+                //}
+            }
+
+            
+            //if(VC.CurrentUser.IsPettyCashCustodian == true){
+            //    if(criteria.length > 0){
+            //        criteria += " OR ";
+            //    }
+            //    criteria += " ISNULL(ID_Location,ID_Warehouse) = " + VC.CurrentUser.ID_PettyCashWarehouse.toString(); 
+            //}
+
+            if(criteria.length > 0){
+                WhereCriteria.push(criteria);
+            }
+
+        }
+
+
+        VC_Liquidation.prototype.Compute = function () {
+
+            var _ = this;
+
+            var TotalLiquidatedCost = 0;
+            var TotalCashAdvance = 0;
+            var TotalVat = 0.00;
+
+            if (_.CurrentObject.Liquidation_Details == undefined) {
+                _.CurrentObject.Liquidation_Details = [];
+            }
+
+
+            if (_.CurrentObject.Liquidation_Details.length > 0) {
+                if(_.CurrentObject.VatRate == undefined || _.CurrentObject.VatRate == null) _.CurrentObject.VatRate = 12.00;
+                $.each(_.CurrentObject.Liquidation_Details, function (i, liquidation) {
+
+                       TotalLiquidatedCost +=  liquidation.ActualCost;
+
+                        if(liquidation.IsVatable == true){
+                            liquidation.VatAmount =  ( liquidation.ActualCost / (1 + (_.CurrentObject.VatRate / 100)) ) * (_.CurrentObject.VatRate / 100);
+                            TotalVat += liquidation.VatAmount;
+                        }else{
+                            liquidation.VatAmount = 0.00;
+                        }
+
+                });
+            }else{
+
+
+
+            }
+
+            _.CurrentObject.TotalVat = TotalVat;
+            _.CurrentObject.TotalLiquidationCost = TotalLiquidatedCost; //- TotalVat;
+                TotalCashAdvance =    _.CurrentObject.TotalCashAdvance ;
+
+            _.CurrentObject.ChangeAmount =  (TotalCashAdvance > TotalLiquidatedCost ? TotalCashAdvance - TotalLiquidatedCost   : 0  );
+            _.CurrentObject.Reimbursement = (TotalLiquidatedCost > TotalCashAdvance ?  TotalLiquidatedCost - TotalCashAdvance  : 0 );
+
+
+        }
+
+
+
+        //
+        VC_Liquidation.prototype.isColumnGridEditable = function (p, e) {
+            //
+            //
+            //
+            var _ = this;
+            var VC = _.VC;
+
+            console.log('XB',_.CurrentObject.Level2Approvers)
+            console.log('ABC',p)
+
+            if(p == 'Liquidation_Details'){
+                
+                if(e.column.dataField == 'ActualCost'){
+                    if(_.CurrentObject.Level2Approvers == undefined || _.CurrentObject.Level2Approvers == null ){
+                        return false;
+                    }else{
+                        var ID_Approvers = _.CurrentObject.Level2Approvers.split(",");
+                        if (!ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                            return false;
+                        }
+                    }
+                }
+                else if(e.column.dataField == 'ProjectCost'){
+                    if(_.CurrentObject.ID_FilingStatus == 1 && _.CurrentObject.ID_CashAdvanceRequest > 0){
+                        
+                    }else{
+                        return false;
+                    }
+                }
+                else if(e.column.dataField == 'ID_Means' || e.column.dataField == 'ID_Itinerary'){
+                    
+                    var isLevel2 = true;
+                    if(_.CurrentObject.Level2Approvers == undefined || _.CurrentObject.Level2Approvers == null ){
+                        isLevel2 = false;
+                    }else{
+                        var ID_Approvers = _.CurrentObject.Level2Approvers.split(",");
+                        if (!ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                            isLevel2 = false;
+                        }
+                    }
+                    if(_.CurrentObject.ID_FilingStatus > 1){
+                        if([1,2,35].includes(_.CurrentObject.ID_FilingStatus) && (VC.CurrentUser.ID == 274 || C.CurrentUser.ID == 32 || isLevel2 == true)){
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }
+                }
+                else{
+                    if(_.CurrentObject.ID_FilingStatus > 1){
+                        return false;
+                    }
+                }
+            }
+
+
+            return true;
+        }
+
+        VC_Liquidation.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var VC = _.VC;
+            
+            if(_.ID_ViewType == 2){
+                if(VC.$scope.CurrentObject.$dirty == true){
+                    VC.MsgBox('Please save document first');
+                    return;
+                }
+            }
+
+            baseModelHelper.prototype.PerformApproved.call(this, items);
+        }
+
+        //
+        //
+        //
+        VC_Liquidation.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            if(Items.length == 0){
+                defer.reject();
+            }
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pLiquidationApprove")',
+                {
+                    'IDs': [Items[0].ID],//Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_Liquidation.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            if(Items.length == 0){
+                defer.reject();
+            }
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pLiquidationCancel")',
+                {
+                    'IDs': [Items[0].ID],//Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+
+
+
+        return VC_Liquidation;
+    });
+//</script>
+</text> , false )

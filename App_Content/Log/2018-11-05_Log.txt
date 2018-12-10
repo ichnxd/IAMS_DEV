@@ -1,0 +1,5 @@
+11/5/2018 2:37:34 PM: _pGetDataSet ---> Incorrect syntax near ','..
+11/5/2018 2:37:41 PM: _pGetDataSet ---> Incorrect syntax near ','..
+11/5/2018 4:20:02 PM: pValidateDocFilingStatus ---> Invalid column name 'ID_FilingStatus'..
+11/5/2018 4:20:09 PM: pValidateDocFilingStatus ---> Invalid column name 'ID_FilingStatus'..
+11/5/2018 4:23:47 PM: pValidateDocFilingStatus ---> Invalid column name 'ID_FilingStatus'..

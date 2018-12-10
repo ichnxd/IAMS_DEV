@@ -1,0 +1,11 @@
+4/13/2018 3:18:15 PM: pCashAdvanceRequestRelease ---> Insufficient fund.
+4/13/2018 5:36:04 PM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FK_tModelListView_Detail_ID_ModelProperty". The conflict occurred in database "_IAMS_20180413", table "dbo._tModelProperty", column 'ID'.
+The statement has been terminated..
+4/13/2018 5:36:19 PM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FK_tModelListView_Detail_ID_ModelProperty". The conflict occurred in database "_IAMS_20180413", table "dbo._tModelProperty", column 'ID'.
+The statement has been terminated..
+4/13/2018 5:37:02 PM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FK_tModelListView_Detail_ID_ModelProperty". The conflict occurred in database "_IAMS_20180413", table "dbo._tModelProperty", column 'ID'.
+The statement has been terminated..
+4/13/2018 5:38:32 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table '_IAMS_20180413.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/13/2018 5:38:33 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table '_IAMS_20180413.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

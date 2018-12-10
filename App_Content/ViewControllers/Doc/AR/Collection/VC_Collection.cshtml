@@ -1,0 +1,700 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        "use strict"
+        function VC_Collection() { }
+
+        VC_Collection.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Collection.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+
+
+            this.butApproved.text = "Posted";
+            this.butApproved.icon = "mdi mdi-checkbox-marked-circle-outline";
+
+            VC.AddButtonReport({
+                Name: 'Collection Receipt form',
+                ID_Report: 2048,
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'Official Receipt form',
+                ID_Report: 2051,
+                requireSingleObject: true
+            });
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+                
+                VC['onPaymentTransaction_PaymentSchemes_RowUpdated'] = function (Grid, Detail) {
+                    $.each(Detail,function (i,d) {
+                        d.Amount = d.Rate * _.CurrentObject.TotalAmount;
+                    });
+                }
+
+                VC.AddToolbarButton({
+                    text: 'Update Record',
+                    items: [
+                        {
+                            text: 'Date Deposit',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                if (_.CurrentObject.ID_FilingStatus !== 2) {
+                                    return true;
+                                }
+                                return false;
+                            },
+                            onItemClick: function () {
+
+                                var CurrentObjects = null;
+
+                                if (_.ID_ViewType == 1) { //ListView
+
+                                    CurrentObjects = _.Grid.getSelectedRowsData();
+                                } else if (_.ID_ViewType == 2) { //DetailView
+
+                                    CurrentObjects = [_.CurrentObject];
+                                }
+
+
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px">'
+                                    + '<div style="padding-top:5px">Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Date Deposit',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            ReferenceNo: null,
+                                            DateDeposit: new Date()
+                                        };
+
+
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.DateDeposit'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.DateDeposit == null) {
+                                                VC.MsgBox("Date is required.")
+                                                return;
+                                            };
+
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdateDepositDate")', {
+                                                'IDs': Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                                                'DepositDate': s.CurrentObject.DateDeposit
+                                            }).then(function () {
+
+                                                if (_.ID_ViewType == 1) {
+                                                  
+                                                    _.Grid.refresh();
+                                                }else{
+
+                                                    VC.Reload();
+                                                }
+                                                VC.ToastSuccess('Update Successfully');
+                                                d.hide();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    ]
+                });
+
+                var AddModeOfPayment = function (ID_ModelDetailView, PropertyName) {
+
+                    var TotalVPAmt = 0;
+                    var TotalPayment = 0;
+                    var Balance = 0;
+
+                    var ID_DetailView = null;
+
+                    VC.OpenOnNewWindowByID(ID_ModelDetailView, -1, {
+                        fullScreen: false,
+                        InitController: function (scope) {
+
+                        },
+                        IsEditingOnly: true,
+                        Width: $(window).width() * 0.80,
+                        shading: true
+                    }).then(function (currentPayment) {
+
+                        if (_.CurrentObject[PropertyName] == undefined || _.CurrentObject[PropertyName] == null) {
+                            _.CurrentObject[PropertyName] = [];
+                        }
+
+                        if (currentPayment.ID_CheckType_DisplayName !== undefined) {
+
+                            currentPayment.CheckType = currentPayment.ID_CheckType_DisplayName;
+                            currentPayment.ID_PDCBy = null;
+
+                        }
+
+                        currentPayment.ID_PaymentTransaction = _.CurrentObject.ID
+
+
+                        //    VC.$timeout(function () {
+
+                        _.CurrentObject[PropertyName].push(currentPayment);
+                        //VC.GetGridEditor(PropertyName).refresh();
+
+                        //    });
+
+
+                        _.Compute();
+
+
+
+                    });
+
+                };
+                //NonTrade
+            	VC.AddToolBarButtonOnGrid('PaymentTransaction_NonTrades', {
+                    text: 'Add Particulars',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        if(_.CurrentObject.PaymentTransaction_NonTrades == undefined) _.CurrentObject.PaymentTransaction_NonTrades = [];
+
+                        _.CurrentObject.PaymentTransaction_NonTrades.push({
+                            ID: -1,
+                            Name: null,
+                            Comment: null,
+                            Code: null,
+                            ID_COA: null,
+                            ID_SubsidiaryType : null,
+                            ID_Subsidiary: 0, 
+                            COA: '-',
+                            Subsidiary: '-',
+                            TotalAmount: 0.00
+                        });
+                    }
+                },true);
+
+                VC['PaymentTransaction_NonTrades_ID_Subsidiary_onColumnDataSourceLoad'] = function(data,e){
+                    console.log('change')
+                    data.params.ID_SubsidiaryType = e.ID_SubsidiaryType == undefined ? null: e.ID_SubsidiaryType;
+                    data.params.ID_COA = e.ID_COA == undefined ? null: e.ID_COA;
+                }
+                VC['PaymentTransaction_NonTrades_onColumnChanged'] = function( e ) {      
+            
+                    if(e.dataField === 'ID_COA'){
+                        if(e.data === undefined || e.data === null) return;
+                        if(e.data.Code !== undefined){
+                            _.CurrentObject['PaymentTransaction_NonTrades'][e.rowIndex].Code = e.data.Code;
+                            _.CurrentObject['PaymentTransaction_NonTrades'][e.rowIndex].Name = e.data.Name;
+                            _.CurrentObject['PaymentTransaction_NonTrades'][e.rowIndex].ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                        }
+                    }
+
+                    if(e.dataField == 'TotalAmount'){
+                        _.Compute();
+                    }
+    
+                }
+                //
+                //
+
+                VC.AddToolbarButton({
+                    text: 'Add Sales Invoice',
+                    IsDisabled: function () {
+
+                    },
+                    onItemClick: function () {
+
+                        if (VC.$scope.CurrentObject.ID_BusinessPartner == null || VC.$scope.CurrentObject.ID_BusinessPartner == 0) {
+                            VC.MsgBox('Select Customer', 'Payment Receipt');
+                            return;
+                        }
+
+                        var SQL = '@Html.EncryptSQL(@"
+                                    Select 
+                                        si.ID, si.DocumentNo, CONVERT(varchar, si.Date,101) AS Date,si.RefTotalVat,si.BusinessPartner AS Customer, 
+                                        si.RefTotalAmount, si.Balance, si.TotalNetAmount, si.ID_TaxScheme, si.TaxScheme, si.Balance,
+                                        si.Subtotal, si.TotalVat  , si.ID_FilingStatus, fs.Name FilingStatus ,SITotalAmount, SISubTotal, SITotalVat, si.SalesReturn, si.ReferenceNo
+                                        ,PaymentTransactionNo
+                                    FROM vSalesInvoice si
+                                    LEFT JOIN tfilingstatus fs on fs.ID =  si.ID_FilingStatus
+                                    WHERE 
+                                        si.ID_BusinessPartner = @ID_BusinessPartner AND 
+                                        si.IsActive = 1 AND 
+                                        si.ID_FilingStatus  IN (2, 17) AND 
+                                        si.ID NOT IN ( @Selected_ID_SalesIvoice )
+                                    ")';
+
+
+                        VC.BrowseDataSet(SQL, {
+                            title: 'Select Sales Invoice',
+                            ID_View: 'B2AF7547-612A-4AF7-924A-FE56FCC4E17D',
+                            params: {
+                                'ID_BusinessPartner': _.CurrentObject.ID_BusinessPartner,
+                                'Selected_ID_SalesIvoice': Enumerable.From(_.CurrentObject['PaymentTransaction_Details']).Select("$.ID_SalesInvoice").ToArray()
+                            }
+                        }).then(function (Items) {
+                            $.each(Items, function (i, item) {
+
+                                var NewDetail = {
+                                    ID: -1,
+                                    ID_SalesInvoice: item.ID,
+                                    SalesInvoice: item.DocumentNo,
+                                    Date_SalesInvoice: item.Date,
+                                    LineTotal: item.SITotalAmount,//item.TotalAmount, 
+                                    NetAmount: item.TotalNetAmount,
+                                    Balance: item.Balance,
+                                    VatAmount: item.SITotalVat,
+                                    SIRemainingBalance: 0.00,
+                                    RemainingBalance: item.Balance,
+                                    ID_TaxScheme: item.ID_TaxScheme,
+                                    TaxScheme: item.TaxScheme,
+                                    PaymentTransactionNo : item.PaymentTransactionNo,
+                                    InterestAmount : 0.00
+                                };
+
+                                if (VC.$scope.CurrentObject['PaymentTransaction_Details'] == null) VC.$scope.CurrentObject['PaymentTransaction_Details'] = [];
+                                //
+                                //
+                                if(_.CurrentObject.PaymentTransaction_PaymentSchemes == undefined || _.CurrentObject.PaymentTransaction_PaymentSchemes == null) _.CurrentObject.PaymentTransaction_PaymentSchemes = [];
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query('@Html.EncryptSQL("Select * From vSalesInvoice_PaymentScheme WHERE ID_SalesInvoice = @ID_SalesInvoice AND ID NOT IN(@ID_DocDetail)")', {
+                                    params:{
+                                        'ID_SalesInvoice': item.ID,
+                                        'ID_DocDetail': Enumerable.From(_.CurrentObject.PaymentTransaction_PaymentSchemes).Select('$.ID_DocDetail').ToArray()
+                                    }
+                                }).then(function (Data) {
+                                    
+                                    $.each(Data.collection, function (i, item) {
+                            
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_DocDetail: item.ID,
+                                            ID_PaymentScheme: item.ID_PaymentScheme,
+                                            PaymentScheme: item.PaymentScheme,
+                                            DueDate: item.DueDate,
+                                            Amount: item.Amount,
+                                            Comment: item.Comment,
+                                            Rate: item.Rate
+                                        };
+                            
+                                        _.CurrentObject.PaymentTransaction_PaymentSchemes.push(NewDetail);
+                                
+                                    });
+                            
+                                });
+
+                                //
+                                //
+
+                                VC.$timeout(function () {
+                                    VC.$scope.CurrentObject.PaymentTransaction_Details.push(NewDetail);
+
+                                    _.Compute();
+
+                                }, 500);
+
+
+                            });
+                        });
+                    }
+
+                });
+
+
+                _.butAddPayment = {
+                    text: 'Add Payment'
+                           , icon: 'mdi mdi-note-plus-outline'
+                           , IsDisabled: function () {
+
+                               return _.CurrentObject.ID_FilingStatus == 8 || _.CurrentObject.ID_FilingStatus == 7;
+                           }
+                           , items: [
+
+                               {
+                                   text: 'Add Bank Transfer',
+                                   icon: 'fa fa-bank',
+                                   onItemClick: function () {
+                                       AddModeOfPayment(5212, 'PaymentTransaction_BankTransfers');
+                                   }
+                               },
+                               // wag delete.. pinahide lunghz
+                /*              {
+                                   text: 'Add Debit Memos',
+                                   icon: 'fa fa-sticky-note-o',
+                                   onItemClick: function () {
+                                       AddModeOfPayment(4176, 'PaymentTransaction_DebitMemos');
+                                   }
+                               },*/
+                               {
+                                   text: 'Add Credit Memos',
+                                   icon: 'fa fa-credit-card',
+                                   onItemClick: function () {
+                                       //AddModeOfPayment(4175, 'PaymentTransaction_CreditMemos');
+
+                                       if(_.CurrentObject.ID_BusinessPartner == null || _.CurrentObject.ID_BusinessPartner == undefined){
+                                            VC.MsgBox("Please select customer first", "Collection");
+                                            return;
+                                       }
+
+                                        var SQL = '@Html.EncryptSQL(@"SELECT  ID,DocumentNo,Date,BusinessPartner AS Customer,TotalAmount FROM dbo.vAccRevCreditMemo WHERE ID_MemoType = 1 AND IsActive = 1 AND ID_FilingStatus = 2 AND IsCollectionReceipt <> 1 AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN(@ID_ARCreditMemo)")';
+
+
+                                        VC.BrowseDataSet(SQL, {
+                                            title: 'Select Credit Memo',
+                                            ID_View: 'CBC9C351-028F-4715-8F96-CD5DC17B69C9',
+                                            params: {
+                                                'ID_BusinessPartner': _.CurrentObject.ID_BusinessPartner,
+                                                'ID_ARCreditMemo': Enumerable.From(_.CurrentObject['PaymentTransaction_CreditMemos']).Select("$.ID_ARCreditMemo").ToArray()
+                                            }
+                                        }).then(function (Items) {
+                                            $.each(Items, function (i, item) {
+
+                                                var NewDetail = {
+                                                    ID: -1,
+                                                    ARCreditMemo: item.DocumentNo,
+                                                    ID_ARCreditMemo: item.ID,
+                                                    TotalCost: item.TotalAmount,
+                                                    Date: item.Date
+                                                };
+
+                                                if (_.CurrentObject['PaymentTransaction_CreditMemos'] == null) _.CurrentObject['PaymentTransaction_CreditMemos'] = [];
+
+                                                VC.$timeout(function () {
+                                                    _.CurrentObject.PaymentTransaction_CreditMemos.push(NewDetail);
+
+                                                    _.Compute();
+
+                                                }, 500);
+
+
+                                            });
+                                        });
+                                   }
+                               },
+                            {
+                                text: 'Add Check',
+                                icon: 'fa fa-sticky-note-o',
+                                onItemClick: function () {
+                                    AddModeOfPayment(4178, 'PaymentTransaction_DetailChecks');
+                                }
+                            }
+                           ]
+                };
+
+                VC.AddToolbarButton(_.butAddPayment);
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+					
+	
+                    if (_.CurrentObject.TotalAmount.toFixed(2) !== _.CurrentObject.TotalPayment.toFixed(2)) {
+
+                        brokenRules.push('Total Payment and Total Amount Due must be equal.');
+                    }
+
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+
+                });
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    if(_.CurrentObject.ID_PaymentTransactionType == 2){
+                        if(_.CurrentObject.PaymentTransaction_NonTrades == undefined) _.CurrentObject.PaymentTransaction_NonTrades = [];
+                        if(_.CurrentObject.PaymentTransaction_NonTrades.length == 0){
+                             brokenRules.push('Non-Trade must have atleast one record.');
+                        }
+
+                        $.each(_.CurrentObject.PaymentTransaction_NonTrades, function (i, item) {
+                            if(item.TotalAmount == 0 || item.TotalAmount == null || item.TotalAmount == undefined){
+                                brokenRules.push(item.Particulars + ': Total Amount must not be equal to zero.')
+                            }
+                        });
+                        
+                    }
+                    else{
+
+                        if (_.CurrentObject.DetailCount !== undefined) {
+                            if (_.CurrentObject.DetailCount == 0 || _.CurrentObject.DetailCount == null) {
+                                brokenRules.push('Detail must have atleast one record.');
+                            }
+                        }
+
+                        $.each(_.CurrentObject.PaymentTransaction_Details, function (i, item) {
+
+                            if (item.PaidAmount > item.Balance) {
+                                brokenRules.push(item.SalesInvoice + ': Amount Collected must not exceed on remaining payable.')
+                            }
+                            if(item.PaidAmount == 0 || item.PaidAmount == null || item.PaidAmount == undefined){
+                                brokenRules.push(item.SalesInvoice + ': Amount Collected must not be equal to zero.')
+                            }
+                        });
+                        
+                    }
+
+
+                    if(_.CurrentObject.PaymentTransaction_DetailChecks == undefined || _.CurrentObject.PaymentTransaction_DetailChecks == null) _.CurrentObject.PaymentTransaction_DetailChecks = [];
+                    if(_.CurrentObject.PaymentTransaction_DetailChecks.length > 0 && _.CurrentObject.ID_BankAccount == null ){
+                         brokenRules.push('Bank Account is required.')
+                    }
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+
+
+
+
+
+                });
+
+                _.Compute();
+            }
+
+
+
+
+            VC_Collection.prototype.OnFormInitialized = function (VC) {
+
+                var _ = this;
+
+                VC.PaymentTransaction_Details_onColumnChanged = function (e) {
+                    _.Compute();
+                };
+
+                VC.PaymentTransaction_BankTransfers_onColumnChanged = function (e) {
+                    _.Compute();
+                };
+
+                VC.PaymentTransaction_DetailChecks_onColumnChanged = function (e) {
+                    _.Compute();
+                };
+            }
+            //
+
+
+            VC_Collection.prototype.Compute = function (dataField) {
+
+
+                var _ = this;
+                var VC = this.VC;
+
+                var SIAmount = 0;
+                var TotalBankTransferAmount = 0;
+                var TotalCheckAmount = 0;
+
+                var selectedEWT = VC.$scope.CurrentObject.EXPR_EWT;
+
+                var ID_EWT_SalesOfGoods = 1
+                var ID_EWT_SalesOfServices = 2
+                var ID_EWT_Government = 3
+                var ID_EWT_ZeroRated = 4
+                var totalPaidAmout = 0.00
+                var EWTAmount = 0.00
+                var TotalAmtDue = 0.00
+                var TotalCredit = 0.00
+                
+                VC.$scope.CurrentObject.EWTRate = 0.00;
+
+                switch (VC.$scope.CurrentObject.ID_EWT) {
+
+                    case ID_EWT_SalesOfGoods:
+                        VC.$scope.CurrentObject.EWTRate = 0.01;
+                        break;
+                    case ID_EWT_SalesOfServices:
+                        VC.$scope.CurrentObject.EWTRate = 0.02;
+                        break;
+                    case ID_EWT_Government:
+                        VC.$scope.CurrentObject.EWTRate = 0.06;
+                        break;
+                    case ID_EWT_ZeroRated:
+                        VC.$scope.CurrentObject.EWTRate = 0;
+                        break;
+                }
+
+                if (VC.$scope.CurrentObject.PaymentTransaction_Details === null || VC.$scope.CurrentObject.PaymentTransaction_Details === undefined) {
+                    VC.$scope.CurrentObject.PaymentTransaction_Details = [];
+                }//para mawala error pag new
+                $.each(VC.$scope.CurrentObject.PaymentTransaction_Details, function (i, detail) {
+                    SIAmount += detail.LineTotal;
+                    totalPaidAmout += detail.PaidAmount;
+                    EWTAmount += ((detail.PaidAmount / ( detail.ID_TaxScheme == 3 || detail.ID_TaxScheme == 4 ? 1 : 1.12))  * VC.$scope.CurrentObject.EWTRate)
+                });
+
+                if (VC.$scope.CurrentObject.PaymentTransaction_BankTransfers === null || VC.$scope.CurrentObject.PaymentTransaction_BankTransfers === undefined) {
+                    VC.$scope.CurrentObject.PaymentTransaction_BankTransfers = [];
+                }
+                $.each(VC.$scope.CurrentObject.PaymentTransaction_BankTransfers, function (i, detail) {
+                    TotalBankTransferAmount += detail.TransferAmount;
+                });
+
+                if (VC.$scope.CurrentObject.PaymentTransaction_DetailChecks === null || VC.$scope.CurrentObject.PaymentTransaction_DetailChecks === undefined) {
+                    VC.$scope.CurrentObject.PaymentTransaction_DetailChecks = [];
+                }
+
+                $.each(VC.$scope.CurrentObject.PaymentTransaction_DetailChecks, function (i, detail) {
+
+                    TotalCheckAmount += detail.CheckAmount;
+
+                });
+
+                if (VC.$scope.CurrentObject.PaymentTransaction_CreditMemos === null || VC.$scope.CurrentObject.PaymentTransaction_CreditMemos === undefined) {
+                    VC.$scope.CurrentObject.PaymentTransaction_CreditMemos = [];
+                }
+                $.each(VC.$scope.CurrentObject.PaymentTransaction_CreditMemos, function (i, detail) {
+
+                    TotalCredit += detail.TotalCost;
+
+                });
+                var TotalNonTrade = 0;
+                
+                $.each(_.CurrentObject.PaymentTransaction_NonTrades, function (i, detail) {
+                    TotalNonTrade += detail.TotalAmount;
+                });
+
+                VC.$scope.CurrentObject.DetailCount = VC.$scope.CurrentObject.PaymentTransaction_Details.length;
+                VC.$scope.CurrentObject.SubTotal = SIAmount;
+                VC.$scope.CurrentObject.TotalBankTransferAmount = TotalBankTransferAmount;
+                VC.$scope.CurrentObject.TotalCheckAmount = TotalCheckAmount;
+
+                if(dataField != 'EWTAmount'){
+                    VC.$scope.CurrentObject.EWTAmount = EWTAmount;//((VC.$scope.CurrentObject.SubTotal / 1.12) * VC.$scope.CurrentObject.EWTRate)
+                }
+                
+                
+                VC.$scope.CurrentObject.TotalCredit  = TotalCredit;
+                VC.$scope.CurrentObject.TotalNonTradeAmount = TotalNonTrade;
+                VC.$scope.CurrentObject.GrossAmount = totalPaidAmout;
+                VC.$scope.CurrentObject.TotalAmount = (VC.$scope.CurrentObject.GrossAmount + VC.$scope.CurrentObject.TotalNonTradeAmount) - VC.$scope.CurrentObject.EWTAmount ;
+
+
+                VC.$scope.CurrentObject.TotalPayment =
+                    parseFloat(VC.$scope.CurrentObject.TotalCredit == null ? 0 : VC.$scope.CurrentObject.TotalCredit) +
+                    parseFloat(VC.$scope.CurrentObject.CashPayment == null ? 0 : VC.$scope.CurrentObject.CashPayment) +
+                    parseFloat(VC.$scope.CurrentObject.TotalBankTransferAmount == null ? 0 : VC.$scope.CurrentObject.TotalBankTransferAmount) +
+                    parseFloat(VC.$scope.CurrentObject.TotalCheckAmount == null ? 0 : VC.$scope.CurrentObject.TotalCheckAmount);
+
+
+            }
+
+
+            VC_Collection.prototype.Approve = function (Items) {
+
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pPaymentTransactionApprove")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser'
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+
+            VC_Collection.prototype.Cancel = function (Items, Reason) {
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pPaymentTransactionCancel")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser',
+                        'Reason': Reason
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+
+        }
+
+        VC_Collection.prototype.onCurrentObjectChanged = function (e) {
+            //  baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = this.VC;
+
+            if (e.dataField == 'CashPayment') {
+
+                _.Compute(e.dataField);
+            }
+
+            if (e.dataField == 'TransferAmount') {
+
+                _.Compute(e.dataField);
+            }
+
+            if (e.dataField == 'ID_EWT') {
+
+                _.Compute(e.dataField);
+            }
+            if (e.dataField == 'EWTAmount') {
+
+                _.Compute(e.dataField);
+            }
+
+            if (e.dataField == 'ID_BankAccount') {
+                 if(e.value !== null && e.value !== undefined){
+                    if(e.value.ID_Bank !== undefined ){
+                        _.CurrentObject.ID_Bank = e.value.ID_Bank;
+                        _.CurrentObject.Bank = e.value.Bank;
+                    }
+                 }else{
+                     _.CurrentObject.ID_Bank = null;
+                     _.CurrentObject.Bank = null;
+                 }
+            }
+            
+        }
+
+        return VC_Collection;
+
+    });
+//</script>
+</text> , false);

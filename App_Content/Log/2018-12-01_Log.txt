@@ -1,0 +1,29 @@
+12/1/2018 7:54:06 AM: pReceivingReportApprove ---> Procedure or function 'pGenerateInvetorySummaryPerWH' expects parameter '@ID_InventorySummaryOnHand', which was not supplied.
+The statement has been terminated..
+12/1/2018 9:13:40 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+12/1/2018 9:13:56 AM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+12/1/2018 2:25:27 PM: _pGetDataSet ---> Invalid column name 'sequence'..
+12/1/2018 2:25:34 PM: _pGetDataSet ---> Incorrect syntax near ','..
+12/1/2018 2:25:36 PM: _pGetDataSet ---> Invalid column name 'sequence_no'..
+12/1/2018 2:25:39 PM: _pGetDataSet ---> Invalid column name 'sequence_number'..
+12/1/2018 2:25:43 PM: _pGetDataSet ---> Invalid column name 'sequence'..
+12/1/2018 4:56:58 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+12/1/2018 4:56:59 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (_Quantity, 9989).
+The statement has been terminated..
+12/1/2018 4:57:00 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (_Quantity, 9989).
+The statement has been terminated..
+12/1/2018 4:57:00 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (_Quantity, 9989).
+The statement has been terminated..
+12/1/2018 5:55:58 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+12/1/2018 5:55:59 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+12/1/2018 6:38:30 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+12/1/2018 6:38:32 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (UOM, 10489).
+The statement has been terminated..
+12/1/2018 6:38:32 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

@@ -1,0 +1,29 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+<div class="container">
+
+    <div class="header">
+         <span class="close-module fa fa-close" ng-click="CloseModule()"></span>
+         <div>SQL Browser Utility</div>          
+    </div>
+
+    <div class="container-body">
+
+     
+
+        <div class="row">
+             <div class="col-md-3" dx-select-box="dxSelectBoxOption" style="margin-bottom:10px;margin-right:5px"></div>
+             <div class="col-md-3" dx-text-box="dxTextBoxOption" style="margin-bottom:10px"></div>
+             <div class="col-md-4" dx-text-box="dxTextBoxOption_TableName" style="margin-left:5px;margin-bottom:10px"></div>
+        </div>
+       
+
+        <div dx-data-grid="DataGridOption"></div>
+
+    </div>
+
+
+</div>

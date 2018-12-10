@@ -1,0 +1,137 @@
+3/16/2018 8:16:56 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 8:16:56 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 8:16:56 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ImageTab, 2).
+The statement has been terminated..
+3/16/2018 8:17:11 AM: _pGetDataSet ---> Incorrect syntax near ','..
+3/16/2018 11:19:27 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:19:43 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:30:10 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:37:43 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:39:26 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:39:48 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:40:10 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:40:17 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:42:21 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 11:42:52 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tCustomer_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 1:21:47 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 1:21:48 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 1:22:54 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 1:22:55 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (Category, 9389).
+The statement has been terminated..
+3/16/2018 1:22:56 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:48:45 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:48:46 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:48:47 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:50:28 PM: _pGetDataSet ---> Invalid column name 'Seqo'..
+3/16/2018 2:52:35 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:52:36 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:52:36 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:25 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 2:53:46 PM: _pGetDataSet ---> Invalid column name 'ID_Seqno'..
+3/16/2018 3:30:48 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (PaymentTermSection, 9389).
+The statement has been terminated..
+3/16/2018 3:31:10 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ConditionsSection, 9389).
+The statement has been terminated..
+3/16/2018 3:31:32 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ConditionsSection, 9389).
+The statement has been terminated..
+3/16/2018 3:35:52 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 3:35:52 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 3:35:53 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 3:53:08 PM: _pGetDataSet ---> Invalid column name 'heught'..
+3/16/2018 4:09:40 PM: _pGetDataSet ---> Incorrect syntax near the keyword 'With'..
+3/16/2018 5:32:06 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:32:07 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:32:08 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:32:30 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:32:32 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:32:32 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:44:22 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:44:22 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:44:23 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:10 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:10 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:11 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:31 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:32 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:45:33 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:07 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:08 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:09 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:09 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:52 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:53 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:53 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:54 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:47:54 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:03 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:33 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:33 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:34 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:34 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:48:35 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/16/2018 5:59:44 PM:  ---> Cannot insert the value NULL into column 'ID_CustomerLead', table 'IAMS_DEV_20180305.dbo.tCustomerLead_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

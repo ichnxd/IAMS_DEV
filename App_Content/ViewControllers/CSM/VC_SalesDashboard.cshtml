@@ -1,0 +1,331 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom'], function (app, BaseClass) {
+
+        var SalesPipeLineDashboard = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var ID_UserGroup = _.CurrentUser.ID_UserGroup;
+            var DefaultValue_ID_Employee = -1;
+            var DefaultValue_ID_BusinessUnit = -1;
+            if (ID_UserGroup == 5) {
+                DefaultValue_ID_Employee = _.CurrentUser.ID_Employee;
+                DefaultValue_ID_BusinessUnit = _.CurrentUser.ID_BusinessUnit;
+            } else if (ID_UserGroup == 4) {
+                DefaultValue_ID_BusinessUnit = _.CurrentUser.ID_BusinessUnit;
+            }
+
+            $scope.BaseMenuOptionItems.push({
+                text: 'Clear Filter',
+                icon: 'red mdi mdi-filter-remove',
+                onItemClick: function () {
+                    _.VC_BusinessUnit.option('value', DefaultValue_ID_BusinessUnit);
+                    _.VC_Employee.option('value', DefaultValue_ID_Employee);
+                }
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_Employee',
+                caption: 'Account Manager',
+                SQL: function () {
+                    var ID_BusinessUnit = _.ActionFilters.VC_BusinessUnit == null ? -1 : _.ActionFilters.VC_BusinessUnit;
+                    if (ID_BusinessUnit == -1) {
+                        return '@Html.EncryptSQL("SELECT ID, Name,ID_BusinessUnit FROM vSalesPipeLineUsers WHERE isActive = 1 ORDER BY LastName,FirstName ")';
+                    } else {
+                        return '@Html.EncryptSQL("SELECT ID, Name,ID_BusinessUnit FROM vSalesPipeLineUsers WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit ORDER BY LastName,FirstName ")';
+                    }
+                },
+                params: function () {
+                    return { 'ID_BusinessUnit': _.ActionFilters.VC_BusinessUnit == null ? -1 : _.ActionFilters.VC_BusinessUnit };
+                },
+                width: 150,
+                isActionFilter: true,
+                defaultItems: [{
+                        ID: -1,
+                        Name: '(All)',
+                        ID_BusinessUnit: -1
+                }],
+                value: DefaultValue_ID_Employee
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_BusinessUnit',
+                caption: 'Business Unit',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM tBusinessUnit WHERE isActive = 1")',
+                width: 150,
+                isActionFilter: true,
+                defaultItems: [{
+                        ID: -1,
+                        Name: '(All)'
+                }],
+                value: DefaultValue_ID_BusinessUnit
+            });
+
+            $scope.ForeCastData = [];
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_DateFilter',
+                caption: 'Period',
+                width: 120,
+                isActionDateRange: true,
+                value : 4 // CURRENT MONTH
+            });
+
+            var types = [
+                "splineArea",
+                "stackedSplineArea",
+                "fullStackedSplineArea",
+                "spline",
+                "stackedSpline",
+                "fullStackedSpline",
+                "area",
+                "stackedArea",
+                "fullStackedArea",
+                "steparea"
+                ];
+
+            var colors = [
+                '#1ca550',
+                '#56a0b5',
+                '#f1a71f'
+                ];
+
+            console.log(DevExpress)
+            DevExpress.viz.registerPalette('DashPallete', colors);
+
+            $scope.currentType = types[0];
+
+            $scope.SummaryOpportunity = [];
+
+            $scope.SummaryList = [
+                { caption: 'WON' , value: 0 },
+                { caption: 'Open Opportunities' , value: 0 },
+                { caption: 'Target' , value: 0 }
+            ]
+
+            _.RefreshData = function (FilterName) {
+                if(FilterName == 'VC_BusinessUnit'){
+                    $scope.BaseMenuOptionItems[0].params =  { 'ID_BusinessUnit': _.ActionFilters.VC_BusinessUnit == null ? -1 : _.ActionFilters.VC_BusinessUnit }
+                    var VC_Employee = $('#VC_Employee').dxSelectBox('instance');
+                    VC_Employee.option('value', -1)
+                    VC_Employee._options.reload();
+                }
+
+                _.JSDataService.pGetCurrentObject('@Html.EncryptSQL("pGetSalesForecast")', {
+                    'ID_Employee': _.ActionFilters.VC_Employee,
+                    'ID_BusinessUnit': _.ActionFilters.VC_BusinessUnit,
+                    'StartDate': _.ActionFilters.VC_DateFilter.startDate,
+                    'EndDate': _.ActionFilters.VC_DateFilter.endDate,
+                    'ID_Period': _.ActionFilters.VC_DateFilter.ID_Period
+                }).then(function (d) {
+                    $scope.ForeCastData = d.ForecastData;
+
+                    $scope.SummaryOpportunity.length = 0;
+                    $.each(d.Summary,function(i,item){
+                        $scope.SummaryOpportunity.push(item);
+                    });
+
+                    //console.log('--->', d.ForecastData);
+
+                    $scope.SummaryList[0].value = d.ForecastData[d.ForecastData.length-1]['TotalWonAccounts'];
+                    $scope.SummaryList[1].value = d.ForecastData[d.ForecastData.length-1]['TotalOpenAccounts'];
+                    $scope.SummaryList[2].value = d.ForecastData[d.ForecastData.length-1]['GOALS'];
+
+                    var SumDataGrid = $('#OpportunityGrid').dxDataGrid('instance');
+                    SumDataGrid.refresh();
+                    var OpportunityGrid = $('#SummaryGrid').dxDataGrid('instance');
+                    OpportunityGrid.refresh();
+
+                    //
+                    //
+                    //
+
+                    var Employee = _.VC_Employee.option('selectedItem');
+                    var BusinessUnit = _.VC_BusinessUnit.option('selectedItem');
+                    
+                });
+            }
+            //Default, SoftPastel, HarmonyLight, Pastel, Bright, Soft, Ocean, Vintage and Violet
+            $scope.Series = [
+                    { color: colors[0], valueField: "TotalWonAccounts", name: "WON" , border: { visible: true} },
+                    { color: colors[1], valueField: "TotalOpenAccounts", name: "Open Opportunities" , border: { visible: true}},
+                    { color: colors[2], valueField: "GOALS", name: "Targets" , border: { visible: true }}
+            ]
+
+            $scope.chartOptions = {
+                palette: 'DashPallete',
+                title: "Sales Forecast",
+                commonSeriesSettings: {
+                    argumentField: "Arguments"
+                },
+                bindingOptions: {
+                    "dataSource" : "ForeCastData",
+                    "commonSeriesSettings.type": "currentType"
+                },
+                argumentAxis: {
+                    valueMarginsEnabled: false
+                },
+                margin: {
+                    bottom: 20
+                },
+                series: $scope.Series,
+                valueAxis: [{
+                    axisDivisionFactor: 20,
+                    name: "total",
+                    position: "left",
+                    valueType: 'numeric',
+                    grid: {
+                        visible: true
+                    },
+                    title: {
+                        text: "Total"
+                    },
+                    label: {
+                        format: 'largeNumber',
+                        precision: 2
+                    }
+                }],
+                "export": {
+                    enabled: true
+                },
+                tooltip: {
+                    enabled: true,
+                    format: 'fixedPoint',
+                    precision: 2,
+                    customizeTooltip: function (arg) {
+                        var color = '';
+                        $.each($scope.Series,function(i,item){
+                            if(item.name == arg.seriesName){
+                                color = item.color;
+                            }
+                        });
+
+                        return {
+                            //color: color,
+                            html: '<center><b><div><span  style="color:'+ color +'">' +arg.seriesName +'</span></br><span>'+ arg.valueText + '</span></div></b></center>'
+                        };
+                    }
+                },
+                legend: {
+                    verticalAlignment: "bottom",
+                    horizontalAlignment: "center"
+                },
+                height: 400,
+                onInitialized: function (e) {
+                    //
+                    //
+                    //
+                    _.RefreshData();
+                },
+                crosshair: {
+                    enabled: true,
+                    color: "#949494",
+                    width: 3,
+                    dashStyle:"dot",
+                    label: {
+                        visible: true,
+                        backgroundColor: "#949494",
+                        font: {
+                        color: "#fff",
+                        size: 12,
+                        }
+                    }
+                },
+                onLegendClick: function(e) {
+                    var series = e.target;
+                    if(series.isVisible()) {
+                        series.hide();
+                    } else {
+                        series.show();
+                    }
+                },
+                customizeLabel: function(arg) {
+
+                    //if (this.value > highAverage) {
+                       // return {
+                        //    visible: true,
+                        //    backgroundColor: "#ff7c7c",
+                        //    customizeText: function () {
+                        //        return this.valueText + "&#176F";
+                        //    }
+                       // };
+                    //}
+                }
+
+            };
+
+
+
+            $scope.OpportunityGridOption = {
+                 title: 'Opportunity Summary',
+                 color: '#000',
+                 size: '150%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.SummaryOpportunity,
+                 columns:[
+                        { dataField: 'Stages', dataType: 'string' },
+                        { dataField: 'Opportunity', dataType: 'number' , format:'fixedPoint',precision: 2},
+                        { dataField: 'TotalVatEx', dataType: 'number', caption: 'Vat Ex', format:'fixedPoint',  precision: 2},
+                        { dataField: 'TotalContractPrice', dataType: 'number', caption: 'Contract Price' , format:'fixedPoint',  precision: 2}
+                ],
+                summary:{
+                    totalItems:[
+                        {
+                            column: "Opportunity",
+                            summaryType: "sum",
+                            valueFormat: "fixedPoint",
+                            precision: 2,
+                            displayFormat: '{0}'
+                        },
+                        {
+                            column: "TotalVatEx",
+                            summaryType: "sum",
+                            valueFormat: "fixedPoint",
+                            precision: 2,
+                            displayFormat: '{0}'
+                        },
+                        {
+                            column: "TotalContractPrice",
+                            summaryType: "sum",
+                            valueFormat: "fixedPoint",
+                            precision: 2,
+                            displayFormat: '{0}'
+                        }
+                    ]
+                }
+            }
+
+            $scope.SummaryGridOption = {
+                 title: 'Forecast Summary',
+                 color: '#000',
+                 size: '150%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.SummaryList,
+                 columns:[
+                        { dataField: 'caption', dataType: 'string' ,caption: 'Name' },
+                        { dataField: 'value', dataType: 'number',caption: 'Total Amount' , format:'fixedPoint',precision: 2}
+                ]
+            }
+            _.OpportunityGridOption = $scope.OpportunityGridOption;
+
+        }
+
+        SalesPipeLineDashboard.prototype = Object.create(BaseClass.prototype);
+
+        SalesPipeLineDashboard.prototype.OnFilterValueChanged = function (FilterName, e) {
+            this.RefreshData(FilterName);
+        };
+
+        return SalesPipeLineDashboard;
+
+    });
+//</script>
+</text> , false )

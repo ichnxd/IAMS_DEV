@@ -1,0 +1,94 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocDetailView");
+    var PurchaseOrder = Url.Encode("Doc/AP/Order/PurchaseOrder");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}'
+                        ,'/JsApp/GetScript?Url=@{@PurchaseOrder}' , 'AcctHelper'], function (BaseClass,PurchaseOrder,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+
+            _.DocDetailPropertyName = 'PurchaseOrderDetails';
+
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            // VALIDATIONS
+            //
+
+            _.ValidationRules.push(function () {
+                return _.JSDataService.Validate('@Html.EncryptSQL("pValidatePurchaseOrderItems")', {
+                    'IDs': Enumerable.From(_.$scope.CurrentObject.PurchaseOrderDetails).Select('$.ID_Item').ToArray(),
+                });
+            });
+
+            _.butReceive = {
+                text: 'Receive',
+                icon:'mdi mdi-cube-send',
+                disabled: false,
+                IsDisabled : function() {
+                    return ( _.$scope.CurrentObject.ID_FilingStatus !== 2 || _.$scope.CurrentObject.ID_DocStatus == 3 ) || _.IsNew();
+                },
+                onItemClick: function () {
+
+                    AcctHelper.CreateRRFromPO([_.$scope.CurrentObject]);
+
+                }
+            }
+
+            _.AddToolbarButton(_.butReceive);
+
+            _.PerformViewReport = function() {
+            
+               
+            
+            }
+
+            _.ButReport = {
+                text: 'Purchase Order Form',
+                icon: 'jspp-icon js-file-2',
+                color: '#000',
+                IsDisabled: function () {
+                    return !(_.$scope.CurrentObject.ID > -1);
+                },
+                onItemClick: function () {
+                    _.ViewReport( _.$scope.CurrentObject.ID, PurchaseOrder.RPT_PURCHASEORDERFORM,  _.$scope.CurrentObject.Name + ' Form' , {
+                        ID : _.$scope.CurrentObject.ID
+                    } );
+                }
+            }
+
+            _.AddToolbarButton(_.ButReport);
+
+            _.Approve = function() {
+                return PurchaseOrder.Approve( [_.$scope.CurrentObject]);
+            };
+
+            _.Cancel = function() {
+                return PurchaseOrder.Cancel( [_.$scope.CurrentObject] );
+            };
+
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+
+
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

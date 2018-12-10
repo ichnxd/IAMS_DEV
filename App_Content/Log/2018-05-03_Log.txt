@@ -1,0 +1,18 @@
+5/3/2018 9:31:35 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180426_NEW.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/3/2018 9:31:36 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180426_NEW.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/3/2018 9:31:37 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (Type, 9898).
+The statement has been terminated..
+5/3/2018 9:31:37 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20180426_NEW.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/3/2018 10:15:53 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20180426_NEW.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/3/2018 10:15:54 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ScheduleSection3, 10459).
+The statement has been terminated..
+5/3/2018 10:15:55 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ScheduleSection3, 10459).
+The statement has been terminated..
+5/3/2018 10:15:55 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20180426_NEW.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/3/2018 10:15:56 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20180426_NEW.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

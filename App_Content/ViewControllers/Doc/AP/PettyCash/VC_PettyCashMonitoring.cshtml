@@ -1,0 +1,79 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper'], function (app, baseAP) {
+		//	'/JsApp/GetScript?Url=@{@BaseVCUrl}'
+        var VC_PettyCashMonitoring = function () { }
+
+        VC_PettyCashMonitoring.prototype = Object.create(baseAP.prototype);
+
+        VC_PettyCashMonitoring.prototype.Init = function (VC) {
+
+            baseAP.prototype.Init.call(this, VC);
+
+            var _ = this;
+           // VC.IsFormReadOnly = true;
+			//VC.ButNew.visible = false;
+
+			if(_.ID_ViewType == 1){
+					VC.AddActionFilter({
+                    name: 'VC_StatusFilter',
+                    caption: 'Filing Status',
+                    width: '150px',
+                    SQL : '@Html.EncryptSQL("SELECT * FROM vFilingStatusFilter ORDER BY ID")',
+                    //dataSource: [
+                    //      { id: 1, name: '(All)' }, { id: -3, name: '(Pending)' }, { id: -2, name: '(Not Cancelled)' }, { id: 2, name: 'Filed' }
+                    //    , { id: 3, name: 'Approved' }, { id: 4, name: 'Cancelled' }
+                    //    , { id: 5, name: 'Paid' }, { id: 6, name: 'Posted' }],
+                    placeholder: 'Select Status',
+                    value: _.DefaultFilterValue == undefined ? -2 : _.DefaultFilterValue
+                    });
+			}
+
+			console.log(_.butApproved,'x');
+
+        }
+
+	   VC_PettyCashMonitoring.prototype.onLoad = function () {
+           //baseAP.prototype.onLoad.call(this);
+			console.log(_.ID_ViewType,'xyz')
+			
+        }
+
+       VC_PettyCashMonitoring.prototype.onCollectionSource_Load = function (data) {
+			//	baseAP.prototype.onCollectionSource_Load.call(this, data);
+				var _ = this 
+				var VC = _.VC
+
+				   var filterValue = VC.ActionFilters.VC_StatusFilter;
+					if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+					var WhereCriteria = data.WhereCriteria;
+					var criteria = '';  
+					
+				if(VC.CurrentUser.ID !== 5){
+					if(VC.CurrentUser.IsPettyCashCustodian == true){
+					console.log(VC.CurrentUser)
+						criteria += " ISNULL(ID_Employee,0) = " + VC.CurrentUser.ID.toString(); 
+				}
+				if(criteria.length > 0){
+				WhereCriteria.push(criteria);
+				}
+				
+  }
+
+						
+			}
+
+
+
+        return VC_PettyCashMonitoring;
+    });
+//</script>
+</text> , false);

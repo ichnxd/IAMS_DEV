@@ -1,0 +1,586 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+          "use strict"
+
+        var VC_APDebitMemo = function () {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'APDebitMemo_Details';
+            this.IsAllowNoDetails = true;
+        }
+
+
+
+        VC_APDebitMemo.prototype = Object.create(baseModelHelper.prototype);
+
+        //Initialization Start
+        VC_APDebitMemo.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            VC.AddButtonReport({
+                Name: 'Credit Memo Form',
+                ID_Report: 3141,
+                requireSingleObject: true
+            });
+
+
+            if (_.ID_ViewType == 2) {
+
+                VC_APDebitMemo_ViewDetail_Init(_,VC);
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    if(_.CurrentObject.APDebitMemo_Details == undefined || _.CurrentObject.APDebitMemo_Details == null) _.CurrentObject.APDebitMemo_Details = [];
+
+                    if(_.CurrentObject.APDebitMemo_Details.length === 0){
+                      brokenRules.push('Must atleast have 1 detail record.');
+                    }
+                    $.each(_.CurrentObject.APDebitMemo_Details, function (index, item) {
+                        var hasNoSerial = false;
+
+                        if(_.CurrentObject.ID_MemoType == 3){
+                            if(item.QtyReturned < 1){
+                                brokenRules.push('Qty Returned is required');
+                            }
+                            if(item.QtyReturned > item.QtyReceived){
+                                brokenRules.push('Qty Returned must not be greater than Qty Received');
+                            }
+                        }
+
+                        if (item.IsSerialized === true && item.NonInventoriable !== true) {
+                            if (Enumerable.From(item.APDebitMemo_Detail_Serials).Where('$.Name == null').ToArray().length > 0) {
+                                brokenRules.push('Serial(s) is required for Item (' + item.Item + ')');
+                            } else {
+
+                                if(item.APDebitMemo_Detail_Serials == undefined) { item.APDebitMemo_Detail_Serials = [] }
+                                if(item.APDebitMemo_Detail_Serials == null) { item.APDebitMemo_Detail_Serials = [] }
+
+                                var isSerialsUnique = Enumerable.From(item.APDebitMemo_Detail_Serials).Select('$.Name').Distinct().ToArray().length === item.APDebitMemo_Detail_Serials.length;
+                                if (isSerialsUnique === false) {
+                                    brokenRules.push('Serial(s) must be unique for Item (' + item.Item + ')');
+                                }
+                            }
+
+
+                            var SerialData = item.APDebitMemo_Detail_Serials;
+                            if(item.Quantity !== SerialData.length){
+                                brokenRules.push('Serial(s) count must be same with Quantity Return for Item (' + item.Item + ')');
+                            }
+                            //
+                        }
+                    });
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                });
+
+            }
+
+            _.IsAddItemDisabled = true;
+
+            _.IsDetailRequired = false;
+
+        }
+
+        var VC_APDebitMemo_ViewDetail_Init = function(_,VC)
+        {
+
+
+            var fBrowsePurchaseOrder = function(){
+                if (VC.$scope.CurrentObject.ID_MemoType == 0 || VC.$scope.CurrentObject.ID_MemoType == null) {
+                    VC.MsgBox("Please Select Memo type", "AP Debit Memo");
+                    return;
+                }
+                if (VC.$scope.CurrentObject.ID_BusinessPartner == 0 || VC.$scope.CurrentObject.ID_BusinessPartner == null) {
+                    VC.MsgBox("Please Select Supplier", "AP Debit Memo");
+                    return;
+                }
+                if (VC.$scope.CurrentObject.ID_Warehouse == 0 || VC.$scope.CurrentObject.ID_Warehouse == null) {
+                    VC.MsgBox("Please Select Warehouse", "AP Debit Memo");
+                    return;
+                }
+
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM vPRForDebitMemo WHERE ID_Warehouse = @ID_Warehouse AND ID NOT IN ( @IDs ) AND ID_BusinessPartner = @ID_BusinessPartner")';
+                var filterParam = {
+                    'ID_Warehouse': VC.$scope.CurrentObject.ID_Warehouse,
+                    'IDs': Enumerable.From(_.CurrentObject['APDebitMemo_Details']).Select("$.ID_DocDetail").ToArray(),
+                    'ID_BusinessPartner': VC.$scope.CurrentObject.ID_BusinessPartner
+                };
+
+                var browseDataSetParam =
+                {
+                    title: 'Browse Purchase Return',
+                    ID_View: '443DFE7B-8969-4AD1-94C1-11F66D5DDB12',
+                    params: filterParam
+                };
+
+                var loadSerialFromPRDetail = function(ID_PurchaseReturn_Detail, srDetail)
+                {
+
+                    if(srDetail.APDebitMemo_Detail_Serials == undefined){
+
+                        srDetail.APDebitMemo_Detail_Serials = [];
+                    }
+                    if(srDetail.APDebitMemo_Detail_Serials == null){
+
+                        srDetail.APDebitMemo_Detail_Serials = [];
+                    }
+
+                    var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+
+                    console.log(ID_PurchaseReturn_Detail);
+
+                    JsDataService.Query('@Html.EncryptSQL("SELECT  * FROM vPurchaseReturn_Detail_Serial WHERE ID_PurchaseReturn_Detail = @ID_PurchaseReturn_Detail")',
+                    {
+                        params: {
+                            'ID_PurchaseReturn_Detail': ID_PurchaseReturn_Detail
+                        }
+                    }
+                    ).then(function (data) {
+
+                        var result = data.collection;
+
+                        console.log(result);
+
+                        $.each(result,function (i,record) {
+                            srDetail.APDebitMemo_Detail_Serials.push({
+                                ID: _.rndID(),
+                                Name: record.Name,
+                                Code: srDetail.Item
+                            });
+                             console.log(srDetail.APDebitMemo_Detail_Serials);
+                        });
+
+
+
+                    });
+
+
+                };
+
+                var browseDataSetThen = function(selectedRecord){
+
+                    if (VC.$scope.CurrentObject['APDebitMemo_Details'] == null) {
+                        VC.$scope.CurrentObject['APDebitMemo_Details'] = [];
+                    }
+
+                    if (VC.$scope.CurrentObject['APDebitMemo_Particulars'] == null) {
+                        VC.$scope.CurrentObject['APDebitMemo_Particulars'] = [];
+                    }
+
+                    $.each(selectedRecord, function (i, record) {
+
+                        var newDetail  =
+                        {
+                                ID: _.rndID()
+                            ,   ID_Item: record.ID_Item
+                            ,   Item: record.Item
+                            ,   UOM: record.UOM
+                            ,   ID_UOM: record.ID_UOM
+                            ,   Quantity:record.Quantity
+                            ,   UnitPrice: record.UnitPrice
+                            ,   VatAmt: record.VatAmt
+                            ,   VATAmount: record.VatAmt
+                            ,   Subtotal: record.GrossAmount
+                            ,   GrossAmount: record.GrossAmount
+                            ,   TotalAmount: record.TotalAmount
+                            ,   IsFree: record.IsFree
+                            ,   ID_DocDetail: record.ID
+                            ,   ID_DocDetailParentModel: 2149// ID_Model ni Purchase Return
+                            ,   ReferenceNo: record.DocumentNo + ':' +record.ID
+                   //         ,   ID_ARDebitMemo : VC.$scope.CurrentObject.ID
+                            ,   QtyReceived: record.RefQuantity
+                            ,   QtyReturned: record.Quantity
+                            ,   IsSerialized: record.IsSerialized
+                            ,   ID_TaxScheme: record.ID_TaxScheme
+                            ,   VatRate: record.VatRate
+                            ,   ID_Brand: record.ID_Brand
+                            ,   NonInventoriable: record.NonInventoriable
+                        };
+
+                        VC.$scope.CurrentObject['APDebitMemo_Details'].push(newDetail);
+
+                        loadSerialFromPRDetail(record.ID, newDetail);
+
+                        _.Compute();
+
+                    });
+                }
+
+                VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+            }
+
+
+
+
+            /**Temporary remove Add Item**/
+            var APDebitMemo_Details_MenuOption  = VC.$scope.APDebitMemo_Details_MenuOptions;
+            APDebitMemo_Details_MenuOption.splice(0,1);
+            /**              END           **/
+
+            VC.AddToolBarButtonOnGrid('APDebitMemo_Details',
+            {
+                text: 'Browse Purchase Return',
+                icon: 'mdi mdi-package-variant',
+                onClick: fBrowsePurchaseOrder
+            }, true);
+ //---- 08/25/2017
+      //    VC.AddToolBarButtonOnGrid('APDebitMemo_Particulars',
+      //    {
+      //        text: 'Add Particular Entry',
+      //        icon: 'mdi mdi-package-variant',
+      //        onClick: function(){
+
+      //            var newDetail  =
+      //                {
+      //                        ID: _.rndID()
+      //                    ,   Particular: ''
+      //                    ,   Amount: 0.00
+      //
+      //                };
+
+      //                VC.$timeout(function(){
+      //
+      //                    VC.$scope.CurrentObject['APDebitMemo_Particulars'].push(newDetail);
+
+      //                    //VC.GetGridEditor('APDebitMemo_Particulars').refresh();
+      //
+      //                });
+      //        }
+      //    }, true);
+
+      VC.AddToolBarButtonOnGrid('APDebitMemo_Particulars',
+            {
+               text: 'Browse PO',
+               icon: 'mdi mdi-package-variant',
+               onItemClick: function () {
+
+                    if(_.CurrentObject.ID_BusinessPartner == null){
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    var SQL = '@Html.EncryptSQL(@"Select * from vPurchaseOrder where ID_FilingStatus = 2 and ID_BusinessPartner = @ID_BusinessPartner And ID not IN (@ID_Ref)")'
+                    var JsPopUpView = app.$GetPopupView();
+                    var ID_Ref = Enumerable.From(_.CurrentObject.APDebitMemo_Particulars).Select('$.ID_PurchaseOrder').ToArray();
+                    JsPopUpView.BrowseDataSet(SQL, {
+                                    ID_View: '96FCD5BE-4008-46AA-93FB-969F8F72C759',
+                                    params: {
+                                      'ID_BusinessPartner': _.CurrentObject.ID_BusinessPartner,
+                                      'ID_Ref': ID_Ref
+                                    },
+
+                                    title: 'Select Purchase Order'
+                                }).then(function(PurchaseOrder){
+                                    $.each(PurchaseOrder,function (i,d){
+                                   _.CurrentObject.APDebitMemo_Particulars.push({
+                                       Name : d.DocumentNo,
+                                       RefAmount : d.TotalAmount,
+                                       Amount : 0,
+                                       ID_PurchaseOrder : d.ID
+                                   })
+
+                                   _.CurrentObject.ID_Warehouse = d.ID_Warehouse
+
+                                    });
+
+                                })
+                }
+            }, true);
+
+      VC.AddToolBarButtonOnGrid('APDebitMemo_Particulars',
+            {
+               text: 'Browse RR',
+               icon: 'mdi mdi-package-variant',
+               onItemClick: function () {
+
+                    if(_.CurrentObject.ID_BusinessPartner == null){
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    var SQL = '@Html.EncryptSQL(@"Select * from vReceivingReport where ID_FilingStatus = 2 and ID_BusinessPartner = @ID_BusinessPartner And ID not IN (@ID_Ref)")'
+                    var JsPopUpView = app.$GetPopupView();
+                    var ID_Ref = Enumerable.From(_.CurrentObject.APDebitMemo_Particulars).Select('$.ID_ReceivingReport').ToArray();
+                    JsPopUpView.BrowseDataSet(SQL, {
+                                    ID_View: '7927BBA6-741D-43E2-80E2-6B79BD99FDFC',
+                                    params: {
+                                      'ID_BusinessPartner': _.CurrentObject.ID_BusinessPartner,
+                                      'ID_Ref': ID_Ref
+                                    },
+
+                                    title: 'Select Receiving Report'
+                                }).then(function(ReceivingReport){
+                                    $.each(ReceivingReport,function (i,d){
+                                   _.CurrentObject.APDebitMemo_Particulars.push({
+                                       Name : d.DocumentNo,
+                                       RefAmount : d.TotalAmount,
+                                       Amount : 0,
+                                       ID_ReceivingReport : d.ID
+                                   })
+
+                                   _.CurrentObject.ID_Warehouse = d.ID_Warehouse
+
+                                    });
+
+                                })
+                }
+            }, true);
+
+
+        }
+        //Initialization End
+
+
+        VC_APDebitMemo.prototype.onLoad = function(){
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+
+            if (_.ID_ViewType == 2) {
+
+                if (_.CurrentObject.APDebitMemo_Details == undefined) {
+                    _.CurrentObject.APDebitMemo_Details = []
+                }
+
+                if (_.CurrentObject.APDebitMemo_Details == null) {
+                    _.CurrentObject.APDebitMemo_Details = []
+                }
+
+                if (_.CurrentObject.APDebitMemo_Particulars == undefined) {
+                    _.CurrentObject.APDebitMemo_Particulars = []
+                }
+
+                if (_.CurrentObject.APDebitMemo_Particulars == null) {
+                    _.CurrentObject.APDebitMemo_Particulars = []
+                }
+
+
+            }
+
+            _.butCancel.IsDisabled = function () {
+
+                var _isCanCancel = _.IsCanCancel();
+
+                if (_.ID_ViewType == 2) {
+
+                    if(_isCanCancel == false) {
+
+                        if(_.CurrentObject.ID_FilingStatus == 21){
+
+                            _isCanCancel = true;
+                        }
+                    }
+
+                }else{
+
+
+
+                }
+
+                return _isCanCancel;
+            }
+
+        }
+
+        //
+        VC_APDebitMemo.prototype.onCurrentObjectChanged = function (e) {
+
+             //this.Compute();
+        }
+        //
+
+
+        //Computation Start
+        VC_APDebitMemo.prototype.Compute = function () {
+            baseModelHelper.prototype.Compute.call(this)
+            var _ = this;
+            var VC = this.VC;
+
+            if (this.ID_ViewType == 2) {
+
+                var EWTAmt = 0.00;
+                var TotalVat = 0.00;
+                var TotalAmt = 0.00;
+                var Subtotal = 0.00;
+
+                  if(_.CurrentObject.APDebitMemo_Details == undefined) _.CurrentObject.APDebitMemo_Details = [];
+                  $.each(_.CurrentObject.APDebitMemo_Details, function (i, detail) {
+
+                        Subtotal += detail.GrossAmount;
+                        TotalAmt += detail.TotalAmount;
+                        TotalVat += detail.VATAmount;
+                  })
+
+                if (_.CurrentObject.APDebitMemo_Particulars !== null) {
+
+                    $.each(_.CurrentObject.APDebitMemo_Particulars, function (i, detail) {
+
+                        Subtotal += detail.Amount;
+                        TotalAmt += detail.Amount;
+
+                    });
+                }
+
+                _.CurrentObject.TotalVat = TotalVat.toFixed(2);
+                _.CurrentObject.Subtotal = Subtotal.toFixed(2);
+                _.CurrentObject.TotalAmount = TotalAmt.toFixed(2);
+
+            }
+
+        }
+        //Computation End
+        VC_APDebitMemo.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+
+                var Item = e.key;
+                if (e.dataField === 'Quantity') {
+                    e.grid.deselectAll();
+
+                    if(_.CurrentObject.ID_MemoType != 3){
+                        return;
+                    }
+
+                    if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                        //
+                        //
+                        //
+                        if (e.data.Quantity == 0) return;
+
+                        if (Item.APDebitMemo_Detail_Serials !== null && Item.APDebitMemo_Detail_Serials !== undefined) {
+                            if (VC._DeletedItems["APDebitMemo_Detail_Serials"] === undefined) VC._DeletedItems["APDebitMemo_Detail_Serials"] = [];
+                            $.each(Item.APDebitMemo_Detail_Serials, function (i, s) {
+                                if (s.ID > 0) {
+                                    VC._DeletedItems["APDebitMemo_Detail_Serials"].push(s);
+                                }
+                            });
+                        }else{
+                            Item.APDebitMemo_Detail_Serials = [];
+                        }
+
+                        VC.JsPopUpView.BrowseDataSet('@Html.EncryptSQL("SELECT ID,Name As SerialNo FROM vPurchaseReturn_Detail_Serial WHERE ID_PurchaseReturn_Detail = @ID_DocDetail")', {
+                            ID_View: '97A9F2C2-4A2D-4CB2-8428-FC2BBE8F5CE9',
+                            title: 'Select ' + Item.Item + ' Serial (' + Item.Quantity + ')',
+                            params: {
+                                ID_DocDetail: Item.ID_DocDetail
+                            },
+                            validate: function (SelectedRows) {
+                                if (SelectedRows.length !== Item.Quantity) {
+                                    VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                                    return false;
+                                }
+                                return true;
+                            }
+                        }).then(function (Serials) {
+
+                            $.each(Serials,function (i,d) {
+                                Item.APDebitMemo_Detail_Serials.push({
+                                    ID: -1,
+                                    Name: d.SerialNo,
+                                    Code: Item.Item
+                                });
+                            });
+                            //
+                            //
+                            //
+                            console.log(Item)
+
+                            VC.$timeout(function () {
+                                e.grid.selectRowsByIndexes([e.rowIndex]);
+                            },500);
+                        });
+                    }
+                }
+
+                _.Compute();
+
+        }
+
+        VC_APDebitMemo.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+
+            VC.APDebitMemo_Particulars_onColumnChanged = function (e) {
+                _.Compute();
+            };
+
+        }
+
+        VC_APDebitMemo.prototype.onDetailRowUpdated = function () {
+
+            var _ = this;
+            var VC = this.VC;
+
+            //_.Compute();
+        }
+
+
+        VC_APDebitMemo.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPDebitMemoApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        VC_APDebitMemo.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPDebitMemoCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_APDebitMemo;
+
+    });
+//</script>
+</text> , false);

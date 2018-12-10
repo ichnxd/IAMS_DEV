@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en" dir=ltr>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<script type="text/javascript">window.NREUM||(NREUM={});NREUM.info={"beacon":"bam.nr-data.net","errorBeacon":"bam.nr-data.net","licenseKey":"6387e82dbf","applicationID":"3081130","transactionName":"IV9dR0RcDghRRk4TBwVVQBxFUg8UWFES","queueTime":0,"applicationTime":68,"agent":""}</script>
+<script type="text/javascript">window.NREUM||(NREUM={}),__nr_require=function(e,t,n){function r(n){if(!t[n]){var o=t[n]={exports:{}};e[n][0].call(o.exports,function(t){var o=e[n][1][t];return r(o||t)},o,o.exports)}return t[n].exports}if("function"==typeof __nr_require)return __nr_require;for(var o=0;o<n.length;o++)r(n[o]);return r}({1:[function(e,t,n){function r(){}function o(e,t,n){return function(){return i(e,[f.now()].concat(u(arguments)),t?null:this,n),t?void 0:this}}var i=e("handle"),a=e(2),u=e(3),c=e("ee").get("tracer"),f=e("loader"),s=NREUM;"undefined"==typeof window.newrelic&&(newrelic=s);var p=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],d="api-",l=d+"ixn-";a(p,function(e,t){s[t]=o(d+t,!0,"api")}),s.addPageAction=o(d+"addPageAction",!0),s.setCurrentRouteName=o(d+"routeName",!0),t.exports=newrelic,s.interaction=function(){return(new r).get()};var m=r.prototype={createTracer:function(e,t){var n={},r=this,o="function"==typeof t;return i(l+"tracer",[f.now(),e,n],r),function(){if(c.emit((o?"":"no-")+"fn-start",[f.now(),r,o],n),o)try{return t.apply(this,arguments)}catch(e){throw c.emit("fn-err",[arguments,this,e],n),e}finally{c.emit("fn-end",[f.now()],n)}}}};a("setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(e,t){m[t]=o(l+t)}),newrelic.noticeError=function(e){"string"==typeof e&&(e=new Error(e)),i("err",[e,f.now()])}},{}],2:[function(e,t,n){function r(e,t){var n=[],r="",i=0;for(r in e)o.call(e,r)&&(n[i]=t(r,e[r]),i+=1);return n}var o=Object.prototype.hasOwnProperty;t.exports=r},{}],3:[function(e,t,n){function r(e,t,n){t||(t=0),"undefined"==typeof n&&(n=e?e.length:0);for(var r=-1,o=n-t||0,i=Array(o<0?0:o);++r<o;)i[r]=e[t+r];return i}t.exports=r},{}],4:[function(e,t,n){t.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],ee:[function(e,t,n){function r(){}function o(e){function t(e){return e&&e instanceof r?e:e?c(e,u,i):i()}function n(n,r,o,i){if(!d.aborted||i){e&&e(n,r,o);for(var a=t(o),u=m(n),c=u.length,f=0;f<c;f++)u[f].apply(a,r);var p=s[y[n]];return p&&p.push([b,n,r,a]),a}}function l(e,t){v[e]=m(e).concat(t)}function m(e){return v[e]||[]}function w(e){return p[e]=p[e]||o(n)}function g(e,t){f(e,function(e,n){t=t||"feature",y[n]=t,t in s||(s[t]=[])})}var v={},y={},b={on:l,emit:n,get:w,listeners:m,context:t,buffer:g,abort:a,aborted:!1};return b}function i(){return new r}function a(){(s.api||s.feature)&&(d.aborted=!0,s=d.backlog={})}var u="nr@context",c=e("gos"),f=e(2),s={},p={},d=t.exports=o();d.backlog=s},{}],gos:[function(e,t,n){function r(e,t,n){if(o.call(e,t))return e[t];var r=n();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(e,t,{value:r,writable:!0,enumerable:!1}),r}catch(i){}return e[t]=r,r}var o=Object.prototype.hasOwnProperty;t.exports=r},{}],handle:[function(e,t,n){function r(e,t,n,r){o.buffer([e],r),o.emit(e,t,n)}var o=e("ee").get("handle");t.exports=r,r.ee=o},{}],id:[function(e,t,n){function r(e){var t=typeof e;return!e||"object"!==t&&"function"!==t?-1:e===window?0:a(e,i,function(){return o++})}var o=1,i="nr@id",a=e("gos");t.exports=r},{}],loader:[function(e,t,n){function r(){if(!x++){var e=h.info=NREUM.info,t=d.getElementsByTagName("script")[0];if(setTimeout(s.abort,3e4),!(e&&e.licenseKey&&e.applicationID&&t))return s.abort();f(y,function(t,n){e[t]||(e[t]=n)}),c("mark",["onload",a()+h.offset],null,"api");var n=d.createElement("script");n.src="https://"+e.agent,t.parentNode.insertBefore(n,t)}}function o(){"complete"===d.readyState&&i()}function i(){c("mark",["domContent",a()+h.offset],null,"api")}function a(){return E.exists&&performance.now?Math.round(performance.now()):(u=Math.max((new Date).getTime(),u))-h.offset}var u=(new Date).getTime(),c=e("handle"),f=e(2),s=e("ee"),p=window,d=p.document,l="addEventListener",m="attachEvent",w=p.XMLHttpRequest,g=w&&w.prototype;NREUM.o={ST:setTimeout,SI:p.setImmediate,CT:clearTimeout,XHR:w,REQ:p.Request,EV:p.Event,PR:p.Promise,MO:p.MutationObserver};var v=""+location,y={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-1071.min.js"},b=w&&g&&g[l]&&!/CriOS/.test(navigator.userAgent),h=t.exports={offset:u,now:a,origin:v,features:{},xhrWrappable:b};e(1),d[l]?(d[l]("DOMContentLoaded",i,!1),p[l]("load",r,!1)):(d[m]("onreadystatechange",o),p[m]("onload",r)),c("mark",["firstbyte",u],null,"api");var x=0,E=e(4)},{}]},{},["loader"]);</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Sales Agent Resume samples - VisualCV resume samples database</title>
+<meta content="Find thousands of resume samples and CV examples from real professionals on VisualCV. Check out some of our Sales Agent resume examples and download the pdf." name="description" />
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link href='//fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'/>
+
+  <link href="/packages/landing-fa66ac6ccecab960d2007bfc1b9845f8.css" media="all" rel="stylesheet" />
+
+  <script src="//cdn.optimizely.com/js/1758790105.js"></script>
+
+  <!--[if lt IE 9]>
+  <script src="/www-home/js/html5.js"></script>
+  <script src="/www-home/js/respond.min.js"></script>
+  <![endif]-->
+
+  <!-- Schema.org markup for Google+ -->
+  <meta itemprop="image" content="https://www.visualcv.com/images/visualcv-resume-templates.jpg">
+
+  <meta name="twitter:card" content="photo" />
+  <meta name="twitter:site" content="@visualcv" />
+  <meta name="twitter:image" content="https://www.visualcv.com/images/visualcv-resume-templates.jpg" />
+  <meta name="twitter:url" content="https://www.visualcv.com/resume-samples/sales-agent-cv-examples" />
+  <meta property="og:url" content="https://www.visualcv.com/resume-samples/sales-agent-cv-examples" />
+  <meta property="og:title" content="Sales Agent Resume samples - VisualCV resume samples database" />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="https://www.visualcv.com/images/visualcv-resume-templates.jpg" />
+  <meta property="fb:app_id" content="819813384706537" />
+
+
+  <link rel="alternate" hreflang="x-default" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples"/>
+  <link rel="alternate" hreflang="fr" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=fr"/>
+  <link rel="alternate" hreflang="de" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=de"/>
+  <link rel="alternate" hreflang="es" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=es"/>
+  <link rel="alternate" hreflang="pt" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=pt"/>
+  <link rel="alternate" hreflang="zh" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=zh"/>
+  <link rel="alternate" hreflang="ru" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=ru"/>
+  <link rel="alternate" hreflang="ar" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=ar"/>
+  <link rel="alternate" hreflang="tr" href="https://www.visualcv.com/resume-samples/sales-agent-cv-examples?locale=tr"/>
+
+  <!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-WKRGZV"
+                  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-WKRGZV');</script>
+<!-- End Google Tag Manager -->
+  
+</head>
+
+<body>
+
+<header>
+  <nav class="navigation navigation-header">
+    <div class="container">
+      <div class="navigation-brand">
+        <div class="brand-logo">
+          <a class="logo" href="/">
+            <img src="/images/logos/vcv-type-white.svg" class="logo" alt="visualcv logo"/>
+</a>          <span class="sr-only">VisualCV</span>
+        </div>
+        <button class="navigation-toggle visible-xs" type="button" data-toggle="dropdown" data-target=".navigation-navbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+      <div class="navigation-navbar">
+        <ul class="navigation-bar navigation-bar-right">
+            <li><a href="/app/#/login">Login</a></li>
+
+            <li class="featured">
+              <a href="/app/#/signup">Sign up</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+
+
+<div id="hero" class="static-header light inverted vcv-bg slim-header text-center">
+  <div class="text-heading container">
+    <h1 class="text-center">Sales Agent Resume samples</h1>
+    <h5 class="text-center">VisualCV helps you create stunning resumes and personal landing pages</h5>
+  </div>
+
+  <ul class="list-inline text-center">
+
+    <li>
+      <i class="fa fa-text"></i>
+        <a class="btn btn-primary primary-cta link-signup" href="/app/#/signup">
+          <img src="/images/icons/pencil-64.png" class="icon" alt="build a cv"/>
+          Create your account
+</a>    </li>
+
+    <li>
+        <a class="btn btn-default" href="/resume-samples">Featured resume samples</a>
+    </li>
+
+  </ul>
+
+
+</div>
+
+
+
+<div id="social-share">
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=819813384706537&version=v2.0";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));</script>
+
+  <div class="share-button">
+    <div class="fb-like"
+         data-href="https://www.visualcv.com/resume-samples"
+         data-layout="button_count"
+         data-share="false"
+         data-width="450"
+         data-show-faces="false"></div>
+
+  </div>
+
+  <div class="share-button subtle">
+    <script src="//platform.linkedin.com/in.js" defer async></script>
+    <script type="IN/Share"
+            data-url="https://www.visualcv.com/resume-samples"
+            data-counter="right"></script>
+  </div>
+
+  <div class="share-button subtle">
+    <a href="https://twitter.com/share"
+       class="twitter-share-button"
+       data-text="Awesome resumes designs at"
+       data-url="https://www.visualcv.com/resume-samples"
+       data-hashtags=""
+       data-dnt="true">Tweet</a>
+    <script>!function(d,s,id){
+      var js,fjs=d.getElementsByTagName(s)[0];
+      if(!d.getElementById(id)){js=d.createElement(s);
+        js.id=id;js.src="//platform.twitter.com/widgets.js";
+        fjs.parentNode.insertBefore(js,fjs);
+      }}(document,"script","twitter-wjs");</script>
+  </div>
+</div>
+
+
+<div class="container">
+
+  <section id="resume-samples" class="section dark" style="padding-top: 15px">
+
+    <div class="row">
+      <div class="col-sm-9 cv-samples">
+
+        <div class="text-left">
+        
+        </div>
+
+
+        
+
+  <div class="row" data-sample-id="10601">
+    <div class="col-sm-6">
+      <img alt="real estate sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/10601/realestatesalesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Real Estate Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Real Estate Sales Agent, Michael Kris Real Estate (2009 - Present)</li><li>Network Operations Supervisor, Trans Adelaide (2007 - 2009)</li><li>Relief Senior Passenger Service Assistant, Trans Adelaide (2004 - 2007)</li><li>Tram Driver and Tram Conductor, Trans Adelaide (1999 - 2004)</li><li>Managing Director, VGA InNovations PTY Ltd. ()</li></ul> Education <ul><li>Registered Sales and Land Sales Representative , SoUth australia  rsr229346 ()</li></ul> Skills: <p>concrETer, TRadIe supervisor, TiLEr, Painter, customer service</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="4767">
+    <div class="col-sm-6">
+      <img alt="sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/4767/salesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Sales Agent, ERA King (Jun 2006 - Present)</li><li>Crew Leader, U.S. Census Bureau (Mar 2009 - Jul 2010)</li><li>Sales Consultant/Freelance Make-up Artist, Lancome Cosmetics (2003 - 2005)</li><li>GIS Analyst, Smart Data Strategies (1999 - 2001)</li><li>Advertising Sales Executive, Meridian Graphics (Jun 2010 - Jun 2011)</li></ul> Education <ul><li>Bachelor's of Science, Troy University ()</li></ul> Skills: <p>Microsoft Office Suite</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="11665">
+    <div class="col-sm-6">
+      <img alt="leasing &amp; sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/11665/leasingsalesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Leasing &amp; Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Leasing &amp; Sales Agent, Cushman &amp; Wakefield (Apr 2015 - Jul 2015)</li><li>Associate Sales Agent, Marcus &amp; Millichap (Sep 2014 - Mar 2015)</li><li>Analyst &amp; Project Manager, Stonebridge Real Estate Group (Sep 2013 - Aug 2014)</li><li>Leasing  &amp; Sales Agent, Boston Brokerage Group (Jan 2012 - Aug 2013)</li><li>Social Strategy &amp; Analytics Intern, R/GA (Jul 2012 - Dec 2012)</li></ul> Education <ul><li>BS in Business Administration, Northeastern University (2013)</li></ul> Skills: <p>Proficient in MS Powerpoint, word &amp; Excel, research</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="15183">
+    <div class="col-sm-6">
+      <img alt="direct sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/15183/directsalesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Direct Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Sales, Technical &amp; Logistics Manager, Apple Centre, Abuja (Apr 2008 - Oct 2009)</li><li>Team Leader/Supervisor, NIIT (May 2002 - Dec 2007)</li><li>Sales Executive, Lead Automobile Co. Ltd. (Nov 2009 - Feb 2011)</li><li>Advisor, GuidePoint Global LLC (Aug 2010 - Present)</li><li>Sales &amp; Marketing Manager, CEC Apple Store (Feb 2011 - Apr 2011)</li></ul> Education <ul><li>Bsc (Hons) in Business Administration, Lagos State University (Mar 2000 - Mar 2006)</li><li>NIIT Certified Solutions Developer, NIIT (Jan 2002 - May 2002)</li><li>Diploma, Obafemi Awolowo University (UNIFECS) (2001 - 2002)</li></ul> Skills: <p>Programming in Visual Studio.Net and SQL Administration</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="4768">
+    <div class="col-sm-6">
+      <img alt="sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/4768/salesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Sales Agent, Conlon Real Estate (Dec 2001 - Present)</li><li>Account Manager, Micron Electronics (PC Division) (Jan 1996 - Jan 2001)</li><li>Account Executive, Government Technology Services Corporation (Jan 1988 - Jan 1996)</li></ul> Education <ul><li>MBA, John Sperling Graduate School of Business (2009 - Present)</li><li>Bachelor of Science, Illinois State University  (1982 - 1987)</li><li>H.S. DIPLOMA, VON STEUBEN H.S.-Chicago Illinois  (1979 - 1982)</li></ul> Skills: <p>High-Impact Sales Presentations, Team Player, Computer Savvy</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="11666">
+    <div class="col-sm-6">
+      <img alt="entry-level insurance sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/11666/entrylevelinsurancesalesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Entry Level Insurance Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Entry-Level Insurance Sales Agent, AMERICAN LIFE INCOME INSURANCE (Jan 2013 - Present)</li><li>Receptionist, WVU- Office of Student Life (Jun 2012 - Aug 2012)</li><li>Server, FIRST WATCH DAYTIME CAFE' (Dec 2007 - May 2008)</li><li>Independent  Beauty Consultant, Mary Kay (Sep 2012 - Dec 2012)</li></ul> Education <ul><li>Communication Studies, West Virginia University (Aug 2008 - May 2013)</li></ul>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="11667">
+    <div class="col-sm-6">
+      <img alt="car insurance sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/11667/carinsurancesalesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Car Insurance Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Car Insurance Sales Agent, AEGON Magyarország Általános Biztosító Zrt. (Mar 2014 - Present)</li><li>Consumer Electronics Salesman, Euronics
+Műszaki Áruház (Nov 2013 - Feb 2014)</li><li>Salesman, Presenter, Educator, Zepter International Ungarn Kft. - Medical (Oct 2010 - Nov 2013)</li><li>Electrical and Electronic Equipment Assembler, JOST
+Hungaria Bt. (Mar 2010 - Aug 2010)</li><li>Coffee Shop Owner, Randi Kávézó (Oct 2008 - Jan 2010)</li></ul> Education <ul><li>High School Diploma, Cholnoky Jenő Gimnázium (High School) (2002 - 2006)</li><li>Mechanical Engineer Degree (Unfinished), Pannon Egyetem (University) (2006 - 2008)</li><li>Turism &amp; Hospitality - Sales Course, Kereskedelmi
+és Idegenforgalmi Továbbképző Kft. (2008 - 2009)</li></ul> Skills: <p>English Language, German Language, Microsoft Office Applications</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="4770">
+    <div class="col-sm-6">
+      <img alt="sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/4770/salesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Sales Associate/Merchandiser, Macy's (Dec 2005 - Jan 2011)</li><li>Volunteer, Boys and Girl's Town of Missouri (Aug 2008 - Dec 2008)</li><li>Project Highlights, Missouri State University (Jan 2009 - May 2010)</li><li>Sales Agent, Expedia Inc./Hotels.com (Jan 2011 - Mar 2011)</li></ul> Education <ul><li>Bachelor of Science, Missouri State University  (2005 - 2010)</li></ul>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="4772">
+    <div class="col-sm-6">
+      <img alt="sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/4772/salesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Sales Agent Resume samples</h5>
+       Work Experience <ul><li>Inside Sales Specialist, CenturyLink (Oct 2007 - present)</li><li>Legal Secretary, Tricia A. Madden, PA (Apr 2001 - Sep 2003)</li><li>Money Room Supervisor/Accounts Payable, Levy Restaurants (Feb 2000 - Mar 2001)</li><li>Sales Agent, Dillards</li></ul> Education <ul><li>DeVry (2011 - present)</li></ul>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+  <div class="row" data-sample-id="4771">
+    <div class="col-sm-6">
+      <img alt="sales agent Resume example" class="sample-thumb" src="https://workstory.s3.amazonaws.com/cv_samples/4771/salesagentresume-example.png" />
+    </div>
+    <div class="col-sm-6 sample-content text-left">
+      <h5 class="first">Sales Agent Resume samples</h5>
+       Work Experience <ul><li>General Manager South Cone, VeriFone (Apr 2008 - Feb 2009)</li><li>Sales &amp; Services Corporate Manager, Global Crossing Latin America &amp; Caribbean Co. (ex Impsat) (Oct 1998 - Mar 2008)</li><li>Senior Accounts Executive, Global Crossing Latin America &amp; Caribbean Co. (ex Impsat) (Mar 1996 - Sep 1998)</li><li>Accounts Executive, Global Crossing Latin America &amp; Caribbean Co. (ex Impsat) (Oct 1994 - Sep 1996)</li><li>Commercial Assistant, Global Crossing Latin America &amp; Caribbean Co. (ex Impsat) (Jul 1993 - Sep 1994)</li></ul> Education <ul><li>Master in Business Administration, Centro de Estudios Macroeconómicos de Argentina (CEMA) (Mar 1995 - Dec 1996)</li><li>Bachelor’s Degree in Systems, Centro de Altos Estudios en Ciencias Exactas (C.A.E.C.E.) (Mar 1989 - Dec 1993)</li><li>Argentine Baccalaureate, Instituto Marianista (Mar 1977 - Dec 1988)</li></ul> Skills: <p>English Level</p>
+        <div class="btn-group sample-cta">
+          <a class="btn btn-secondary" href="/app/#/signup">Get resume template</a>
+        </div>
+    </div>
+  </div>
+
+        <a class="btn btn-secondary" href="/resume-samples">Featured resume samples</a>
+      </div>
+
+      <div class="col-sm-3 sidebar-menu">
+
+        <h5 class="first">Popular resume examples</h5>
+
+        <ul class="nav bs-docs-sidenav">
+            <li>
+              <a href="/resume-samples/administration-cv-examples">administration</a>
+            </li>
+            <li>
+              <a href="/resume-samples/banking-cv-examples">banking</a>
+            </li>
+            <li>
+              <a href="/resume-samples/business-development-cv-examples">business development</a>
+            </li>
+            <li>
+              <a href="/resume-samples/call-center-agent-cv-examples">call center agent</a>
+            </li>
+            <li>
+              <a href="/resume-samples/construction-cv-examples">construction</a>
+            </li>
+            <li>
+              <a href="/resume-samples/consulting-cv-examples">consulting</a>
+            </li>
+            <li>
+              <a href="/resume-samples/customer-service-cv-examples">customer service</a>
+            </li>
+            <li>
+              <a href="/resume-samples/human-resources-cv-examples">human resources</a>
+            </li>
+            <li>
+              <a href="/resume-samples/retail-cv-examples">retail</a>
+            </li>
+            <li>
+              <a href="/resume-samples/software-engineer-cv-examples">software engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/executive-cv-examples">executive</a>
+            </li>
+            <li>
+              <a href="/resume-samples/housekeeping-cv-examples">housekeeping</a>
+            </li>
+            <li>
+              <a href="/resume-samples/interior-designer-cv-examples">interior designer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/investment-banking-cv-examples">investment banking</a>
+            </li>
+            <li>
+              <a href="/resume-samples/journalism-cv-examples">journalism</a>
+            </li>
+            <li>
+              <a href="/resume-samples/logistics-manager-cv-examples">logistics manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/marketing-manager-cv-examples">marketing manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/nurse-cv-examples">nurse</a>
+            </li>
+            <li>
+              <a href="/resume-samples/paralegal-cv-examples">paralegal</a>
+            </li>
+            <li>
+              <a href="/resume-samples/psychologist-cv-examples">psychologist</a>
+            </li>
+            <li>
+              <a href="/resume-samples/public-relations-cv-examples">public relations</a>
+            </li>
+            <li>
+              <a href="/resume-samples/real-estate-cv-examples">real estate</a>
+            </li>
+            <li>
+              <a href="/resume-samples/restaurant-cv-examples">restaurant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sales-cv-examples">sales</a>
+            </li>
+            <li>
+              <a href="/resume-samples/technical-support-cv-examples">technical support</a>
+            </li>
+            <li>
+              <a href="/resume-samples/engineering-cv-examples">engineering</a>
+            </li>
+            <li>
+              <a href="/resume-samples/project-manager-cv-examples">project manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/public-relations-cv-examples">public relations</a>
+            </li>
+            <li>
+              <a href="/resume-samples/management-cv-examples">management</a>
+            </li>
+            <li>
+              <a href="/resume-samples/property-management-cv-examples">property management</a>
+            </li>
+            <li>
+              <a href="/resume-samples/chef-cv-examples">chef</a>
+            </li>
+            <li>
+              <a href="/resume-samples/military-cv-examples">military</a>
+            </li>
+            <li>
+              <a href="/resume-samples/recruiter-cv-examples">recruiter</a>
+            </li>
+          <li>
+            <a href="/resume-samples">More ...</a>
+          </li>
+        </ul>
+
+        <h5>Resume samples</h5>
+
+        <ul class="nav bs-docs-sidenav">
+            <li>
+              <a href="/resume-samples/vice-president-of-sales-cv-examples">vice president of sales</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sole-proprietor-cv-examples">sole proprietor</a>
+            </li>
+            <li>
+              <a href="/resume-samples/shop-assistant-cv-examples">shop assistant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-director-cv-examples">it director</a>
+            </li>
+            <li>
+              <a href="/resume-samples/application-developer-cv-examples">application developer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-engineer-cv-examples">it engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/founding-partner-cv-examples">founding partner</a>
+            </li>
+            <li>
+              <a href="/resume-samples/intern-architect-cv-examples">intern architect</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sales-support-cv-examples">sales support</a>
+            </li>
+            <li>
+              <a href="/resume-samples/architectural-assistant-cv-examples">architectural assistant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/quality-engineer-cv-examples">quality engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/founder-&amp;-president-cv-examples">founder/president</a>
+            </li>
+            <li>
+              <a href="/resume-samples/vice-president-of-operations-cv-examples">vice president of operations</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-specialist-cv-examples">it specialist</a>
+            </li>
+            <li>
+              <a href="/resume-samples/plant-manager-cv-examples">plant manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/senior-product-manager-cv-examples">senior product manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/freelance-consultant-cv-examples">freelance consultant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/periodista-cv-examples">periodista</a>
+            </li>
+            <li>
+              <a href="/resume-samples/treasurer-cv-examples">treasurer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/managing-editor-cv-examples">managing editor</a>
+            </li>
+            <li>
+              <a href="/resume-samples/foreman-cv-examples">foreman</a>
+            </li>
+            <li>
+              <a href="/resume-samples/test-engineer-cv-examples">test engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/communications-manager-cv-examples">communications manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/senior-director-cv-examples">senior director</a>
+            </li>
+            <li>
+              <a href="/resume-samples/chairman-and-ceo-cv-examples">chairman and ceo</a>
+            </li>
+            <li>
+              <a href="/resume-samples/accounts-executive-cv-examples">accounts executive</a>
+            </li>
+            <li>
+              <a href="/resume-samples/executive-producer-cv-examples">executive producer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/software-test-engineer-cv-examples">software test engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/php-developer-cv-examples">php developer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/founder-and-owner-cv-examples">founder and owner</a>
+            </li>
+            <li>
+              <a href="/resume-samples/office-administrator-cv-examples">office administrator</a>
+            </li>
+            <li>
+              <a href="/resume-samples/case-manager-cv-examples">case manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/math-teacher-cv-examples">math teacher</a>
+            </li>
+            <li>
+              <a href="/resume-samples/computer-engineer-cv-examples">computer engineer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/welder-cv-examples">welder</a>
+            </li>
+            <li>
+              <a href="/resume-samples/seo-cv-examples">seo</a>
+            </li>
+            <li>
+              <a href="/resume-samples/editor-in-chief-cv-examples">editor in chief</a>
+            </li>
+            <li>
+              <a href="/resume-samples/director-of-technology-cv-examples">director of technology</a>
+            </li>
+            <li>
+              <a href="/resume-samples/marketing-associate-cv-examples">marketing associate</a>
+            </li>
+            <li>
+              <a href="/resume-samples/rn-cv-examples">rn</a>
+            </li>
+            <li>
+              <a href="/resume-samples/service-manager-cv-examples">service manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/purchasing-manager-cv-examples">purchasing manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/logistics-manager-cv-examples">logistics manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/assembler-cv-examples">assembler</a>
+            </li>
+            <li>
+              <a href="/resume-samples/police-officer-cv-examples">police officer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/tour-guide-cv-examples">tour guide</a>
+            </li>
+            <li>
+              <a href="/resume-samples/recruitment-consultant-cv-examples">recruitment consultant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/director-of-information-technology-cv-examples">director of information technology</a>
+            </li>
+            <li>
+              <a href="/resume-samples/construction-manager-cv-examples">construction manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/director-of-development-cv-examples">director of development</a>
+            </li>
+            <li>
+              <a href="/resume-samples/accounting-manager-cv-examples">accounting manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/financial-representative-cv-examples">financial representative</a>
+            </li>
+            <li>
+              <a href="/resume-samples/country-manager-cv-examples">country manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/va-cv-examples">va</a>
+            </li>
+            <li>
+              <a href="/resume-samples/loan-officer-cv-examples">loan officer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/classroom-teacher-cv-examples">classroom teacher</a>
+            </li>
+            <li>
+              <a href="/resume-samples/deli-clerk-cv-examples">deli clerk</a>
+            </li>
+            <li>
+              <a href="/resume-samples/communications-director-cv-examples">communications director</a>
+            </li>
+            <li>
+              <a href="/resume-samples/director-of-finance-cv-examples">director of finance</a>
+            </li>
+            <li>
+              <a href="/resume-samples/founder,-ceo-cv-examples">founder / ceo</a>
+            </li>
+            <li>
+              <a href="/resume-samples/child-care-provider-cv-examples">child care provider</a>
+            </li>
+            <li>
+              <a href="/resume-samples/dermatologist-cv-examples">dermatologist</a>
+            </li>
+            <li>
+              <a href="/resume-samples/lvn-cv-examples">lvn</a>
+            </li>
+            <li>
+              <a href="/resume-samples/carpenter-cv-examples">carpenter</a>
+            </li>
+            <li>
+              <a href="/resume-samples/public-relations-manager-cv-examples">public relations manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/special-education-teacher-cv-examples">special education teacher</a>
+            </li>
+            <li>
+              <a href="/resume-samples/blogger-cv-examples">blogger</a>
+            </li>
+            <li>
+              <a href="/resume-samples/pediatric-dentist-cv-examples">pediatric dentist</a>
+            </li>
+            <li>
+              <a href="/resume-samples/president-and-chief-executive-officer-cv-examples">president and chief executive officer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-technician-cv-examples">it technician</a>
+            </li>
+            <li>
+              <a href="/resume-samples/project-lead-cv-examples">project lead</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sales-&amp;-marketing-manager-cv-examples">sales &amp; marketing manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/product-marketing-manager-cv-examples">product marketing manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/teacher&#39;s-assistant-cv-examples">teacher&#39;s assistant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/massage-therapist-cv-examples">massage therapist</a>
+            </li>
+            <li>
+              <a href="/resume-samples/financial-controller-cv-examples">financial controller</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-support-cv-examples">it support</a>
+            </li>
+            <li>
+              <a href="/resume-samples/it-analyst-cv-examples">it analyst</a>
+            </li>
+            <li>
+              <a href="/resume-samples/vice-president-cv-examples">vice-president</a>
+            </li>
+            <li>
+              <a href="/resume-samples/law-clerk-cv-examples">law clerk</a>
+            </li>
+            <li>
+              <a href="/resume-samples/ceo%2Ffounder-cv-examples">ceo &amp; founder</a>
+            </li>
+            <li>
+              <a href="/resume-samples/account-supervisor-cv-examples">account supervisor</a>
+            </li>
+            <li>
+              <a href="/resume-samples/owner%2Fmanager-cv-examples">owner/manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/owner%2Fceo-cv-examples">owner/ceo</a>
+            </li>
+            <li>
+              <a href="/resume-samples/promoter-cv-examples">promoter</a>
+            </li>
+            <li>
+              <a href="/resume-samples/regional-director-cv-examples">regional director</a>
+            </li>
+            <li>
+              <a href="/resume-samples/assistant-project-manager-cv-examples">assistant project manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sous-chef-cv-examples">sous chef</a>
+            </li>
+            <li>
+              <a href="/resume-samples/business-development-consultant-cv-examples">business development consultant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/associate-manager-cv-examples">associate manager</a>
+            </li>
+            <li>
+              <a href="/resume-samples/sales-advisor-cv-examples">sales advisor</a>
+            </li>
+            <li>
+              <a href="/resume-samples/technology-consultant-cv-examples">technology consultant</a>
+            </li>
+            <li>
+              <a href="/resume-samples/orthopaedic-surgeon-cv-examples">orthopaedic surgeon</a>
+            </li>
+            <li>
+              <a href="/resume-samples/customer-care-cv-examples">customer care</a>
+            </li>
+            <li>
+              <a href="/resume-samples/administration-cv-examples">administration</a>
+            </li>
+            <li>
+              <a href="/resume-samples/officer-cv-examples">officer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/crew-trainer-cv-examples">crew trainer</a>
+            </li>
+            <li>
+              <a href="/resume-samples/engineering-intern-cv-examples">engineering intern</a>
+            </li>
+            <li>
+              <a href="/resume-samples/english-instructor-cv-examples">english instructor</a>
+            </li>
+            <li>
+              <a href="/resume-samples/gerente-cv-examples">gerente</a>
+            </li>
+        </ul>
+
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<div class="template-container">
+  <a href="/">
+    <img src="/images/textures/clear.png" alt="Visual CV Resume Samples"
+         data-src="/images/misc/cv-templates.png" class="banner-top" />
+</a></div>
+
+<section id="guarantee" class="long-block light float-top">
+  <div class="container center">
+    <div class="col-md-12 col-lg-8">
+      <article class="pull-left">
+        <h2>Create your account</h2>
+        <p class="thin">Easily create professional resumes, online portfolios and personal landing pages</p>
+      </article>
+    </div>
+
+    <div class="col-md-12 col-lg-4">
+      <a class="btn btn-default" href="/app/#/signup">Create for free.</a>
+    </div>
+  </div>
+</section>
+
+
+
+<footer id="footer" class="footer light inverted" dir="ltr">
+  <div class="container">
+    <div class="footer-content row">
+      <div class="col-sm-3">
+        <div class="footer-title" style="text-align: left">CV Tools</div>
+        <ul class="list-unstyled no-padding">
+          <li>
+            <a href="/">CV Builder</a>
+          </li>
+          <li>
+            <a href="/student-cv/">Student CV Builder</a>
+          </li>
+          <li>
+            <a href="/linkedin-resume-builder/">Linkedin CV Builder</a>
+          </li>
+          <li>
+            <a href="/cv-templates/">CV Templates</a>
+          </li>
+          <div class="footer-title" style="text-align: left">Resume Tools</div>
+          <li>
+            <a href="/">Resume Builder</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-sm-3">
+        <div class="footer-title" style="text-align: left">Career Resources</div>
+        <ul class="list-unstyled no-padding">
+          <li>
+            <a href="/blog/">Job search Blog</a>
+          </li>
+          <li>
+            <a href="/job-search/">Job search Sites</a>
+          </li>
+          <li>
+            <a href="/how-to-write-a-cover-letter/">How to write a cover Letter</a>
+          </li>
+          <li>
+            <a href="/how-to-write-a-job-application/">How to write a job Application</a>
+          </li>
+          <li>
+            <a href="/create-an-online-portfolio/">How to create an online Portfolio</a>
+          </li>
+          <li>
+            <a href="/how-to-build-your-personal-brand/">How to build your personal Brand</a>
+          </li>
+          <li>
+            <a href="/how-to-get-a-better-job/">How to get a better Job</a>
+          </li>
+          <li>
+            <a href="/how-to-get-a-job-in-america/">How to get a job in America</a>
+          </li>
+          <li>
+            <a href="/linkedin-alternative/">LinkedIn Alternative</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-sm-3">
+        <div class="footer-title" style="text-align: left">CV Resources</div>
+        <ul class="list-unstyled no-padding">
+          <li>
+            <a href="/examples/">CV Examples</a>
+          </li>
+          <li>
+            <a href="/cv-vs-resume/">CV vs Resume</a>
+          </li>
+        </ul>
+        <div class="footer-title" style="text-align: left">Resume Resources</div>
+        <ul class="list-unstyled no-padding">
+          <li>
+            <a href="/resume-samples/">Resume Samples</a>
+          </li>
+          <li>
+            <a href="/resume-guide/">Resume Guide</a>
+          </li>
+        </ul>
+      </div>
+
+
+      <div class="col-sm-3">
+        <div class="footer-title" style="text-align: left">Why VisualCV</div>
+        <ul class="list-unstyled no-padding">
+          <li><a href="/press/">In the Media</a></li>
+          <li><a href="/reviews/">VisualCV Reviews</a></li>
+        </ul>
+        <div class="footer-title" style="text-align: left">Contact Us</div>
+        <ul class="list-unstyled no-padding">
+          <li><a href="/contact/">Support</a></li>
+          <li><a href="/contact/">Enquiries</a></li>
+          <li><a href="/partner-materials/">Partners</a></li>
+          <li>110 East Cordova Street. Vancouver</li>
+        </ul>
+      </div>
+      <div class="col-sm-12 text-center">
+        <br>
+        <span>create your cv in:</span>
+        <ul class="inline">
+            <li>
+              <a href="/">English</a>
+            </li>
+            <li>
+              <a href="/fr/">Français</a>
+            </li>
+            <li>
+              <a href="/de/">Deutsch</a>
+            </li>
+            <li>
+              <a href="/es/">Español</a>
+            </li>
+            <li>
+              <a href="/pt/">Português</a>
+            </li>
+            <li>
+              <a href="/zh/">中文</a>
+            </li>
+            <li>
+              <a href="/ru/">Pусский</a>
+            </li>
+            <li>
+              <a href="/ar/">العربية</a>
+            </li>
+            <li>
+              <a href="/tr/">Türkçe</a>
+            </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+      <br>
+      <ul class="list-inline text-center">
+        <li>
+          <a href="https://plus.google.com/+visualcv" target="_blank"><span class="icon icon-socialmedia-16"></span></a>
+        </li>
+        <li>
+          <a href="https://twitter.com/visualcv" target="_blank"><span class="icon icon-socialmedia-07"></span></a>
+        </li>
+        <li>
+          <a href="https://www.facebook.com/YourVisualCV/" target="_blank"><span class="icon icon-socialmedia-08"></span></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="copyright">Copyright © 2007 - 2016 VisualCV All rights reserved.
+    <span>
+      <a href="/privacy-policy/">Privacy Policy</a>, <a href="/terms-of-service/">Terms of Service</a>
+    </span>
+  </div>
+
+</footer>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>if (!window.jQuery) { document.write('<script src="/js/jquery-1.9.1.min.js"><\/script>') }</script>
+
+<script src="/packages/landing-6917c44bc2cc2613cd60df00b635b815.js"></script>
+
+
+<script>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,275 @@
+/// <XRTypeInfo>
+///   <AssemblyFullName>DevExpress.XtraReports.v15.2, Version=15.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a</AssemblyFullName>
+///   <AssemblyLocation>C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\DevExpress.XtraReports.v15.2\v4.0_15.2.7.0__b88d1754d700e49a\DevExpress.XtraReports.v15.2.dll</AssemblyLocation>
+///   <TypeName>DevExpress.XtraReports.UI.XtraReport</TypeName>
+///   <Localization>en-US</Localization>
+///   <Version>15.2</Version>
+///   <Resources>
+///     <Resource Name="XtraReportSerialization.Report1">
+/// zsrvvgEAAACRAAAAbFN5c3RlbS5SZXNvdXJjZXMuUmVzb3VyY2VSZWFkZXIsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OSNTeXN0ZW0uUmVzb3VyY2VzLlJ1bnRpbWVSZXNvdXJjZVNldAIAAAABAAAAAAAAAFBBRFBBRFA4hdt+AAAAAA8BAABOcwBxAGwARABhAHQAYQBTAG8AdQByAGMAZQAxAC4AUgBlAHMAdQBsAHQAUwBjAGgAZQBtAGEAUwBlAHIAaQBhAGwAaQB6AGEAYgBsAGUAAAAAAAHIIFBFUmhkR0ZUWlhRZ1RtRnRaVDBpYzNGc1JHRjBZVk52ZFhKalpURWlQanhXYVdWM0lFNWhiV1U5SWw5MlEzVnljbVZ1ZEVSaGRHVlVhVzFsSWo0OFJtbGxiR1FnVG1GdFpUMGlR
+/// M1Z5Y21WdWRFUmhlWFJwYldVaUlGUjVjR1U5SWxOMGNtbHVaeUlnTHo0OEwxWnBaWGMrUEZacFpYY2dUbUZ0WlQwaVJITkRiMjF3WVc1NUlqNDhSbWxsYkdRZ1RtRnRaVDBpU1VRaUlGUjVjR1U5SWtsdWRETXlJaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkRiMlJsSWlCVWVYQmxQU0pUZEhKcGJtY2lJQzgrUEVacFpXeGtJRTVoYldVOUlrNWhiV1VpSUZSNWNHVTlJbE4wY21sdVp5SWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVNYTkJZM1JwZG1VaUlGUjVjR1U5SWtKdmIyeGxZVzRpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa1JoZEdWRGNtVmhkR1ZrSWlCVWVYQmxQU0pFWVhSbFZHbHRaU0lnTHo0OFJtbGxiR1FnVG1GdFpUMGlTVVJmUTNKbFlYUmxaRUo1SWlCVWVYQmxQU0pK
+/// Ym5Rek1pSWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVJHRjBaVTF2WkdsbWFXVmtJaUJVZVhCbFBTSkVZWFJsVkdsdFpTSWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVFXUmtjbVZ6Y3lJZ1ZIbHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkpiV0ZuWlVacGJHVWlJRlI1Y0dVOUlsTjBjbWx1WnlJZ0x6NDhSbWxsYkdRZ1RtRnRaVDBpVUdodmJtVWlJRlI1Y0dVOUlsTjBjbWx1WnlJZ0x6NDhSbWxsYkdRZ1RtRnRaVDBpUm1GNElpQlVlWEJsUFNKVGRISnBibWNpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa0ZrWkhKbGMzTXhJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtGa1pISmxjM015SWlCVWVYQmxQU0pUZEhKcGJtY2lJQzgrUEVa
+/// cFpXeGtJRTVoYldVOUlrRmtaSEpsYzNNeklpQlVlWEJsUFNKVGRISnBibWNpSUM4K1BDOVdhV1YzUGp4V2FXVjNJRTVoYldVOUluWjZVR0Y1YldWdWRGSmxZMlZwY0hRaVBqeEdhV1ZzWkNCT1lXMWxQU0pKUkNJZ1ZIbHdaVDBpU1c1ME16SWlJQzgrUEVacFpXeGtJRTVoYldVOUlrTnZaR1VpSUZSNWNHVTlJbE4wY21sdVp5SWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVRtRnRaU0lnVkhsd1pUMGlVM1J5YVc1bklpQXZQanhHYVdWc1pDQk9ZVzFsUFNKSmMwRmpkR2wyWlNJZ1ZIbHdaVDBpUW05dmJHVmhiaUlnTHo0OFJtbGxiR1FnVG1GdFpUMGlRMjl0YldWdWRDSWdWSGx3WlQwaVUzUnlhVzVuSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pOWVc1MVlXeEViMk5PYnlJZ1ZI
+/// bHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkViMk4xYldWdWRFNXZJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtSaGRHVWlJRlI1Y0dVOUlrUmhkR1ZVYVcxbElpQXZQanhHYVdWc1pDQk9ZVzFsUFNKSlJGOUNkWE5wYm1WemMxQmhjblJ1WlhJaUlGUjVjR1U5SWtsdWRETXlJaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkpSRjlRWVhsdFpXNTBWSEpoYm5OaFkzUnBiMjVVZVhCbElpQlVlWEJsUFNKSmJuUXpNaUlnTHo0OFJtbGxiR1FnVG1GdFpUMGlTVVJmVW1WalpXbHdkRlI1Y0dVaUlGUjVjR1U5SWtsdWRETXlJaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkpSRjlYWVhKbGFHOTFjMlVpSUZSNWNHVTlJa2x1ZERNeUlpQXZQ
+/// anhHYVdWc1pDQk9ZVzFsUFNKVGRXSlViM1JoYkNJZ1ZIbHdaVDBpUkdWamFXMWhiQ0lnTHo0OFJtbGxiR1FnVG1GdFpUMGlWRzkwWVd4RGNtVmthWFFpSUZSNWNHVTlJa1JsWTJsdFlXd2lJQzgrUEVacFpXeGtJRTVoYldVOUlsUnZkR0ZzUkdWaWFYUWlJRlI1Y0dVOUlrUmxZMmx0WVd3aUlDOCtQRVpwWld4a0lFNWhiV1U5SWtkeWIzTnpRVzF2ZFc1MElpQlVlWEJsUFNKRVpXTnBiV0ZzSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pKUkY5RlYxUWlJRlI1Y0dVOUlrbHVkRE15SWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pGVjFSU1lYUmxJaUJVZVhCbFBTSkVaV05wYldGc0lpQXZQanhHYVdWc1pDQk9ZVzFsUFNKRlYxUkJiVzkxYm5RaUlGUjVjR1U5SWtSbFkybHRZV3dp
+/// SUM4K1BFWnBaV3hrSUU1aGJXVTlJbFpoZEVGdGIzVnVkQ0lnVkhsd1pUMGlSR1ZqYVcxaGJDSWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVZHOTBZV3hXWVhRaUlGUjVjR1U5SWtSbFkybHRZV3dpSUM4K1BFWnBaV3hrSUU1aGJXVTlJbFJ2ZEdGc1RtVjBRVzF2ZFc1MElpQlVlWEJsUFNKRVpXTnBiV0ZzSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pVYjNSaGJFRnRiM1Z1ZENJZ1ZIbHdaVDBpUkdWamFXMWhiQ0lnTHo0OFJtbGxiR1FnVG1GdFpUMGlRMkZ6YUZCaGVXMWxiblFpSUZSNWNHVTlJa1JsWTJsdFlXd2lJQzgrUEVacFpXeGtJRTVoYldVOUlsUnZkR0ZzUW1GdWExUnlZVzV6Wm1WeVFXMXZkVzUwSWlCVWVYQmxQU0pFWldOcGJXRnNJaUF2UGp4R2FXVnNaQ0JPWVcx
+/// bFBTSlViM1JoYkVOb1pXTnJRVzF2ZFc1MElpQlVlWEJsUFNKRVpXTnBiV0ZzSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pVYjNSaGJGQmhlVzFsYm5RaUlGUjVjR1U5SWtSbFkybHRZV3dpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa2xFWDBOeVpXRjBaV1JDZVNJZ1ZIbHdaVDBpU1c1ME16SWlJQzgrUEVacFpXeGtJRTVoYldVOUlrUmhkR1ZCY0hCeWIzWmxaQ0lnVkhsd1pUMGlSR0YwWlZScGJXVWlJQzgrUEVacFpXeGtJRTVoYldVOUlrUmhkR1ZEWVc1alpXeHNaV1FpSUZSNWNHVTlJa1JoZEdWVWFXMWxJaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkpSRjlRYjNOMFpXUkNlU0lnVkhsd1pUMGlTVzUwTXpJaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtsRVgwWnBiR2x1WjFOMFlY
+/// UjFjeUlnVkhsd1pUMGlTVzUwTXpJaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtSbGRHRnBiRU52ZFc1MElpQlVlWEJsUFNKSmJuUXpNaUlnTHo0OFJtbGxiR1FnVG1GdFpUMGlTVVJmVEdGemRFMXZaR2xtYVdWa1Fua2lJRlI1Y0dVOUlrbHVkRE15SWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pKUkY5RGIyMXdZVzU1SWlCVWVYQmxQU0pKYm5Rek1pSWdMejQ4Um1sbGJHUWdUbUZ0WlQwaVJHRjBaVU55WldGMFpXUWlJRlI1Y0dVOUlrUmhkR1ZVYVcxbElpQXZQanhHYVdWc1pDQk9ZVzFsUFNKSlJGOUJjSEJ5YjNabFpFSjVJaUJVZVhCbFBTSkpiblF6TWlJZ0x6NDhSbWxsYkdRZ1RtRnRaVDBpU1VSZlEyRnVZMlZzYkdWa1Fua2lJRlI1Y0dVOUlrbHVkRE15SWlBdlBqeEdh
+/// V1ZzWkNCT1lXMWxQU0pFWVhSbFEyRnVZMlZzWldRaUlGUjVjR1U5SWtSaGRHVlVhVzFsSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pFWVhSbFRXOWthV1pwWldRaUlGUjVjR1U5SWtSaGRHVlVhVzFsSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pEYjIxd1lXNTVJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtOeVpXRjBaV1JDZVNJZ1ZIbHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkNkWE5wYm1WemMxQmhjblJ1WlhJaUlGUjVjR1U5SWxOMGNtbHVaeUlnTHo0OFJtbGxiR1FnVG1GdFpUMGlVR0Y1YldWdWRGUnlZVzV6WVdOMGFXOXVWSGx3WlNJZ1ZIbHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSlhZWEps
+/// YUc5MWMyVWlJRlI1Y0dVOUlsTjBjbWx1WnlJZ0x6NDhSbWxsYkdRZ1RtRnRaVDBpUlZkVUlpQlVlWEJsUFNKVGRISnBibWNpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa1pwYkdsdVoxTjBZWFIxY3lJZ1ZIbHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkJjSEJ5YjNabFpFSjVJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtOaGJtTmxiR3hsWkVKNUlpQlVlWEJsUFNKVGRISnBibWNpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa3hoYzNSTmIyUnBabWxsWkVKNUlpQlVlWEJsUFNKVGRISnBibWNpSUM4K1BFWnBaV3hrSUU1aGJXVTlJa04xYzNSdmJXVnlJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWxS
+/// SlRpSWdWSGx3WlQwaVUzUnlhVzVuSWlBdlBqeEdhV1ZzWkNCT1lXMWxQU0pHZFd4c1FXUmtjbVZ6Y3lJZ1ZIbHdaVDBpVTNSeWFXNW5JaUF2UGp4R2FXVnNaQ0JPWVcxbFBTSkNkWE5wYm1WemMxTjBlV3hsSWlCVWVYQmxQU0pUZEhKcGJtY2lJQzgrUEVacFpXeGtJRTVoYldVOUlsQmhlVzFsYm5SWGIzSmtJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtSaGRHVXhJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQRVpwWld4a0lFNWhiV1U5SWtSaGRHVXlJaUJVZVhCbFBTSlRkSEpwYm1jaUlDOCtQQzlXYVdWM1Bqd3ZSR0YwWVZObGREND0=</Resource>
+///   </Resources>
+/// </XRTypeInfo>
+namespace XtraReportSerialization {
+    
+    public class Report1 : DevExpress.XtraReports.UI.XtraReport {
+        private DevExpress.XtraReports.UI.TopMarginBand TopMargin;
+        private DevExpress.XtraReports.UI.DetailBand Detail;
+        private DevExpress.XtraReports.UI.DetailReportBand dbvzPurchaseOrderDetailBand;
+        private DevExpress.XtraReports.UI.DetailBand dbvzPurchaseOrderDetailDetailBand;
+        private DevExpress.XtraReports.UI.XRLabel label8;
+        private DevExpress.XtraReports.UI.XRLabel label7;
+        private DevExpress.XtraReports.UI.XRLabel label6;
+        private DevExpress.XtraReports.UI.XRLabel label5;
+        private DevExpress.XtraReports.UI.XRLabel label4;
+        private DevExpress.XtraReports.UI.XRLabel label3;
+        private DevExpress.XtraReports.UI.XRLabel label2;
+        private DevExpress.XtraReports.UI.XRLabel label1;
+        private DevExpress.DataAccess.Sql.SqlDataSource sqlDataSource1;
+        private DevExpress.XtraReports.UI.BottomMarginBand BottomMargin;
+        private DevExpress.XtraReports.UI.XRControlStyle DetailOddStyleName;
+        private DevExpress.XtraReports.UI.XRControlStyle DetailEvenStyleName;
+        private DevExpress.XtraReports.UI.XRControlStyle DefaultStyle;
+        private System.Resources.ResourceManager _resources;
+        private string _resourceString;
+        public Report1() {
+            this._resourceString = DevExpress.XtraReports.Serialization.XRResourceManager.GetResourceFor("XtraReportSerialization.Report1");
+            this.InitializeComponent();
+        }
+        private System.Resources.ResourceManager resources {
+            get {
+                if (_resources == null) {
+                    this._resources = new DevExpress.XtraReports.Serialization.XRResourceManager(this._resourceString);
+                }
+                return this._resources;
+            }
+        }
+        private void InitializeComponent() {
+            DevExpress.DataAccess.ConnectionParameters.CustomStringConnectionParameters customStringConnectionParameters1 = new DevExpress.DataAccess.ConnectionParameters.CustomStringConnectionParameters();
+            DevExpress.DataAccess.Sql.CustomSqlQuery customSqlQuery1 = new DevExpress.DataAccess.Sql.CustomSqlQuery();
+            DevExpress.DataAccess.Sql.CustomSqlQuery customSqlQuery2 = new DevExpress.DataAccess.Sql.CustomSqlQuery();
+            DevExpress.DataAccess.Sql.CustomSqlQuery customSqlQuery3 = new DevExpress.DataAccess.Sql.CustomSqlQuery();
+            DevExpress.DataAccess.Sql.MasterDetailInfo masterDetailInfo1 = new DevExpress.DataAccess.Sql.MasterDetailInfo();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo1 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
+            this.Detail = new DevExpress.XtraReports.UI.DetailBand();
+            this.dbvzPurchaseOrderDetailBand = new DevExpress.XtraReports.UI.DetailReportBand();
+            this.BottomMargin = new DevExpress.XtraReports.UI.BottomMarginBand();
+            this.dbvzPurchaseOrderDetailDetailBand = new DevExpress.XtraReports.UI.DetailBand();
+            this.label8 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label7 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label6 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label5 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label4 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label3 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label2 = new DevExpress.XtraReports.UI.XRLabel();
+            this.label1 = new DevExpress.XtraReports.UI.XRLabel();
+            this.sqlDataSource1 = new DevExpress.DataAccess.Sql.SqlDataSource();
+            this.DetailOddStyleName = new DevExpress.XtraReports.UI.XRControlStyle();
+            this.DetailEvenStyleName = new DevExpress.XtraReports.UI.XRControlStyle();
+            this.DefaultStyle = new DevExpress.XtraReports.UI.XRControlStyle();
+            ((System.ComponentModel.ISupportInitialize)(this)).BeginInit();
+            // 
+            // TopMargin
+            // 
+            this.TopMargin.HeightF = 0F;
+            this.TopMargin.Name = "TopMargin";
+            // 
+            // Detail
+            // 
+            this.Detail.HeightF = 0F;
+            this.Detail.Name = "Detail";
+            this.Detail.Padding = new DevExpress.XtraPrinting.PaddingInfo(5, 0, 5, 5, 100F);
+            this.Detail.PageBreak = DevExpress.XtraReports.UI.PageBreak.BeforeBand;
+            this.Detail.StylePriority.UsePadding = false;
+            this.Detail.Visible = false;
+            // 
+            // dbvzPurchaseOrderDetailBand
+            // 
+            this.dbvzPurchaseOrderDetailBand.Bands.AddRange(new DevExpress.XtraReports.UI.Band[] {
+                        this.dbvzPurchaseOrderDetailDetailBand});
+            this.dbvzPurchaseOrderDetailBand.DataMember = "vzPaymentReceipt";
+            this.dbvzPurchaseOrderDetailBand.DataSource = this.sqlDataSource1;
+            this.dbvzPurchaseOrderDetailBand.Level = 0;
+            this.dbvzPurchaseOrderDetailBand.Name = "dbvzPurchaseOrderDetailBand";
+            this.dbvzPurchaseOrderDetailBand.Padding = new DevExpress.XtraPrinting.PaddingInfo(5, 5, 5, 5, 100F);
+            // 
+            // BottomMargin
+            // 
+            this.BottomMargin.HeightF = 0F;
+            this.BottomMargin.Name = "BottomMargin";
+            // 
+            // dbvzPurchaseOrderDetailDetailBand
+            // 
+            this.dbvzPurchaseOrderDetailDetailBand.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+                        this.label8,
+                        this.label7,
+                        this.label6,
+                        this.label5,
+                        this.label4,
+                        this.label3,
+                        this.label2,
+                        this.label1});
+            this.dbvzPurchaseOrderDetailDetailBand.HeightF = 383.1992F;
+            this.dbvzPurchaseOrderDetailDetailBand.Name = "dbvzPurchaseOrderDetailDetailBand";
+            // 
+            // label8
+            // 
+            this.label8.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.TIN")});
+            this.label8.LocationFloat = new DevExpress.Utils.PointFloat(587.4167F, 113.875F);
+            this.label8.Name = "label8";
+            this.label8.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label8.SizeF = new System.Drawing.SizeF(100F, 23F);
+            this.label8.Text = "label8";
+            // 
+            // label7
+            // 
+            this.label7.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.TotalPayment")});
+            this.label7.LocationFloat = new DevExpress.Utils.PointFloat(588.4167F, 252.9583F);
+            this.label7.Name = "label7";
+            this.label7.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label7.SizeF = new System.Drawing.SizeF(201.5833F, 22.99998F);
+            this.label7.Text = "label7";
+            // 
+            // label6
+            // 
+            this.label6.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.PaymentWord", "{0} Only")});
+            this.label6.LocationFloat = new DevExpress.Utils.PointFloat(143.7917F, 210.1667F);
+            this.label6.Name = "label6";
+            this.label6.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label6.SizeF = new System.Drawing.SizeF(543.625F, 23F);
+            this.label6.Text = "label6";
+            // 
+            // label5
+            // 
+            this.label5.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.BusinessStyle")});
+            this.label5.LocationFloat = new DevExpress.Utils.PointFloat(158.7917F, 175.5417F);
+            this.label5.Name = "label5";
+            this.label5.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label5.SizeF = new System.Drawing.SizeF(528.625F, 23F);
+            this.label5.Text = "label5";
+            // 
+            // label4
+            // 
+            this.label4.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.Date2")});
+            this.label4.LocationFloat = new DevExpress.Utils.PointFloat(713.9584F, 77F);
+            this.label4.Name = "label4";
+            this.label4.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label4.SizeF = new System.Drawing.SizeF(76.04163F, 23F);
+            this.label4.Text = "label4";
+            // 
+            // label3
+            // 
+            this.label3.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.FullAddress")});
+            this.label3.LocationFloat = new DevExpress.Utils.PointFloat(149.7917F, 142.9075F);
+            this.label3.Name = "label3";
+            this.label3.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label3.SizeF = new System.Drawing.SizeF(458.3333F, 23F);
+            this.label3.Text = "label3";
+            // 
+            // label2
+            // 
+            this.label2.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.Date1")});
+            this.label2.LocationFloat = new DevExpress.Utils.PointFloat(588.4167F, 77F);
+            this.label2.Name = "label2";
+            this.label2.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label2.SizeF = new System.Drawing.SizeF(100F, 23F);
+            // 
+            // label1
+            // 
+            this.label1.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+                        new DevExpress.XtraReports.UI.XRBinding("Text", null, "vzPaymentReceipt.Customer")});
+            this.label1.LocationFloat = new DevExpress.Utils.PointFloat(143.7917F, 113.875F);
+            this.label1.Name = "label1";
+            this.label1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.label1.SizeF = new System.Drawing.SizeF(387.375F, 23.00002F);
+            this.label1.Text = "label1";
+            // 
+            // sqlDataSource1
+            // 
+            this.sqlDataSource1.ConnectionName = "Connection";
+            customStringConnectionParameters1.ConnectionString = "Data Source=.;Initial Catalog=ITIAcct;User ID=sa;Password=abc123";
+            this.sqlDataSource1.ConnectionParameters = customStringConnectionParameters1;
+            this.sqlDataSource1.Name = "sqlDataSource1";
+            customSqlQuery1.Name = "DsCompany";
+            customSqlQuery1.Sql = "SELECT TOP 1 * FROM tCompany";
+            customSqlQuery2.Name = "_vCurrentDateTime";
+            customSqlQuery2.Sql = "SELECT * FROM _vCurrentDateTime";
+            customSqlQuery3.Name = "vzPaymentReceipt";
+            customSqlQuery3.Sql = "SELECT * FROM vzPaymentReceipt";
+            this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
+                        customSqlQuery1,
+                        customSqlQuery2,
+                        customSqlQuery3});
+            masterDetailInfo1.DetailQueryName = "vzPurchaseOrderDetail";
+            relationColumnInfo1.NestedKeyColumn = "ID_PurchaseOrder";
+            relationColumnInfo1.ParentKeyColumn = "ID";
+            masterDetailInfo1.KeyColumns.Add(relationColumnInfo1);
+            masterDetailInfo1.MasterQueryName = "vzPurchaseOrder";
+            this.sqlDataSource1.Relations.AddRange(new DevExpress.DataAccess.Sql.MasterDetailInfo[] {
+                        masterDetailInfo1});
+            this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
+            // 
+            // DetailOddStyleName
+            // 
+            this.DetailOddStyleName.Name = "DetailOddStyleName";
+            // 
+            // DetailEvenStyleName
+            // 
+            this.DetailEvenStyleName.BackColor = System.Drawing.Color.White;
+            this.DetailEvenStyleName.Borders = DevExpress.XtraPrinting.BorderSide.None;
+            this.DetailEvenStyleName.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.DetailEvenStyleName.Name = "DetailEvenStyleName";
+            // 
+            // DefaultStyle
+            // 
+            this.DefaultStyle.Font = new System.Drawing.Font("Tahoma", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DefaultStyle.Name = "DefaultStyle";
+            this.DefaultStyle.Padding = new DevExpress.XtraPrinting.PaddingInfo(5, 0, 0, 0, 100F);
+            this.DefaultStyle.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            // 
+            // Report1
+            // 
+            this.Bands.AddRange(new DevExpress.XtraReports.UI.Band[] {
+                        this.TopMargin,
+                        this.Detail,
+                        this.dbvzPurchaseOrderDetailBand,
+                        this.BottomMargin});
+            this.DataMember = "vzPaymentReceipt";
+            this.DataSource = this.sqlDataSource1;
+            this.DisplayName = "CHECK VOUCHER FORM";
+            this.Extensions.Add("DataSerializationExtension", "DevExpress.XtraReports.Web.ReportDesigner.DefaultDataSerializer");
+            this.Font = new System.Drawing.Font("Times New Roman", 10F);
+            this.Margins = new System.Drawing.Printing.Margins(25, 25, 0, 0);
+            this.Name = "Report1";
+            this.PageHeight = 1100;
+            this.PageWidth = 850;
+            this.PaperKind = System.Drawing.Printing.PaperKind.Custom;
+            this.RollPaper = true;
+            this.SnapToGrid = false;
+            this.StyleSheet.AddRange(new DevExpress.XtraReports.UI.XRControlStyle[] {
+                        this.DetailOddStyleName,
+                        this.DetailEvenStyleName,
+                        this.DefaultStyle});
+            this.Version = "15.2";
+            ((System.ComponentModel.ISupportInitialize)(this)).EndInit();
+        }
+    }
+}

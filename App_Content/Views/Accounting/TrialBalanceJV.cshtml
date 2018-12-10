@@ -1,0 +1,83 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = "~/Views/BaseView/BaseDashboardView.cshtml";
+}
+<style>
+	.tb-header {
+		background:#7093DB;
+		color:white;	
+	}
+	.tb-header h3{
+		margin-top: 10px;
+		margin-bottom: 10px;
+	}
+	.tb-content .dx-datagrid-headers{
+		background-color: #808080;
+		color: white;		
+	}
+	.tb-content .col-md-12{
+		padding:0;
+	}
+</style>
+<div class="form">
+	<div class="row tb-header">
+		<div class="col-md-12"><h3>{{TrialBalanceJVGridOption.title}} {{TrialBalanceJVGridOption.dateCaption}}</h3></div>		
+	</div>
+	<div class="row">
+		<div class="col-md-4">
+			<div class="dx-fieldset">
+                <div class="dx-field">
+                    <div class="dx-field-label">Beg. Debit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.BegDebit"></div>
+                    </div>
+                </div>
+                <div class="dx-field">
+                    <div class="dx-field-label">Beg. Credit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.BegCredit"></div>
+                    </div>
+                </div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="dx-fieldset">
+                <div class="dx-field">
+                    <div class="dx-field-label">Debit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.Debit"></div>
+                    </div>
+                </div>
+                <div class="dx-field">
+                    <div class="dx-field-label">Credit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.Credit"></div>
+                    </div>
+                </div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="dx-fieldset">     
+				<div class="dx-field">
+                    <div class="dx-field-label">Ending Debit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.EndDebit"></div>
+                    </div>
+                </div>
+                <div class="dx-field">
+                    <div class="dx-field-label">Ending Credit</div>
+                    <div class="dx-field-value">
+                        <div dx-number-box="parentText.EndCredit"></div>
+                    </div>
+                </div>				
+			</div>
+		</div>
+	
+	</div>
+	<div class="row tb-content">
+		<div class="col-md-12">
+			<div id="TrialBalanceJVGrid" dx-data-grid="TrialBalanceJVGridOption" style="margin-bottom:10px"></div>
+		</div>
+	</div>
+</div>

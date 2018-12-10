@@ -1,0 +1,464 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_IMFRequest = function () { }
+
+        VC_IMFRequest.prototype = Object.create(BaseClass.prototype);
+
+        VC_IMFRequest.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+            VC.$ID_Currency_IsDisabled = function () {
+                //if (_.CurrentObject.IsImported === true) return true;
+                return true;
+            }
+
+            _.butCancel.IsDisabled = function () {
+
+                var _isCanCancel = _.IsCanCancel();
+
+                var Selecteds = null;
+                if (_.ID_ViewType == 2) {
+                    Selecteds = [_.CurrentObject];
+                } else {
+                    Selecteds = _.Grid.getSelectedRowsData();
+                }
+
+                if(Selecteds.length !== 1){
+                    return true;
+                }
+
+                if(Selecteds[0].ID_FilingStatus == 2){
+                    return true;
+                }
+
+                return _isCanCancel;
+            }
+
+            if(_.ID_ViewType == 2){
+                VC.ValidationRules.push(function () {
+                    var JsDataService = app.$GetDataService();
+                    return JsDataService.Validate( '@Html.EncryptSQL("pValidateIMFRequest")',
+                        {
+                            'ID_IMF': _.CurrentObject.ID,
+                            'Description': _.CurrentObject.Description,
+                            'ID_Color': _.CurrentObject.ID_ItemColor
+                        }
+                    );
+                });    
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+                    if(_.CurrentObject.ID_ItemGroup !== 3 && _.CurrentObject.ID_ItemGroup !== 6){
+                        if(_.CurrentObject.ID_ItemColor == undefined || _.CurrentObject.ID_ItemColor == null){
+                            brokenRules.push("Color is required.");
+                        }
+                    }
+                    
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                })
+            }
+
+            if(_.ID_ViewType == 2){
+                
+                VC.AddToolBarButtonOnGrid('IMFRequest_Suppliers',{
+                    text: 'Add Suppliers',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function(){
+                        VC.BrowseDataSet('@Html.EncryptSQL(@" SELECT ID,Name,FullAddress FROM dbo.tBusinessPartner WHERE IsActive = 1 AND IsSupplier = 1 AND ID NOT IN(@IDs)")',{
+                            title: 'Suppliers',
+                            ID_View: 'E7A3C0BA-0907-44DF-ACA0-448C77542593',
+                            params: {
+                                'IDs':Enumerable.From(_.CurrentObject.IMFRequest_Suppliers).Select('$.ID_Supplier').ToArray()
+                            }
+                        }).then(function(data){
+                            if(_.CurrentObject.IMFRequest_Suppliers == null || _.CurrentObject.IMFRequest_Suppliers == undefined) _.CurrentObject.IMFRequest_Suppliers = [];
+
+                            $.each(data,function(i,supplier){
+                                var newDetail = {
+                                    ID: _.rndID(),
+                                    ID_Supplier:supplier.ID,
+                                    Supplier:supplier.Name,
+                                    UnitCost: 0.00,
+                                    IsActive: true
+                                }
+
+                                _.CurrentObject.IMFRequest_Suppliers.push(newDetail);
+                            });
+                        });
+                    }          
+                }, true);
+            }
+
+            VC.AddToolbarButton({
+                text: 'Verify',
+                IsDisabled: function () {
+                    var _isCanApprove = _.IsCanApprove();
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+    
+                    if(Selecteds.length !== 1){
+                        return true;
+                    }
+
+                    if(Selecteds[0].ID_FilingStatus !== 1){
+                        return true;
+                    }
+    
+                    if(Selecteds[0].IsVerified == 1 || Selecteds[0].IsVerified == true){
+                        return true;
+                    }
+                    return _isCanApprove;
+                },
+                onItemClick: function () {
+                    var JsDataService = app.$GetDataService();
+                    var CurrentObject = null;
+                    if (_.ID_ViewType == 1) {
+                        CurrentObject = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) {
+                        CurrentObject = [_.CurrentObject];
+                    }
+                    JsDataService.ExecSQLProc(
+                        '@Html.EncryptSQL("pIMFRequestVerify")',
+                        {
+                            'IDs': Enumerable.From(CurrentObject).Select('$.ID').ToArray()
+                        }
+                    ).then(function (response) {
+                        VC.ToastSuccess('Verified Successfully.');
+                        if (_.ID_ViewType == 2) {
+                            VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    });
+                }
+            });
+            console.log(_.butApproved)
+            _.butApproved.visible = false;
+            _.butApproved.text = 'Post';
+            _.butApproved.IsDisabled = function () {
+                
+                var _isCanApprove = _.IsCanApprove();
+
+                var Selecteds = null;
+                if (_.ID_ViewType == 2) {
+                    Selecteds = [_.CurrentObject];
+                } else {
+                    Selecteds = _.Grid.getSelectedRowsData();
+                }
+
+                if(Selecteds.length !== 1){
+                    return true;
+                }
+
+
+                if(Selecteds[0].ID_FilingStatus !== 43){
+                    return true;
+                }
+                
+                // if(Selecteds[0].IsVerified !== 1 && Selecteds[0].IsVerified !== true){
+                //     return true;
+                // }
+                console.log(Selecteds[0]);
+                return _isCanApprove;
+            }
+
+
+            VC.AddToolbarButton({
+                text: 'Post',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                IsDisabled: function () {
+                    var _isCanApprove = _.IsCanApprove();
+
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+    
+                    if(Selecteds.length !== 1){
+                        return true;
+                    }
+    
+    
+                    if(Selecteds[0].ID_FilingStatus !== 43){
+                        return true;
+                    }
+                    return _isCanApprove;
+                },
+                onItemClick: function () {
+                    if (_.isApprovedValid() == false) {
+                        return;
+                    }                   
+                    var CurrentObject = null;
+                    if (_.ID_ViewType == 1) {
+                        CurrentObject = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) {
+                        CurrentObject = [_.CurrentObject];
+                    }
+                    _.PerformApproved(CurrentObject);
+                }
+            });
+
+            _.butCancel.IsDisabled = function () {
+                
+                var _isCanCancel = _.IsCanCancel();
+
+                var Selecteds = null;
+                if (_.ID_ViewType == 2) {
+                    Selecteds = [_.CurrentObject];
+                } else {
+                    Selecteds = _.Grid.getSelectedRowsData();
+                }
+
+                if(Selecteds.length !== 1){
+                    return true;
+                }
+
+                if(Selecteds[0].ID_FilingStatus !== 1){
+                    return true;
+                }
+
+                return _isCanCancel;
+            }
+
+
+
+        }
+
+        
+        VC_IMFRequest.prototype.onInitDetailView = function (VC) {
+            BaseClass.prototype.onInitDetailView.call(this,VC);
+            var _ = this;
+            if (_.ID_ViewType == 2) {
+                var gridOption = VC.GetGridOption("IMFRequest_Suppliers");
+                if(gridOption !== null){
+                    gridOption.width = '100%';
+                }
+            }
+
+        };
+
+        VC_IMFRequest.prototype.onLoad = function () {
+            var _ = this;
+            var VC = this.VC;
+            
+            if (_.ID_ViewType == 2) {
+                if(_.CurrentObject.IsVerified == true || _.CurrentObject.IsVerified == 1){
+                    if(_.CurrentObject.ID_FilingStatus == 1){
+                        if(_.CurrentObject.ID_CurrentApprovers !== null){
+                            var ID_Approvers = _.CurrentObject.ID_CurrentApprovers.split(",");
+                            if (ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                                _.VC.setFormReadOnly(false);
+                            }else{
+                                _.VC.setFormReadOnly(true);
+                            }
+                        }else{
+                            _.VC.setFormReadOnly(true);
+                        }
+
+
+                    }else if(_.CurrentObject.ID_FilingStatus == 43 ) {
+                        _.VC.setFormReadOnly(true);
+                        VC.IsFormReadOnly = false;
+
+                        var ID_AssetAccount  = _.VC.GetDxControl('ID_AssetAccount')   
+                        var ID_InventoryAccount  = _.VC.GetDxControl('ID_InventoryAccount')  
+                        var ID_CostOfSales  = _.VC.GetDxControl('ID_CostOfSales')  
+                        var ID_SalesAccount  = _.VC.GetDxControl('ID_SalesAccount')  
+
+                        // ID_AssetAccount.option('readOnly', false)   ;
+                        var AccountingControls = [];
+                        AccountingControls.push(ID_AssetAccount) 
+                        AccountingControls.push(ID_InventoryAccount) 
+                        AccountingControls.push(ID_CostOfSales) 
+                        AccountingControls.push(ID_SalesAccount) 
+                        
+                        $.each(AccountingControls, function(i,d){
+                            d.option('readOnly', false)
+                        })
+                      
+                    }
+                    else{
+                        _.VC.setFormReadOnly(true);
+                    }
+                }
+
+                if(_.CurrentObject.ID_FilingStatus == 7){
+                    _.VC.setFormReadOnly(true);
+                }else{
+                    if(_.CurrentObject.ID_FilingStatus == 1){
+                        _.VC.setFormReadOnly(false);
+                    }
+                }
+                VC.$scope.CurrentObject.$dirty = false;
+            }
+
+           
+
+
+        }
+
+
+        // VC_IMFRequest.prototype.isColumnGridEditable = function (p, e) {
+        //     if(_.CurrentObject.IsVerified == true || _.CurrentObject.IsVerified == 1){
+        //        return false;
+        //     }
+        //     return false;
+        // }
+
+        var ID_Brand_GENERIC = 161;
+        var ID_ItemType_GENERICITEM = 5801;
+
+        VC_IMFRequest.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var VC = _.VC;
+
+            var Selecteds = null;
+            if (_.ID_ViewType == 2) {
+                Selecteds = [_.CurrentObject];
+            } else {
+                Selecteds = _.Grid.getSelectedRowsData();
+            }
+
+            var brokenRules = [];
+            var CurrentObject = Selecteds[0];
+
+            var ID_Brand = CurrentObject.ID_Brand;
+            var ID_ItemType = CurrentObject.ID_ItemType;
+
+            if(CurrentObject.$dirty == false){
+
+                if(ID_ItemType != ID_ItemType_GENERICITEM ){
+
+                    if((CurrentObject.ID_SalesAccount == null || CurrentObject.ID_SalesAccount == undefined)){
+
+                        brokenRules.push({ type: 'Required', message: 'Accounting Setup: Sales Account is required' })
+                    }
+
+                    if((CurrentObject.ID_CostOfSales == null || CurrentObject.ID_CostOfSales == undefined)){
+                        brokenRules.push({ type: 'Required', message: 'Accounting Setup: COS Account is required' })
+                    }
+
+                    if((CurrentObject.ID_InventoryAccount == null || CurrentObject.ID_InventoryAccount == undefined)){
+                        brokenRules.push({ type: 'Required', message: 'Accounting Setup: Inventory Account is required' })
+                    }
+                }
+            }
+
+            if(brokenRules.length > 0){
+                VC.ShowValidation(brokenRules);
+                return;
+            }
+
+            BaseClass.prototype.PerformApproved.call(this, items);
+        }
+
+         VC_IMFRequest.prototype.onCurrentObjectChanged = function (e) {
+
+            BaseClass.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            var VC = this.VC;
+
+
+            if(e.dataField == 'SupplierModelCode'){
+                console.log(VC.$scope.CurrentObject.$dirty,e.dataField);
+                if(VC.$scope.CurrentObject.$dirty === true || _.CurrentObject.ID == -1){
+                    _.CurrentObject.ModelCode = e.value;
+                }
+            }
+
+
+            if(e.dataField == 'ID_ItemGroup'){
+                
+                //if (e.value == undefined || e.value == null) {
+                    if(VC.$scope.CurrentObject.$dirty === true || _.CurrentObject.ID == -1){
+                        _.CurrentObject.ID_ItemCategory = null;
+                        _.CurrentObject.ItemCategory = null;
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+
+                //}
+            }
+
+            if(e.dataField == 'ID_ItemCategory'){
+                //if (e.value == undefined || e.value == null) {
+                    if(VC.$scope.CurrentObject.$dirty === true){
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+                //}
+            }
+
+
+            if(e.dataField == ''){
+
+            }
+
+        }
+		
+		VC_IMFRequest.prototype.Approve = function (Items) { 
+			var $q = app.$GetAsync();
+            var defer = $q.defer();
+			
+			app.$GetDataService().ExecSQLProc(
+                '@Html.EncryptSQL("pIMFRequestPost")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+			return defer.promise;
+		}
+		
+        VC_IMFRequest.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pIMFRequestCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+        return VC_IMFRequest;
+    });
+//</script>
+</text> , false )

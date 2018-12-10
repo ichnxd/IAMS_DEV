@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Visible="false" Text="Purchase Order Status Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Card ComponentName="cardDashboardItem1" Name="Cards 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" ContentLineCount="5">
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" SortOrder="None" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem2" />
+        <Measure DataMember="[Measures].[PurchaseOrder Count]" UniqueName="DataItem0" />
+      </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension UniqueName="DataItem1" />
+      </SeriesDimensions>
+      <Card>
+        <ActualValue UniqueName="DataItem2" />
+      </Card>
+      <Card>
+        <ActualValue UniqueName="DataItem0" />
+      </Card>
+    </Card>
+    <Pie ComponentName="pieDashboardItem1" Name="Pies 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" PieType="Donut" LabelContentType="ArgumentValueAndPercent" ContentArrangementMode="FixedColumnCount" ContentLineCount="6">
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Amount]" Name="by PO Total Amount" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" UniqueName="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem1" />
+      </Arguments>
+      <Values>
+        <Value UniqueName="DataItem0" />
+      </Values>
+    </Pie>
+    <Grid ComponentName="gridDashboardItem2" Name="Grid 2" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimPurchaseOrder].[PONumber].[PONumber]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Quantity]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[Unit Price]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[Line Total]" UniqueName="DataItem3">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" UniqueName="DataItem5" />
+        <Dimension DataMember="[DimPurchaseOrder].[PO Date].[PO Date]" UniqueName="DataItem4" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="PO Number">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem4" />
+        </GridDimensionColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem3" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status">
+          <Dimension UniqueName="DataItem5" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem1" Name="Grid 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[PurchaseOrder Count]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem2" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="Supplier" Weight="132.67241379310346">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Count" Weight="40.3448275862069">
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amt" Weight="51.982758620689658">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" Rotated="true">
+      <ColoringOptions UseGlobalColors="false" />
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" SortOrder="None" UniqueName="DataItem0" />
+      </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension UniqueName="DataItem0" />
+      </SeriesDimensions>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX EnableZooming="true" />
+    </Chart>
+  </Items>
+  <ColorScheme>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-4567727">
+      <DimensionKeys>
+        <DimensionKey>
+          <Definition DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" />
+          <Value Type="System.String" Value="[DimPurchaseOrder].[FilingStatus].&amp;[Approved]" />
+        </DimensionKey>
+      </DimensionKeys>
+    </Entry>
+  </ColorScheme>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="gridDashboardItem1" Weight="20.013431833445264" />
+      <LayoutGroup Orientation="Vertical" Weight="79.986568166554733">
+        <LayoutItem DashboardItem="cardDashboardItem1" Weight="12.021857923497267" />
+        <LayoutGroup Weight="87.978142076502735">
+          <LayoutGroup Orientation="Vertical" Weight="46.263643996641477">
+            <LayoutItem DashboardItem="pieDashboardItem1" Weight="49.937888198757761" />
+            <LayoutItem DashboardItem="chartDashboardItem1" Weight="50.062111801242239" />
+          </LayoutGroup>
+          <LayoutItem DashboardItem="gridDashboardItem2" Weight="53.736356003358523" />
+        </LayoutGroup>
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

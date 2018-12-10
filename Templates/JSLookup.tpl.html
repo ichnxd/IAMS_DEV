@@ -1,0 +1,28 @@
+﻿<div class="form-inline" ng-class="{'has-error' : hasError() }">
+    <label class="control-label">{{caption}}</label>
+    <div class="input-group holder">
+        <div class="form-control container">
+            <div class="display-value" ng-show="ngModel != null">
+                <span class="icon mdi mdi-close" ng-click="Remove()"></span>
+                <div ng-click="Remove()">{{ngModel[displayProperty]}}</div>
+            </div>
+            <input ng-show="ngModel == null" type="text" class="form-control search" aria-label="Text input with dropdown button" ng-Model="searchText" ng-keydown="OnTextSearckKeyDown($event)">
+        </div>
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" tabIndex="-1">
+                <span class="mdi mdi-cube"></span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right js-scrollbar">
+                <ul>
+                    <li ng-repeat="d in list" ng-click="OnItemSelected(d)">
+                        <div class="display-property">{{d[displayProperty]}}</div>
+                        <div class="secondary-property" ng-repeat="p in displayProperties">{{d[p]}}</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="error-message" ng-show="hasError()">
+    <div ng-show="isRequired()">{{caption}} is required</div>
+</div>

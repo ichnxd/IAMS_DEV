@@ -1,0 +1,6 @@
+10/5/2018 5:23:57 PM: pSalesEndorsementEndorse ---> This doucment is already endorsed/done. Please refresh to proceed..
+10/5/2018 5:24:06 PM: pSalesEndorsementEndorse ---> This doucment is already endorsed/done. Please refresh to proceed..
+10/5/2018 5:24:39 PM: pSalesEndorsementEndorse ---> This doucment is already endorsed/done. Please refresh to proceed..
+10/5/2018 5:24:44 PM: pSalesEndorsementEndorse ---> This doucment is already endorsed/done. Please refresh to proceed..
+10/5/2018 5:57:17 PM: pPurchaseRequestChecked ---> This doucment is already check. Please refresh to proceed..
+10/5/2018 5:57:20 PM: pPurchaseRequestChecked ---> This doucment is already check. Please refresh to proceed..

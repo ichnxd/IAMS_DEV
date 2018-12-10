@@ -1,0 +1,60 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocDetailView");
+    var ReceivingReport = Url.Encode("Doc/AP/ReceivingReport/ReceivingReport");
+
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}'
+                        ,'/JsApp/GetScript?Url=@{@ReceivingReport}','AcctHelper'], function (BaseClass,ReceivingReport,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+
+            _.DocDetailPropertyName = 'ReceivingReportDetail';
+
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            
+            _.Approve = function() {
+                return ReceivingReport.Approve( [_.$scope.CurrentObject]);
+            };
+
+            _.Cancel = function() {
+                return ReceivingReport.Cancel( [_.$scope.CurrentObject] );
+            };
+
+            _.butReceive = {
+                name: 'Create Invoice',
+                disabled: false,
+                IsDisabled : function() {
+                    return ( _.$scope.CurrentObject.ID_FilingStatus !== 2 || _.$scope.CurrentObject.ID_DocStatus == 3 ) || _.IsNew();
+                },
+                Click: function () {
+
+                    AcctHelper.CreatePurchaseInvoice([_.$scope.CurrentObject],AcctHelper.ReceivingReport);
+
+                }
+            }
+
+            _.AddToolbarButton(_.butReceive);
+
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

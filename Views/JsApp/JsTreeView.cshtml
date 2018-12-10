@@ -1,0 +1,33 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@{
+    Layout = null;
+    string PropertyKey = ViewBag.TreeViewModel.PropertyKey.ToString();
+    string DataSource = ViewBag.TreeViewModel.DataSource.ToString();
+    string DisplayName = ViewBag.TreeViewModel.DisplayName.ToString();
+    string Icon = ViewBag.TreeViewModel.ImageName.ToString();
+}
+
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/Content/js/Base/BaseTreeViewController.js'], function (app, baseClass) {
+
+        var TreeViewClass = function ($scope) {
+            this.Init($scope);
+        }
+
+        TreeViewClass.prototype = Object.create(baseClass.prototype);
+
+        TreeViewClass.prototype.Init = function ($scope) {
+            var _ = this;
+            _.PropertyKey = '@PropertyKey';
+            _.SQL = '@Html.EncryptSQL(DataSource)';
+            _.ID_DetailView = @ViewBag.TreeViewModel.ID_DetailView;
+            $scope.DisplayName = '@DisplayName';
+            $scope.Icon = '@Icon';
+            baseClass.prototype.Init.call(this, $scope);
+        }
+
+        return TreeViewClass;
+    });
+    //</script>
+</text>,true)

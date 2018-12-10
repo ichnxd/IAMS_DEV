@@ -1,0 +1,356 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseModelHelper) {
+
+        function VC_ReportView() { };
+
+        VC_ReportView.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_ReportView.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            VC.AddToolbarButton({
+                text: 'Create Report (Auto)',
+                icon: 'mdi mdi-crop',
+                disabled: false,
+                onItemClick: function () {
+                    app.$modal().Show({
+                        Template: `<div style="height:100%">
+                                        <div class ="col-md-4" style="height:100%;padding:0px">
+                                            <div style="height:100%;padding:5px;">
+                                                <div dx-text-box="txtReportNameOption" style="margin-bottom:5px"/>
+                                                <div dx-select-box="dxOrientationOption" style="margin-bottom:5px"/>
+                                                <div dx-select-box="dxPageSize" style="margin-bottom:5px"/>
+                                                <div dx-text-area="dxTextAreaOption" style="margin-bottom:5px"/>
+                                                <div dx-button="dxButtonOption"/>
+                                            </div>
+                                        </div>
+                                        <div class ="col-md-8" style="padding:5px">
+                                            <div dx-data-grid="dxDataGridOption"/>
+                                        </div>
+                                    </div>`,
+                        title: 'Generate Report',
+                        width: 1250,
+                        closeOnConfirm: false,
+                        height: 600,
+                        InitController: function (s) {
+
+                            var Grid = null;
+
+                            s.CurrentObject = {
+                                SQL: null,
+                                Name: null,
+                                ID_Orientation: 2,
+                                Columns: [],
+                                ID_PageSize: 1
+                            }
+                            
+                            s.dxOrientationOption = {
+                                items: [{ id: 1, name: 'Vertical' }, { id: 2, name: 'Horizontal' }],
+                                bindingOptions: {
+                                    'value': 'CurrentObject.ID_Orientation'
+                                },
+                                valueExpr: 'id',
+                                displayExpr: 'name'
+                            }
+
+                            s.dxPageSize = {
+                                items: [{ id: 1, name: 'Letter' }, { id: 2, name: 'Legal' }, { id: 3, name: 'LegalExtra' }],
+                                bindingOptions: {
+                                    'value': 'CurrentObject.ID_PageSize'
+                                },
+                                valueExpr: 'id',
+                                displayExpr: 'name'
+                            }
+
+                            s.txtReportNameOption = {
+                                bindingOptions: {
+                                    'value': 'CurrentObject.Name'
+                                },
+                                placeholder: 'ReportName'
+                            }
+
+                            s.dxTextAreaOption = {
+                                bindingOptions: {
+                                    'value': 'CurrentObject.SQL'
+                                },
+                                maxLength: 300,
+                                height: 200,
+                            }
+
+                            s.dxDataGridOption = {
+                                bindingOptions: {
+                                    'dataSource': 'CurrentObject.Columns'
+                                },
+                                height: 500,
+                                filterRow: {
+                                    visible:true
+                                },
+                                rowAlternationEnabled: true,
+                                showRowLines : true,
+                                editing: {
+                                    mode: 'cell',
+                                    allowUpdating: true,
+                                },
+                                //scrolling: {
+                                //    mode: 'infinite'
+                                //},
+                                onInitialized: function (e) {
+                                    
+                                }
+                            }
+
+                            s.dxButtonOption = {
+                                text: 'Generate Fields',
+                                onClick: function () {
+                                    if (s.CurrentObject.SQL === null) return;
+                                    VC.ConfirmBox("Generate Fields?", "Report").then(function () {
+                                        VC.JSDataService.Post('/ReportView/GeSQLSchema', {
+                                            SQL: s.CurrentObject.SQL
+                                        }).then(function (response) {
+                                            var Fields = JSON.parse(response.data);
+                                            console.log(Fields);
+                                            var Columns = [];
+                                            $.each(Fields, function (i, f) {
+                                                if (f.ColumnName == "ID") return;
+                                                if (f.ColumnName.startsWith("ID_")) return;
+                                                Columns.push({
+                                                    Name: f.ColumnName,
+                                                    Caption: null,
+                                                    Type: f.DataTypeName,
+                                                    IsActive: false,
+                                                    SeqNo: 0,
+                                                    GroupIndex: null,
+                                                    Width: null,
+                                                    ShowTotal: false
+                                                });
+                                            });
+                                            s.CurrentObject.Columns = Columns;
+                                        });
+                                    });
+                                }
+                            };
+
+                            s.onPositiveClick = function (d) {
+                                if (s.CurrentObject.Columns == null) return;
+                                if (s.CurrentObject.Columns.length == 0) return;
+                                var ActiveColumns = Enumerable.From(s.CurrentObject.Columns).Where('$.IsActive == true').ToArray();
+                                if (ActiveColumns.length == 0) {
+                                    VC.MsgBox("No Active Columns");
+                                    return;
+                                }
+                                //console.log('Report Object', s.CurrentObject);
+                                var form = $("<form/>").attr({
+                                    method: "post",
+                                    target: "_blank",
+                                    action: "ReportDesigner/GenerateLayoutReport",
+                                })
+                                .append($("<input type='hidden' name='CurrentObject'/>").attr('value', JSON.stringify(s.CurrentObject)))
+                                .appendTo('body').submit().remove();
+                            }
+                        }
+                    });
+                }
+            });
+
+            VC.AddToolbarButton({
+                text: 'Upload Report',
+                icon: 'mdi mdi-file-document',
+                color: '#009688',
+                disabled: false,
+                isContextMenu: true,
+                requireSingleObject: true,
+                onItemClick: function (BaseObjects) {
+
+                    app.$modal().Show({
+                        ViewSrc: 'Templates/UploadReport.tpl.html',
+                        title: 'Upload Report',
+                        width: 550,
+                        height: 200,
+                        InitController: function ($scope) {
+
+                            $scope.data = {
+                                ReportName: null,
+                                file: null
+                            };
+
+                            $scope.FileUploaderOption = {
+                                buttonText: 'Select file',
+                                labelText: 'Drop file here',
+                                multiple: true,
+                                accept: '*.repx',
+                                uploadMode: "useForm",
+                                onValueChanged: function (e) {
+                                    $scope.data.file = e.value;
+                                }
+                            };
+
+                            $scope.TextBoxOption = {
+                                placeholder: 'Enter Report name',
+                                bindingOptions: {
+                                    value: 'data.ReportName'
+                                }
+                            }
+                            //
+                            //
+                            //
+                            $scope.onPositiveClick = function (popup) {
+                                if ($scope.data.file == null) {
+                                    VC.MsgBox('Report file not found');
+                                    return;
+                                }
+
+                                if ($scope.data.ReportName == null) {
+                                    VC.MsgBox('Report Name is required');
+                                    return;
+                                }
+
+                                var Upload = angular.element(document).injector().get('Upload');
+
+                                Upload.upload({
+                                    url: 'JsApp/UploadReportFile',
+                                    data: $scope.data,
+                                }).then(function () {
+                                    popup.hide();
+                                    VC.ToastSuccess('Upload Report Successfull');
+                                });
+
+                            };
+                        }
+                    });
+
+                }
+
+            });
+
+
+            VC.AddToolbarButton({
+                text: 'Report Designer',
+                icon: 'mdi mdi-file-document',
+                color: '#009688',
+                disabled: false,
+                isContextMenu: true,
+                requireSingleObject: true,
+                onItemClick: function (BaseObjects) {
+                    var ID_Report;
+
+                    if (_.ID_ViewType == 1) {
+                        ID_Report = BaseObjects[0].ID;
+                    } else {
+                        ID_Report = VC.$scope.CurrentObject.ID;
+                    }
+
+                    window.open('/ReportDesigner?ID_Report=' + ID_Report);
+                }
+            });
+
+            if (this.ID_ViewType === 1) {
+
+                VC.AddToolbarButton({
+                    text: 'Download',
+                    icon: 'mdi mdi-file-document',
+                    color: '#009688',
+                    disabled: false,
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        var CurrentReport = BaseObjects[0];
+                        window.open('/JsApp/DownloadReportFile?ID=' + CurrentReport.ID);
+                    }
+                });
+
+                VC.AddToolbarButton({
+                    text: 'View Report',
+                    icon: 'mdi mdi-file-document',
+                    color: '#009688',
+                    disabled: false,
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        window.open('/ReportView/Viewer?ID=' + BaseObjects[0].ID);
+                    }
+                });
+            } else {
+
+
+                //VC.AddToolbarButton({
+                //    text: 'Generate Layout',
+                //    icon: 'mdi mdi-file-document',
+                //    color: '#009688',
+                //    disabled: false,
+                //    isContextMenu: true,
+                //    requireSingleObject: true,
+                //    onItemClick: function (BaseObjects) {
+                //        window.open('/ReportDesigner/GenerateLayoutReport?ID_Report=' + VC.$scope.CurrentObject.ID);
+
+                //    }
+                //});
+
+                VC.AddToolbarButton({
+                    text: 'Generate Fields',
+                    icon: 'mdi mdi-package-variant',
+                    disabled: false,
+                    onItemClick: function () {
+
+                        if (VC.$scope.CurrentObject.ID == -1) return;
+
+                        if (VC.$scope.CurrentObject.Datasources.length == 0) return;
+
+                        VC.ConfirmBox("Generate Fields?", "Report").then(function () {
+
+                            $.each(VC.$scope.CurrentObject.Datasources, function (index, d) {
+
+
+                                VC.JSDataService.Post('/ReportView/GeSQLSchema', {
+                                    SQL: d.SQLQuery
+                                }).then(function (response) {
+                                    var Fields = JSON.parse(response.data);
+                                    $.each(Fields, function (i, f) {
+
+                                        if (VC.$scope.CurrentObject.Parameters == null || VC.$scope.CurrentObject.Parameters === undefined) {
+                                            VC.$scope.CurrentObject.Parameters = [];
+                                        }
+
+                                        if (index === 0) {
+                                            VC.$scope.CurrentObject.Parameters.push({
+                                                Name: f.ColumnName,
+                                                IsActive: 0
+                                            });
+                                        }
+
+                                        if (d.Datasourcefields == undefined || d.Datasourcefields == null) d.Datasourcefields = [];
+
+                                        d.Datasourcefields.push({
+                                            ID: -1,
+                                            Name: f.ColumnName,
+                                            IsActive: 0
+                                        });
+
+                                    });
+
+                                });
+                            });
+
+                        });
+                    }
+                });
+
+            }
+
+        }
+
+        VC_ReportView.prototype.OnFormInitialized = function (VC) {
+            VC.GetGridEditor('Datasourcefields').option('headerFilter.visible', true);
+        }
+
+        return VC_ReportView;
+    });
+//</script>
+</text> , false )

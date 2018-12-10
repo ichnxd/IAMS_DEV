@@ -1,0 +1,2261 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '@BaseVCUrl', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+         var VC_CustomerLead = function () {
+             this.DocDetailPropertyName = 'Customer_Details';
+         }
+
+        VC_CustomerLead.prototype = Object.create(Base.prototype);
+
+        VC_CustomerLead.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+            // VC.$PromptBeforeSave = true;
+                //---------------
+
+          
+                // var gridOption = VC.GetGridOption("CustomerLead_Details");
+                // gridOption.width = '100%';
+                VC.AddToolbarButton({
+                    text: 'Generate Template',
+                    icon: 'mdi mdi-clipboard-arrow-down',
+                    IsDisabled: function () {
+                        return false;
+                    },
+                    onItemClick: function () {
+                        AcctHelper.CreateTemplate('ClientName,Industry,Source,Event,Contact_Fname,Contact_Lname,Department,Position,Email,MobileNo,PhoneNo,ExtNo,AudioVisual,CorporateRetail,Advertisement,Dell,Security,Microsoft,Lightning,CorporateIT,Vimar,Trade,Interior&Architecture\n,,,,,,,,,(63)XXX-XXX-XXXX'+',(632)XXX-XXXX'          , 'Template.csv', 'text/csv');
+                    }
+                });
+
+                 VC.AddToolbarButton({
+                    text: 'Import',
+                    icon: 'mdi mdi-clipboard-arrow-down',
+                    IsDisabled: function () {
+                        return false;
+                    },
+                    onItemClick: function () {
+                      //
+                      if(_.ID_ViewType == 2)
+                      {
+                      var JsDataService = app.$GetDataService();
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_CustomerLeads")', null,
+                            'Import'
+                        ).then(function (d) {
+                            $.each(d.Items, function (i, item) {
+                                _.CurrentObject.Name = item.ClientName;
+                                _.CurrentObject.ID_Industry = item.ID_Industry;
+                                _.CurrentObject.ID_MediaSource = item.ID_MediaSource;
+                                _.CurrentObject.Event = item.Event;
+                                //-- Product Interest
+                                
+                                _.CurrentObject.IsAds = _.CurrentObject.IsAds == true ? true: item.Advertisement;
+                                _.CurrentObject.IsInteriorAndCorp = _.CurrentObject.IsInteriorAndCorp == true ? true: item.Interior;
+                                _.CurrentObject.IsVimar = _.CurrentObject.IsVimar == true ? true: item.Vimar;
+                                _.CurrentObject.IsLighting =  _.CurrentObject.IsLighting == true ? true: item.Lightning;
+                                _.CurrentObject.IsSecurity = _.CurrentObject.IsSecurity == true ? true: item.Security;
+                                _.CurrentObject.IsCorporate = _.CurrentObject.IsCorporate == true ? true: item.CorporateIT;
+                                _.CurrentObject.IsTrade =  _.CurrentObject.IsTrade == true ? true: item.Trade;
+                                _.CurrentObject.IsCorpRetail = _.CurrentObject.IsCorpRetail == true ? true: item.CorporateRetail;
+                                _.CurrentObject.IsMicrosoft = _.CurrentObject.IsMicrosoft == true ? true: item.Microsoft;
+                                _.CurrentObject.IsDell = _.CurrentObject.IsDell == true ? true: item.Dell;
+                                _.CurrentObject.IsAV =  _.CurrentObject.IsAV == true ? true: item.AudioVisual;
+                            });
+                            
+                            $.each(d.Contacts, function (i, item) {
+                                var details = {
+                                     Name : item.Name,
+                                     LastName : item.Contact_Lname	,
+                                     FirstName :item.Contact_Fname	,
+                                     Department : item.Department	,
+                                     Position : item.Position ,
+                                     EmailAddress : item.Email	,
+                                     ContactNo : item.MobileNo	,
+                                     PhoneNo : item.PhoneNo	,
+                                     PhoneExt : item.ExtNo
+                                }
+                                
+                                _.CurrentObject.CustomerLead_Details.push(details);
+                            });
+             
+                        });
+                      //
+                      // -end
+                    }
+                    else{
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_CustomerLeadsListView")', null,
+                            'Import'
+                        ).then(function (d) {
+                            console.log('xxx')
+                             VC.Grid.refresh();
+                             VC.ToastSuccess(Documents + ' Successfully Imported');
+                        });
+
+                    }
+                    }
+                });
+         
+            
+            var NewOppformControl;
+
+
+            var fIsEmailValidate = function(){
+
+                var isvalid = true;
+
+                var brokenRules = NewOppformControl.validate().brokenRules;
+
+                brokenRules.forEach(function(brokenRule) {
+                                        
+                    if(brokenRule.type == "email"){
+                        console.log(brokenRule);
+                        isvalid = false;
+                    }
+                });
+
+                console.log(isvalid, brokenRules);
+
+                return isvalid;
+
+            };
+
+
+            /***************************************** New Opportunity Button ******************************************************/
+            var fShowNewOpportunityWindow = function(lookDS){
+
+                var fNewOpportunityInit = function($scope){
+
+                    $scope.City = lookDS.City;
+
+                    $scope.PositiveButton.visible = false;
+                    var Customer = {};
+                    Customer  = {
+
+                        ID : -1,
+                        IsActive : true,
+                        ParentName:null,
+                        Management: null,
+                        Name:null,
+                        TradeName:null,
+                        FullAddress: null,
+                        ID_City: null,
+                        City: null,
+                        ID_Province: null,
+                        Province: null,
+                        ID_PaymentTerm: null,
+                        PaymentTerm: null,
+                        ID_CustomerType: null,
+                        CustomerType: null,
+                        TelNo: null
+
+                    };
+
+                    if(lookDS.Customer.length > 0){
+                        Customer = lookDS.Customer[0];
+                    }
+
+                    if(lookDS.Contact == null) lookDS.Contact = [];
+
+                     if(lookDS.Contact.length > 0){
+                         Customer.Customer_Details = lookDS.Contact;
+                     }else{
+
+                         Customer.Customer_Details = [{
+                            ID : -1,
+                            ID_BusinessPartner : null,
+                            IsActive: true,
+                            LastName: null,
+                            FirstName: null,
+                            MiddleName: null,
+                            Position: null,
+                            Department: null,
+                            IsDefault: true,
+                            EmailAddress: null,
+                            ID_Ref: -1,
+                            Comment: ''
+                         }]
+                     }
+                     Customer.Customer_Details[0].IsDefault = true;
+                    // Customer.Customer_Details = [{
+                    //     ID : -1,
+                    //     ID_BusinessPartner : null,
+                    //     IsActive: true,
+                    //     LastName: null,
+                    //     FirstName: null,
+                    //     MiddleName: null,
+                    //     Position: null,
+                    //     Department: null,
+                    //     IsDefault: true,
+                    //     EmailAddress: null
+                        
+                    // }]
+
+
+                    Customer.ID_CustomerLead = lookDS.ID;
+
+                    // Customer.Customer_Branchs = {
+                    //     ID : -1,
+                    //     Name: null,
+                    //     Address: null
+                    // };
+
+                    var Opportunity = {
+
+                        Name : '',
+                        IsActive: true,
+                        ID_OpportunityCategory : null,
+                        OpportunityCategory : null,
+                        ID_OpportunityStage : 1,
+                        OpportunityStage : 'Introduction',
+                        ID_TaxScheme: 2,
+                        TaxScheme: 'Vat Inclusive',
+                        BusinessUnit: VC.CurrentUser.BusinessUnit,
+                        ID_BusinessUnit: VC.CurrentUser.ID_BusinessUnit,
+                        Subtotal : 0,
+                        TotalDiscount : 0,
+                        TotalContractPrice : 0,
+                        TotalVatInc : 0,
+                        TotalVat : 0,
+                        TotalVatEx : 0,
+                        Opportunity_Details : [],
+                        ID_MediaSource: lookDS.CurrentObject[0].ID_MediaSource
+                    };
+
+                    $scope.Record = {};
+                    $scope.Record.Opportunity = Opportunity;
+                    $scope.Record.Customer = Customer;
+                    $scope.Record.Customer.ParentCompany = lookDS.CurrentObject[0].Name;
+                    $scope.Record.Customer.RegisteredCompanyName = lookDS.CurrentObject[0].Name;
+           
+
+                    // /*    SET Initial Contact for New Opportunity  */ 
+                    
+                    // var initialContact =$scope.Record.Customer.Customer_Details[0];
+                    // Object.keys(initialContact).forEach(function(fieldName) {
+                                            
+                    //     initialContact[fieldName] = _.CurrentObject.CustomerLead_Details[0][fieldName];
+                    // });
+                    // /*    SET Initial Contact for New Opportunity end  */
+
+
+
+
+
+                    var fCompute = function(ColumnName){
+                        console.log('oppo',$scope.Record.Opportunity);
+                        var SubTotal = 0.00;
+                        var TotalDiscount = 0.00;
+                        var TotalContractPrice = 0.00;
+
+
+                        $.each($scope.Record.Opportunity.Opportunity_Details, function (i, detail) {
+                            console.log(ColumnName);
+                            if(ColumnName == 'SRP'){
+                                detail.UnitPrice = detail.SRP;
+                            }
+                            //detail.Discount =  detail.UnitPrice * (detail.DiscountRate / 100);
+
+                            if(ColumnName == 'Discount'){
+                                if(detail.Discount > detail.UnitPrice){
+                                    detail.Discount = detail.UnitPrice;
+                                }
+                                detail.DiscountRate = 100 * (detail.Discount /  (detail.UnitPrice == 0 ? 1 : detail.UnitPrice));
+                                detail.DiscountRate = parseFloat(detail.DiscountRate.toFixed(2));
+                            }else{
+                                // detail.Discount = detail.UnitPrice * (detail.DiscountRate / 100);
+                                // detail.Discount = parseFloat(detail.Discount.toFixed(2));
+
+                                var DiscountRate = 100 * (detail.Discount /  (detail.UnitPrice == 0 ? 1 : detail.UnitPrice));
+                                DiscountRate = parseFloat(DiscountRate.toFixed(2));
+            
+                                if(DiscountRate !== parseFloat(detail.DiscountRate.toFixed(2))){
+                                    detail.Discount = detail.UnitPrice * (detail.DiscountRate / 100);
+                                    detail.Discount = parseFloat(detail.Discount.toFixed(2));
+                                }
+                            }
+
+                            if (detail.IsFree === true) {
+                                detail.DiscountRate = 0.00;
+                                detail.Discount = 0.00;
+                                //Jefrey Sambile BUG #121
+                            }
+
+                            detail.GrossAmount = detail.IsFree == true ? 0.00 : detail.Quantity * detail.UnitPrice;
+                            detail.LineDiscount = detail.IsFree == true ? 0.00 : detail.UnitPrice - detail.Discount;
+                            detail.LineTotal = detail.IsFree == true ? 0.00 : detail.Quantity * detail.LineDiscount ;
+
+                            detail.TotalAmount = detail.LineTotal;
+
+                            TotalDiscount += parseFloat( detail.Quantity *  detail.Discount );
+                            SubTotal += parseFloat(detail.GrossAmount);
+                            TotalContractPrice += parseFloat(detail.TotalAmount);
+                        });
+
+                        var VATRate = 12;
+                        var TotalVAT = parseFloat(AcctHelper.GetTaxAmt($scope.Record.Opportunity.ID_TaxScheme, VATRate, TotalContractPrice))
+                        // $scope.Record.Opportunity.TotalVat = TotalVAT;
+                        // $scope.Record.Opportunity.Subtotal = SubTotal;
+                        // $scope.Record.Opportunity.TotalDiscount = TotalDiscount;
+          
+
+                        var TotalVATInc = 0.00;
+                        var TotalVATEx = 0.00;
+                        switch ($scope.Record.Opportunity.ID_TaxScheme) {
+                            case 1:
+                                TotalVATEx = TotalContractPrice;
+                                TotalVATInc = TotalContractPrice + TotalVAT;
+                                TotalContractPrice = TotalVATInc;
+            
+                                break;
+                            case 2:
+                                TotalVATEx = TotalContractPrice - TotalVAT;
+                                TotalVATInc = TotalContractPrice;
+                                break;
+                            case 3:
+                            case 4:
+                                TotalVATEx = TotalContractPrice;
+                                TotalVATInc = TotalContractPrice;
+                                break;
+                        }
+                        $scope.Record.Opportunity.Subtotal = parseFloat(SubTotal.toFixed(2));
+                        $scope.Record.Opportunity.TotalDiscount = parseFloat(TotalDiscount.toFixed(2));
+                        $scope.Record.Opportunity.TotalContractPrice = parseFloat(TotalContractPrice.toFixed(2));
+                        $scope.Record.Opportunity.TotalVatInc = parseFloat(TotalVATInc.toFixed(2));
+                        $scope.Record.Opportunity.TotalVat = parseFloat(TotalVAT.toFixed(2));
+                        $scope.Record.Opportunity.TotalVatEx = parseFloat(TotalVATEx.toFixed(2));
+
+
+                        //for displaying only
+                        $scope.Record.Opportunity.DisplaySubtotal = AcctHelper.formatDecimalNumber(parseFloat(SubTotal.toFixed(2)));
+                        $scope.Record.Opportunity.DisplayTotalDiscount = AcctHelper.formatDecimalNumber(parseFloat(TotalDiscount.toFixed(2)));
+                        $scope.Record.Opportunity.DisplayTotalContractPrice = AcctHelper.formatDecimalNumber(parseFloat(TotalContractPrice.toFixed(2)));
+                        $scope.Record.Opportunity.DisplayTotalVatInc = AcctHelper.formatDecimalNumber(parseFloat(TotalVATInc.toFixed(2)));
+                        $scope.Record.Opportunity.DisplayTotalVat = AcctHelper.formatDecimalNumber(parseFloat(TotalVAT.toFixed(2)));
+                        $scope.Record.Opportunity.DisplayTotalVatEx = AcctHelper.formatDecimalNumber(parseFloat(TotalVATEx.toFixed(2)));
+
+                    };
+
+                 
+                    var formTabs = [];
+                    var txtParentCompany = null;
+                    var CustomerInfo_Fields = [                        
+                        {
+                            dataField: "Customer.ParentCompany",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                        e.component.focus();
+                                        txtParentCompany = e.component;
+                                    },500);
+                                }, 
+                                onValueChanged: function(e){
+                                    $scope.Record.Customer.RegisteredCompanyName = $scope.Record.Customer.ParentCompany;
+                                    $scope.Record.Customer.TradeName = $scope.Record.Customer.ParentCompany;
+                                }
+
+                            },
+                            label : {
+                                text : "Parent Company",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Registered Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.RegisteredCompanyName",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                onValueChanged: function(e){
+                                    $scope.Record.Customer.TradeName = $scope.Record.Customer.RegisteredCompanyName;
+                                }
+                            },
+                            label : {
+                                text : "Registered Name",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Registered Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.Management",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    // VC.$timeout(function(){                                       
+                                    //     $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    // },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Management",
+                            },
+                            validationRules: [
+                                //{ type: "required", message: "Registered Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.TradeName",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Trade Name",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Trade Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.Branch",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Branch",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Branch is required." },
+                            ]
+                        },
+                        {
+                            dataField: "Customer.Address",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            editorType: "dxTextArea",
+                            label : {
+                                text : "Address",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Address is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.ID_Province",
+                            editorType: "dxListViewBox",
+                            editorOptions: {
+                                SQL: '@Html.EncryptSQL(@"SELECT ID,Name FROM dbo.tProvince ORDER BY NAME")',
+                                onLoad: function(d){
+                                    d.params =  { 'ID_Province': $scope.Record.Customer.ID_Province };
+                                },
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                onValueChanged: function(e){
+                                    console.log('value',e.value);
+                                    $scope.Record.Customer.ID_City = null;
+                                    $scope.Record.Customer.City = null;
+
+                                },
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                dataSource : lookDS.Province,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                            },
+                            label : {
+                                text : "Province",
+                            },
+                             validationRules: [
+                                { type: "required", message: "Province is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.ID_City",
+                            editorType: "dxListViewBox",
+                            editorOptions: {
+                                SQL: '@Html.EncryptSQL(@"SELECT ID,Name FROM dbo.tCity WHERE ID_Province = @ID_Province ORDER BY NAME")',
+                                
+                                onLoad: function(d){
+                                    d.params =  { 'ID_Province': $scope.Record.Customer.ID_Province };
+                                },
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                dataSource : $scope.City,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                            },
+                            label : {
+                                text : "Municipality / City",
+                            },
+                             validationRules: [
+                                { type: "required", message: "City is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.PhoneNo",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                       // $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                        $(e.element).find('.dx-texteditor-input').selectionStart = 3
+                                    },500);
+                                }, 
+                                onFocusIn: function(e){                                      
+                                    $(e.element).find('.dx-texteditor-input')[0].selectionStart = 5;
+                                },
+                                mask: '(000)000-0000',
+                                useMaskedValue: true
+                            },
+                            label : {    
+                                text : "Phone 1",
+                            }//,
+                            // validationRules: [
+                            //     { type: "required", message: "Phone 1 is required." },
+                            // ],
+                        },
+                        {
+                            dataField: "Customer.ID_PaymentTerm",
+                            editorType: "dxSelectBox",
+                            editorOptions: {
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                dataSource : lookDS.PaymentTerms,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                            },
+                            label : {
+                                text : "Payment Terms",
+                            },
+                             validationRules: [
+                                { type: "required", message: "Payment Term is required." },
+                            ],
+                        },
+
+                    ];
+
+
+                    var ArrayMove = function (arr, fromIndex, toIndex) {
+                        var element = arr[fromIndex];
+                        arr.splice(fromIndex, 1);
+                        arr.splice(toIndex, 0, element);
+                    }
+
+                    $scope.btnBrowseContact = {
+
+                        text: 'Browse Contacts',
+                        icon: 'card',
+                        height: 35,
+
+                        //type: 'default',
+
+
+                        onClick: function(){
+ 
+                            VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vCustomerLead_Detail WHERE IsActive = 1 AND ID_CustomerLead = @ID_Lead")', {
+                                title: 'Select Main Contact Person',
+                                ID_View: 'AC3896F6-8878-44E3-AA0E-2DA2718289CE',
+                                width: 1200,
+                                ModelName: 'Contact',
+                                ModelIcon: 'mdi mdi-package-variant',
+                                validate: function (SelectedRows) {
+                                    if (SelectedRows.length !== 1 ) {
+                                        VC.MsgBox("Please select 1 main contact person only");
+                                        return false;
+                                    }
+                                    return true;
+                                },
+                                PropertyKey: 'ID',
+                                params:{
+                                    'ID_Lead': $scope.Record.Customer.ID_CustomerLead
+                                }
+                            }).then(function(data){
+                                console.log(data)
+                                if(data.length > 0){
+
+                                    var TempDetails = angular.copy(lookDS.Contact);
+
+                                    var foundIndex = null;
+                                    $.each(TempDetails,function(i,item){
+                                        if(item.ID_Ref == data[0].ID){
+                                            foundIndex = i;
+                                        }
+                                    }); 
+
+                                    if(foundIndex !== null){
+                                        //if(foundIndex !== 0){
+                                            ArrayMove(TempDetails,foundIndex,0);
+                                            Customer.Customer_Details = TempDetails;
+                                        //}
+                                    }
+                                    $.each(Customer.Customer_Details,function(i,item){
+                                        item.IsDefault = false;
+                                    });
+                                    Customer.Customer_Details[0].IsDefault = true;
+                                    console.log('foundIndex',foundIndex,Customer.Customer_Details)
+
+                                }else{
+                                    Customer.Customer_Details = [{
+                                        ID : -1,
+                                        Name: '',
+                                        IsActive: true ,     
+                                        LastName: null,
+                                        FirstName: null,
+                                        MiddleName: null,
+                                        Position: null,
+                                        Department: null,
+                                        IsDefault: true,
+                                        EmailAddress: null
+                                        
+                                    }]
+                                }
+
+                            });
+                        }
+                    }
+                                             
+
+                    var Contact_Fields = [
+                        {
+                            label:{
+                                text:'',
+                                //visible: false,
+                            },
+                            editorType : 'dxCustomView',
+                            template: function (data, itemElement) {
+
+                                var compile = angular.element(document).injector().get('$compile');
+                                var div = compile("<div style='text-align:right;'><div dx-button='btnBrowseContact'></div></div>")($scope);
+
+                                $(div).appendTo(itemElement);
+                            }
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].LastName",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                onValueChanged: function(e){
+                                    var lastname = $scope.Record.Customer.Customer_Details[0].LastName;
+                                    if(lastname !== null && lastname !== undefined){
+                                        if(lastname.length > 0){
+                                            var n = lastname.split(' ');
+                                            var x = ''; 
+                                            $.each(n,function(i,o){
+                                                x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                                            });
+                                            $scope.Record.Customer.Customer_Details[0].LastName = x;
+                                        }
+                    
+                                    }
+                                }
+                            },
+                            label : {
+                                text : "Last Name",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Last Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].FirstName",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                                onValueChanged: function(e){
+                                    var FirstName = $scope.Record.Customer.Customer_Details[0].FirstName;
+                                    if(FirstName !== null && FirstName !== undefined){
+                                        if(FirstName.length > 0){
+                                            var n = FirstName.split(' ');
+                                            var x = ''; 
+                                            $.each(n,function(i,o){
+                                                x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                                            });
+                                            $scope.Record.Customer.Customer_Details[0].FirstName = x;
+                                        }
+                    
+                                    }
+                                }
+                            },
+                            label : {
+                                text : "First Name",
+                            },
+                            validationRules: [
+                                { type: "required", message: "First Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].MiddleName",
+                            label : {
+                                text : "Middle Name",
+                            },
+                            editorOptions: {
+                                onValueChanged: function(e){
+                                    var MiddleName = $scope.Record.Customer.Customer_Details[0].MiddleName;
+                                    if(MiddleName !== null && MiddleName !== undefined){
+                                        if(MiddleName.length > 0){
+                                            var n = MiddleName.split(' ');
+                                            var x = ''; 
+                                            $.each(n,function(i,o){
+                                                x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                                            });
+                                            $scope.Record.Customer.Customer_Details[0].MiddleName = x;
+                                        }
+                    
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].Department",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    // VC.$timeout(function(){                                       
+                                    //     $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    // },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Department",
+                            },
+                            // validationRules: [
+                            //     { type: "required", message: "Position is required." },
+                            // ],
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].Position",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Position",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Position is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Customer.Customer_Details[0].EmailAddress",
+                            editorOptions: {
+                                mode: 'email',
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            mode: 'email',
+                            label : {
+                                text : "Email Address",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Email Address is required." },
+                                { type: "email" },
+                            ],
+                        },
+                    ];
+
+                    // var Branch_Fields = [
+                    //     {
+                    //         dataField: "Customer.Customer_Branchs.Name",
+                    //         label : {
+                    //             text : "Name",
+                    //         }
+                    //     },
+                    //     {
+                    //         dataField: "Customer.Customer_Branchs.Address",
+                    //         editorType: "dxTextArea",
+                    //         label : {
+                    //             text : "Address",
+                    //         }
+                    //     },
+                    // ];
+                    var txtProjectName = null;
+                    var OppInfo_Fields = [
+                        {
+                            dataField: "Opportunity.Name",
+                            editorOptions: {
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                        txtProjectName = e.component;
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Project Name",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Project Name is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Opportunity.ID_OpportunityCategory",
+                            editorType: "dxSelectBox",
+                            editorOptions: {
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                dataSource : lookDS.OpportunityCategories,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Opportunity Type",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Opportunity Type is required" },
+
+                            ],
+                        },
+                        {
+                            dataField: "Opportunity.ID_OpportunityStage",
+                            editorType: "dxSelectBox",
+                            editorOptions: {
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                dataSource : lookDS.Stages,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                                tabIndex: 100000,
+                                readOnly: true,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                    },500);
+                                }, 
+                            },
+                            label : {
+                                text : "Stage",
+                            },
+
+                            validationRules: [
+                                //{ type: "required", message: "Stage is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Opportunity.ID_TaxScheme",
+                            editorType: "dxSelectBox",
+                            editorOptions: {
+                                searchEnabled:true,
+                                searchMode: 'contains',
+                                dataSource : lookDS.TaxSchemes,
+                                displayExpr: "Name",
+                                valueExpr: "ID",
+                                onValueChanged : function(){
+
+                                    fCompute();
+                                },
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ffdede');
+                                    },500);
+                                }, 
+
+                            },
+                            label : {
+                                text : "Tax Scheme",
+                            },
+                            validationRules: [
+                                { type: "required", message: "Tax Scheme is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Opportunity.BusinessUnit",
+                            label : {
+                                text : "Business Unit",
+                            },
+                            editorOptions:{
+                                readOnly: true,
+                                tabIndex: 100000,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){                                       
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                    },500);
+                                }, 
+                            },
+                            validationRules: [
+                                //{ type: "required", message: "Business Unit is required." },
+                            ],
+                        },
+                        {
+                            dataField: "Opportunity.DisplaySubtotal",
+                            editorType: 'dxTextBox',
+                            label : {
+                                text : "Subtotal",
+                            },    
+                            editorOptions:{
+                                readOnly: true,
+                                tabIndex: 100000,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },                 
+                            }
+                        },
+                        {
+                            dataField: "Opportunity.DisplayTotalDiscount",
+                            editorType: 'dxTextBox',
+                            label : {
+                                text : "Discount",
+                            },
+                            editorOptions: {
+                                tabIndex: 100000,
+                                readOnly: true,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },   
+                            }
+                        },
+                        {
+                            dataField: "Opportunity.DisplayTotalContractPrice",
+                            editorType: 'dxTextBox',
+                            label : {
+                                text : "Total Contract Price",
+                            },
+                            editorOptions: {
+                                tabIndex: 100000,
+                                readOnly: true,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },   
+                            }
+                        },
+                        {
+                            dataField: "Opportunity.DisplayTotalVatInc",
+                            editorType: 'dxTextBox',
+                            label : {
+                                text : "VAT Inc",
+                            },
+                            editorOptions:{
+                                readOnly: true,
+                                tabIndex: 100000,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },   
+                            }
+                        },
+                        {
+                            dataField: "Opportunity.DisplayTotalVat",
+                            editorType: 'dxTextBox',
+                            label : {
+                                text : "Vat Amount",
+                            },                           
+                            editorOptions:{
+                                readOnly: true,
+                                tabIndex: 100000,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },     
+                            }
+                        },
+                        {
+                            dataField: "Opportunity.DisplayTotalVatEx",        
+                            editorType: 'dxTextBox',                    
+                            label : {
+                                text : "VAT Ex",
+                            },
+                            editorOptions:{
+                                readOnly: true,
+                                tabIndex: 100000,
+                                onInitialized: function(e){
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-texteditor-input').css('background', '#ddd');
+                                        $(e.element).find('.dx-texteditor-input').css('text-align','right');
+                                    },500);
+                                },   
+                            }
+                        }
+                    ];
+
+                    var OppDetail_Fields = [
+                        {
+                            label:{
+                                text:'',
+                                visible: false,
+                            },
+                            editorType : 'dxCustomView',
+                            template: function (data, itemElement) {
+
+                                var compile = angular.element(document).injector().get('$compile');
+                                var div = compile("<div style='text-align:right;padding-bottom:5px'><div dx-button='btnAddItem'></div></div><div dx-data-grid='OppDetailGridOptions'></div>")($scope);
+
+                                $(div).appendTo(itemElement);
+   
+                            }
+                        }
+                    ];
+
+
+                    var OppDetail_NewItem = function (item) {
+                        
+                        return {
+                            ID: -1,
+                            IsActive: true,
+                            ID_Item: item.ID,
+                            DisplayName: item.Name,
+                            Name: item.Name,
+                            Description: item.Name,
+                            Item: item.Name,
+                            ItemCode: item.Code,
+                            Code : item.Code,
+                            SupplierCode: item.SupplierCode,
+                            PartNo : item.PartNo,
+                            Description: item.Description,
+                            Quantity: 0,
+                            //UnitPrice: _.$isHidePrice == true ? 0.00 : item.SRP,
+                            //SRP: _.$isHidePrice == true ? 0.00 : item.SRP,
+                            UnitPrice: item.SRP,
+                            SRP: item.SRP,
+                            ID_UOM: item.ID_UOM,
+                            UOM: item.PrimaryUOM,
+                            VatAmt: 0.00,
+                            IsFree : false,
+                            TaxScheme: 'VAT Inclusive',
+                            ID_TaxScheme: 2,
+                            IsSerialized : item.IsSerialized,
+                            TotalAmount: 0.00,
+                            // DocStatus: 'Pending',
+                            // ID_DocStatus: 1,
+                            // IsCanvassed: false,
+                            // ID_Customer: null,
+                            // Customer: '',
+                            NonInventoriable : item.NonInventoriable,
+                            // Reference: '',
+                            Comment: null,
+                            ID_Brand: item.ID_Brand,
+                            Brand: item.Brand,
+                            ModelCode : item.ModelCode,
+                            ID_ItemType : item.ID_ItemType,
+                            ItemType : item.ItemType,
+                            Discount : 0,
+                            DiscountRate : 0.00,
+                            GrossAmount : 0.00,
+                            LineDiscount : 0.00,
+                            LineTotal: 0.00,
+                            SKUCode: item.SKUCode
+                        };
+                    }
+
+                    // $scope.responsiveBox = {
+
+                    //     rows: [
+                    //         { ratio: 1 },
+                    //         { ratio: 1 },
+                    //         { ratio: 1 },
+                    //         { ratio: 1 },
+                    //     ],
+                    //     cols: [
+                    //         { ratio: 1 }
+                    //     ]
+                    // };
+
+
+                    var ID_ITEMGROUP_EQUIPMENT = 1;
+                    var ID_ITEMGROUP_FURNITURE = 4;
+                    var ID_ITEMGROUP_SOFTWARE = 6;
+                    $scope.btnAddItem = {
+
+                        text: 'Add Item',
+                         height: 35,
+                        width: 100,
+                        //type: 'default',
+                        icon: 'plus',
+
+                        onClick: function(){
+                                             
+                            VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem WHERE IsActive = 1 AND ID_ItemGroup IN(@ID_ItemGroup) ")', {
+                                title: 'Select Items',
+                                ID_View: '9B2755BA-C424-466D-AD8C-209186154AFD',
+                                ID_DetailView: 2,
+                                params: {
+                                    'ID_ItemGroup': [ID_ITEMGROUP_EQUIPMENT,ID_ITEMGROUP_FURNITURE,ID_ITEMGROUP_SOFTWARE]
+                                },
+                                ModelName: 'Item',
+                                ModelIcon: 'mdi mdi-package-variant',
+                                PropertyKey: 'ID',
+                                validate : function(items){
+                                    var x = Enumerable.From(items).Where("$.ID_Brand === null").ToArray()
+                                    if(x.length > 0){
+                                        VC.MsgBox('Select items must set Brand','Invalid');
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            }).then(function(data){
+
+                                $.each(data, function (i, item) {
+
+                                    var detail = OppDetail_NewItem(item);
+
+                                    $scope.Record.Opportunity.Opportunity_Details.push(detail);
+
+                                    OppDetailGrid.refresh();
+                                });
+                            });
+
+                        },
+                    };
+
+                    var OppDetailGrid;
+                    
+                    $scope.OppDetailGridOptions = {
+                    
+                        bindingOptions: {
+
+                            dataSource: 'Record.Opportunity.Opportunity_Details',
+                        },
+                        hoverStateEnabled: true,
+                        // scrolling: { //bug to
+                        //     mode: "onHover",
+                        //     showScrollbar : true
+                        // },
+                        columnAutoWidth: true,
+                        width: 700,
+                        height: 350,
+                        selection: {
+                            mode: "single",
+                        },
+                        editing: {
+                            allowUpdating: true,
+                            //allowDeleting: true,
+                            mode: 'cell',
+                        }, 
+                        columns: [
+                            {
+                                dataField: "SKUCode",
+                                caption : "SKU Code",
+                                width: 100,
+                                allowEditing: false
+                            },
+                            {
+                                dataField: "ItemType",
+                                caption : "Type",
+                                width: 100,
+                                allowEditing: false
+                            },
+                            {
+                                dataField: "Brand",
+                                caption : "Brand",
+                                width: 100,
+                                allowEditing: false
+                            },
+                            {
+                                dataField: "ModelCode",
+                                caption : "ITI Model Code",
+                                width: 100,
+                                allowEditing: false
+                            },
+                            {
+                                dataField: "Description",
+                                //required: true,
+                                //caption : "Description",
+                                allowEditing: false,
+                                width: 200
+                            },
+                            {
+                                dataField: "DisplayName",
+                                //required: true,
+                                caption : "Display Name",
+                                width: 200
+                            },
+                            {
+                                dataField: "ID_UOM",                                
+                                caption : "UOM",
+                                allowEditing: false,
+                                //required: true,
+                                width: 100,
+                                lookup: {                                
+                                    searchEnabled:true,
+                                    searchMode: 'contains',
+                                    dataSource: lookDS.UOMs,
+                                    valueExpr: "ID",
+                                    displayExpr: "Name",
+                                },
+                            },
+                            {
+                                dataField: "Quantity",
+                                caption : "Qty",
+                                required: true,
+                                width: 80,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 0
+                            },
+                            {
+                                dataField: "SRP",
+                                //caption : "SRP",
+                                width: 100,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+                            {
+                                dataField: "UnitPrice",
+                                caption : "Unit Price",
+                                width: 100,
+                                //allowEditing: false,
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+                            {
+                                dataField: "GrossAmount",
+                                caption : "Gross Amt",
+                                width: 100,
+                                allowEditing: false,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+                            {
+                                dataField: "DiscountRate",
+                                caption : "Discount %",
+                                width: 80,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+                            {
+                                dataField: "Discount",
+                                caption : "Discount",
+                                //allowEditing: false,
+                                width: 80,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+
+                            // {
+                            //     dataField: "LineDiscount",
+                            //     caption : "Line Discount",
+                            //     width: 100,
+                            //     allowEditing: false,
+                            //     dataType: 'number',
+                            //     format: 'fixedPoint',
+                            //     precision: 2
+                            // },
+                            {
+                                dataField: "LineTotal",
+                                caption : "Net Amount",
+                                width: 100,
+                                allowEditing: false,
+                                dataType: 'number',
+                                format: 'fixedPoint',
+                                precision: 2
+                            },
+                            {
+                                dataField: "Comment",
+                                caption : "Remarks",
+                                width: 100
+                            },
+                            {
+                                dataField: "IsFree",
+                                caption : "Free",
+                                width: 80,
+                                dataType: 'boolean',
+                            },
+                        ],
+
+                        onInitialized: function(e){
+
+                            OppDetailGrid = e.component;
+        
+                            fCompute();
+                        },
+                        onContextMenuPreparing: function(e){
+                            if (e.row.rowType === "data") {
+                                e.items = [{
+                                    text: "Delete",
+                                    onItemClick: function (row) {
+                                        OppDetailGrid.removeRow(e.row.rowIndex);
+                                        console.log($scope.Record)
+                                    }
+                                }]
+                            }
+                        },
+                        onCellHoverChanged: function(e){
+         
+                        },
+                        onCellPrepared: function(e){
+                            
+                            if(e.rowType == 'header'){
+                                e.cellElement.css('background', '#808080');
+                                e.cellElement.css('color', '#fff');
+                            }
+                            if(e.rowType == 'data'){
+                                
+                                if($scope.OppDetailGridOptions.columns.length > e.columnIndex ){
+                                    if($scope.OppDetailGridOptions.columns[e.columnIndex].required == true ){
+                                        e.cellElement.css('background', '#ffdede');
+                                    }else if($scope.OppDetailGridOptions.columns[e.columnIndex].allowEditing == false ){
+                                        e.cellElement.css('background', '#e0e1ff');
+                                    }else{
+                                        //e.cellElement.css('background', '#fff');
+                                    }
+                                }
+                            }
+                        },
+                        onRowPrepared: function (e) {
+                        },
+                        onEditorPreparing : function (e){
+
+                            // var dataField = e.dataField;
+
+                            // if(dataField != 'ID_UOM' && dataField != 'Quantity' && dataField != 'DiscountRate' && dataField != 'UnitPrice' && dataField != 'Comment'){
+
+                            //     e.cancel = true;
+                            // }
+                        },
+                        onRowInserted: function(e){
+
+                            fCompute();
+                        },
+                        onRowUpdated: function(e){
+                            fCompute(Object.keys( e.data )[0].toString());
+                        },
+                        onRowRemoved: function(e){
+  
+                            fCompute();
+                        },
+                    };
+
+                    var CustomerTab = {
+                        title: "Customer Info.",
+                        colCount: 2,
+                        items: [
+                            {
+                                itemType : "group",
+                                caption : "Customer",
+                                items : CustomerInfo_Fields,
+                            },
+                            {
+                                itemType : "group",
+                                caption : "Main Contact Person",
+                                items : Contact_Fields,
+                            },
+                            // {
+                            //     itemType : "group",
+                            //     caption : "Branch",
+                            //     items : Branch_Fields
+                            // },
+                        ],
+                    };
+
+                    var OppourtunityTab = {
+                        title: "Opportunity Info.",
+                        colCount: 2,
+                        items: [
+                            {
+                         
+                                colSpan: 9,
+                                itemType: "group",
+                                caption: "Information",
+                                items: OppInfo_Fields
+                            },
+                            {  
+                                colCount: 1,
+                                itemType: "group",
+                                caption: "Details",
+                                items: OppDetail_Fields,
+                            },
+                            // {
+                            //     colSpan: 1,
+                            //     itemType: "group",
+                            //     caption: "Total",
+                            //     items: OppTotal_Fields
+                            // },
+                        ]
+                    };
+
+                    var SummaryTab = {
+                        title: "Summary",
+                        colCount: 2,
+                        items: [
+                            
+                        ]
+                    }; 
+
+
+                    var formTabPanel;
+                    var saveControl;
+                    var nextControl;
+                    var backControl;
+                    var nextElement;
+                    var backElement;
+                    
+                    var SaveNewOpportunity = function(){
+
+                        var JSDataService  = app.$GetDataService();
+                        $scope.Record.Customer.ID = -1;
+                        $scope.Record.Customer.Customer_Details[0].Name = $scope.Record.Customer.Customer_Details[0].LastName + ', ' + $scope.Record.Customer.Customer_Details[0].FirstName + ' ' + $scope.Record.Customer.Customer_Details[0].MiddleName;
+                        $scope.Record.Customer.Customer_Details[0].Email =  $scope.Record.Customer.Customer_Details[0].EmailAddress;
+
+                        $.each($scope.Record.Customer.Customer_Details,function(i,item){
+
+                            item.Email = item.EmailAddress;
+                            console.log(item);
+                        });
+
+                        $scope.Record.Customer.CRUD = {
+                            Main: 5283, Customer_Details: 5284
+                        }
+
+                        JSDataService.SaveModelObject('JSApp/Save', {
+
+                            ID: 6249,//Customer                    
+                            CurrentObject: JSON.stringify($scope.Record.Customer),                    
+                            ViewName: 'xxxxxx_xxxx',                   
+                            _DeletedItems: JSON.stringify({}),                
+                            // $files: Files,                    
+                            // $filesDetails: JSON.stringify(_.$FilesToUpload)
+                
+                        }).then(function (CustomerObject) {
+
+                            $scope.Record.Opportunity.ID = -1;
+                            $scope.Record.Opportunity.ID_Customer = CustomerObject.ID;
+                            $scope.Record.Opportunity.ParentCompany = CustomerObject.ParentCompany;
+                            $scope.Record.Opportunity.RegisteredCompany = CustomerObject.RegisteredCompanyName;
+                            $scope.Record.Opportunity.Management = CustomerObject.Management;
+                            $scope.Record.Opportunity.ID_PaymentTerm = CustomerObject.ID_PaymentTerm;
+
+                            if(CustomerObject.Customer_Details !== null && CustomerObject.Customer_Details !== undefined){
+                                $scope.Record.Opportunity.ID_ContactA = CustomerObject.Customer_Details.length > 0 ? CustomerObject.Customer_Details[0].ID : null;
+                            }
+
+                            $scope.Record.Opportunity.CRUD = {
+                                Main: 3181, Opportunity_Details: 3182, Opportunity_BOMs: 12479, Opportunity_Services: 12481, Opportunity_PaymentTermss: 12480
+                            }
+
+                            JSDataService.SaveModelObject('JSApp/Save', {
+
+                                ID: 4142,//Oppo                        
+                                CurrentObject: JSON.stringify($scope.Record.Opportunity),
+                                ViewName: 'xxxxxx_xxxx',   
+                                _DeletedItems: JSON.stringify({}),
+                    
+                            }).then(function (OpportunityObject) {
+
+                                JSDataService.ExecSQLProc(
+                                    '@Html.EncryptSQL("pCreateDiaryFromOpp")',
+                                    {
+                                        'ID_Opportunity':   OpportunityObject.ID
+                                    }
+                                ).then(function (response) {
+                                    //VC.ToastSuccess("To Do's Successfully Created");
+                                });
+
+
+                                VC.ToastSuccess('Save Successful');    
+
+                                VC._popUp.hide();
+                                AcctHelper.OpenOpportunity(OpportunityObject.ID);
+                                if(_.ID_ViewType == 2){
+                                    VC.Reload();
+                                }else{
+                                    VC.Grid.refresh();
+                                }
+                            });
+                        });
+                    };
+
+                   
+
+                    $scope.selectedTab = 0;
+                    $scope.btnSave = {                        
+                        text:'Save',
+                      //  type: 'default',
+                        icon: 'save',
+                        height: 40,
+                        width: 80,
+                        onInitialized: function(e){
+                            saveControl = e.component;
+                            saveControl.option('disabled',true);
+                        },
+                        onClick: function(){
+                            OppDetailGrid.closeEditCell();
+                            fCompute();
+
+                            console.log($scope.Record);
+                            // Validation ////////////////////////////////
+
+
+                  
+
+
+                            VC.$timeout(function(){
+                                
+                                
+                                var customer = $scope.Record.Customer;
+                                var opportunity = $scope.Record.Opportunity;
+                                var brokenRules = [];
+                                if(customer.ParentCompany == null || customer.ParentCompany.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Parent Company is required' })
+                                }
+                                if(customer.RegisteredCompanyName == null || customer.RegisteredCompanyName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Registered Company is required' })
+                                }
+                                if(customer.TradeName == null || customer.TradeName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'TradeName is required' })
+                                }
+                                if(customer.Branch == null || customer.Branch.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Branch is required' })
+                                }
+                                if(customer.Address == null || customer.Address.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Address is required' })
+                                }
+                                if(customer.ID_City == null || customer.ID_City == ""){
+                                    brokenRules.push({ type: 'Required', message: 'City is required' })
+                                }
+                                if(customer.ID_Province == null || customer.ID_Province == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Province is required' })
+                                }
+                                
+                                if(customer.PhoneNo == null || customer.PhoneNo.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Phone No is required' })
+                                }else{
+                                   
+                                   if(customer.PhoneNo.length > 6){
+                                        if(customer.PhoneNo.length < 13){
+                                                brokenRules.push({ type: 'Required', message: 'Phone No should be 10 digits' })
+                                           }
+                                    }
+                                }
+                                if(customer.ID_PaymentTerm == null || customer.ID_PaymentTerm == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Payment Terms is required' })
+                                }
+                                /////
+                                if(customer.Customer_Details[0].FirstName == null || customer.Customer_Details[0].FirstName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'First Name is required' })
+                                }                            
+                                if(customer.Customer_Details[0].LastName == null || customer.Customer_Details[0].LastName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Last Name is required' })
+                                }
+                                if(customer.Customer_Details[0].Position == null || customer.Customer_Details[0].Position.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Position is required' })
+                                }
+                                if(customer.Customer_Details[0].EmailAddress == null || customer.Customer_Details[0].EmailAddress.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Email is required' })
+                                }
+
+
+                                ////
+
+                                if(opportunity.Name == null || opportunity.Name.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Project Name is required' })
+                                }
+                                if(opportunity.ID_OpportunityCategory == null || opportunity.ID_OpportunityCategory == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Opportunity Type is required' })
+                                }
+                                if(opportunity.ID_TaxScheme == null || opportunity.ID_TaxScheme == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Tax Scheme is required' })
+                                }
+
+                                if(opportunity.Opportunity_Details == null || opportunity.Opportunity_Details == undefined) opportunity.Opportunity_Details = [];
+                                $.each(opportunity.Opportunity_Details,function(index,detail){
+                                    // if(detail.Description == null || detail.Description.trim() == ""){
+                                    //     brokenRules.push({ type: 'Required', message: 'Description is required' })
+                                    // }
+                                    // if(detail.ID_UOM == null){
+                                    //     brokenRules.push({ type: 'Required', message: 'UOM is required' })
+                                    // }
+                                    if(opportunity.ID_OpportunityStage > 2){
+                                        if(!(detail.Quantity > 0)){
+                                            brokenRules.push({ type: 'Required', message: 'Quantity is required' })
+                                        }
+                                    }
+
+                                });
+
+                                /////////////////////////////////////////////
+
+                                
+
+                                if(brokenRules.length > 0){
+                                    VC.ShowValidation(brokenRules);
+                                    return;
+                                }
+
+
+
+                                
+                                //////////////////////////////////////////////
+                                var JSDataService  = app.$GetDataService();
+
+
+                                JSDataService.Validate('@Html.EncryptSQL("pValidateClientName")',
+                                    {
+                                        'TradeName': $scope.Record.Customer.TradeName,
+                                        'RegCompany': $scope.Record.Customer.RegisteredCompanyName,
+                                        'Branch': $scope.Record.Customer.Branch
+                                    }
+                                ).then(function(result){
+                                    if (result.HasClient == true) {
+                                        VC.ShowValidation([{ type: 'Error', message: 'Client already exist' }]);
+                                        return;
+                                    }
+                                    else{
+                                        if ($scope.Record.Opportunity.ID_OpportunityStage !== 5 && $scope.Record.Opportunity.ID_OpportunityStage !== 6) {
+                                            VC.JSDataService.Query('@Html.EncryptSQL("SELECT ID, Name FROM tDiaryType WHERE isActive = 1")').then(function (data) {
+                                                var DiaryTypes = data.collection;
+                                                app.$modal().Show({
+                                                    Template: '<div dx-form="FormOptions" style="padding:10px"></div>',
+                                                    title: 'To Do',
+                                                    width: 350,
+                                                    //height: '100%',
+                                                    closeOnConfirm: false,
+                                                    InitController: function (s) {
+                
+                                                        var Form = null;
+                
+                                                        s.CurrentObject = {
+                                                            Date: new Date(),
+                                                            ID_Type: null,
+                                                            Note: null
+                                                        }
+                
+                                                        s.FormOptions = {
+                                                            bindingOptions: {
+                                                                'formData.Date': 'CurrentObject.Date',
+                                                                'formData.ID_Type': 'CurrentObject.ID_Type',
+                                                                'formData.Note': 'CurrentObject.Note',
+                
+                                                            },
+                                                            formData: s.CurrentObject,
+                                                            showColonAfterLabel: false,
+                                                            onInitialized: function (e) {
+                                                                Form = e.component;
+
+                                                            },
+                                                            items: [
+                                                                {
+                                                                    dataField: 'Date',
+                                                                    editorType: 'dxDateBox',
+                                                                    validationRules: [{
+                                                                        type: 'required',
+                                                                        message: 'Date is required'
+                                                                    }],
+                                                                    editorOptions: {
+                
+                                                                    }
+                                                                }, {
+                                                                    dataField: 'ID_Type',
+                                                                    editorType: 'dxSelectBox',
+                                                                    validationRules: [{
+                                                                        type: 'required',
+                                                                        message: 'Type is required'
+                                                                    }],
+                                                                    editorOptions: {
+                                                                        items: DiaryTypes,
+                                                                        valueExpr: 'ID',
+                                                                        displayExpr: 'Name',
+                
+                                                                    },
+                                                                    label: {
+                                                                        text: 'Type',
+                                                                    }
+                                                                }, {
+                                                                    dataField: 'Note',
+                                                                    editorType: 'dxTextArea',
+                                                                    validationRules: [{
+                                                                        type: 'required',
+                                                                        message: 'Note is required'
+                                                                    }],
+                                                                    editorOptions: {
+                                                                        maxLength: 300,
+                                                                        height: 160,
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                
+                                                        s.onPositiveClick = function (d) {
+                                                            var result = DevExpress.validationEngine.validateGroup(Form);
+                                                            console.log('followup',s)
+                                                            if (result.isValid == true) {
+                                                                d.hide();
+                                                                $scope.Record.Opportunity.ID_FollowUpType = s.CurrentObject.ID_Type;
+                                                                $scope.Record.Opportunity.FollowUpDate = s.CurrentObject.Date;
+                                                                $scope.Record.Opportunity.FollowUpNote = s.CurrentObject.Note;
+                                                                SaveNewOpportunity();
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            });
+                                            
+                                        }else{
+                                            SaveNewOpportunity();
+                                        }
+                                        ////////////////
+                                    }
+                                });
+
+                       
+
+
+
+
+                            },500);
+
+                        },
+                    };
+                    $scope.btnBack = {                        
+                        text:'Back',
+                        //type: 'normal',
+                        icon: 'arrowleft',
+                        height: 35,
+                        width: 80,
+                        onInitialized: function(e){
+                            backControl = e.component;
+                            backControl.option('disabled',true);
+
+                            backElement = e.element;
+                            backElement.css('display','none');
+                        },
+                        onClick: function(){
+                            $scope.selectedTab = $scope.selectedTab - 1;
+
+                            if($scope.selectedTab == 0){
+                                if(txtParentCompany !== null){
+                                    VC.$timeout(function(){
+                                        txtParentCompany.focus();
+                                    });
+                                }                                
+                            }
+
+                            if($scope.selectedTab == 1){
+                                if(txtProjectName !== null){
+                                    VC.$timeout(function(){
+                                        txtProjectName.focus();
+                                    });
+                                }         
+                            }
+
+                            formTabPanel.option("selectedIndex", $scope.selectedTab);
+                            // formTabPanel._options.selectedIndex = $scope.selectedTab;
+                            // formTabPanel._options.selectedItem = formTabPanel._options.dataSource[$scope.selectedTab];
+                            if(formTabPanel._options.dataSource.length -1  == $scope.selectedTab ){
+                                saveControl.option('disabled',false);
+                                nextControl.option('disabled',true);
+                                nextElement.css('display','none');
+                            }
+                            else{
+                                saveControl.option('disabled',true);
+                                nextControl.option('disabled',false);
+                                nextElement.css('display','inline-block');
+                            }
+                            
+                            if(0 == $scope.selectedTab ){
+                                backControl.option('disabled',true);
+                                backElement.css('display','none');
+                            }
+                            else{
+                                backControl.option('disabled',false);
+                                backElement.css('display','inline-block');
+                            }
+                        },
+                    };
+
+
+
+                    $scope.btnNext = {                        
+                        text:'Next',
+                       // type: 'default',
+                        icon: 'arrowright',
+                        height: 35,
+                        width: 80,
+                        onInitialized: function(e){
+                            nextControl = e.component;
+                            nextElement = e.element;
+                        },
+                        onClick: function(){
+                            
+               
+                            var customer = $scope.Record.Customer;
+                            var opportunity = $scope.Record.Opportunity;
+                            var brokenRules = [];
+                            if($scope.selectedTab == 0){
+                                if(customer.ParentCompany == null || customer.ParentCompany.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Parent Company is required' })
+                                }
+                                if(customer.RegisteredCompanyName == null || customer.RegisteredCompanyName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Registered Company is required' })
+                                }
+                                if(customer.TradeName == null || customer.TradeName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'TradeName is required' })
+                                }
+                                if(customer.Branch == null || customer.Branch.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Branch is required' })
+                                }
+                                if(customer.Address == null || customer.Address.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Address is required' })
+                                }
+                                if(customer.ID_City == null || customer.ID_City == ""){
+                                    brokenRules.push({ type: 'Required', message: 'City is required' })
+                                }
+                                if(customer.ID_Province == null || customer.ID_Province == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Province is required' })
+                                }
+                                // if(customer.PhoneNo == null || customer.PhoneNo.trim() == ""){
+                                //     brokenRules.push({ type: 'Required', message: 'Phone No is required' })
+                                // }else{
+                                //      console.log(customer.PhoneNo.length,'lenght')
+                                //     if(customer.PhoneNo.length > 6){
+                                //         if(customer.PhoneNo.length < 13){
+                                //                 brokenRules.push({ type: 'Required', message: 'Phone No should be 10 digits' })
+                                //            }
+                                //     }
+                                    
+                                // }
+                                if(AcctHelper.ValidatePhoneNo(customer.PhoneNo,10,3) == false){
+                                      brokenRules.push({ type: 'Required', message: 'Phone No should be 10 digits' })
+                                  }
+                                if(customer.ID_PaymentTerm == null || customer.ID_PaymentTerm == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Payment Terms is required' })
+                                }
+                                /////
+                                if(customer.Customer_Details[0].FirstName == null || customer.Customer_Details[0].FirstName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'First Name is required' })
+                                }                            
+                                if(customer.Customer_Details[0].LastName == null || customer.Customer_Details[0].LastName.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Last Name is required' })
+                                }
+                                if(customer.Customer_Details[0].Position == null || customer.Customer_Details[0].Position.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Position is required' })
+                                }
+
+                                if(customer.Customer_Details[0].EmailAddress == null || customer.Customer_Details[0].EmailAddress.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Email is required' })
+                                }else{
+
+                                    if(fIsEmailValidate() == false) {
+
+                                        brokenRules.push({ type: 'email', message: 'Email is not valid format.' });      
+                                    }
+
+                                }
+
+
+
+                             
+                            }
+
+                                ////
+                            if($scope.selectedTab == 1){
+                                if(opportunity.Name == null || opportunity.Name.trim() == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Project Name is required' })
+                                }
+                                if(opportunity.ID_OpportunityCategory == null || opportunity.ID_OpportunityCategory == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Opportunity Type is required' })
+                                }
+                                if(opportunity.ID_TaxScheme == null || opportunity.ID_TaxScheme == ""){
+                                    brokenRules.push({ type: 'Required', message: 'Tax Scheme is required' })
+                                }
+
+                                if(opportunity.Opportunity_Details == null || opportunity.Opportunity_Details == undefined) opportunity.Opportunity_Details = [];
+                                $.each(opportunity.Opportunity_Details,function(index,detail){
+                                    // if(detail.Description == null || detail.Description.trim() == ""){
+                                    //     brokenRules.push({ type: 'Required', message: 'Description is required' })
+                                    // }
+                                    // if(detail.ID_UOM == null){
+                                    //     brokenRules.push({ type: 'Required', message: 'UOM is required' })
+                                    // }
+                                    if(opportunity.ID_OpportunityStage > 2){
+                                        if(!(detail.Quantity > 0)){
+                                            brokenRules.push({ type: 'Required', message: 'Quantity is required' })
+                                        }
+                                    }
+                                });
+                            }
+
+
+                            /////////////////////////////////////////////
+
+                            if(brokenRules.length > 0){
+                                VC.ShowValidation(brokenRules);
+                                return;
+                            }
+
+
+                            $scope.selectedTab = $scope.selectedTab + 1;
+
+                            //////////////////////////////////////////////
+                            if($scope.selectedTab == 0){
+                                if(txtParentCompany !== null){                                    
+                                    VC.$timeout(function(){
+                                        txtParentCompany.focus();
+                                    });
+                                }                                
+                            }
+
+                            if($scope.selectedTab == 1){
+                                if(txtProjectName !== null){
+                                    VC.$timeout(function(){
+                                        txtProjectName.focus();
+                                    });
+                                }         
+                            }
+
+                            formTabPanel.option("selectedIndex", $scope.selectedTab);
+                            // formTabPanel._options.selectedIndex = $scope.selectedTab;
+                            // formTabPanel._options.selectedItem = formTabPanel._options.dataSource[$scope.selectedTab];
+                            if(formTabPanel._options.dataSource.length -1  == $scope.selectedTab ){
+                                saveControl.option('disabled',false);
+                                nextControl.option('disabled',true);
+                                nextElement.css('display','none');
+                            }
+                            else{
+                                saveControl.option('disabled',true);
+                                nextControl.option('disabled',false);
+                                nextElement.css('display','inline-block');
+                            }
+
+                            if(0 == $scope.selectedTab ){
+                                backControl.option('disabled',true);
+                                backElement.css('display','none');
+                            }
+                            else{
+                                backControl.option('disabled',false);
+                                backElement.css('display','inline-block');
+                            }
+  
+                            // console.log(formTabPanel);
+                        },
+                    };
+
+                    $scope.formOption = {
+
+                        bindingOptions : {
+
+                            formData: 'Record',
+                        },
+                        onInitialized: function(e){
+
+                            NewOppformControl = e.component;
+                      
+                        },
+                        items: [{
+                            itemType: "tabbed",
+                            tabPanelOptions: {    
+                                bindingOptions:{
+                                    selectedIndex: $scope.selectedTab
+                                },          
+                                swipeEnabled: false,                                    
+                                deferRendering: false,
+                                height: 490,
+                                onTitleClick: function(e){
+                                    $scope.selectedTab = e.itemIndex;
+                                    if(formTabPanel._options.dataSource.length -1  == $scope.selectedTab ){
+                                        saveControl.option('disabled',false);
+                                        nextControl.option('disabled',true);
+                                    }
+                                    else{
+                                        saveControl.option('disabled',true);
+                                        nextControl.option('disabled',false);
+                                    }
+        
+                                    if(0 == $scope.selectedTab ){
+                                        backControl.option('disabled',true);
+                                    }
+                                    else{
+                                        backControl.option('disabled',false);
+                                    }
+                                },
+                                onInitialized: function(e){
+                                    
+                                    formTabPanel = e.component;
+                                    VC.$timeout(function(){
+                                        $(e.element).find('.dx-tab-text').css('font-weight','bold');  
+                                        $(e.element).find('.dx-tabs').css('display','none');
+                                        $(e.element).find('.dx-texteditor').css('border','1px solid #a0a0a0');
+                                        //$("#NewOpportunity").css('background','#fff');  
+                                    },500);
+                                    console.log('tab',e)
+                                    //formTabPanel._options.selectedItem = formTabPanel._options.dataSource[2];
+                                }
+                            },
+                            tabs: [CustomerTab, OppourtunityTab ] //, SummaryTab]
+                        }]
+                    };
+     
+
+
+
+
+
+                };
+                VC._popUp = null;
+                app.$modal().Show({
+                    ViewSrc: 'Templates/NewOpportunity.html',
+                    title: 'New Opportunity',
+                    width: '80%',
+                    height: '615',
+                    showNegativeButton: false,
+                    onPopupInitialized: function (p) {
+                        console.log('pop',p)
+                        VC._popUp = p;
+                        VC.$timeout(function(){
+                            $(VC._popUp._$element).find('.dx-popup-title.dx-toolbar').css('background','#E67E22');
+                            $(VC._popUp._$element).find('.dx-popup-title.dx-toolbar').css('font-weight','bold');
+                            $(VC._popUp._$element).find('.dx-popup-title.dx-toolbar').css('font-size','20px');
+                            $(VC._popUp._$element).find('.dx-popup-title.dx-toolbar').css('color','#fff');
+                            //$(VC._popUp._$element).find('.dx-popup-content').css('background','#FAE5D2');
+                            
+                        });
+                    },
+                    InitController: fNewOpportunityInit,
+                });
+
+            };
+
+        
+            VC.AddToolbarButton({
+                text: 'New Opportunity',
+				isContextMenu: true,
+                IsDisabled: function(){
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    if(Selecteds.length !== 1){
+                        return true;
+                    }
+                    if(Selecteds[0].ID == -1){
+                        return true;
+                    }
+                    if(Selecteds[0].ID_Client > 0){
+                        return true;
+                    }
+
+                    return false;
+                },
+                onItemClick: function(){
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+
+                    if(Selecteds[0].ID_Client > 0){
+                        VC.MsgBox("Client already created.");
+                        return;
+                    }
+
+                    if(Selecteds[0].$dirty == true){
+
+                        VC.MsgBox("Please save first the current record.");
+                        return;
+                    }
+
+                    var JsDataService = app.$GetDataService();
+                    JsDataService.pGetCurrentObject(
+                        '@Html.EncryptSQL("pGetNewOpportunityLookUpDatasource")',
+                        {
+                            'ID': Selecteds[0].ID
+                        }
+                    ).then(function (data) {
+                        console.log(data)
+                        fShowNewOpportunityWindow(data);
+                    });
+                }
+            });
+
+
+            /***************************************************************************************************************************/
+
+
+            if(_.ID_ViewType == 2){
+                    console.log(VC.IsNew(),'xx')
+                    // VC.AddToolbarButton({
+                    //     text : 'Create Client',
+                    //     IsDisabled : function(){
+                    //         if(VC.IsNew() == true){
+                    //             return true;
+                    //         }
+                    //             return false;
+                    //     },
+                    //     onClick:function () {
+                    //               var JsDataService =  app.$GetDataService();
+                    //               JsDataService.Validate('@Html.EncryptSQL("pValidateLead")',
+                    //                   {
+                    //                       'ID': _.CurrentObject.ID
+                    //                   }
+                    //               ).then(function(data){
+                    //                    if (data.HasClient == true) {
+                    //                        VC.MsgBox('Client already exist', 'Leads');
+                    //                    }
+                    //                   else{
+                    //                       AcctHelper.Create_SPL_Client(_.CurrentObject.ID);
+                    //                   }
+                    //               })
+
+                    //         }
+                    // });
+
+             VC.ValidationRules.push(function () {
+
+                console.log(_.CurrentObject,'current')
+                 var JsDataService = app.$GetDataService();
+                 return JsDataService.Validate( '@Html.EncryptSQL("pValidateLeadName")',
+                     {
+                         'Name': _.CurrentObject.Name,
+                         'ID_CustomerLead': _.CurrentObject.ID
+                     }
+                 );
+             });
+
+             VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    var Leads = Enumerable.From(_.CurrentObject.CustomerLead_Details).Select('$.ID').ToArray();
+
+                    if(Leads.length == 0){
+                        brokenRules.push('Contact detail is required')
+                     }
+					 
+					// if ( _.CurrentObject.ID_MediaSource === 1 ) { 
+					// 	if ( _.CurrentObject.EventName === null ||  _.CurrentObject.EventName === undefined ) {
+					// 		brokenRules.push('Event name is required.')
+					// 	} else {
+					// 		if ( _.CurrentObject.EventName.length == 0 ) { 
+					// 			brokenRules.push('Event name is required.')
+					// 		}
+					// 	}
+					// }
+					
+
+                    console.log(  _.CurrentObject.Event);
+                    var ID_MediaSource_Event = 3;
+                    
+                    if(_.CurrentObject.ID_MediaSource == ID_MediaSource_Event){ 
+                        
+                        if(_.CurrentObject.Event == '' || _.CurrentObject.Event == null ||  _.CurrentObject.Event == undefined){
+
+                            brokenRules.push('Event is required.');
+                        }
+                    }
+
+
+                    console.log(_.CurrentObject.IsAV,'js')
+                    if(_.CurrentObject.IsAds == false 
+                        && _.CurrentObject.IsInteriorAndCorp == false 
+                        && _.CurrentObject.IsVimar == false 
+                        && _.CurrentObject.IsLighting == false 
+                        && _.CurrentObject.IsSecurity == false 
+                        && _.CurrentObject.IsCorpRetail == false 
+                        && _.CurrentObject.IsTrade == false 
+                        && _.CurrentObject.IsCorporate == false 
+                        && _.CurrentObject.IsMicrosoft == false 
+                        && _.CurrentObject.IsDell == false 
+                        && _.CurrentObject.IsAV == false){
+
+                            console.log(_.CurrentObject)
+                           brokenRules.push('Product Interest is required')
+                       }
+
+                       console.log(_.CurrentObject)
+
+                    var re = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
+                    console.log(_.CurrentObject.Website,'xx')
+                        if(_.CurrentObject.Website !== null && _.CurrentObject.Website !== ''){
+                            console.log(re,'web')
+                        if (!re.test(_.CurrentObject.Website)) { 
+                            brokenRules.push('Invalid Website Format');
+                        }
+                        }
+                    if(brokenRules.length > 0){
+                         return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                     }
+                      return { isValid: true }
+
+              });
+
+            }
+
+        }
+
+
+        // var Leads = Enumerable.From(_.CurrentObject.CustomerLead_Details).Select('$.ID').ToArray();
+        //             console.log(Leads,'x')
+        //             if(Leads.length = 0){
+        //                 brokenRules.push('Contact detail is required')
+        // }
+        //
+
+
+        VC_CustomerLead.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+            // setTimeout(function() {
+            //     $('.CustomerLead_Details').css('max-width','');
+            // }, 500);
+        }
+
+        return VC_CustomerLead;
+    });
+//</script>
+</text> , false )
+

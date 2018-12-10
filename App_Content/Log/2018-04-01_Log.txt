@@ -1,0 +1,10 @@
+4/1/2018 9:35:00 AM: _pGetDataSet ---> Invalid column name 'IsOnGridTabm'..
+4/1/2018 9:35:26 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/1/2018 9:35:26 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/1/2018 9:35:26 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ActionTakenTab, 10459).
+The statement has been terminated..
+4/1/2018 9:35:26 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/1/2018 9:35:40 AM: _pGetDataSet ---> Invalid column name 'undefined'..

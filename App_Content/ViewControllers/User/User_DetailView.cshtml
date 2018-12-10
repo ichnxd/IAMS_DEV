@@ -1,0 +1,44 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/DetailView?ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}&IsBase=1'], function (app, BaseClass) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            //
+            //
+
+            //_.SaveUrl = '/JsApp/SaveUser';
+
+            var txtPasswordOptions = _.GetFormItemOptions("Password");
+
+            txtPasswordOptions.onValueChanged = function() { 
+                
+            }
+
+            txtPasswordOptions.mode = 'password';
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.Save = function() {
+            BaseClass.prototype.Save.call( this );
+
+        }
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+    });
+//</script>
+</text> , false )

@@ -1,0 +1,155 @@
+11/28/2018 10:54:22 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:54:23 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:54:55 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:54:56 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:54:57 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:55:41 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:55:41 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:55:42 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:55:42 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:55:43 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 10:59:10 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 11:00:16 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 11:00:16 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 11:00:17 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 11:00:18 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 11:06:47 AM: _pGetDataSet ---> Invalid column name 'sequence'..
+11/28/2018 11:57:21 AM: _pGetDataSet ---> Invalid column name 'isongrid'..
+11/28/2018 11:57:44 AM: _pGetDataSet ---> Invalid column name 'ison'..
+11/28/2018 11:57:48 AM: _pGetDataSet ---> Invalid column name 'isongrid'..
+11/28/2018 1:02:33 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:03:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:03:26 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:03:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:03:27 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:07:15 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:07:16 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (PickListTab, 3126).
+The statement has been terminated..
+11/28/2018 1:07:16 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (PickListTab, 3126).
+The statement has been terminated..
+11/28/2018 1:07:16 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:07:17 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:07:17 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:11:40 PM: _pGetDataSet ---> Invalid column name 'undefined'..
+11/28/2018 1:11:43 PM: _pGetDataSet ---> Invalid column name 'undefined'..
+11/28/2018 1:11:48 PM: _pGetDataSet ---> Invalid column name 'undefined'..
+11/28/2018 1:11:52 PM: _pGetDataSet ---> Invalid column name 'undefined'..
+11/28/2018 1:11:54 PM: _pGetDataSet ---> Invalid column name 'undefined'..
+11/28/2018 1:20:44 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:20:45 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:20:45 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:20:45 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:20:46 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:24:23 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:24:24 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:24:24 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:24:25 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/28/2018 1:41:51 PM: _pGetDataSet ---> Invalid column name 'isongrid'..
+11/28/2018 2:19:13 PM: _pGetDataSet ---> Invalid column name 'Picklist'..
+11/28/2018 2:28:20 PM: _pGetDataSet ---> Invalid column name 'ID_ModelDetailView'..
+11/28/2018 2:28:37 PM: _pGetDataSet ---> Invalid column name 'ID_ModelDetailView'..
+11/28/2018 2:30:04 PM: _pGetDataSet ---> Invalid column name 'ID'..
+11/28/2018 2:30:18 PM: _pGetDataSet ---> Invalid column name 'ID'..
+11/28/2018 2:44:39 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 2:47:42 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:11:42 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:11:53 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:12:26 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:12:46 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:13:32 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:20:30 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 3:23:34 PM:  ---> Cannot insert the value NULL into column 'ID_ControlType', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. UPDATE fails.
+The statement has been terminated..
+11/28/2018 5:06:19 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:07:15 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:07:47 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:13:46 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:16:36 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:16:49 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:20:28 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:21:16 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:21:32 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:22:37 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:22:46 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:25:10 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:26:43 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:27:42 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:28:43 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:29:31 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:37:30 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:38:06 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:42:50 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:44:06 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:45:01 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:45:15 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 5:50:51 PM: _pGetDataSet ---> Invalid column name 'datasource'..
+11/28/2018 5:51:39 PM: _pGetDataSet ---> Invalid column name 'ID_Model'..
+11/28/2018 6:09:24 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 6:09:38 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..
+11/28/2018 6:10:13 PM:  ---> String or binary data would be truncated.
+The statement has been terminated..

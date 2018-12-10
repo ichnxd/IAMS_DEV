@@ -1,0 +1,11 @@
+4/30/2018 6:59:38 PM:  ---> Invalid column name 'ID_CostOfGoods'.
+Invalid column name 'ID_IncomeAccount'.
+Invalid column name 'ID_AssetAccount'..
+4/30/2018 9:48:58 AM: pSalesOrderCancel ---> Sales Order has already reference to DR-02277.
+4/30/2018 11:21:54 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:22:48 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:23:28 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:23:47 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:24:52 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:26:14 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/30/2018 11:28:17 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.

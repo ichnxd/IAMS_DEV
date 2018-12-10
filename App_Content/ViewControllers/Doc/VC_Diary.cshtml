@@ -1,0 +1,40 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/AR/VC_BaseAR");
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Diary = function () { }
+
+        VC_Diary.prototype = Object.create(baseModelHelper.prototype);
+
+
+        VC_Diary.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var SQL = '@Html.EncryptSQL("SELECT * FROM tItem")';
+
+        }
+
+        VC_Diary.prototype.onLoad = function () {
+            baseModelHelper.prototype.onLoad.call(this);
+        }
+
+        VC_Diary.prototype.IsCanApprove = function () {
+            var xxx = baseModelHelper.prototype.IsCanApprove.call(this);
+            return xxx;
+        }
+
+
+        return VC_Diary;
+
+    });
+//</script>
+</text> , false);

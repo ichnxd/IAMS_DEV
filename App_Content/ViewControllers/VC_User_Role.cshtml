@@ -1,0 +1,128 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, BaseClass) {
+
+        var VC_UserRole = function () { }
+
+        VC_UserRole.prototype = Object.create(BaseClass.prototype);
+
+        VC_UserRole.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+            
+            if (_.ID_ViewType == 1) {
+                VC.onContextMenuPreparing = function (e) {
+                    var itemsSelected = e.row.data;
+                    e.items.push({
+                        text: "Copy User Role",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetUserRole")', {
+                                'ID': itemsSelected.ID,
+                                ID_Refs: []
+                            }).then(function (d) {
+                                d.ID = -1;
+                                var properties = ['UserRole_Details', 'UserRole_CustomViews', 'UserRole_OwnerRights', 'UserRole_Reports'];
+                                $.each(properties, function (i, p) {
+                                    if (d[p] === null || d[p] === undefined) return;
+                                    $.each(d[p], function (i, det) {
+                                        det.ID = -1;
+                                        det.ID_UserRole = null;
+                                    });
+                                });
+                                //
+                                //
+                                //
+                                var $rootScope = app.$rootScope();
+                                $rootScope.$emit("CallNewTabMethod", {
+                                    ID: app.getRandomInt(),
+                                    Caption: 'User Role (New)',
+                                    ID_ViewType: 2,
+                                    ViewID: 4192,
+                                    CurrentObject: d,
+                                    ImageName: ''
+                                });
+                            });
+                        }
+                    });
+                }
+            }
+
+
+            if (_.ID_ViewType === 2) {
+
+                VC.onUserRole_OwnerRights_RowUpdated = function (Grid, Detail) {
+                    var AllTypes = Enumerable.From(Detail).Where('$.ID_OwnerRightType === 1').ToArray();
+                    if (AllTypes.length > 0) {
+                        $.each(AllTypes, function (i, d) {
+                            d.Name = 'All Employees';
+                            d.OwnerType = '-';
+                        });
+                    }
+                };
+
+                VC.AddToolBarButtonOnGrid('UserRole_OwnerRights', {
+                    text: 'Add Departments',
+                    icon: 'mdi mdi-playlist-plus',
+                    onClick: function () {
+
+                        VC.BrowseDataSet('@Html.EncryptSQL("SELECT ID, Code, Name FROM tDepartment WHERE isActive = 1 AND ID NOT IN (@Departments)")', {
+                            ID_View: 'EC918422-BF0A-43C3-9734-CA28DE0522AA',
+                            params: {
+                                'Departments':Enumerable.From(_.CurrentObject.UserRole_OwnerRights).Where('$.ID_OwnerRightType === 3').Select('$.ID_CurrentObject').ToArray()
+                            }
+                        }).then(function (Departments) {
+                            if (_.CurrentObject.UserRole_OwnerRights === null) _.CurrentObject.UserRole_OwnerRights = [];
+                            $.each(Departments, function (i, d) {
+                                _.CurrentObject.UserRole_OwnerRights.push({
+                                    ID: -1,
+                                    ID_OwnerRightType: 3,
+                                    OwnerType: 'Department',
+                                    ID_CurrentObject: d.ID,
+                                    Name: d.Name,
+                                    isActive: true
+                                });
+                            })
+                        });
+
+                    }
+                });
+
+                VC.AddToolBarButtonOnGrid('UserRole_OwnerRights', {
+                    text: 'Add Employees',
+                    icon: 'mdi mdi-playlist-plus',
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL("SELECT ID, Code, Name FROM vEmployee WHERE isActive = 1 AND ID NOT IN (@Employees)")', {
+                            ID_View: 'EC918422-BF0A-43C3-9734-CA28DE0522AA',
+                            params: {
+                                'Employees': Enumerable.From(_.CurrentObject.UserRole_OwnerRights).Where('$.ID_OwnerRightType === 2').Select('$.ID_CurrentObject').ToArray()
+                            }
+                        }).then(function (Employees) {
+                            if (_.CurrentObject.UserRole_OwnerRights === null) _.CurrentObject.UserRole_OwnerRights = [];
+                            $.each(Employees, function (i, e) {
+                                _.CurrentObject.UserRole_OwnerRights.push({
+                                    ID: -1,
+                                    ID_OwnerRightType: 2,
+                                    OwnerType : 'Employee',
+                                    ID_CurrentObject: e.ID,
+                                    Name: e.Name,
+                                    isActive: true
+                                });
+                            })
+                        });
+
+                    }
+                });
+            }
+        }
+
+        return VC_UserRole;
+    });
+//</script>
+</text> , false )

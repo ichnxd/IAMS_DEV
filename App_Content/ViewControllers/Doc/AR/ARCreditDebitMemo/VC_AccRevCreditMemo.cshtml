@@ -1,0 +1,427 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+          "use strict"
+
+        var VC_AccRevCreditMemo = function () {
+
+            this.IsAllowNoDetails = false;
+            this.DocDetailPropertyName = 'AccRevCreditMemo_Details';
+        }
+
+        VC_AccRevCreditMemo.prototype = Object.create(baseModelHelper.prototype);
+
+        //Initialization Start
+        VC_AccRevCreditMemo.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+
+                VC_AccRevCreditMemo_ViewDetail_Init(_,VC);
+
+                VC.ValidationRules.push(function () {
+           
+                    if(_.CurrentObject.ID_MemoType != 1){
+                        if (_.CurrentObject.MemoAmount == 0 || _.CurrentObject.MemoAmount == null) {
+                            return {
+                                isValid: false,
+                                message: 'Memo Amount is required.'
+                            };
+                        }
+                    }else{
+                        _.CurrentObject.MemoAmount = 0;
+                    }
+
+                    return { isValid: true };
+                });
+
+                VC.$MemoAmount_IsDisabled = function () {
+                    if (_.CurrentObject.ID_MemoType !== 1) return true;
+                    return false;
+                }
+                _.CurrentObject.AccRevCreditMemo_Particulars
+            }
+
+            VC.AddButtonReport({
+                Name: 'Debit Memo Form',
+                ID_Report: 3140,
+                requireSingleObject: true
+            });
+
+            _.IsAddItemDisabled = true;
+            
+        }
+
+        var VC_AccRevCreditMemo_ViewDetail_Init = function(_,VC)
+        {
+
+            var fBrowseSalesOrder = function(){
+
+                if (VC.$scope.CurrentObject.ID_BusinessPartner == 0 || VC.$scope.CurrentObject.ID_BusinessPartner == null) {
+                    VC.MsgBox("Please Select Customer", "AR Credit Memo");
+                    return;
+                }
+                if (_.CurrentObject.ID_MemoType !== 1){
+                    VC.MsgBox("Memo Type must be Sales Return", "AR Credit Memo");
+                    return;
+                }
+    
+
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM vSalesReturn_Detail WHERE ID_FilingStatus = 2 AND ID NOT IN ( @ID_DocDetail ) AND ID_Customer = @ID_Customer ")';
+                var filterParam = {
+                    'ID_DocDetail': Enumerable.From(_.CurrentObject['AccRevCreditMemo_Details']).Select("$.ID_DocDetail").ToArray(),
+                    'ID_Customer': VC.$scope.CurrentObject.ID_BusinessPartner
+                };
+
+                var browseDataSetParam = 
+                {
+                    title: 'Browse Sales Return',
+                    ID_View: '21B7B4AD-6B4C-4D18-BAA8-02F4C11185D4',
+                    params: filterParam
+                };
+
+                var browseDataSetThen = function(selectedRecord){
+
+                    if (VC.$scope.CurrentObject['AccRevCreditMemo_Details'] == null) {
+                        VC.$scope.CurrentObject['AccRevCreditMemo_Details'] = [];
+                    } 
+
+                    $.each(selectedRecord, function (i, record) {
+
+                        var newDetail  =
+                        {
+                                ID: _.rndID()
+                            ,   ID_Item: record.ID_Item
+                            ,   Item: record.Description
+                            ,   UOM: record.UOM
+                            ,   ID_UOM: record.ID_UOM
+                            ,   Quantity: record.Quantity
+                            ,   UnitPrice: record.UnitPrice
+                            ,   VatAmt: record.VatAmt
+                            ,   VATAmount: record.VatAmt
+                            ,   GrossAmount: record.GrossAmount
+                            ,   TotalAmount: record.TotalAmount
+                            ,   IsFree: record.IsFree
+                            ,   ID_DocDetail: record.ID
+                            ,   ID_DocDetailParentModel: 5272 // ID_Model ni Sales Return
+                            ,   ReferenceNo: record.DocumentNo
+                        };
+
+                        VC.$timeout(function(){
+                            
+                            var countBeforePush = VC.$scope.CurrentObject['AccRevCreditMemo_Details'].length;
+
+                            VC.$scope.CurrentObject['AccRevCreditMemo_Details'].push(newDetail);
+
+                            if(countBeforePush == 0 ){
+
+                                VC.GetGridEditor('AccRevCreditMemo_Details').refresh();
+                            }         
+                        });
+                        
+                        _.Compute();
+
+                    });
+
+
+                        if(selectedRecord.length > 0){
+                            var dxMemo = VC.GetDxControl('ID_MemoType');
+                            if (dxMemo !== null) {
+                                dxMemo.option("disabled", true)
+                            }
+                        }
+                }
+
+                VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+            }
+
+            /**Temporary remove Add Item**/
+            var AccRevCreditMemo_Details_MenuOption  = VC.$scope.AccRevCreditMemo_Details_MenuOptions;
+            AccRevCreditMemo_Details_MenuOption.splice(0,1);
+            /**              END           **/
+
+            VC.AddToolBarButtonOnGrid('AccRevCreditMemo_Details', 
+            {
+                text: 'Browse Sales Return',
+                icon: 'mdi mdi-package-variant',
+                onClick: fBrowseSalesOrder          
+            }, true);
+
+            VC.AddToolBarButtonOnGrid('AccRevCreditMemo_Details', 
+            {
+                text: 'Browse Sales Invoice',
+                icon: 'mdi mdi-package-variant',
+                onClick: function(){
+
+                    if (_.CurrentObject.ID_BusinessPartner == 0 || _.CurrentObject.ID_BusinessPartner == null) {
+                        VC.MsgBox("Please Select Customer", "AR Credit Memo");
+                        return;
+                    }
+                    console.log(_.CurrentObject.ID_MemoType)
+                    if (_.CurrentObject.ID_MemoType < 2 || _.CurrentObject.ID_MemoType === null){
+                        VC.MsgBox("Memo Type must be Advanced Payment or Discount or System Fee", "AR Credit Memo");
+                        return;
+                    }
+
+                    var sql = '@Html.EncryptSQL(@"SELECT * FROM vSalesInvoice_Detail WHERE ID_FilingStatus = 2 AND ID NOT IN ( @ID_DocDetail ) AND ID_BusinessPartner = @ID_Customer AND ID NOT IN(SELECT ID_DocDetail FROM vAccRevCreditMemo_Detail WHERE ID_FilingStatus = 2 AND ID_DocDetailParentModel = 3249)")';
+
+                    VC.BrowseDataSet(sql, {
+                        title: 'Browse Sales Invoice',
+                        ID_View: '5299DA49-4189-4CD8-9F0F-70E4303095B8',
+                        params: {
+                            'ID_DocDetail': Enumerable.From(_.CurrentObject['AccRevCreditMemo_Details']).Select("$.ID_DocDetail").ToArray(),
+                            'ID_Customer': _.CurrentObject.ID_BusinessPartner
+                        }   
+                    }).then(function(data){
+
+                        if (_.CurrentObject['AccRevCreditMemo_Details'] == null) {
+                            _.CurrentObject['AccRevCreditMemo_Details'] = [];
+                        } 
+
+                        $.each(data, function (i, record) {
+
+                            var newDetail  =
+                            {
+                                    ID: _.rndID()
+                                ,   ID_Item: record.ID_Item
+                                ,   Item: record.Description
+                                ,   UOM: record.UOM
+                                ,   ID_UOM: record.ID_UOM
+                                ,   Quantity: record.Balance
+                                ,   UnitPrice: record.UnitPrice
+                                ,   VatAmt: record.VatAmt
+                                ,   VATAmount: record.VatAmt
+                                ,   GrossAmount: record.GrossAmount
+                                ,   TotalAmount: record.TotalAmount
+                                ,   IsFree: record.IsFree
+                                ,   ID_DocDetail: record.ID
+                                ,   ID_DocDetailParentModel: 3249 // ID_Model ni Sales Invoice
+                                ,   ReferenceNo: record.DocumentNo
+                            };
+
+                            VC.$timeout(function(){                            
+                                _.CurrentObject['AccRevCreditMemo_Details'].push(newDetail);  
+                                _.Compute();                  
+                            },100);                            
+                            
+                        });
+
+                        if(data.length > 0){
+                            var dxMemo = VC.GetDxControl('ID_MemoType');
+                            console.log(dxMemo)
+                            if (dxMemo !== null) {
+                                dxMemo.option("disabled", true)
+                            }
+                        }
+                    });
+                }          
+            }, true);
+
+            VC.AddToolBarButtonOnGrid('AccRevCreditMemo_Particulars', 
+            {
+                text: 'Add Particular Entry',
+                icon: 'mdi mdi-package-variant',
+                onClick: function(){
+
+                    var newDetail  =
+                        {
+                                ID: _.rndID()
+                            ,   Particular: ''
+                            ,   Amount: 0.00
+         
+                        };
+
+                        VC.$timeout(function(){
+                            
+                            VC.$scope.CurrentObject['AccRevCreditMemo_Particulars'].push(newDetail);
+
+                            VC.GetGridEditor('AccRevCreditMemo_Particulars').refresh();
+                                
+                        });
+                }          
+            }, true);
+
+        }
+        //Initialization End
+        VC_AccRevCreditMemo.prototype.onLoad = function () {
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+
+            if(_.CurrentObject.AccRevCreditMemo_Details == undefined || _.CurrentObject.AccRevCreditMemo_Details == null) _.CurrentObject.AccRevCreditMemo_Details = [];
+            if(_.CurrentObject.AccRevCreditMemo_Details.length > 0){
+                var dxMemo = VC.GetDxControl('ID_MemoType');
+                if (dxMemo !== null) {
+                    dxMemo.option("disabled", true)
+                }
+            }
+        }
+        //
+        VC_AccRevCreditMemo.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            if(e.value !== undefined && e.value !== null){
+                if(e.dataField == 'ID_MemoType'){
+                    if(e.value.ID == 2){
+                        _.IsAllowNoDetails = true;
+                    }
+                    else{
+                        _.IsAllowNoDetails = false;
+                    }
+                    
+                    if(e.value.ID == 1){
+                        _.CurrentObject.MemoAmount = 0.00;
+                    }
+                }         
+            }
+
+
+             this.Compute();
+        }
+        //
+
+
+        //Computation Start
+        VC_AccRevCreditMemo.prototype.Compute = function () {
+
+            baseModelHelper.prototype.Compute.call(this);
+
+            var _ = this;
+            var VC = this.VC;
+
+            var EWTAmt = 0.00;
+            var TotalVat = 0.00;
+            var TotalAmt = 0.00;
+            var Subtotal = 0.00;
+
+            if (_.CurrentObject.AccRevCreditMemo_Details == undefined) {
+                _.CurrentObject.AccRevCreditMemo_Details = []
+            }
+
+            if (_.CurrentObject.AccRevCreditMemo_Particulars == undefined) {
+                _.CurrentObject.AccRevCreditMemo_Particulars = []
+            }
+
+            if (_.CurrentObject.AccRevCreditMemo_Particulars == null) {
+                _.CurrentObject.AccRevCreditMemo_Particulars = []
+            }
+
+            if (this.ID_ViewType == 2) {
+
+                if (_.CurrentObject.AccRevCreditMemo_Details !== null) {
+
+                    $.each(_.CurrentObject.AccRevCreditMemo_Details, function (i, detail) {
+
+                        Subtotal += parseFloat(detail.GrossAmount);
+                        TotalAmt += parseFloat(detail.TotalAmount);
+                        TotalVat += parseFloat(detail.VATAmount);
+                    });
+                }
+
+                if (_.CurrentObject.AccRevCreditMemo_Particulars !== null) {
+
+                    $.each(_.CurrentObject.AccRevCreditMemo_Particulars, function (i, detail) {
+
+                        Subtotal += parseFloat(detail.Amount);
+                        TotalAmt += parseFloat(detail.Amount);
+
+                    });
+                }
+
+
+                _.CurrentObject.TotalVat = TotalVat;
+                _.CurrentObject.Subtotal = Subtotal + _.CurrentObject.MemoAmount;
+                _.CurrentObject.TotalAmount = TotalAmt + _.CurrentObject.MemoAmount;
+            }
+ 
+    
+        }
+        //Computation End
+
+        //
+        VC_AccRevCreditMemo.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            VC.AccRevCreditMemo_Details_onColumnChanged = function (e) {
+                _.Compute();
+            };
+
+            VC.AccRevCreditMemo_Particulars_onColumnChanged = function (e) {
+                _.Compute();
+            };
+        }
+        //
+
+
+        VC_AccRevCreditMemo.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_AccRevCreditMemo.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAccRevCreditMemoApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_AccRevCreditMemo.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAccRevCreditMemoCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_AccRevCreditMemo;
+
+    });
+//</script>
+</text> , false);
+
+
+

@@ -1,0 +1,142 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+   define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_InventorySummaryPerWarehouse = function () { }
+
+        VC_InventorySummaryPerWarehouse.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_InventorySummaryPerWarehouse.prototype.Init = function (VC) {
+          
+            baseModelHelper.prototype.Init.call(this, VC);
+            console.log("VCCCCCCCCC",VC);
+
+            VC.butNew.visible = false;
+            
+              VC.butSave.visible = false;
+               VC.butSaveClose.visible = false;
+            
+           
+            //VC.setFormReadOnly = "true";
+            
+        }
+        
+        var fRemoveOpenDetail = function(items){
+            
+            var index = -1;
+
+            items.forEach(function(detail,i) {
+                
+                if(detail.text == 'Open Detail'){
+
+                    index = i;
+                }
+            });
+
+            if(index > -1){
+
+                items.splice( index, 1 );
+            }
+        };
+
+
+
+        VC_InventorySummaryPerWarehouse.prototype.onInitDetailView = function (VC) {
+
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+
+            var _onContextMenuPreparing_InventorySummaryPerWarehouse_Details = VC.onContextMenuPreparing_InventorySummaryPerWarehouse_Details;
+
+            VC.onContextMenuPreparing_InventorySummaryPerWarehouse_Details = function (e) {
+                
+                fRemoveOpenDetail(e.items);
+
+                if(e.rowIndex > -1 ){
+
+                    var rowIndex = e.rowIndex;
+                    var record = VC.$scope.CurrentObject.InventorySummaryPerWarehouse_Details[rowIndex];
+                    for (i = -3; i < 0; i++) {
+                        e.items.shift({
+                            ID: i,
+                            Name: '(All)'
+                        });
+                     }
+
+                    e.items.unshift({
+
+                        text: "View " + record.DocumentNo,
+                        icon: "fa fa-th-list",
+                        onItemClick: function () {
+                            var rowIndex = e.rowIndex;
+                            var record = VC.$scope.CurrentObject.InventorySummaryPerWarehouse_Details[rowIndex];
+
+                            var fGetDetailViewID = function (){
+                                var JsDataService = app.$GetDataService();
+
+                                return JsDataService.pGetCurrentObject(
+                                '@Html.EncryptSQL("pGetDetailViewID")',
+                                    {
+                                        'ID_Model': record.ID_Model,
+                                        'DocumentNo': record.DocumentNo,
+                                    }
+                                );
+                            };
+
+                            fGetDetailViewID().then(function (result) {
+                                // var _ = this;
+                                console.log("result",result);
+                                var ID_ModelDetailView = result.ID_ModelDetailView;
+                                var ID_DocumentNo = result.ID_DocumentNo;
+
+                                result.__isMenuItemHide = true;
+
+                                VC.OpenOnNewWindowByID(
+                                    ID_ModelDetailView, 
+                                    ID_DocumentNo, 
+                                    {
+                                        fullScreen: false,
+                                        InitController: function (scope) {
+
+                                            scope.IsMenuItemHide = true;
+
+                                        },
+                                        IsEditingOnly: true,
+                                        Width: $(window).width() * 0.80,
+                                        shading: true
+                                    }
+                                ).then(function (s) {
+                                  
+                                });
+
+                                //currentObject.__isMenuItemHide = true;
+
+                                // var $rootScope = app.$rootScope();
+                                // $rootScope.$emit("CallNewTabMethod", {
+                                    
+                                //     ID: app.getRandomInt(),
+                                //     Caption: currentObject.DocumentNo + '',
+                                //     ID_ViewType: 2,
+                                //     ViewID: record.ID_ModelDetailView,
+                                //     CurrentObject: currentObject,
+                                //     ImageName: '',
+                                // });
+                            });
+                        }
+                    });       
+                }
+            };
+        }
+
+        return VC_InventorySummaryPerWarehouse;
+    });
+//</script>
+</text> , false)
+

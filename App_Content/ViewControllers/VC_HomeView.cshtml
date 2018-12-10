@@ -1,0 +1,20 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var VC_HomeView = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+        }
+
+        VC_HomeView.prototype = Object.create(BaseClass.prototype);
+        
+        return VC_HomeView;
+    });
+//</script>
+</text> , false )

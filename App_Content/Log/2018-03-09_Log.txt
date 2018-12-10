@@ -1,0 +1,66 @@
+3/9/2018 9:47:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 9:47:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 9:47:15 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (SectionB, 6250).
+The statement has been terminated..
+3/9/2018 9:47:15 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 9:47:16 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 9:52:41 AM: _pGetDataSet ---> Invalid column name 'isVisible'..
+3/9/2018 9:59:37 AM:  ---> An invalid parameter or option was specified for procedure 'mysp_CreateCustomer'..
+3/9/2018 10:04:02 AM:  ---> The record does not exist..
+3/9/2018 10:07:05 AM:  ---> The record does not exist..
+3/9/2018 10:11:39 AM:  ---> Maximum stored procedure, function, trigger, or view nesting level exceeded (limit 32)..
+3/9/2018 10:11:54 AM:  ---> Maximum stored procedure, function, trigger, or view nesting level exceeded (limit 32)..
+3/9/2018 10:12:32 AM:  ---> Maximum stored procedure, function, trigger, or view nesting level exceeded (limit 32)..
+3/9/2018 10:54:14 AM:  ---> Maximum stored procedure, function, trigger, or view nesting level exceeded (limit 32)..
+3/9/2018 11:13:28 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:13:50 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:15:55 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:16:32 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:47:55 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:49:08 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:49:12 AM:  ---> The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 11:49:13 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 11:49:14 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (Branch, 4142).
+The statement has been terminated..
+3/9/2018 11:49:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 4:49:47 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 4:50:10 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:06:24 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:06:34 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:06:38 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:20:47 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:21:32 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:21:36 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:21:50 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:38:35 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_UOM". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tUOM", column 'ID'.
+The statement has been terminated..
+3/9/2018 5:52:29 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tItem'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 5:52:36 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_DEV_20180305.dbo.tItem'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+3/9/2018 6:01:18 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..
+3/9/2018 6:01:22 PM:  ---> The INSERT statement conflicted with the FOREIGN KEY constraint "FKtItem_ID_ItemCategory". The conflict occurred in database "IAMS_DEV_20180305", table "dbo.tItemCategory", column 'ID'.
+The statement has been terminated..

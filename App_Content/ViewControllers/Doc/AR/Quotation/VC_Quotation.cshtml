@@ -1,0 +1,331 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/AR/VC_BaseAR");
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Quotation = function () {
+            this.DocDetailPropertyName = 'Quotation_Details';
+            this.ShowBillOfMaterials = true;
+        }
+
+
+        VC_Quotation.prototype = Object.create(baseModelHelper.prototype);
+  
+        VC_Quotation.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this,VC);
+            var _ = this
+
+             var currentObject = VC.$scope.CurrentObject;
+            
+            VC.GetFormItem('ID_BusinessPartner').validationRules = [{
+                type: 'custom',
+                validationCallback: function (options) {
+                    if (currentObject.IsWalkIn === false) {
+                        if (currentObject.ID_BusinessPartner == null || currentObject.ID_BusinessPartner == 0) {
+                            options.rule.message = 'Please specify Customer';
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }];
+        /*    var dxName = VC.GetFormItem('WalkInCustomer');
+            dxName.editorOptions.onItemClick = function(e) {
+             
+                VC.ConfirmBox('Do you want to open (' + e.itemData.Name + ')').then(function (result) {
+                    VC.Reload(e.itemData.ID_WalkInCustomer);
+                });
+                
+            };*/
+            VC.GetFormItem('WalkInCustomer').validationRules = [{
+                type: 'custom',
+                validationCallback: function (options) {
+                    if (currentObject.IsWalkIn === true) {
+                        if (currentObject.WalkInCustomer == null|| currentObject.WalkInCustomer == '') {
+                            options.rule.message = 'Please specify Walk in customer';
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }];
+      }
+
+        VC_Quotation.prototype.onLoad = function () {
+
+            var _ = this;
+            var VC = _.VC;
+       
+
+        }
+
+        VC_Quotation.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+			
+            VC.AddButtonReport({
+                Name: 'Quotation Form',
+                ID_Report: 14,
+                requireSingleObject: true
+            });
+			
+            if (_.ID_ViewType == 2) {
+
+                var currentObject = VC.$scope.CurrentObject;
+
+                VC.ValidationRules.push(function () {
+
+                        var brokenRules = [];
+
+                  //      if (currentObject.ID < 1){
+                   //         if ((currentObject.ID_BusinessPartner == undefined || currentObject.ID_BusinessPartner === 0 ) && ( currentObject.WalkInCustomer == undefined || currentObject.WalkInCustomer === 0)) {
+                            
+                      //          brokenRules.push('Please specify Customer');
+                       //     }
+                     //   } 
+                
+                        if (brokenRules.length > 0) {
+                            return {
+                                isValid: false,
+                                brokenRules: brokenRules
+                            }
+                        }
+
+                        return { isValid: true };
+
+                    });                   
+
+                }
+
+                VC.AddToolbarButton({
+                    text: 'Create Sales Order',
+                    IsDisabled: function () {
+
+
+                        if (_.ID_ViewType == 2) {
+                            return (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3) || VC.IsNew();
+                        } else {
+                               
+                            var itemsSelected = VC.Grid.getSelectedRowsData();
+
+                            var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+
+                            var selected_ID_BusinessPartners = Enumerable
+                                .From(itemsSelected)
+                                .Select("$.ID_BusinessPartner")
+                                .Distinct()
+                                .ToArray();
+
+                            if (selected_ID_BusinessPartners.length !== 1) return true;
+
+                            if (itemsSelected.length === 0) return true;
+
+                            if (NotApprovedDocs.length > 0) return true;
+
+                            return false;
+                        }
+
+                        return false;
+                    },
+                    onItemClick: function () {
+
+                        if (_.ID_ViewType === 1) {
+
+                            var itemsSelected = _.Grid.getSelectedRowsData();
+
+                            AcctHelper.CreateSalesOrder(itemsSelected);
+
+
+                        } else if (_.ID_ViewType === 2) {
+
+                            var ID_FilingStatus = _.CurrentObject.ID_FilingStatus;
+                            var DocumentCode = _.CurrentObject.DocumentNo;
+
+                            if (ID_FilingStatus !== 2) {
+
+                                VC.MsgBox( DocumentCode + ' must be approve first.', 'Generating Sales Order Invalid');
+                                return;
+                            }
+                          /*  if (_.CurrentObject.WalkInCustomer !== null && _.CurrentObject.WalkInCustomer !== "" )
+                            {
+                                console.log(_.CurrentObject.WalkInCustomer !== null , _.CurrentObject.WalkInCustomer !== "") 
+                                VC.MsgBox('Walk-In Customer must be save first to module Customers','Generating Sales Order Invalid')
+                                return;
+                                
+                            }*/
+
+                            AcctHelper.CreateSalesOrder([_.CurrentObject]);
+                        }
+                    }
+
+
+
+                });
+        
+                VC_Quotation.prototype.Approve = function (Items) {
+
+                    var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+
+                    JsDataService.ExecSQLProc(
+                        '@Html.EncryptSQL("pQuotationApprove")',
+                        {
+                            'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                            'ID_CurrentUser': '#ID_CurrentUser'
+                        }
+                    ).then(function (response) {
+                        defer.resolve();
+                    }, function () {
+                        defer.reject();
+                    });
+
+                    return defer.promise;
+                }
+
+         }
+
+        VC_Quotation.prototype.PerformCancel = function (items) {
+            var _ = this;
+            var VC = this.VC;
+
+
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            var msg = "WARNING: Cancellation of " + Documents + " may effect with the following documents: <br>" ;
+
+
+            VC.ConfirmBox(msg, VC.ModelName).then(function () {
+                if (_.Cancel !== undefined) {
+                    _.Cancel(items).then(function () {
+                        VC.ToastSuccess(Documents + ' Successfully Cancelled');
+                        if (_.ID_ViewType == 2) {
+                            _.VC.setFormReadOnly(true);
+                            _.VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    });
+                }
+            });
+        };
+
+        VC_Quotation.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pQuotationCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        VC_Quotation.prototype.onCurrentObjectChanged = function (e) {
+
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+            var VC = this.VC;
+
+            var currentObject = VC.$scope.CurrentObject;
+        
+            /* TODO Just to debug this field IsWalkIn bit ung datatype pero ang return is 0 or null */    
+                if (currentObject.IsWalkIn == 0 || currentObject.IsWalkIn == null){
+                     currentObject.IsWalkIn = false;
+                }
+            /*TODO End*/
+                if (currentObject.ID_BusinessPartner == 0 ){
+                     currentObject.ID_BusinessPartner = null;
+                }
+                if (currentObject.WalkInCustomer == '' ){
+                     currentObject.WalkInCustomer = null;
+                }
+                
+                if (e.dataField === 'IsWalkIn')
+                {
+                    VC.$WalkInCustomer_IsDisabled = function () {
+                    
+                        if (currentObject.IsWalkIn === true){
+                            
+                            currentObject.ID_BusinessPartner = null;
+                            return true;
+                        } 
+                        return false;
+                    }
+
+                    VC.$ID_BusinessPartner_IsDisabled = function () {
+                    
+                        if (currentObject.IsWalkIn === false){
+
+                            currentObject.WalkInCustomer = null;
+                            return true;
+                        } 
+                        return false;
+                    }
+
+
+                }
+           
+          //  VC.$WalkInCustomer_IsDisabled = function () {
+        
+              //  var IsDisabled = false;
+                
+            //    if (currentObject.IsWalkIn === true){
+
+                //    IsDisabled = true;
+                 //   currentObject.ID_BusinessPartner = null;
+            //    } 
+
+              //  return IsDisabled;
+        //    }
+
+        //    VC.$ID_BusinessPartner_IsDisabled = function () {
+
+          //      var IsDisabled = false
+
+          //      if (currentObject.IsWalkIn === false){
+
+            //        IsDisabled = true;
+            //        currentObject.WalkInCustomer = null;
+           //     } 
+
+            //    return IsDisabled;
+            //}
+        }
+
+
+        return VC_Quotation;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+
+
+
+
+
+

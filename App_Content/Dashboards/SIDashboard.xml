@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Sales Invoice" Alignment="Left" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="http://192.168.1.8:8001/msmdpump.dll_IAMSAnalytics_AccountsReceivable" ConnectionString="provider=msolap;data source=http://192.168.1.8:8001/msmdpump.dll;initial catalog=IAMSAnalytics;timeout=1200;Cube Name=AccountsReceivable;" />
+  </DataSources>
+  <Items>
+    <Grid ComponentName="gridDashboardItem1" Name="Grid 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem1] In ('[DimFilingStatus].[Name].&amp;[Cancelled]', '[DimFilingStatus].[Name].&amp;[Filed]')">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Measure DataMember="[Measures].[SI TotalAmount]" DefaultId="DataItem2" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem1" />
+        <Measure DataMember="[Measures].[SI Count]" DefaultId="DataItem0" />
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" DefaultId="DataItem3" />
+        <Measure DataMember="[Measures].[SI Balance]" DefaultId="DataItem4" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="Customer" Weight="173.78190301847761">
+          <Dimension DefaultId="DataItem3" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Count" Weight="77.185047351291928">
+          <Measure DefaultId="DataItem0" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="55.924495386265406">
+          <Measure DefaultId="DataItem2" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Balance" Weight="55.462309473982216">
+          <Measure DefaultId="DataItem4" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="51.764822175716738">
+          <Dimension DefaultId="DataItem1" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem2" Name="Grid 2" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimSalesInvoice].[SI No].[SI No]" DefaultId="DataItem2" />
+        <Dimension DataMember="[DimSalesInvoice].[Reference No].[Reference No]" DefaultId="DataItem3" />
+        <Measure DataMember="[Measures].[SI Balance]" DefaultId="DataItem1" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="SI No." Weight="74.694347057167278">
+          <Dimension DefaultId="DataItem2" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="Ref No." Weight="84.36067432338892">
+          <Dimension DefaultId="DataItem3" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Balance" Weight="76.4518611055712">
+          <Measure DefaultId="DataItem1" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions IgnoreMasterFilters="true" MasterFilterMode="Multiple" />
+      <DataItems>
+        <Measure DataMember="[Measures].[SI TotalAmount]" DefaultId="DataItem1" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem0" />
+      </DataItems>
+      <Arguments>
+        <Argument DefaultId="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" />
+          <Series>
+            <Simple Name="Total Amount">
+              <Value DefaultId="DataItem1" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <ChartLegend IsInsidePosition="true" InsidePosition="TopRightVertical" />
+    </Chart>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="68.186753528773068">
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="45.692883895131089" />
+        <LayoutItem DashboardItem="gridDashboardItem1" Weight="54.307116104868911" />
+      </LayoutGroup>
+      <LayoutItem DashboardItem="gridDashboardItem2" Weight="31.813246471226929" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

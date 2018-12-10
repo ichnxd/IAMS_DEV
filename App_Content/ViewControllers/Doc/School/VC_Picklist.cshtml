@@ -1,0 +1,76 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Picklist = function () { }
+
+        VC_Picklist.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Picklist.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+        
+
+        VC_Picklist.prototype.onInitDetailView = function (VC) {
+        
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+           var _ = this;
+
+           var fBrowseStudents = function(){
+
+				var query = '@Html.EncryptSQL(@"SELECT * FROM dbo.tStudent WHERE ID NOT IN (@ID_Students) ")';
+
+				var ID_Students = AcctHelper.fGetSelectedObjectValuesNumeric(VC.$scope.CurrentObject.Teacher_Students,'ID_Student');
+
+                console.log(ID_Students);
+
+                VC.BrowseDataSet(query, {
+                    title: 'Select Students',
+                    ID_View: '243D8E5B-A04F-4A59-BA2C-751D6D4DBE8C',
+                    width: '80%',
+                    params: {
+
+                        'ID_Students': ID_Students,
+                    }
+                }).then(function (selectedItems) {
+
+                    selectedItems.forEach(function(selectedItem) {
+                                        
+                        var newItem = {
+
+                            ID_Student: selectedItem.ID,
+                            Student:  selectedItem.Name
+                        };
+
+                        VC.$scope.CurrentObject.Teacher_Students.push(newItem);
+                    });
+
+                });
+            }
+
+            var btnAddItem = {
+
+                text: 'Add Student',
+                onClick: function(e){
+                    fBrowseStudents();
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('Teacher_Students',btnAddItem);
+
+            
+        }
+
+        return VC_Picklist;
+    });
+//</script>
+</text> , false)
+

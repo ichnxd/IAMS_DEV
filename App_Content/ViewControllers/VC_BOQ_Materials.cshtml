@@ -1,0 +1,89 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+   Layout = null;
+   //var BaseVCUrl = null; //Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        var VC_BOQ_Materials = function () {
+            //this.DocDetailPropertyName = "Contacts";
+        }
+       
+        VC_BOQ_Materials.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BOQ_Materials.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            
+        }
+
+        VC_BOQ_Materials.prototype.onCurrentObjectChanged = function (e) {
+            var VC = this.VC;
+            var _ = this;
+            var CurrentObject = VC.$scope.CurrentObject;
+            if(e.dataField == "ID_Item"){
+                if(e.value !== null)
+                {
+                     if(e.value.Code !== null && e.value.Code !== undefined)
+                        {
+                           
+                            //
+                            //
+                            _.CurrentObject.ID_ItemCategory = e.value.ID_ItemCategory;
+                            _.CurrentObject.ItemCategory = e.value.ItemCategory;
+                            _.CurrentObject.ID_ItemType = e.value.ID_ItemType;
+                            _.CurrentObject.ItemType = e.value.ItemType;
+                            _.CurrentObject.ID_ItemSubCategory = e.value.ID_ItemSubCategory;
+                            _.CurrentObject.SubCategory = e.value.SubCategory;
+                            _.CurrentObject.Name = e.value.Name;
+                            _.CurrentObject.PartNo = e.value.PartNo;
+                            _.CurrentObject.ID_Brand = e.value.ID_Brand;
+                            _.CurrentObject.Brand = e.value.Brand;
+                            _.CurrentObject.ModelCode = e.value.ModelCode;
+                            _.CurrentObject.Code = e.value.Code;
+                            _.CurrentObject.ID_UOM = e.value.UOM;
+                            _.CurrentObject.UOM = e.value.PrimaryUOM;
+                        }
+                }
+                else
+                {
+                            _.CurrentObject.ID_ItemCategory = null;
+                            _.CurrentObject.ItemCategory = null;
+                            _.CurrentObject.ID_ItemType = null;
+                            _.CurrentObject.ItemType = null;
+                            _.CurrentObject.ID_ItemSubCategory = null;
+                            _.CurrentObject.SubCategory = null;
+                            _.CurrentObject.Name = null;
+                            _.CurrentObject.PartNo = null;
+                            _.CurrentObject.ID_Brand = null;
+                            _.CurrentObject.Brand = null;
+                            _.CurrentObject.ModelCode = null;
+                            _.CurrentObject.Code = null;
+                            _.CurrentObject.ID_UOM = null
+                            _.CurrentObject.UOM = null;
+
+                }
+                
+            }
+            // if ( CurrentObject.ID_FilingStatus === 2){
+            //     if (e.dataField === "isTemplate") {
+            //         if (e.value === true) {
+            //             VC.ConfirmBox("Do you want to save as Template?").then(function () {
+            //                 var JsDataService = app.$GetDataService();
+            //                 JsDataService.ExecSQLProc('@Html.EncryptSQL("pBOMSaveAsTemplate")', {
+            //                     ID_BOM: CurrentObject.ID
+            //                 }).then(function () {
+            //                     VC.Reload();
+            //                 });
+            //             });
+            //         }
+            //     }
+            // }
+        };
+
+        return VC_BOQ_Materials;
+    });
+//</script>
+</text> , false )

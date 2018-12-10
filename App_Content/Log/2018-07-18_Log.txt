@@ -1,0 +1,2 @@
+7/18/2018 11:13:18 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180710_10396_DEV.dbo.tIMFRequest_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

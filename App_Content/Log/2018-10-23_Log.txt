@@ -1,0 +1,2 @@
+10/23/2018 9:32:25 AM: pCashAdvanceRequestCancel ---> Cash Advance has already reference to VP-05680.
+10/23/2018 9:32:45 AM: pCashAdvanceRequestCancel ---> Cash Advance has already reference to VP-05680.

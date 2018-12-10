@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Sales Order" Alignment="Left" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="http://192.168.1.8:8001/msmdpump.dll_IAMSAnalytics_AccountsReceivable" ConnectionString="provider=msolap;data source=http://192.168.1.8:8001/msmdpump.dll;initial catalog=IAMSAnalytics;timeout=1200;Cube Name=AccountsReceivable;" />
+  </DataSources>
+  <Items>
+    <Treemap ComponentName="treemapDashboardItem1" Name="Treemap 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem2] = '[DimFilingStatus].[Name].&amp;[Cancelled]'" TilesLabelContentType="ArgumentAndValue" GroupsLabelContentType="None">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimAccountExecutive].[Department].[Department]" DefaultId="DataItem0" />
+        <Measure DataMember="[Measures].[SO Count]" DefaultId="DataItem1" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem2" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension DefaultId="DataItem2" />
+      </HiddenDimensions>
+      <Values>
+        <Value DefaultId="DataItem1" />
+      </Values>
+      <Arguments>
+        <Argument DefaultId="DataItem0" />
+      </Arguments>
+    </Treemap>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem3] = '[DimFilingStatus].[Name].&amp;[Cancelled]'">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimAccountExecutive].[Name].[Name]" SortOrder="Descending" SortByMeasure="DataItem1" DefaultId="DataItem2" />
+        <Measure DataMember="[Measures].[SO TotalAmount]" DefaultId="DataItem1" />
+        <Measure DataMember="[Measures].[SO Count]" DefaultId="DataItem0" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem3" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension DefaultId="DataItem3" />
+      </HiddenDimensions>
+      <Arguments>
+        <Argument DefaultId="DataItem2" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" />
+          <SecondaryAxisY TitleVisible="false" />
+          <Series>
+            <Simple>
+              <Value DefaultId="DataItem1" />
+            </Simple>
+            <Simple PlotOnSecondaryAxis="true" ShowPointMarkers="true" SeriesType="Spline">
+              <Value DefaultId="DataItem0" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <ChartLegend IsInsidePosition="true" />
+      <AxisX TitleVisible="true" Title="Account Executive" LimitVisiblePoints="true" VisiblePointsCount="5" />
+    </Chart>
+    <Grid ComponentName="gridDashboardItem1" Name="Grid 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="Not [DataItem5] = '[DimFilingStatus].[Name].&amp;[Cancelled]'">
+      <DataItems>
+        <Dimension DataMember="[DimSalesOder].[SONo].[SONo]" DefaultId="DataItem0" />
+        <Dimension DataMember="[DimSalesOder].[SO Date].[SO Date]" DefaultId="DataItem1" />
+        <Dimension DataMember="[DimSalesOder].[PurchaseOrderNo].[PurchaseOrderNo]" DefaultId="DataItem2" />
+        <Measure DataMember="[Measures].[SO TotalAmount]" DefaultId="DataItem4" />
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" DefaultId="DataItem3" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" DefaultId="DataItem5" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension DefaultId="DataItem5" />
+      </HiddenDimensions>
+      <GridColumns>
+        <GridDimensionColumn Name="SO No." Weight="51.044350523968639">
+          <Dimension DefaultId="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Weight="52.591149024694964">
+          <Dimension DefaultId="DataItem1" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="Customer" Weight="85.8473167903109">
+          <Dimension DefaultId="DataItem3" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="PO No" Weight="60.325141528326576">
+          <Dimension DefaultId="DataItem2" />
+          <Totals>
+            <Total />
+          </Totals>
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="66.512335531231869">
+          <Measure DefaultId="DataItem4" />
+          <Totals>
+            <Total Type="Sum" />
+          </Totals>
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup Orientation="Vertical">
+      <LayoutItem DashboardItem="treemapDashboardItem1" Weight="38.675958188153309" />
+      <LayoutGroup Weight="61.324041811846691">
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="52.877307274701408" />
+        <LayoutItem DashboardItem="gridDashboardItem1" Weight="47.122692725298592" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

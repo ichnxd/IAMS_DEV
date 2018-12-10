@@ -1,0 +1,120 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Teacher = function () { }
+
+        VC_Teacher.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Teacher.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+        
+
+        VC_Teacher.prototype.onInitDetailView = function (VC) {
+        
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+           var _ = this;
+
+           var fBrowseStudents = function(){
+
+				var query = '@Html.EncryptSQL(@"SELECT * FROM dbo.tStudent WHERE ID NOT IN (@ID_Students) ")';
+
+				var ID_Students = AcctHelper.fGetSelectedObjectValuesNumeric(VC.$scope.CurrentObject.Teacher_Students,'ID_Student');
+
+                console.log(ID_Students);
+
+                VC.BrowseDataSet(query, {
+                    title: 'Select Students',
+                    ID_View: '243D8E5B-A04F-4A59-BA2C-751D6D4DBE8C',
+                    width: '80%',
+                    params: {
+
+                        'ID_Students': ID_Students,
+                    }
+                }).then(function (selectedItems) {
+
+                    selectedItems.forEach(function(selectedItem) {
+                                        
+                        var newItem = {
+
+                            ID_Student: selectedItem.ID,
+                            Student:  selectedItem.Name
+                        };
+
+                        VC.$scope.CurrentObject.Teacher_Students.push(newItem);
+                    });
+
+                });
+            }
+
+            var btnAddItem = {
+
+                text: 'Add Student',
+                onClick: function(e){
+                    fBrowseStudents();
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('Teacher_Students',btnAddItem);
+
+
+           var fBrowseSubjects = function(){
+
+				var query = '@Html.EncryptSQL(@"SELECT * FROM dbo.tSubject WHERE ID NOT IN (@ID_Subjects) ")';
+
+				var ID_Subjects = AcctHelper.fGetSelectedObjectValuesNumeric(VC.$scope.CurrentObject.Teacher_Subjects,'ID_Subject');
+
+                console.log(ID_Subjects);
+
+                VC.BrowseDataSet(query, {
+                    title: 'Select Subject',
+                    ID_View: '9455E3DF-4C2E-41DA-B297-FB19A96077D9',
+                    width: '80%',
+                    params: {
+
+                        'ID_Subjects': ID_Subjects,
+                    }
+                }).then(function (selectedItems) {
+
+                    selectedItems.forEach(function(selectedItem) {
+                                        
+                        var newItem = {
+
+                            ID_Subject: selectedItem.ID,
+                            Subject:  selectedItem.Name
+                        };
+
+                        VC.$scope.CurrentObject.Teacher_Subjects.push(newItem);
+                    });
+
+                });
+            }
+
+            var btnAddItem = {
+
+                text: 'Add Subject',
+                onClick: function(e){
+
+                    fBrowseSubjects();
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('Teacher_Subjects',btnAddItem);
+
+            
+        }
+
+        return VC_Teacher;
+    });
+//</script>
+</text> , false)
+

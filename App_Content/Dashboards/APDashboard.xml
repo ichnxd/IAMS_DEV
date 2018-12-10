@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-PH">
+  <Title Visible="false" Text="Purchases Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="dsSource" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Pivot ComponentName="pivotDashboardItem1" Name="Pivot 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="Descending" SortByMeasure="DataItem5" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" SortOrder="None" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimPurchaseOrder].[PONumber].[PONumber]" SortOrder="None" UniqueName="DataItem2" />
+        <Dimension DataMember="[DimItem].[ItemName].[ItemName]" SortOrder="None" UniqueName="DataItem3" />
+        <Measure DataMember="[Measures].[Quantity]" UniqueName="DataItem4" />
+        <Measure DataMember="[Measures].[Line Total]" Name="Total Amount" UniqueName="DataItem5">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[Vat Amt]" Name="VAT Amt" UniqueName="DataItem6">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[Balance]" UniqueName="DataItem7" />
+        <Measure DataMember="[Measures].[Unit Price]" UniqueName="DataItem8">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <FormatRules>
+        <PivotItemFormatRule Name="FormatRule 1" DataItem="DataItem8">
+          <FormatConditionBar>
+            <NegativeStyleSettings PredefinedColor="PaleRed" />
+            <StyleSettings PredefinedColor="PaleRed" />
+            <BarOptions />
+          </FormatConditionBar>
+          <PivotItemFormatRuleLevel />
+        </PivotItemFormatRule>
+      </FormatRules>
+      <Rows>
+        <Row UniqueName="DataItem0" />
+        <Row UniqueName="DataItem1" />
+        <Row UniqueName="DataItem2" />
+        <Row UniqueName="DataItem3" />
+      </Rows>
+      <Values>
+        <Value UniqueName="DataItem4" />
+        <Value UniqueName="DataItem8" />
+        <Value UniqueName="DataItem6" />
+        <Value UniqueName="DataItem5" />
+        <Value UniqueName="DataItem7" />
+      </Values>
+    </Pivot>
+    <Pie ComponentName="pieDashboardItem2" Name="Pies 2" ShowCaption="false" DataSource="dashboardOlapDataSource1" PieType="Donut" LabelContentType="ArgumentValueAndPercent" ContentLineCount="1">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" Name=" " UniqueName="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Values>
+        <Value UniqueName="DataItem1" />
+      </Values>
+    </Pie>
+    <Chart ComponentName="chartDashboardItem1" Name="Top 5 Supplier by Purchase Amount" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="None" ColoringMode="Hue" TopNEnabled="true" TopNMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+    </Chart>
+    <Chart ComponentName="chartDashboardItem2" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimItem].[ItemName].[ItemName]" SortOrder="None" TopNEnabled="true" TopNMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Line Total]" UniqueName="DataItem1" />
+      </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension UniqueName="DataItem0" />
+      </SeriesDimensions>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+    </Chart>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup Orientation="Vertical">
+      <LayoutGroup Weight="52.9320987654321">
+        <LayoutItem DashboardItem="pieDashboardItem2" Weight="49.946751863684774" />
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="50.053248136315226" />
+      </LayoutGroup>
+      <LayoutGroup Weight="47.0679012345679">
+        <LayoutItem DashboardItem="pivotDashboardItem1" Weight="50.053248136315226" />
+        <LayoutItem DashboardItem="chartDashboardItem2" Weight="49.946751863684774" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

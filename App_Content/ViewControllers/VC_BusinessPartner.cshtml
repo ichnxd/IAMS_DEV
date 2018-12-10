@@ -1,0 +1,176 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_BusinessPartner = function () {
+            this.DocDetailPropertyName = "Contacts";
+        }
+        
+        VC_BusinessPartner.prototype = Object.create(baseDoc.prototype);
+          
+        VC_BusinessPartner.prototype.Init = function (VC) {
+            baseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+            VC.$ID_Currency_IsDisabled = function () {
+                if (_.CurrentObject.IsImported === true) return true;
+                return false;
+            }
+
+            if(_.ID_ViewType == 2){
+       
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+              
+                    var hasDefault = false;
+                   if(_.CurrentObject.Contacts == null || _.CurrentObject.Contacts == undefined) _.CurrentObject.Contacts = [];
+                   if(_.CurrentObject.Contacts.length == 0){
+                        hasDefault = true;
+                    }
+                    $.each(_.CurrentObject.Contacts, function (i, d) {
+                            if(d.IsDefault == true){
+                                hasDefault = true;
+                          
+                            }
+                    });
+
+                    if(hasDefault == false){
+                        brokenRules.push('Select default contact');
+                    }
+                                
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return {  isValid: true }
+                });
+
+
+                VC.Contacts_onColumnChanged = function(e){
+                    var Item = e.key;
+                    if(e.dataField === 'IsDefault'){
+                        if(Item.IsDefault == false){
+                            return;
+                        }
+
+                        $.each(_.CurrentObject[_.DocDetailPropertyName], function(index, value){
+                            if(e.rowIndex != index){
+                                value.IsDefault = false;
+                            }
+                        });
+                    }
+
+                }
+				
+            }
+  if(_.ID_ViewType == 2){
+
+
+             VC.AddToolBarButtonOnGrid('BusinessPartner_Branchs', {
+                     text: 'Add Branch',
+                     icon: 'mdi mdi-package-variant',
+                     onClick: function(){
+                     //   var SQL = '@Html.EncryptSQL("SELECT * FROM twarehouse WHERE isBranch = 1 and isActive = 1")';
+                     //    VC.BrowseDataSet(SQL, {
+                     //        text : 'Select Branch',
+                     //        ID_View : '5968044A-B514-4D0B-872D-9A4057EF0EBP'
+                     //    }).then(function(data){
+                     //        if ( _.CurrentObject.BusinessPartner_Branchs == undefined) _.CurrentObject.BusinessPartner_Branchs = [];
+                     //      $.each(data,function(i,d){
+                     //          _.CurrentObject.BusinessPartner_Branchs.push({
+                     //              ID_Warehouse : d.ID,
+                     //              Warehouse : d.Name,
+                     //              isActive : true,
+                     //              Name: d.Name,
+                     //              Address : d.Address
+                     //          });
+
+                     //      })
+                     //        
+                     //    });
+                     _.CurrentObject.BusinessPartner_Branchs.push({
+                         ID_Warehouse : -1,
+                         Warehouse : '',
+                         isActive : 1,
+                         Name : '',
+                         Address : ''
+
+                     })
+
+                     }
+                 }, true);
+              }
+        }
+
+        VC_BusinessPartner.prototype.onInitDetailView = function (VC) {
+            baseDoc.prototype.onInitDetailView(this, VC);
+            var dxName = VC.GetFormItem('Name');
+            dxName.editorOptions.onItemClick = function (e) {
+
+                VC.ConfirmBox('Do you want to open (' + e.itemData.Name + ')').then(function (result) {
+                    VC.Reload(e.itemData.ID);
+                });
+
+            }
+
+            if (VC.$scope.$params !== undefined && VC.$scope.$params !== null) {
+
+                var ID_Model_Caller = VC.$scope.$params.ID_Model_Caller;
+                var APModels = [65, 2142, 2147, 2149, 2157, 2159, 3191, 5269, 8288, 2141];
+                var ARModels = [2165, 2167, 2168, 3212, 3249, 5272, 5281, 8285, 2141, 8307, 8329];
+                
+                if (APModels.includes(ID_Model_Caller)) VC.$scope.$params.IsSupplier = true;
+                if (ARModels.includes(ID_Model_Caller)) VC.$scope.$params.IsCustomer = true;
+                
+                if (VC.$scope.$params.IsSupplier == true) {
+                    VC.$scope.DisplayName = 'Supplier';
+                    VC.$scope.CurrentObject.IsSupplier = true;
+                }
+
+                //console.log('tBusinessPartner', VC.$scope.$params);
+                if (VC.$scope.$params.IsCustomer == true) {
+                    VC.$scope.DisplayName = 'Customer';
+                    VC.$scope.CurrentObject.IsCustomer = true;
+                }
+
+                if (VC.$scope.$Tab !== undefined) {
+                    if (VC.$scope.CurrentObject.ID > -1) {
+                        VC.$scope.$Tab.title = VC.$scope.DisplayName + ' (' + VC.$scope.CurrentObject[VC.DisplayProperty] + ')';;
+                    } else {
+                        VC.$scope.$Tab.title = VC.$scope.DisplayName + '(New)';
+                    }
+                    
+                }
+                
+            }
+        }
+
+        VC_BusinessPartner.prototype.onLoad = function () {
+            baseDoc.prototype.onLoad(this);
+        }
+
+
+        VC_BusinessPartner.prototype.onCurrentObjectSaved = function(CurrentObject){
+
+            var _ = this;
+            var VC = _.VC;
+
+            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pSaveBusinessPartnerToCustomer")', {
+                ID_BusinessPartner: _.CurrentObject.ID
+            });
+                                                
+        }
+
+        return VC_BusinessPartner;
+    });
+//</script>
+</text> , false )

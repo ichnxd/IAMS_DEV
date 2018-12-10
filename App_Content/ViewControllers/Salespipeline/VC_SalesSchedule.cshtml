@@ -1,0 +1,571 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','@BaseVCUrl'], function (app, Base) {
+
+        var VC_SalesSchedule = function () { 
+            this.DocDetailPropertyName = 'SalesSchedule_Details'
+        }
+
+        VC_SalesSchedule.UpdateStatus = function (schedule, ID_Status) {
+            return app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdateSalesSchedule")', {
+                ID_Status: ID_Status,
+                ID: schedule.ID
+            });
+        }
+
+        VC_SalesSchedule.FOR_CONFIRMATION = '#00c6c6';
+        VC_SalesSchedule.CONFIRMED = '#008111';
+        VC_SalesSchedule.VISITED = '#001b9d';
+        VC_SalesSchedule.CANCELLED = '#ff0000';
+        VC_SalesSchedule.RESCHEDULED = '#c6a800';
+        
+        VC_SalesSchedule.prototype = Object.create(Base.prototype);
+
+        VC_SalesSchedule.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+             
+            var _ = this;
+
+            if (this.ID_ViewType === 2) {
+
+                VC.AddToolbarButton({
+                    text: 'Update Status',
+                    icon: 'green mdi mdi-calendar-check',
+                    IsDisabled: function () {
+                        if (VC.$scope.CurrentObject.ID === -1) return true;
+                        return false;
+                    },
+                    items: [
+                        {
+                            id: 11,
+                            text: 'For Confirmation',
+                            icon: '',
+                            onItemClick: function () {
+                                VC_SalesSchedule.UpdateStatus(VC.$scope.CurrentObject, 1).then(function () {
+                                    VC.ToastSuccess('For Confirmation status updated Successfull');
+                                    VC.Reload();
+                                });
+                            }
+                        },
+                        {
+                            id: 12,
+                            text: 'Confirmed',
+                            icon: '',
+                            onItemClick: function () {
+                                VC_SalesSchedule.UpdateStatus(VC.$scope.CurrentObject, 2).then(function () {
+                                    VC.ToastSuccess('Confirmed status updated Successfull');
+                                    VC.Reload();
+                                });;
+                            }
+                        },
+                        {
+                            id: 13,
+                            text: 'Visited(Done)',
+                            icon: '',
+                            onItemClick: function () {
+                                VC_SalesSchedule.UpdateStatus(VC.$scope.CurrentObject, 3).then(function () {
+                                    VC.ToastSuccess('Visited(Done) status updated Successfull');
+                                    VC.Reload();
+                                });
+                            }
+                        },
+                        {
+                            id: 14,
+                            text: 'Cancelled',
+                            icon: '',
+                            onItemClick: function () {
+                                VC_SalesSchedule.UpdateStatus(VC.$scope.CurrentObject, 4).then(function () {
+                                    VC.ToastSuccess('Cancelled status updated Successfull');
+                                    VC.Reload();
+                                });
+                            }
+                        },
+                        {
+                            id: 15,
+                            text: 'Rescheduled',
+                            icon: '',
+                            onItemClick: function () {
+                                VC_SalesSchedule.UpdateStatus(VC.$scope.CurrentObject, 5).then(function () {
+                                    VC.ToastSuccess('Rescheduled status updated Successfull');
+                                    VC.Reload();
+                                });
+                            }
+                        }
+                    ]
+                });
+       
+                VC.AddToolbarButton({
+                    text: 'Approve Cash Advance',
+                    icon: 'green mdi mdi-asterisk',
+                    IsDisabled: function () {     
+                        if(_.CurrentObject == -1){
+                            //console.log('new')
+                            return true;
+                        }
+                        if(!(_.CurrentObject.ID_CashAdvanceRequest > 0)){
+                            //console.log('ca',_.CurrentObject)
+                            return true;
+                        }               
+                        if(_.CurrentObject.ID_CAStatus !== 1 && _.CurrentObject.ID_CAStatus !== 7){
+                            //console.log('status')
+                            return true;
+                        }
+                        if(VC.CurrentUser.ID_UserGroup !== 3 && VC.CurrentUser.ID_UserGroup !== 2 && VC.CurrentUser.ID_UserGroup !== 4 ){
+                            //console.log('group')
+                            return true;
+                        }
+                        if(_.CurrentObject.ID_CABusinessUnit !== VC.CurrentUser.ID_BusinessUnit ){
+                            //console.log('ewan')
+                            return true;
+                        }
+
+                        return false;
+                    },
+                    onItemClick: function () {
+                        var JsDataService = app.$GetDataService();
+
+                        JsDataService.ExecSQLProc(
+                            '@Html.EncryptSQL("pCashAdvanceRequestApprove")',
+                            {
+                                'IDs': [_.CurrentObject.ID_CashAdvanceRequest],
+                                'ID_CurrentUser': '#ID_CurrentUser'
+                            }
+                        ).then(function (response) {
+                            VC.ToastSuccess('Cash Advance Successfully approved!');
+                            VC.Reload();
+                        }, function () {
+                            VC.ToastError('Error approving.');
+                        });
+                        //
+                    }
+                });
+                
+
+
+                if (_.CurrentObject.IsGroupMeeting == undefined) {
+                    //_.CurrentObject.IsGroupMeeting = 0;
+                }
+
+                //ID_SalesScheduleStatus
+                
+            
+              //  VC.DeleteAllItems('SalesSchedule_Details');
+                VC.ValidationRules.push(function () {
+
+                    if(_.CurrentObject.SalesSchedule_Details  == null || _.CurrentObject.SalesSchedule_Details  === undefined)
+                    {
+                        _.CurrentObject.SalesSchedule_Details = [];
+                    }
+
+
+                    var brokenRules = [];
+            
+                    var CurrentDateString = new Date().toLocaleDateString();
+                    var CurrentDate = _.CurrentObject.DateCreated == null ? new Date() : new Date(_.CurrentObject.DateCreated);
+
+                    if(_.CurrentObject.ID_CashAdvanceRequest == 0 || _.CurrentObject.ID_CashAdvanceRequest == null ){
+
+                        if(new Date(_.CurrentObject.StartDate) < CurrentDate ){
+                        brokenRules.push('Start date / time invalid');
+                        }
+                        if(new Date(_.CurrentObject.EndDate) <= new Date(_.CurrentObject.StartDate)){
+                            brokenRules.push('End date / time invalid');
+                        }
+                    }
+
+                    if(_.CurrentObject.ID_SalesScheduleEventType != 7){
+                        if(_.CurrentObject.ID_Opportunity > 0){
+
+                        }
+                        else{
+                            brokenRules.push('Opportunity is required');
+                        }
+                    }
+
+                    if(_.CurrentObject.ID_SalesScheduleStatus === 3){
+                        //MeetingDetails
+                        //LiquidatedAmt
+
+                        if(_.CurrentObject.MeetingDetails === undefined || _.CurrentObject.MeetingDetails === null){
+                            brokenRules.push('Minutes of the meeting required');
+                        }else{
+                            if(_.CurrentObject.MeetingDetails.trim().length == 0){
+                                brokenRules.push('Minutes of the meeting required');
+                            }
+                        }
+
+                        if(_.CurrentObject.LiquidatedAmt === undefined || _.CurrentObject.LiquidatedAmt === null){
+                            brokenRules.push('Liquidated Amt required');
+                        }else{
+                            if(_.CurrentObject.LiquidatedAmt == 0){
+                                brokenRules.push('Liquidated Amt required');
+                            }
+                        }
+
+                    }
+
+                    if( [2,3].includes(_.CurrentObject.ID_SalesScheduleStatus) ){
+                          if(_.CurrentObject.CashAdvanceAmt === undefined || _.CurrentObject.CashAdvanceAmt === null){
+                              brokenRules.push('Cash Advance Amt required');
+                          }
+                          else{
+                              if(_.CurrentObject.CashAdvanceAmt === 0){
+                                  brokenRules.push('Cash Advance Amt required');
+                              }
+                          }
+                    }
+
+                    if(_.CurrentObject.SalesSchedule_Details  !== null || _.CurrentObject.SalesSchedule_Details  !== undefined)
+                    {
+                        //if(_.CurrentObject.SalesSchedule_Details.length == 0 && _.CurrentObject.IsGroupMeeting == true){
+                        //        brokenRules.push('Meeting Attendees is required');
+                        //}
+                    }
+                    
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    
+                    return { isValid: true };       
+                      
+                });
+            }
+        }
+
+        VC_SalesSchedule.prototype.onCurrentObjectSaved = function(CurrentObject){
+            
+            var _ = this;
+            var VC = _.VC;
+
+            var JsDataService = app.$GetDataService();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pCreateDiaryFromSalesSchedule")',
+                {
+                    'IDs': _.CurrentObject.ID,
+                }
+            ).then(function (response) {
+            }, function () {
+                VC.ToastError('Unable to update diary');
+            });
+                                                
+        }
+
+
+        VC_SalesSchedule.prototype.onLoad = function(){
+            Base.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+            var Status = _.CurrentObject.ID_SalesScheduleStatus;
+            var StartDate = VC.GetDxControl('StartDate');
+            var EndDate = VC.GetDxControl('EndDate');
+            if(_.CurrentObject.ID > 0){           
+                StartDate._options.min = _.CurrentObject.DateCreated;
+                EndDate._options.min = _.CurrentObject.DateCreated;
+            }else{
+                StartDate._options.min = new Date();
+                EndDate._options.min = new Date();
+            }
+        }
+
+
+        VC_SalesSchedule.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+
+            VC.$ID_Opportunity_IsDisabled = function () {
+                return !(_.CurrentObject.ID_SalesScheduleEventType == 7);
+            }
+
+
+            VC.$StartDate_IsDisabled = function () {
+                return !_.CurrentObject.ID_CashAdvanceRequest > 0;
+            }
+
+            VC.$EndDate_IsDisabled = function () {
+                return !_.CurrentObject.ID_CashAdvanceRequest > 0;
+            }
+
+            VC.butNewCA.option('onClick',function(){
+
+
+                if( _.CurrentObject.ID_Customer == null ){
+                     VC.MsgBox("Customer is required","Sales Calendar");
+                     return;
+                }
+
+                if (VC.$scope.CurrentObject.$dirty === true) {
+                    VC.MsgBox("Pending changes must be save first");
+                    return;
+                };
+
+                app.$rootScope().$emit("CallNewTabMethod", {
+                    ID: app.getRandomInt(),
+                    Caption: 'Cash Advance (New)',
+                    ID_ViewType: 2,
+                    ViewID: 9308,
+                    ImageName: '',
+                    ID_CurrentObject: -1,
+                    params:{
+                        'ID_Customer': _.CurrentObject.ID_Customer,
+                        'StartDate': _.CurrentObject.StartDate,
+                        'EndDate': _.CurrentObject.EndDate,
+                        'Address': _.CurrentObject.Address,
+                        'ID_Purpose': _.CurrentObject.ID_SalesScheduleEventType
+                    }
+                });         
+
+                VC.$scope.CloseModule(true);
+            });
+
+
+        }
+
+
+        var fDeleteAllSalesScheduleDetails = function(_,VC){
+  
+      
+           if (_.CurrentObject.SalesSchedule_Details == undefined) {
+               _.CurrentObject.SalesSchedule_Details = [];
+           }
+
+           VC.DeleteAllItems('SalesSchedule_Details');
+           _.CurrentObject.SalesSchedule_Details = [];
+
+        };
+
+        var  fLoadAttendeesFromCashAdvance = function(ID){
+
+            app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM vCashAdvanceRequest_Companion where ID_CashAdvanceRequest IN (@ID_CashAdvanceRequests) ")',
+            {
+                params: 
+                {
+                    'ID_CashAdvanceRequests': ID
+                }
+            }).then(function (data) 
+            {
+
+                if (VC._DeletedItems['SalesSchedule_Details']  == undefined) {
+                    VC._DeletedItems['SalesSchedule_Details'] = [];
+                }
+
+                if (VC._DeletedItems['SalesSchedule_Details']  == null) {
+                    VC._DeletedItems['SalesSchedule_Details'] = [];
+                }
+
+                fDeleteAllSalesScheduleDetails(_,VC);
+
+                $.each(data.collection, function (i, record)
+                {
+                  
+               
+                     var NewDetail = {
+                                ID: _.rndID(),
+                                ID_User : record.ID_User ,
+                                User : record.Employee
+                                
+                        };
+                    
+                    if (_.CurrentObject.SalesSchedule_Details == null) _.CurrentObject.SalesSchedule_Details = [];
+
+                    _.CurrentObject.SalesSchedule_Details.push(NewDetail);
+
+
+                });
+
+                //_.CurrentObject.IsGroupMeeting = true;      
+
+            });  
+
+
+        };
+
+
+
+
+        VC_SalesSchedule.prototype.onCurrentObjectChanged = function(e){
+            Base.prototype.onCurrentObjectChanged.call(e);
+              
+            var _ = this;
+            var VC = _.VC;    
+            //var IsCourtesyVisit = VC.GetDxControl('IsCourtesyVisit');
+
+            if(e.dataField == "StartDate"){
+                if(new Date(_.CurrentObject.EndDate) < new Date(_.CurrentObject.StartDate)){
+                    _.CurrentObject.EndDate = _.CurrentObject.StartDate; 
+                }      
+            }
+
+            if(e.dataField == 'IsGroupMeeting'){
+
+                if(_.CurrentObject.IsGroupMeeting == false){            
+                    fDeleteAllSalesScheduleDetails(_,VC);
+                }
+
+                if(VC.$scope.CurrentObject.$dirty != true){ return; }
+
+                if(  VC.$scope.CurrentObject.IsGroupMeeting == true && 
+                     VC.$scope.CurrentObject.ID_CashAdvanceRequest > 0  ){
+                
+                    if( VC.$scope.CurrentObject.SalesSchedule_Details.length === 0){
+
+                        fLoadAttendeesFromCashAdvance(VC.$scope.CurrentObject.ID_CashAdvanceRequest);
+                    }
+
+                }else{
+
+                    fDeleteAllSalesScheduleDetails(_,VC);
+                }
+            }
+           
+            if (e.dataField === 'ID_Customer') 
+            {
+
+                if(VC.$scope.CurrentObject.$dirty != true){ return; }
+
+                if (e.value != null) 
+                {
+            
+                    if (e.value.Address !== undefined) 
+                    {
+
+                        var txtAddress = VC.GetDxControl('Address');
+                        if (txtAddress !== undefined && txtAddress != null) txtAddress.option('value', e.value.Address);
+                        VC.$scope.CurrentObject.Address = e.value.Address;
+                    } 
+                    
+                }
+                else
+                {
+                    VC.$scope.CurrentObject.Address = null;
+                    VC.$scope.CurrentObject.ID_CashAdvanceRequest = null;
+
+                    fDeleteAllSalesScheduleDetails(_,VC);
+                }
+            }
+
+            if (e.dataField === 'ID_SalesScheduleEventType'){
+                if(_.CurrentObject.ID_SalesScheduleEventType == 7){
+                    _.CurrentObject.ID_Opportunity = null;
+                    _.CurrentObject.Opportunity = null;
+                }
+            }
+
+            if (e.dataField === 'ID_CashAdvanceRequest') {
+
+
+          
+                if(VC.$scope.CurrentObject.$dirty != true){ return; }
+
+
+
+                /*if (e.value != null) 
+                {
+                    if (e.value.CA_Amt !== undefined) 
+                    {
+                        VC.$scope.CurrentObject.CashAdvanceAmt = e.value.CA_Amt;
+                    }
+                    if (e.value.LQ_Amt !== undefined) 
+                    {
+                        VC.$scope.CurrentObject.LiquidatedAmt = e.value.LQ_Amt;
+                    }
+                    
+                    if (e.value.StartTime !== undefined) 
+                    {
+                        VC.$scope.CurrentObject.StartDate = e.value.StartTime;
+                    }
+
+                    if (e.value.EndTime !== undefined) 
+                    {
+                        VC.$scope.CurrentObject.EndDate = e.value.EndTime;
+                    }
+
+                    fLoadAttendeesFromCashAdvance(VC.$scope.CurrentObject.ID_CashAdvanceRequest);
+
+                }
+                else
+                {
+                    VC.$scope.CurrentObject.CashAdvanceAmt =null;
+                    VC.$scope.CurrentObject.LiquidatedAmt = null;
+                    VC.$scope.CurrentObject.StartDate = null;
+                    VC.$scope.CurrentObject.EndDate = null;
+
+                    fDeleteAllSalesScheduleDetails(_,VC);
+
+                }
+                */
+                
+            }
+
+        }
+
+        VC_SalesSchedule.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            
+            VC.$ID_Customer_OnValueChanged = function (e) {
+                _.CurrentObject.ID_Opportunity = null;
+
+            }
+
+            var _ = this;
+
+
+        VC.AddToolBarButtonOnGrid('SalesSchedule_Details',{
+            text: 'Add Attendees',
+            icon: 'red mdi mdi-account-plus',
+            formatKey: 'VC_SalesSchedule_Details',
+            onClick: function (option) {
+                if(_.CurrentObject.IsGroupMeeting !== true)
+                {
+                        //VC.MsgBox("Cannot Add Meeting Attendees if Group Meeting is Uncheck", "Sales Schedule");
+                        //return;
+                }
+                       VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,Name,BusinessUnit FROM vEmployee WHERE ID Not In (@ID_Details) AND ID <> @ID_Employee")',
+                       {
+                           title: 'Select Attendees',
+                           ID_View: 'D1F8B2A2-BFB6-4F69-924D-309E11F2025A',
+                           params: {
+                               'ID_Details': Enumerable.From(_.CurrentObject.SalesSchedule_Details).Select("$.ID_User").ToArray(),
+                               'ID_Employee' : VC.CurrentUser.ID_Employee
+                           }
+                       }).then(function (Items) {
+                           
+                           $.each(Items, function (i, item) {
+
+                                var NewDetail = {
+                                    ID: _.rndID(),
+                                    ID_User : item.ID ,
+                                    User : item.Name
+                                    
+                                };
+                               
+                                if (_.CurrentObject.SalesSchedule_Details == null) _.CurrentObject.SalesSchedule_Details = [];
+
+                                _.CurrentObject.SalesSchedule_Details.push(NewDetail);
+                      
+                           });
+
+                       });
+            }
+
+        },true);
+        //var obj =  VC.GetDxControl('SalesScheduleDetails');
+        
+        };
+    
+        return VC_SalesSchedule;
+    });
+//</script>
+</text> , false )

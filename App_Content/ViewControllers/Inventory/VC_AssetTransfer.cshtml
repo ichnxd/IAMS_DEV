@@ -1,0 +1,256 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+
+        var VC_AssetTransfer = function () { 
+			this.DocDetailPropertyName = 'AssetTransfer_Details';
+			this.SerialsEnabled = true;
+			this.IsAddItemDisabled = true;
+		}
+
+        VC_AssetTransfer.prototype = Object.create(VC_BaseDoc.prototype);
+
+		VC_AssetTransfer.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+
+			var _ = this;
+           
+			if(_.ID_ViewType == 2){
+				VC.ValidationRules.push(function () {
+
+					var brokenRules = [];
+		
+					if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+					return { isValid: true };
+				});
+			}
+		}
+
+		VC_AssetTransfer.prototype.OnFormInitialized = function (VC) {
+			
+			var _ = this;
+			
+
+            //Item Issuance
+			VC.AddToolBarButtonOnGrid('AssetTransfer_Details', {
+				text: 'Browse Item Issuance',
+				icon: 'mdi mdi-package-variant',
+				onClick: function () {
+					
+					if (_.CurrentObject.ID_Employee_From == null) {
+						VC.MsgBox('Please select a Employee From', 'Asset Transfer');
+						return;
+					}
+					
+					VC.BrowseDataSet('@Html.EncryptSQL(@"Select * from vItemIssuanceApproved Where ID_IssuanceType IN(3,14,11) AND ID_IssuedTo = @ID_Employee AND ID NOT IN(@ID_Details) ")', {
+						
+						title: 'Select Item Issuance ( ' + _.CurrentObject.Employee_From + ' )',
+						ID_View: 'B7B86805-A149-4BAD-86BA-4B16A624CC1E',
+						params : {
+							'ID_Employee' : _.CurrentObject.ID_Employee_From,
+						    'ID_Details': Enumerable.From(_.CurrentObject.AssetTransfer_Details).Where("$.ID_Model == 3208").Select('$.ID_DocDetail').ToArray()
+						},
+						onCustomizeColumns : function( columns ) { 
+							$.each( columns, function(i,c)  { 
+								if ( c.dataField == "DocumentNo") { 
+									c.caption = "Iss No.";
+								}
+								if ( c.dataField == "Date") { 
+									c.caption = "Iss Date";
+								}
+							});
+						}
+						
+					}).then(function(Details){
+
+
+						if ( typeof(_.CurrentObject.AssetTransfer_Details) === 'undefined' || _.CurrentObject.AssetTransfer_Details === null) {
+							_.CurrentObject.AssetTransfer_Details = [];
+						}
+                        app.$GetDataService().Query('@Html.EncryptSQL("SELECT -1 As ID, Code,Name,ID_ItemIssuance_Detail FROM dbo.tItemIssuance_Detail_Serial WHERE ID_ItemIssuance_Detail IN(@ID_ItemIssuance_Detail)")',{ 
+                            params:{
+                                'ID_ItemIssuance_Detail': Enumerable.From(Details).Select('$.ID').ToArray()
+                            }                            
+                        }).then(function(data){
+
+                            $.each(Details,function( index , item ) { 
+                                var Serials = [];
+                                Serials = Enumerable.From(data.collection).Where("$.ID_ItemIssuance_Detail == " + item.ID ).ToArray();
+                           
+                                var newData = {
+                                    ID : -1,
+                                    ID_DocDetail : item.ID,
+                                    Code : item.ItemCode,
+                                    ItemCode : item.ItemCode,
+                                    Quantity : item.Quantity,
+                                    RefQuantity : item.Quantity,
+                                    ID_UOM : item.ID_UOM,
+                                    ID_Item : item.ID_Item,
+                                    Item : item.Item,
+                                    Name : item.Item,
+                                    UOM : item.UOM,
+                                    ID_Doc : item.ID_ItemIssuance,
+                                    Reference : item.DocumentNo,
+                                    UnitPrice : item.UnitPrice,
+                                    ID_Model: 3208,
+                                    ID_Warehouse_From: item.ID_Warehouse,
+                                    AssetTransfer_Detail_Serials: Serials
+                                }
+
+
+                                _.CurrentObject.AssetTransfer_Details.push(newData);
+                            });
+
+                        });
+						
+					});
+					
+					
+				}			
+				
+			} , true); // Item Issuance
+			
+
+
+            //Asset Transfer
+            	VC.AddToolBarButtonOnGrid('AssetTransfer_Details', {
+				text: 'Browse Asset Transfer',
+				icon: 'mdi mdi-package-variant',
+				onClick: function () {
+					
+					if (_.CurrentObject.ID_Employee_From == null) {
+						VC.MsgBox('Please select a Employee From', 'Asset Transfer');
+						return;
+					}
+					
+					VC.BrowseDataSet('@Html.EncryptSQL(@"Select * from vAssetTransferForReference Where ID_AssetTransfer <> @IDx AND ID_Employee_To = @ID_Employee AND ID NOT IN(@ID_Details) ")', {
+						
+						title: 'Select Asset Transfer ( ' + _.CurrentObject.Employee_From + ' )',
+						ID_View: 'CD389A28-96B0-4EC6-BDBA-298EB0726C11',
+						params : {
+                            'IDx': _.CurrentObject.ID,
+							'ID_Employee' : _.CurrentObject.ID_Employee_From,
+						    'ID_Details': Enumerable.From(_.CurrentObject.AssetTransfer_Details).Where("$.ID_Model == 8394").Select('$.ID_DocDetail').ToArray()
+						},
+						onCustomizeColumns : function( columns ) { 
+							$.each( columns, function(i,c)  { 
+								if ( c.dataField == "DocumentNo") { 
+									c.caption = "Ast No.";
+								}
+								if ( c.dataField == "Date") { 
+									c.caption = "Ast Date";
+								}
+							});
+						}
+						
+					}).then(function(Details){
+
+
+						if ( typeof(_.CurrentObject.AssetTransfer_Details) === 'undefined' || _.CurrentObject.AssetTransfer_Details === null) {
+							_.CurrentObject.AssetTransfer_Details = [];
+						}
+                        app.$GetDataService().Query('@Html.EncryptSQL("SELECT -1 As ID, Code,Name,ID_AssetTransfer_Detail FROM dbo.tAssetTransfer_Detail_Serial WHERE ID_AssetTransfer_Detail IN(@ID_AssetTransfer_Detail)")',{ 
+                            params:{
+                                'ID_AssetTransfer_Detail': Enumerable.From(Details).Select('$.ID').ToArray()
+                            }                            
+                        }).then(function(data){
+
+                            $.each(Details,function( index , item ) { 
+                                var Serials = [];
+                                Serials = Enumerable.From(data.collection).Where("$.ID_AssetTransfer_Detail == " + item.ID ).ToArray();
+                           
+                                var newData = {
+                                    ID : -1,
+                                    ID_DocDetail : item.ID,
+                                    Code : item.ItemCode,
+                                    ItemCode : item.ItemCode,
+                                    Quantity : item.Quantity,
+                                    RefQuantity : item.Quantity,
+                                    ID_UOM : item.ID_UOM,
+                                    ID_Item : item.ID_Item,
+                                    Item : item.Item,
+                                    Name : item.Item,
+                                    UOM : item.UOM,
+                                    ID_Doc : item.ID_AssetTransfer,
+                                    Reference : item.DocumentNo,
+                                    UnitPrice : item.UnitPrice,
+                                    ID_Model: 8394,
+                                    ID_Warehouse_From: item.ID_Warehouse,
+                                    AssetTransfer_Detail_Serials: Serials
+                                }
+
+
+                                _.CurrentObject.AssetTransfer_Details.push(newData);
+                            });
+
+                        });
+						
+					});
+					
+					
+				}			
+				
+			} , true);
+            //Asset Transfer ENd
+			
+		}//#End OnFormInitialized
+		
+        VC_AssetTransfer.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAssetTransferApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_AssetTransfer.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+        
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAssetTransferCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_AssetTransfer;
+    });
+//</script>
+</text> , false);
+

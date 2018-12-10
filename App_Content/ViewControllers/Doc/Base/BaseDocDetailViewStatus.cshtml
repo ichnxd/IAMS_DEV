@@ -1,0 +1,148 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    int ID_View = ViewBag.ID;
+    string ViewName = ViewBag.ViewName;
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/DetailView?ID=@{@ID_View}&ViewName=@{@ViewName}&IsBase=1'], function (BaseClass) {
+
+
+        var BaseDocDetailView = {};
+
+        BaseDocDetailView.prototype = Object.create(BaseClass.prototype);
+
+        BaseDocDetailView.prototype.onLoad = function () {
+            var _ = this;
+
+            //
+            // DOC STATUS FULLY SERVED
+            //
+
+
+            if (_.$scope.CurrentObject.ID > -1 && _.$scope.CurrentObject.ID_FilingStatus == 2) {
+
+                _.butApproved.disabled = _.$scope.CurrentObject.ID_DocStatus == 3;
+                _.butCancel.disabled = _.$scope.CurrentObject.ID_DocStatus == 3;
+
+            }
+
+            _.butApproved.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 2 && _.$scope.CurrentObject.ID > -1);
+
+            _.butCancel.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 7 && _.$scope.CurrentObject.ID > -1 && _.$scope.CurrentObject.ID_DocStatus != 3);
+
+            _.butSave.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 2);
+
+
+            if (_.$scope.CurrentObject.ID_FilingStatus == 2) {
+                _.setFormReadOnly(true);
+            }
+           
+          
+            if (_.$scope.CurrentObject.ID == -1) {
+
+            
+            }
+
+            _.RefreshToolBar();
+
+        }
+
+        BaseDocDetailView.prototype.IsValid = function () {
+            var IsValid = BaseClass.prototype.IsValid.call(this);
+            var brokenRules = IsValid.brokenRules;
+            //
+            //
+            //
+
+
+
+
+            return IsValid;
+        }
+
+        BaseDocDetailView.prototype.PerformApproved = function () {
+            var _ = this;
+         
+            var Documents = _.$scope.CurrentObject.DocumentNo;
+
+            _.ConfirmBox("Are you sure you want to approve the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Approve !== undefined) {
+                    _.Approve().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Approved');
+                        _.setFormReadOnly(true);
+                        _.Reload();
+                    });
+                }
+            });
+        }
+
+        BaseDocDetailView.prototype.PerformCancel = function () {
+            var _ = this;
+            var Documents = _.$scope.CurrentObject.DocumentNo;
+            _.ConfirmBox("Are you sure you want to cancel the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Cancel !== undefined) {
+                    _.Cancel().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Cancelled');
+                        _.Reload();
+                    });
+                }
+            });
+        }
+
+        BaseDocDetailView.prototype.Init = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            BaseClass.prototype.Init.call(this,$scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var _ = this;
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                disabled: true,
+                Click: function () {
+
+                    _.PerformApproved();
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                disabled: true,
+                Click: function () {
+
+                    _.PerformCancel();
+
+                }
+            }
+
+            _.ButReport = {
+                text: 'Report',
+                icon: 'jspp-icon js-file-2',
+                color: '#000',
+                disabled: false,
+                Click: function () {
+
+
+                }
+            }
+
+            _.AddToolbarButton(_.ButReport);
+
+            _.AddToolbarButton(_.butApproved);
+
+            _.AddToolbarButton(_.butCancel);
+
+        }
+
+        return BaseDocDetailView;
+
+    });
+//</script>
+</text> , false);

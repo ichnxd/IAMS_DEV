@@ -1,0 +1,153 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_BaseDoc = function () { }
+
+        VC_BaseDoc.prototype = baseModelHelper;
+
+        VC_BaseDoc.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 1) {
+                        var SelectedRows = VC.Grid.getSelectedRowsData();
+                        return !(SelectedRows.length == 1 && SelectedRows[0].ID_FilingStatus !== 2);
+                    } else {
+                        if (VC.$scope.CurrentObject.ID > -1 && VC.$scope.CurrentObject.ID_FilingStatus == 2) {
+                            if (VC.$scope.CurrentObject.ID_DocStatus == 3) return true;
+                        }
+                        return !(VC.$scope.CurrentObject.ID_FilingStatus != 7 && VC.$scope.CurrentObject.ID > -1 && VC.$scope.CurrentObject.ID_DocStatus != 3);
+                    }
+                    return true;
+                },
+                isContextMenu : true,
+                onItemClick: function () {
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformApproved(CurrentObjects);
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 1) {
+                        var SelectedRows = VC.Grid.getSelectedRowsData();
+                        if (SelectedRows.length == 0) return true;
+                        var Result = !(SelectedRows.length == 1 && SelectedRows[0].ID_FilingStatus !== 7);
+                        return Result;
+                    } else {
+                        if (VC.$scope.CurrentObject.ID > -1 && VC.$scope.CurrentObject.ID_FilingStatus == 2) {
+                            if (VC.$scope.CurrentObject.ID_DocStatus == 3) return false;
+                        }
+                        return !(VC.$scope.CurrentObject.ID_FilingStatus != 2 && VC.$scope.CurrentObject.ID > -1);
+                    }
+                    return true;
+                },
+                isContextMenu: true,
+                onItemClick: function () {
+                    var CurrentObjects = null;
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [VC.$scope.CurrentObject];
+                    }
+                    //
+                    //
+                    //
+                    _.PerformCancel(CurrentObjects);
+                }
+            }
+
+            VC.AddToolbarButton(_.butApproved);
+
+            VC.AddToolbarButton(_.butCancel);
+        }
+
+        VC_BaseDoc.prototype.onLoad = function () {
+            var _ = this;
+            var VC = _.VC;
+
+            VC.butSave.disabled = !(VC.$scope.CurrentObject.ID_FilingStatus != 2);
+
+
+            if (VC.$scope.CurrentObject.ID_FilingStatus == 2) {
+                VC.setFormReadOnly(true);
+            }
+
+            if (VC.$scope.CurrentObject.ID == -1) {
+                if (VC.IsFormReadOnly != undefined) {
+                    if (VC.IsFormReadOnly == true) {
+                        VC.setFormReadOnly(false);
+                    }
+                }
+                if (_.Compute != undefined) {
+                    _.Compute();
+                }
+            }
+        }
+
+        VC_BaseDoc.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            _.ConfirmBox("Are you sure you want to approve the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Approve !== undefined) {
+                    _.Approve().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Approved');
+                        if (_.ID_ViewType == 2) {
+                            _.VC.setFormReadOnly(true);
+                            _.VC.Reload();
+                        } else {
+                            _.VC.Refresh();
+                        }
+                    });
+                }
+            });
+        }
+
+        VC_BaseDoc.prototype.PerformCancel = function (Documents) {
+            var _ = this;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            _.ConfirmBox("Are you sure you want to cancel the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Cancel !== undefined) {
+                    _.Cancel().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Cancelled');
+                        if (_.ID_ViewType == 2) {
+                            _.VC.setFormReadOnly(true);
+                            _.VC.Reload();
+                        } else {
+                            _.VC.Refresh();
+                        }
+                    });
+                }
+            });
+        }
+
+        return VC_BaseDoc;
+
+    });
+//</script>
+</text> , false);

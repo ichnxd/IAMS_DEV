@@ -1,0 +1,22 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = "~/Views/BaseView/BaseDashboardView.cshtml";
+}
+<div class="row">
+    <div class="col-md-6">
+        <div style="padding:10px" dx-chart="chartOptions"></div>
+    </div>
+    <div class="col-md-6">
+		<div class="summary-caption" style="padding:10px 0 10px 0; color:{{SummaryGridOption.color}}; font-size:{{SummaryGridOption.size}}">
+			{{SummaryGridOption.title}}
+		</div>
+		<div id="SummaryGrid" dx-data-grid="SummaryGridOption" style="margin-bottom:10px"></div>
+
+		<div class="summary-caption" style="padding:10px 0 10px 0; color:{{OpportunityGridOption.color}}; font-size:{{OpportunityGridOption.size}}">
+			{{OpportunityGridOption.title}}
+		</div>
+        <div id="OpportunityGrid" dx-data-grid="OpportunityGridOption"></div>
+		
+    </div>
+</div>

@@ -1,0 +1,185 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+
+        var VC_ItemReturn = function () { 
+			this.DocDetailPropertyName = 'ItemReturn_Details';
+			this.SerialsEnabled = true;
+			this.IsAddItemDisabled = true;
+		}
+
+        VC_ItemReturn.prototype = Object.create(VC_BaseDoc.prototype);
+
+		VC_ItemReturn.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+
+			var _ = this;
+      VC.AddButtonReport({
+                    Name: 'Item Return Form',
+                    ID_Report: 3121,
+                    requireSingleObject: true
+                });
+           
+			if(_.ID_ViewType == 2){
+				VC.ValidationRules.push(function () {
+
+					var brokenRules = [];
+					if(_.CurrentObject.ItemReturn_Details == undefined) _.CurrentObject.ItemReturn_Details = [];
+					$.each(_.CurrentObject.ItemReturn_Details,function(index,item){
+						if(item.Quantity > item.RefQuantity){
+							brokenRules.push('Quantity must not be greater than Issued Quantity ( '+ item.Name +' )');
+						}
+					});
+
+				
+					if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+					
+
+					return { isValid: true };
+				});
+			}
+		}
+
+		VC_ItemReturn.prototype.OnFormInitialized = function (VC) {
+			
+			var _ = this;
+			
+			VC.AddToolBarButtonOnGrid('ItemReturn_Details', {
+				text: 'Browse Reference IIS',
+				icon: 'mdi mdi-package-variant',
+				onClick: function () {
+					
+					if (_.CurrentObject.ID_Employee == null) {
+						VC.MsgBox('Please select a Employee', 'Item Return');
+						return;
+					}
+					
+					VC.BrowseDataSet('@Html.EncryptSQL(@"Select * from vItemIssuanceApproved Where ID_IssuedTo = @ID_Employee AND ID NOT IN(@ID_Details) ")', {
+						
+						title: 'Select Item Issuance ( ' + _.CurrentObject.Employee + ' )',
+						ID_View: 'CB29BD81-5F46-4319-9ABD-0732287C2F5A',
+						params : {
+							'ID_Employee' : _.CurrentObject.ID_Employee,
+						    'ID_Details': Enumerable.From(_.CurrentObject.ItemReturn_Details).Select('$.RefID').ToArray()
+						},
+						onCustomizeColumns : function( columns ) { 
+							$.each( columns, function(i,c)  { 
+								if ( c.dataField == "DocumentNo") { 
+									c.caption = "Iss No.";
+								}
+								if ( c.dataField == "Date") { 
+									c.caption = "Iss Date";
+								}
+							});
+						}
+						
+					}).then(function(Details){
+						//ItemReturn_Details
+						if ( typeof(_.CurrentObject.ItemReturn_Details) === 'undefined' || _.CurrentObject.ItemReturn_Details === null) {
+							_.CurrentObject.ItemReturn_Details = [];
+						}
+						var ID_Warehouse = null;
+						
+						$.each(Details,function( index , item ) { 
+						
+							var data = {
+								ID : -1,
+								RefID : item.ID,
+								Code : item.ItemCode,
+								ItemCode : item.ItemCode,
+								Quantity : 0.00,
+								RefQuantity : item.Quantity,
+								ID_UOM : item.ID_UOM,
+								ID_Item : item.ID_Item,
+								Item : item.Item,
+								Name : item.Item,
+								UOM : item.UOM,
+								ID_ItemIssuance : item.ID_ItemIssuance,
+								ItemIssuance : item.DocumentNo,
+								IsDefective : 0,
+								UnitPrice : item.UnitPrice,
+								IsSerialized : item.IsSerialized,
+								Conversion : item.Conversion//,
+								//ItemReturn_Detail_Serials :  [{
+								//	ID: -1,
+                                //    Name: item.SerialNo,
+                                //    Code: item.SerialItem
+								//}]
+							}
+
+							ID_Warehouse = item.ID_Warehouse
+
+							_.CurrentObject.ItemReturn_Details.push(data);
+						});
+						
+						_.CurrentObject.ID_Warehouse = ID_Warehouse;
+					});
+					
+					
+				}			
+				
+			} , true);
+			
+			
+		}//#End OnFormInitialized
+		
+        VC_ItemReturn.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemReturnApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_ItemReturn.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+        
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemReturnCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_ItemReturn;
+    });
+//</script>
+</text> , false);
+

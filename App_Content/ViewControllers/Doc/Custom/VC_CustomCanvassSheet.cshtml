@@ -1,0 +1,303 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom'], function (app, BaseClass) {
+
+        var VC_CustomAccounting = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            $scope.Title = 'Canvass Sheet Approvals';
+            $scope.CurrentObject = {};
+            $scope.count = 0;
+      
+            var UpdateSupplier = function(Items,ID_Supplier){
+                if(Items.length == 0){
+                    _.MsgBox('No item selected','Canvass Sheet');
+                    return;
+                }
+
+                _.ConfirmBox('Do you want to use this Supplier','Canvass Sheet').then(function(){
+                    var JsDataService = app.$GetDataService();
+                    JsDataService.ExecSQLProc(
+                        '@Html.EncryptSQL("pCanvassSheetUsedSupplier")',
+                        {
+                            'IDs': Enumerable.From(Items).Select('$.ID_Canvass_Detail').ToArray(),
+                            'ID_Supplier' : ID_Supplier
+                        }
+                    ).then(function (response) {
+                        _.ToastSuccess('Updated Successfully');
+                        var CanvassGrid = $('#CanvassGrid').dxDataGrid('instance');
+                        CanvassGrid.refresh();
+                    }, function (response) {
+                        _.ToastError('An error occured');
+                    });
+                });
+
+            }
+
+            $scope.dataSource1 = new DevExpress.data.CustomStore({
+                load: function(loadOptions){
+                    var deferred = _.$q.defer();
+                    var data = {};
+                    
+                    data.skip = loadOptions.skip || 0;
+                    data.take = loadOptions.take || 20;
+
+                    _.JSDataService.pGetCurrentObject('@Html.EncryptSQL("pGetCanvassSheetApproval")', {
+                        'Skip': data.skip,
+                        'Take': data.take
+                    }).then(function(data){
+                        var dataset = data.CanvassSheet;
+                        if(dataset === null ) dataset = [];
+
+                        var OldCurrentIndex = angular.copy($scope.CurrentIndex);
+                        $scope.CurrentIndex = 0; 
+
+                        $.each(dataset,function(i,o){
+                            if($scope.LastObject.length > 0){
+                                if($scope.LastObject[0].ID == o.ID){
+                                    $scope.CurrentIndex = OldCurrentIndex;
+                                }
+                            }
+                            var detail = Enumerable.From(data.CanvassSheet_Detail).Where('$.ID_CanvasSheet == '+ o.ID.toString() ).ToArray();
+                            if(detail == null) detail = [];
+
+                            $.each(detail,function(ii,oo){
+
+
+                                var Supplier = Enumerable.From(data.CanvasSheet_Detail_Supplier).Where('$.ID_Canvass_Detail == '+ oo.ID.toString() ).ToArray();
+                               
+                                if(Supplier == null) Supplier = [];
+                                if(Supplier.length > 0){
+                                    oo['CanvasSheet_Detail_Supplier'] = [];
+                                    var ID_Suppliers = Enumerable.From(Supplier).Select('$.ID_Supplier').Distinct().ToArray();
+                                 
+                                    $.each(ID_Suppliers,function(index1,ID_Supplier){
+                       
+                                        var ID_PaymentTerm = Enumerable.From(Supplier).Where('$.ID_Supplier == ' + ID_Supplier.toString() + ' && $.ID_Canvass_Detail ==' +  oo.ID.toString()).Select('$.ID_PaymentTerm').Distinct().ToArray();
+                                     
+                                        var itemList = Enumerable.From(data.CanvasSheet_Detail_Supplier).Where('$.ID_Supplier == ' + ID_Supplier.toString() + ' && $.ID_CanvasSheet == '+ o.ID.toString() + ' && $.ID_PaymentTerm == ' + (ID_PaymentTerm[0] == null ? 'null':ID_PaymentTerm[0] ).toString() ).ToArray();
+                                       
+                                        var SupplierObject = angular.copy(itemList[0]);
+                                        
+                                        SupplierObject.ID_FK = oo.ID;
+                                        SupplierObject.items = [];
+                                        $.each(angular.copy(itemList),function(itemIndex,itemObject){
+                                            itemObject.ID_FK = oo.ID;
+                                            SupplierObject.items.push(itemObject);
+                                        });
+                                        SupplierObject.onItemClick = function(e){
+                                            var SelectedItems = Enumerable.From(e.model.items).Where('$.Selected == true').ToArray();
+                                            var ID_Supplier = e.model.ID_Supplier;
+
+                                            UpdateSupplier(SelectedItems,ID_Supplier);
+                                        }
+                                        SupplierObject.onCellPrepared = function(e,data) {
+                                            if(e.rowType === 'data' ){
+                                                if(e.data.ID == e.data.ID_FK){
+                                                    e.cellElement.css({ 'background': '#86928a'});
+                                                    e.cellElement.css({ 'color': '#fff'});
+                                                }
+                                           }
+ 
+                                        }
+
+                                        oo.CanvasSheet_Detail_Supplier.push(angular.copy(SupplierObject));
+                                     
+
+                                    });
+   
+                                }else{
+                                    oo['CanvasSheet_Detail_Supplier'] = [];
+                                }
+                                
+                                
+                            });
+                            o['CanvassSheet_Detail'] = angular.copy(detail);
+                        })
+                        
+                        deferred.resolve(dataset, { totalCount: data.TotalCount });    
+                    });
+
+                    return deferred.promise;
+                }
+            });
+
+            $scope.resetTileScroll = function(){
+                var TileView = $('#TileView').dxTileView('instance');
+                TileView._scrollView.scrollTo(0);
+            }
+
+            $scope.Tiles = [];
+            $scope.TileData = new DevExpress.data.DataSource({
+                load: function (loadOptions) {
+                    var deferred = _.$q.defer();
+                    
+                    setTimeout(function() {
+                        deferred.resolve($scope.Tiles);
+                    }, 500);
+                    
+                    return deferred.promise;
+                }
+            });
+
+            $scope.OnItemApprove = function(e){
+
+                var CurrentObject = e.model.$parent.CurrentIndex;
+
+                var JsDataService = app.$GetDataService();
+                JsDataService.Validate( '@Html.EncryptSQL("pValidateCanvassSupplier")',
+                {
+                    'ID':CurrentObject.ID
+                }).then(function(data){
+                    if(data.isValid == true){
+                        //
+                        _.ConfirmBox('Do you want approved?','Canvass Sheet').then(function(){
+                            
+                            JsDataService.ExecSQLProc(
+                                '@Html.EncryptSQL("pCanvassSheetApprove")',
+                                {
+                                    'IDs': [CurrentObject.ID],
+                                    'ID_CurrentUser' : '#ID_CurrentUser'
+                                }
+                            ).then(function (response) {
+                                _.ToastSuccess('Approved Successfully.');
+                                var CanvassGrid = $('#CanvassGrid').dxDataGrid('instance');
+                                CanvassGrid.refresh();
+                            }, function (response) {
+                                _.ToastError('An error occured');
+                            });
+
+                        });
+                        //
+                        //
+                    }
+                    else{
+                        _.MsgBox('Supplier not yet select for ' + data.Message ,'Canvass Sheet');
+                    }    
+                })
+            }
+
+            $scope.CSTileOption = {
+                dataSource: $scope.TileData,
+                itemTemplate: 'tileTemplate',
+                itemMargin: 2,
+                baseItemHeight: 450,
+                baseItemWidth: 600,
+                activeStateEnabled: false,
+                showScrollbar: true,
+                onContentReady: function(e){ 
+                    e.element.data("dxScrollView").option("useNative", true);
+                }
+            };
+            $scope.CurrentIndex = 0;
+            $scope.LastObject = [];
+            $scope.CSGridOption = {
+                dataSource: $scope.dataSource1,
+                columnAutoWidth: true,
+                showColumnHeaders: false,
+                showRowLines: true,
+                onRowPrepared: function(e) {
+                    e.rowElement.css({ height: 30});
+                },
+                onSelectionChanged: function(e) {
+                    $scope.CurrentIndex = e.currentSelectedRowKeys[0];
+                    $scope.LastObject  = e.component.getSelectedRowsData();
+                    e.component.collapseAll(-1);
+                    e.component.expandRow($scope.CurrentIndex);
+                },
+                onContentReady: function(e) {
+                    if($scope.CurrentIndex !== null && $scope.CurrentIndex > -1){             
+                        e.component.selectRowsByIndexes($scope.CurrentIndex);
+                    }else{
+                        if(!e.component.getSelectedRowKeys().length)
+                        e.component.selectRowsByIndexes(0);
+                    }
+                },
+                //rowAlternationEnabled: true,
+                hoverStateEnabled: true, 
+                showBorders: true,
+                height: 300,               
+                sorting:{
+                    mode: 'none'
+                },
+                paging: {
+                    pageSize: 20
+                },
+                scrolling: {
+                    mode: 'infinite'
+                },
+                selection: {
+                    mode: 'single' // 'multiple'
+                },
+                columns: [
+                    { dataField: 'DocumentNo', dataType: 'string', caption: 'Canvass Sheet'},
+                    //{ dataField: 'FilingStatus', dataType: 'string', caption: 'Status'}                       
+                ],
+                onRowClick: function(e){
+
+                },
+                masterDetail: {
+                    enabled: true,
+                    template: function (container, info) {
+                        
+                        $('<div id="CanvassChildGrid" tabindex="0">').dxDataGrid({ 
+                            dataSource: info.data.CanvassSheet_Detail,
+                            columnAutoWidth: true,
+                            rowAlternationEnabled: true,
+                            hoverStateEnabled: true, 
+                            showBorders: false,
+                            showColumnHeaders: false,
+                            onContentReady: function(e) {
+
+                                if(!e.component.getSelectedRowKeys().length){
+                                    e.component.selectRowsByIndexes(0);
+                                    var data = e.component.getSelectedRowsData();
+                                    $scope.CurrentObject = angular.copy(data[0]);
+                                    if(data.length > 0){
+                                        $scope.Tiles = data[0].CanvasSheet_Detail_Supplier;
+                                        $scope.TileData.load();
+                                    }
+
+                                }
+                            },
+                            selection: {
+                                mode: 'single' // 'multiple'
+                            },
+                            columns: [
+                                { dataField: 'ItemCode', dataType: 'string', caption: 'Item Code' },
+                                { dataField: 'ItemName', dataType: 'string', caption: 'Item Name' }                
+                            ],
+                            onSelectionChanged: function(e){                                
+                                $scope.resetTileScroll();
+                            },
+                            onRowClick: function(e){
+                                $scope.CurrentObject = angular.copy(e.data);
+                                $scope.Tiles = e.data.CanvasSheet_Detail_Supplier;
+                                $scope.TileData.load();
+                            }
+                        }).appendTo(container); // append the div container to the detail section's container
+                    }
+                }
+
+            };
+
+        };
+
+        VC_CustomAccounting.prototype = Object.create(BaseClass.prototype);
+
+        VC_CustomAccounting.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+        
+        }
+
+        return VC_CustomAccounting;
+
+    });
+//</script>
+</text> , false )

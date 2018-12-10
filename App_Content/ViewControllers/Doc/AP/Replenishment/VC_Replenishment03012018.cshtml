@@ -1,0 +1,1000 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+      var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        function VC_Replenishment() {
+            this.DocDetailPropertyName = 'ReplenishmentDetails';
+        }
+         VC_Replenishment.prototype = Object.create(baseModelHelper.prototype);
+
+         VC_Replenishment.prototype.onCollectionSource_Load = function (data) {
+
+            baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+
+            var filterValue = VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            //WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID.toString() ); 
+     
+            
+        }   
+         VC_Replenishment.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            /*VC.AddButtonReport({
+                Name: 'PCF Replenishment 1',
+                ID_Report: 4187,
+                requireSingleObject: true
+            });*/
+            VC.AddButtonReport({
+                Name: 'PCF Replenishment',
+                ID_Report: 4194,
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'PCF Replenishment 2',
+                ID_Report: 4200,
+                requireSingleObject: true
+            });
+
+          
+
+            VC.AddToolbarButton({
+                    text: 'Receive',
+                    IsDisabled: function () {
+                        if(_.ID_ViewType == 1){
+                            if(_.Grid.getSelectedRowsData().length !== 1){
+                                return true;
+                            }
+                        }
+
+
+                        var CurrentObject = null
+                        if(_.ID_ViewType == 1){
+                            CurrentObject = _.Grid.getSelectedRowsData()[0];
+                        }
+                        if(_.ID_ViewType == 2){
+                            CurrentObject = _.CurrentObject;
+                        }   
+
+                        if(CurrentObject.IsReceived !== true && CurrentObject.ForReceiving === true && CurrentObject.ID_CreatedBy == VC.CurrentUser.ID){
+                            return false;
+                        }
+
+                        return true;
+                    },
+                    onItemClick: function(){
+                        var $q = app.$GetAsync();
+                        var JsDataService = app.$GetDataService();
+                        var defer = $q.defer();
+
+                        var CurrentID = null
+                        if(_.ID_ViewType == 1){
+                            CurrentID = _.Grid.getSelectedRowsData()[0].ID;
+                        }
+                        if(_.ID_ViewType == 2){
+                            CurrentID = _.CurrentObject.ID;
+                        }
+            
+                        JsDataService.ExecSQLProc(
+                            '@Html.EncryptSQL("pReplenishmentReceived")',
+                            {
+                                'ID_Replenishment': CurrentID,
+                                'ID_CurrentUser': '#ID_CurrentUser'
+                            }
+                        ).then(function (response) {
+                            VC.Reload();
+                            VC.ToastSuccess("Successfully Received");
+                            defer.resolve();
+                        }, function () {
+                            defer.reject();
+                        });
+                    }
+            }); 
+
+            if (_.ID_ViewType == 2) {
+                //
+                //
+                //
+                var _Save = VC.Save;
+                VC.Save = function () {
+                    _.Compute();
+
+                    VC.$timeout(function () {
+                        _Save.call(VC);
+                    }, 500);
+
+                };
+
+                VC.ValidationRules.push(function () {
+                     var brokenRules = [];
+                    _.Compute();
+                    if(_.CurrentObject.TotalAmount <= 0.00){
+                        brokenRules.push('Total Amount cannot be zero or below.');
+                    }
+
+
+                     if(brokenRules.length > 0){
+                         return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                     }
+                     return { isValid: true };
+                });
+                VC.ValidationRules.push(function () {
+                   var brokenRules = [];
+                   _.Compute();
+                
+                   $.each(_.CurrentObject.ReplenishmentDetails,function(index,detail){
+                       
+                        if(detail.Amount < detail.TotalAmount){
+                            brokenRules.push('Approved Cost cannot exceed Actual Cost');
+                        }
+
+                       var ChangeAmount = 0.00;
+                       var Reimbursement = 0.00;
+                       var SalaryDeduction = 0.00;
+                       var CAAmount = 0.00;
+                       var ApprovedCost = 0.00;
+                        $.each(_.CurrentObject.Replenishment_Breakdowns,function(i,o){
+                            if(o.ID_Liquidation == detail.ID_Liquidation && 
+                                o.ID_CashAdvance == detail.ID_CashAdvance && 
+                                o.ID_Employee == detail.ID_Employee && 
+                                o.ID_CLient == detail.ID_Client  && 
+                                o.ID_ItineraryType == detail.ID_ItineraryType){
+                                    
+                                    ChangeAmount = o.ChangeAmount;
+                                    Reimbursement = o.Reimbursement;
+                                    SalaryDeduction = o.SalaryDeduction;
+                                    CAAmount = o.CAAmount;
+                                    ApprovedCost = o.ApprovedCost;
+                                }
+                        });
+                        // console.log(ChangeAmount !== detail.ChangeAmount)
+                        // console.log(Reimbursement !== detail.Reimbursement)
+                        // console.log(SalaryDeduction !== detail.SalaryDeduction)
+                        // console.log()
+                        // console.log()
+                        if(ChangeAmount !== detail.Change || 
+                            Reimbursement !== detail.Reimbursement || 
+                            SalaryDeduction !== detail.SalaryDeduction || 
+                            CAAmount !== detail.CAAmount || 
+                            ApprovedCost !== detail.TotalAmount){
+                            brokenRules.push('Summary and Detail amounts does not match.');
+                        }
+                   });
+
+
+
+                    if(brokenRules.length > 0){
+                        return {
+                           isValid: false,
+                           brokenRules: brokenRules
+                       }
+                    }
+                    return { isValid: true };
+               });
+
+                if(VC.CurrentUser.ID == 7){
+                    VC.AddToolbarButton({
+                        text: 'Compute',
+                        IsDisabled: function () {
+                            return false;
+                        },
+                        onItemClick: function(){
+                            _.Compute();
+                        }
+                    });
+                }
+                VC.onBeforeDeleteDetail = function(e, selectedRows, p ){
+              
+                    if(e.PropertyName == 'ReplenishmentDetails'){
+                        $.each(selectedRows,function(index,CurrentObject){
+                            var ForDelete = [];
+                            if(VC._DeletedItems['Replenishment_Breakdowns'] == undefined ) VC._DeletedItems['Replenishment_Breakdowns'] = [];
+                            $.each(_.CurrentObject.Replenishment_Breakdowns,function(i,o){
+                                var isFound = false;
+                                //console.log(o,CurrentObject)
+                                if(o.ID_Liquidation == CurrentObject.ID_Liquidation && 
+                                    o.ID_CashAdvance == CurrentObject.ID_CashAdvance && 
+                                    o.ID_Employee == CurrentObject.ID_Employee && 
+                                    o.ID_CLient == CurrentObject.ID_Client  && 
+                                    o.ID_ItineraryType == CurrentObject.ID_ItineraryType){
+                                        isFound = true;
+                                        ForDelete.push(i);
+                                }
+        
+                            });
+                            //console.log(ForDelete)
+                            $.each(ForDelete.reverse(),function(ii,oo){
+                                if(_.CurrentObject.Replenishment_Breakdowns[oo].ID > 0){
+                                    VC._DeletedItems['Replenishment_Breakdowns'].push(_.CurrentObject.Replenishment_Breakdowns[oo]);
+                                }
+                                _.CurrentObject.Replenishment_Breakdowns.splice(oo,1);             
+                            }); 
+                        });
+
+                    }
+ 
+                }
+
+                VC['onContextMenuPreparing_ReplenishmentDetails'] = function (e) {
+                    if (e.row === undefined) return;
+                    if (e.row.data === undefined) return;
+
+                    e.items.unshift({
+                        text: "View Liquidation",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            if(e.row.data.ID_Liquidation == null || e.row.data.ID_Liquidation == undefined){
+                                VC.MsgBox("Liquidation not exist");
+                            }
+                            AcctHelper.ViewLiquidation(e.row.data.ID_Liquidation);
+                        }
+                    });
+
+                    e.items.unshift({
+                        text: "View Cash Advance",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            if(e.row.data.ID_CashAdvance == null || e.row.data.ID_CashAdvance == undefined){
+                                VC.MsgBox("Cash Advance not exist");
+                            }
+                            AcctHelper.ViewCashAdvance(e.row.data.ID_CashAdvance);
+                        }
+                    });
+
+                };
+
+                VC.AddToolbarButton({
+                text: 'Browse',
+                items:[             
+                   {
+                       text: 'Liquidation',
+                       IsDisabled: function () {
+                           if (_.ID_ViewType == 2) {
+
+                               return (VC.$scope.CurrentObject.ID_FilingStatus !== 1);
+                           }
+                           return true;
+                       },
+                       ID_View: 'EE4D9040-8DC7-44ED-A130-D929A4B7B995',
+                       onItemClick: function () {
+                               if (_.ID_ViewType == 2) {
+                                   //
+                                   //
+                                   //OR (( ISNULL(ChangeAmount,0) = 0 AND ISNULL(Reimbursement,0) = 0 ) AND ID_FilingStatus = 2)
+                                   if (VC.$scope.CurrentObject.ReplenishmentDetails == undefined  ) VC.$scope.CurrentObject.ReplenishmentDetails = []
+                                   var SQL = '@Html.EncryptSQL(@"SELECT * FROM vLiquidationForReplenish WHERE (ID_FilingStatus = 25 OR ID_FilingStatus = 40 OR ID_FilingStatus = 35 ) AND (ID_PettyCashCustodian = @ID_Custodian) AND ID NOt in (@ID_Details) ")' ;
+                                   //and ID_CreatedBy = ID_User
+                                   var JsPopUpView = app.$GetPopupView();
+
+                                   JsPopUpView.BrowseDataSet(SQL, {
+                                        ID_View: 'D92379B8-25A2-42BC-A650-A2E107383B1A',
+                                        params: {
+                                            'ID_Details': Enumerable.From(_.CurrentObject.ReplenishmentDetails).Where('$.ID_Liquidation !== null').Select('$.ID_Liquidation').ToArray(),
+                                            'ID_User': _.CurrentObject.ID > 0 ? _.CurrentObject.ID_CreatedBy : VC.CurrentUser.ID,
+                                            'ID_CreatedBy': _.CurrentObject.ID_CreatedBy,
+                                            'ID_Custodian' : _.CurrentObject.ID_Custodian
+                                        },
+                                        title: 'Select Liquidation for Replenishment'
+                                   }).then(function (SelectedItems) {
+                            
+                                        var JsDataService = app.$GetDataService();
+                                        JsDataService.Query(
+                                            '@Html.EncryptSQL(@"Select * FROM vLiquidationPerType WHERE ID_Liquidation IN(@ID_Liquidation) ORDER BY ID_Liquidation,ID_ItineraryType")',
+                                            {
+                                                params:{
+                                                    'ID_Liquidation' : Enumerable.From(SelectedItems).Select('$.ID').ToArray()
+                                                }
+                                            }
+                                        ).then(function(data){
+                                            $.each(data.collection, function (i, record) {
+                                                var NewDetail = {
+                                                    ID: _.rndID(),
+                                                    ID_Liquidation: record.ID_Liquidation,
+                                                    ReferenceNo: record.DocumentNo,
+                                                    Liquidation: record.DocumentNo,
+                                                    CashAdvance: record.DocumentNo,
+                                                    IsDeduction: record.IsDeduction,
+                                                    ID_CashAdvance: record.ID_CashAdvanceRequest,                                        
+                                                    TotalAmount:  record.TotalAmount,
+                                                    Amount: record.TotalAmount,
+                                                    Date: record.Date,
+                                                    ID_Client: record.ID_Client,
+                                                    Client: record.Client,
+                                                    ID_Employee: record.ID_Employee,
+                                                    Employee: record.Employee,
+                                                    InputVat: record.InputVat,
+                                                    ID_ItineraryType: record.ID_ItineraryType,
+                                                    ItineraryType: record.ItineraryType,
+                                                    CAAmount: record.CAAmount,
+                                                    Change: record.IsDeduction == true ? 0.00 : record.Change,
+                                                    Reimbursement: record.Reimbursement,
+                                                    SalaryDeduction: record.IsDeduction == true ? record.Change : 0.00,
+                                                    IsAdvanceCA: record.IsAdvanceCA,
+                                                    PCNo: record.PCNo
+                                                };
+                                                _.CurrentObject.ReplenishmentDetails.push(NewDetail)
+                                                //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                            });
+                                            
+                                            _.Compute();
+                                        });
+
+                                        var JsDataService = app.$GetDataService();
+                                        JsDataService.Query(
+                                            '@Html.EncryptSQL(@"Select * FROM vLiquidationPerType2 WHERE ID_Liquidation IN(@ID_Liquidation) ORDER BY ID_Liquidation,ID_ItineraryType")',
+                                            {
+                                                params:{
+                                                    'ID_Liquidation' : Enumerable.From(SelectedItems).Select('$.ID').ToArray()
+                                                }
+                                            }
+                                        ).then(function(data){
+                                            $.each(data.collection, function (i, record) {
+                                                var NewDetail = {
+                                                    ID: _.rndID(),
+                                                    ID_Liquidation: record.ID_Liquidation,
+                                                    Name: record.DocumentNo,
+                                                    Liquidation: record.DocumentNo,
+                                                    CashAdvance: record.DocumentNo,
+                                                    IsDeduction: record.IsDeduction,
+                                                    ID_CashAdvance: record.ID_CashAdvanceRequest,                                        
+                                                    ApprovedCost:  record.TotalAmount,
+                                                    ActualCost: record.TotalAmount,
+                                                    Date: record.Date,
+                                                    ID_CLient: record.ID_Client,
+                                                    Client: record.Client,
+                                                    ID_Employee: record.ID_Employee,
+                                                    Employee: record.Employee,
+                                                    InputVat: record.InputVat,
+                                                    ID_ItineraryType: record.ID_ItineraryType,
+                                                    ItineraryType: record.ItineraryType,
+                                                    ID_Itinerary: record.ID_Itinerary,
+                                                    Itinerary: record.Itinerary,
+                                                    ID_Means: record.ID_Means,
+                                                    Means: record.Means,
+                                                    CAAmount: record.CAAmount,
+                                                    ChangeAmount: record.IsDeduction == true ? 0.00 : record.Change,
+                                                    Reimbursement: record.Reimbursement,
+                                                    SalaryDeduction: record.IsDeduction == true ? record.Change : 0.00,
+                                                    IsAdvanceCA: record.IsAdvanceCA,
+                                                    PCRVNo: record.PCNo
+                                                };
+                                                _.CurrentObject.Replenishment_Breakdowns.push(NewDetail)
+                                                //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                            });
+                                            
+                                            _.Compute();
+                                        });
+
+                                       //
+                                       //
+                                   });
+                               }
+                               //
+                       }
+
+                   },
+                   {
+                       text: 'CA Salary Deduction',
+                       ID_View: '342489E1-0AA9-4130-A80D-D382F70439FF',
+                       onItemClick: function () {
+                            if (VC.$scope.CurrentObject.ReplenishmentDetails == undefined  ) VC.$scope.CurrentObject.ReplenishmentDetails = []
+                            var SQL = '@Html.EncryptSQL(@"Select * from vCashAdvanceForDeduction WHERE ID_PettyCashCustodian = @ID_Custodian AND ID NOt in (@ID_Details) ")' ;
+                            //and ID_CreatedBy = ID_User
+                            var JsPopUpView = app.$GetPopupView();
+
+                            JsPopUpView.BrowseDataSet(SQL, {
+                                 ID_View: '342489E1-0AA9-4130-A80D-D382F70439FF',
+                                 params: {
+                                     'ID_Details': Enumerable.From(_.CurrentObject.ReplenishmentDetails).Where('$.ID_CashAdvance !== null').Select('$.ID_CashAdvance').ToArray(),
+                                     'ID_User': VC.CurrentUser.ID,
+                                     'ID_Custodian' : _.CurrentObject.ID_Custodian
+                                 },
+                                 title: 'CA Salary Deduction'
+                            }).then(function (SelectedItems) {
+                                var ID_CashAdvanceRequest = Enumerable.From(SelectedItems).Select('$.ID').ToArray();
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query(
+                                    '@Html.EncryptSQL(@"Select * FROM vCashAdvancePerType WHERE ID_CashAdvanceRequest IN (@ID_CashAdvanceRequest) ORDER BY ID_CashAdvanceRequest,ID_ItineraryType")',
+                                    {
+                                        params:{
+                                            'ID_CashAdvanceRequest' : ID_CashAdvanceRequest
+                                        }
+                                    }
+                                ).then(function(data){
+                                    $.each(data.collection, function (i, record) {
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_Liquidation: null,
+                                            ReferenceNo: record.DocumentNo,
+                                            Liquidation: record.DocumentNo,
+                                            CashAdvance: record.DocumentNo,
+                                            IsDeduction: true,
+                                            ID_CashAdvance: record.ID_CashAdvanceRequest,    							
+                                            TotalAmount:  0.00,
+                                            Amount: 0.00,
+                                            Date: record.Date,
+                                            ID_Client: record.ID_BusinessPartner,
+                                            Client: record.Client,
+                                            ID_Employee: record.ID_Employee,
+                                            Employee: record.Employee,
+                                            InputVat: record.InputVat,
+                                            ID_ItineraryType: record.ID_ItineraryType,
+                                            ItineraryType: record.ItineraryType,
+                                            CAAmount: record.CAAmount,
+                                            Change: 0.00,
+                                            Reimbursement: record.Reimbursement,
+                                            SalaryDeduction: record.CAAmount,
+                                            IsAdvanceCA: record.IsAdvanceCA,
+                                            PCNo: record.PCNo
+                                        };
+                                        _.CurrentObject.ReplenishmentDetails.push(NewDetail)
+                                        //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    });
+                                    
+                                    _.Compute();
+                                });
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query(
+                                    '@Html.EncryptSQL(@"Select * FROM vCashAdvancePerType2 WHERE ID_CashAdvanceRequest IN (@ID_CashAdvanceRequest) ORDER BY ID_CashAdvanceRequest,ID_ItineraryType")',
+                                    {
+                                        params:{
+                                            'ID_CashAdvanceRequest' : ID_CashAdvanceRequest
+                                        }
+                                    }
+                                ).then(function(data){
+                                    $.each(data.collection, function (i, record) {
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_Liquidation: null,
+                                            Name: record.DocumentNo,
+                                            Liquidation: record.DocumentNo,
+                                            CashAdvance: record.DocumentNo,
+                                            IsDeduction: true,
+                                            ID_CashAdvance: record.ID_CashAdvanceRequest,    							
+                                            ApprovedCost:  0.00,
+                                            ActualCost: 0.00,
+                                            Date: record.Date,
+                                            ID_CLient: record.ID_BusinessPartner,
+                                            Client: record.Client,
+                                            ID_Employee: record.ID_Employee,
+                                            Employee: record.Employee,
+                                            InputVat: record.InputVat,
+                                            ID_ItineraryType: record.ID_ItineraryType,
+                                            ItineraryType: record.ItineraryType,
+                                            ID_Itinerary: record.ID_Itinerary,
+                                            Itinerary: record.Itinerary,
+                                            ID_Means: record.ID_Means,
+                                            Means: record.Means,
+                                            CAAmount: record.CAAmount,
+                                            ChangeAmount: 0.00,
+                                            Reimbursement: record.Reimbursement,
+                                            SalaryDeduction: record.CAAmount,
+                                            IsAdvanceCA: record.IsAdvanceCA,
+                                            PCRVNo: record.PCNo
+                                        };
+                                        _.CurrentObject.Replenishment_Breakdowns.push(NewDetail)
+                                        //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    });
+                                    
+                                    _.Compute();
+                                });
+
+                            });
+                       }
+                   },                   {
+                       text: 'Cash Advance',
+                       ID_View: 'D14C4832-A80E-46F6-ACCE-ED2AA781100B',
+                       onItemClick: function () {
+                            if (VC.$scope.CurrentObject.ReplenishmentDetails == undefined  ) VC.$scope.CurrentObject.ReplenishmentDetails = []
+                            var SQL = '@Html.EncryptSQL(@"SELECT * FROM vCashAdvanceRelease WHERE ID_PettyCashCustodian = @ID_Custodian AND ID NOt in (@ID_Details) ")' ;
+                            //and ID_CreatedBy = ID_User
+                            var JsPopUpView = app.$GetPopupView();
+
+                            JsPopUpView.BrowseDataSet(SQL, {
+                                 ID_View: '2EC8CDF0-5F6D-496F-922E-799D4A4D730E',
+                                 params: {
+                                     'ID_Details': Enumerable.From(_.CurrentObject.ReplenishmentDetails).Where('$.ID_CashAdvance !== null').Select('$.ID_CashAdvance').ToArray(),
+                                     'ID_User': _.CurrentObject.ID > 0 ? _.CurrentObject.ID_CreatedBy : VC.CurrentUser.ID,
+                                     'ID_Warehouse': _.CurrentObject.ID_Warehouse,
+                                     'ID_Custodian': _.CurrentObject.ID_Custodian
+                                 },
+                                 title: 'Cash Advance'
+                            }).then(function (SelectedItems) {
+                                var ID_CashAdvanceRequest = Enumerable.From(SelectedItems).Select('$.ID').ToArray();
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query(
+                                    '@Html.EncryptSQL(@"Select * FROM vCashAdvancePerType WHERE ID_CashAdvanceRequest IN(@ID_CashAdvanceRequest) ORDER BY ID_CashAdvanceRequest,ID_ItineraryType")',
+                                    {
+                                        params:{
+                                            'ID_CashAdvanceRequest' : ID_CashAdvanceRequest
+                                        }
+                                    }
+                                ).then(function(data){
+                                    $.each(data.collection, function (i, record) {
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_Liquidation: null,
+                                            ReferenceNo: record.DocumentNo,
+                                            Liquidation: record.DocumentNo,
+                                            CashAdvance: record.DocumentNo,
+                                            IsDeduction: false,
+                                            ID_CashAdvance: record.ID_CashAdvanceRequest,    							
+                                            TotalAmount:  0.00,
+                                            Amount: 0.00,
+                                            Date: record.Date,
+                                            ID_Client: record.ID_BusinessPartner,
+                                            Client: record.Client,
+                                            ID_Employee: record.ID_Employee,
+                                            Employee: record.Employee,
+                                            InputVat: record.InputVat,
+                                            ID_ItineraryType: record.ID_ItineraryType,
+                                            ItineraryType: record.ItineraryType,
+                                            ID_Itinerary: record.ID_Itinerary,
+                                            Itinerary: record.Itinerary,
+                                            ID_Means: record.ID_Means,
+                                            Means: record.Means,
+                                            CAAmount: record.CAAmount,
+                                            Change: record.IsAdvanceCA == true ? record.CAAmount : 0.00,
+                                            Reimbursement: record.Reimbursement,
+                                            SalaryDeduction: 0.00,
+                                            IsAdvanceCA: record.IsAdvanceCA,
+                                            PCNo: record.PCNo
+                                        };
+                                        _.CurrentObject.ReplenishmentDetails.push(NewDetail)
+                                        //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    });
+                                    
+                                    _.Compute();
+                                });
+
+                                JsDataService.Query(
+                                    '@Html.EncryptSQL(@"Select * FROM vCashAdvancePerType2 WHERE ID_CashAdvanceRequest IN(@ID_CashAdvanceRequest) ORDER BY ID_CashAdvanceRequest,ID_ItineraryType")',
+                                    {
+                                        params:{
+                                            'ID_CashAdvanceRequest' : ID_CashAdvanceRequest
+                                        }
+                                    }
+                                ).then(function(data){
+                                    $.each(data.collection, function (i, record) {
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_Liquidation: null,
+                                            Name: record.DocumentNo,
+                                            Liquidation: record.DocumentNo,
+                                            CashAdvance: record.DocumentNo,
+                                            IsDeduction: false,
+                                            ID_CashAdvance: record.ID_CashAdvanceRequest,    							
+                                            ApprovedCost:  0.00,
+                                            ActualCost: 0.00,
+                                            Date: record.Date,
+                                            ID_CLient: record.ID_BusinessPartner,
+                                            Client: record.Client,
+                                            ID_Employee: record.ID_Employee,
+                                            Employee: record.Employee,
+                                            InputVat: record.InputVat,
+                                            ID_ItineraryType: record.ID_ItineraryType,
+                                            ItineraryType: record.ItineraryType,
+                                            ID_Itinerary: record.ID_Itinerary,
+                                            Itinerary: record.Itinerary,
+                                            ID_Means: record.ID_Means,
+                                            Means: record.Means,
+                                            CAAmount: record.CAAmount,
+                                            ChangeAmount: record.IsAdvanceCA == true ? record.CAAmount : 0.00,
+                                            Reimbursement: record.Reimbursement,
+                                            SalaryDeduction: 0.00,
+                                            IsAdvanceCA: record.IsAdvanceCA,
+                                            PCRVNo: record.PCNo
+                                        };
+                                        _.CurrentObject.Replenishment_Breakdowns.push(NewDetail)
+                                        //_.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    });
+                                    
+                                    _.Compute();
+                                });
+                            });
+                       }
+                   },
+                   //{
+                   //    text: 'Borrowed Cash',
+                   //    ID_View: 'B7A8B301-CFE0-4C35-8429-8F6A1947E88C',
+                   //    IsDisabled: function () {
+                   //        if (_.ID_ViewType == 2) {
+                   //
+                   //            return (VC.$scope.CurrentObject.ID_FilingStatus !== 1);
+                   //        }
+                   //        return true;
+                   //    },
+                   //    onItemClick: function(){
+                   //         if (VC.$scope.CurrentObject.Replenishment_BorrowedCashs == undefined  ) VC.$scope.CurrentObject.Replenishment_BorrowedCashs = [];
+                   //         var SQL = '@Html.EncryptSQL(@"Select * FROM vBorrowedCashForRP WHERE ((ID_CreatedBy = @ID_CurrentUser AND IsBorrowerDone = 0 ) OR (ID_ReleasedBy = @ID_CurrentUser AND IsLenderDone = 0 )) AND ID NOT IN(@IDs)")'
+                   //         var JsPopUpView = app.$GetPopupView();
+                   //         JsPopUpView.BrowseDataSet(SQL, {
+                   //             title: 'Select Borrowed Cash',
+                   //             ID_View: 'B2E79359-0DE9-4BAE-8ECA-C0F0897B63E9',
+                   //             params: {
+                   //                 'IDs': Enumerable.From(_.CurrentObject.Replenishment_BorrowedCashs).Select('$.ID_BorrowedCash').Where('$.ID_BorrowedCash !== null').ToArray(),
+                   //                 'ID_CurrentUser': VC.CurrentUser.ID
+                   //             }                                       
+                   //         }).then(function(data){
+                   //             $.each(data,function(i,record){
+                   //                 var NewDetail = {
+                   //                     ID: _.rndID(),
+                   //                     ID_BorrowedCash: record.ID,
+                   //                     BorrowedCash: record.DocumentNo,
+                   //                     Name: record.DocumentNo,
+                   //                     Amount:  record.AmountRequested,
+                   //                     ID_Custodian: record.ID_Custodian,
+                   //                     Custodian: record.Custodian,
+                   //                     ID_BCCreatedBy: record.ID_BCCreatedBy,
+                   //                     ID_ReleasedBy: record.ID_ReleasedBy,
+                   //                     ReleasedBy: record.ReleasedBy
+                   //                 };
+                   //
+                   //                 _.CurrentObject.Replenishment_BorrowedCashs.push(NewDetail);
+                   //             });
+                   //             
+                   //             _.Compute();
+                   //         });
+                   //    }
+                   //}
+                   /*,
+                   {
+                       text: 'Cancelled CA',
+                       ID_View: '74489F58-2A02-43DF-92A2-3E505FFF96F8',
+                       IsDisabled: function () {
+                           if (_.ID_ViewType == 2) {
+
+                               return (VC.$scope.CurrentObject.ID_FilingStatus !== 1);
+                           }
+                           return true;
+                       },
+                       onItemClick: function(){
+                            if (VC.$scope.CurrentObject.Replenishment_Liquidations == undefined  ) VC.$scope.CurrentObject.Replenishment_Liquidations = [];
+                            if (VC.$scope.CurrentObject.Replenishment_CashAdvances == undefined  ) VC.$scope.CurrentObject.Replenishment_CashAdvances = [];
+                            var SQL = '@Html.EncryptSQL(@"Select * FROM vCashAdvanceRequestCancelled WHERE ID NOT IN(@IDs)")'
+                            var JsPopUpView = app.$GetPopupView();
+                            JsPopUpView.BrowseDataSet(SQL, {
+                                title: 'Select Cash Advance',
+                                ID_View: 'BEA187CD-D98E-43A2-8A8A-38CC2BBC887E',
+                                params: {
+                                    'IDs': Enumerable.From(_.CurrentObject.Replenishment_Liquidations).Select('$.ID_CashAdvance').Where('$.ID_CashAdvance !== null').ToArray()
+                                }                                       
+                            }).then(function(data){
+                                
+                                $.each(data,function(i,record){
+                                    var NewDetail = {
+                                        ID: _.rndID(),
+                                        ID_CashAdvance: record.ID,
+                                        ReferenceNo: record.DocumentNo,
+                                        ID_Liquidation: null,
+                                        TotalAmount:  record.TotalCashAdvanceAmount,
+                                        CashAdvance: record.DocumentNo,
+                                        ID_Client: record.ID_Client,
+                                        Client: record.Client,
+                                        ID_Employee: record.ID_Employee,
+                                        Employee: record.Employee,
+                                        InputVat: record.TotalVat
+                                    };
+
+                                    _.CurrentObject.Replenishment_Liquidations.push(NewDetail);
+                                    _.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    _.CurrentObject.Warehouse = record.Warehouse;
+                                });
+                                
+                                _.Compute();
+                            });
+                       }
+                   }*/
+                ]
+                });
+
+            }
+
+
+        VC.AddToolbarButton({
+                text: 'Create VP',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 2) {
+                        if (_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 17) {
+                            return false;
+                        }
+                        return true;
+                    } else {
+                        var itemsSelected = _.Grid.getSelectedRowsData();
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus == 2 || $.ID_FilingStatus == 17").ToArray();
+                        
+                        if (NotApprovedDocs.length == 0){ return true;}
+                    }
+                    return false;
+                },
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    AcctHelper.CreateVPFromRP(Selecteds);
+
+                }
+
+            });
+
+
+       VC_Replenishment.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+            VC.ReplenishmentDetails_onColumnChanged = function (e) {
+
+                if (e.dataField == 'TotalAmount'){
+                    
+                    _.Compute();
+                }
+            }
+            VC.Replenishment_Breakdowns_onColumnChanged = function (e) {
+
+                if (e.dataField == 'ApprovedCost'){
+                    
+                    _.Compute();
+                }
+            }
+            this.Compute();
+        }     
+
+        VC_Replenishment.prototype.onDetailRowUpdated = function () {
+        
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_Replenishment.prototype.Compute = function () {
+
+            baseModelHelper.prototype.Compute.call(this);
+
+            var _ = this;
+            var VC = this.VC;
+
+            var totalAmount = 0.00;
+            var TotalInputVat = 0.00;
+            var TotalChange = 0.00;
+            var TotalReimbursement = 0.00;
+            var TotalBorrowed = 0.00;
+            var TotalLent = 0.00;
+            var Subtotal = 0.00;
+            var TotalDeduction = 0.00;
+            var TotalCA = 0.00;
+			var TotalAdjustment = 0.00;
+
+            if(_.CurrentObject.ReplenishmentDetails == null || _.CurrentObject.ReplenishmentDetails == undefined){
+                _.CurrentObject.ReplenishmentDetails = [];
+            }
+
+            if(_.CurrentObject.Replenishment_CashAdvances == null || _.CurrentObject.Replenishment_CashAdvances == undefined){
+                _.CurrentObject.Replenishment_CashAdvances = [];
+            }
+
+            
+
+            $.each(_.CurrentObject.ReplenishmentDetails, function (index, detail) {
+
+                detail.TotalAmount = 0.00;
+                if(_.CurrentObject.Replenishment_Breakdowns == undefined) _.CurrentObject.Replenishment_Breakdowns = [];
+                $.each(_.CurrentObject.Replenishment_Breakdowns,function(i,o){
+                    
+                    if(o.ID_Liquidation == detail.ID_Liquidation && 
+                        o.ID_CashAdvance == detail.ID_CashAdvance && 
+                        o.ID_Employee == detail.ID_Employee && 
+                        o.ID_CLient == detail.ID_Client  && 
+                        o.ID_ItineraryType == detail.ID_ItineraryType){
+                            detail.TotalAmount += o.ApprovedCost;
+                        }
+                });
+
+
+                totalAmount  += detail.TotalAmount;
+                TotalInputVat += detail.InputVat;
+                TotalChange += detail.Change;
+                TotalReimbursement += detail.Reimbursement;
+                Subtotal += detail.Amount;
+                TotalDeduction += detail.SalaryDeduction;
+
+                if(detail.IsAdvanceCA !== true){
+                    TotalCA += detail.CAAmount;
+                }
+				TotalAdjustment += detail.Amount - detail.TotalAmount;
+
+                //if(detail.IsDeduction == true){
+                //    if(detail.ID_Liquidation > 0){
+                //        TotalDeduction += detail.Change;
+                //    }else{
+                //        TotalDeduction += detail.CAAmount; 
+                //    }
+                //}
+                
+            });
+
+            $.each(_.CurrentObject.Replenishment_CashAdvances, function (index, detail) {
+                TotalInputVat += detail.InputVat;
+                totalAmount  += detail.TotalAmount;
+            });
+
+            if(_.CurrentObject.Replenishment_Liquidations == undefined)  _.CurrentObject.Replenishment_Liquidations  = [];
+
+            $.each(_.CurrentObject.Replenishment_Liquidations, function (index, detail) {
+                TotalInputVat += detail.InputVat;
+                totalAmount  += detail.TotalAmount;
+            });
+
+            if(_.CurrentObject.Replenishment_BorrowedCashs == undefined)  _.CurrentObject.Replenishment_BorrowedCashs  = [];
+
+            $.each(_.CurrentObject.Replenishment_BorrowedCashs, function (index, detail) {
+                if(_.CurrentObject.ID_Custodian == detail.ID_Custodian){
+                    TotalBorrowed  += detail.Amount;
+                }
+                if(VC.IsNew() == true){
+                    if(VC.CurrentUser.ID == detail.ID_ReleasedBy){
+                        TotalLent  += detail.Amount;
+                    }
+                }else{
+                    if(_.CurrentObject.ID_CreatedBy == detail.ID_ReleasedBy){
+                        TotalLent  += detail.Amount;
+                    }
+                }
+                
+            });
+
+
+            _.CurrentObject.TotalDeduction = TotalDeduction;
+            _.CurrentObject.TotalInputVat = TotalInputVat;
+            _.CurrentObject.TotalChange = TotalChange;
+            _.CurrentObject.TotalReimbursement = TotalReimbursement;
+            _.CurrentObject.Subtotal = TotalCA;
+            _.CurrentObject.TotalBorrowed = TotalBorrowed;
+            _.CurrentObject.TotalLent = TotalLent;
+			_.CurrentObject.TotalAdjustment = TotalAdjustment;
+
+            _.CurrentObject.COAAdjustment = _.CurrentObject.COAAdjustment == null || _.CurrentObject.COAAdjustment == undefined ? 0.00 : _.CurrentObject.COAAdjustment;
+			
+            totalAmount = (TotalCA + TotalReimbursement)  - TotalChange;
+
+            _.CurrentObject.TotalAmount = totalAmount - _.CurrentObject.COAAdjustment + TotalLent - TotalBorrowed;
+
+        }
+
+
+         Compute = function(){
+
+             var TotalAmount = 0.00
+             if(_.CurrentObject.ReplenishmentDetails == undefined) _.CurrentObject.ReplenishmentDetails = [];
+             $.each(_.CurrentObject.ReplenishmentDetails,function(i,d){
+                 TotalAmount = TotalAmount + d.TotalAmount;
+             })
+
+             if(_.CurrentObject.Replenishment_Liquidations== undefined) _.CurrentObject.Replenishment_Liquidations = [];
+             $.each(_.CurrentObject.Replenishment_Liquidations,function(i,d){
+                 TotalAmount = TotalAmount + d.TotalAmount;
+             })
+
+               _.CurrentObject.TotalAmount = TotalAmount;
+
+            
+           }
+
+        
+
+         }
+        
+
+        VC_Replenishment.prototype.isColumnGridEditable = function (p, e) {
+            //
+            //
+            //
+            var _ = this;
+            var VC = _.VC;
+
+            if(p == 'ReplenishmentDetails'){
+                
+                if(e.column.dataField == 'ActualCost'){
+                    if(_.CurrentObject.Level2Approvers == undefined || _.CurrentObject.Level2Approvers == null ){
+                        return false;
+                    }else{
+                        var ID_Approvers = _.CurrentObject.Level2Approvers.split(",");
+                        if (!ID_Approvers.includes(VC.CurrentUser.ID_Employee + '')) {
+                            return false;
+                        }
+                    }
+                }else{
+                    if(_.CurrentObject.ID_FilingStatus > 1){
+                        return false;
+                    }
+                }
+            }
+
+
+            return true;
+        }
+         VC_Replenishment.prototype.OnFormInitialized = function (VC) {
+          
+            var _ = this;
+             VC.onReplenishmentDetails_RowUpdated = function (e) { 
+                   console.log('xxxx') 
+                   _.Compute();  
+                }
+                _.Compute();  
+        }
+
+             VC_Replenishment.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pReplenishmentApproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+         }
+
+        VC_Replenishment.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pReplenishmentCancelled")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+      
+
+        return VC_Replenishment;
+    });
+//</script>
+</text> , false);
+

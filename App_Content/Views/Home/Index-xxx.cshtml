@@ -1,0 +1,103 @@
+﻿@using JSLibrary;
+@using Newtonsoft.Json;
+@using System.Web.Optimization
+@{
+    ViewBag.Title = "IAMS Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var CurrentUser = ViewBag.CurrentUser as dynamic;
+}
+<script src="JsApp/GetScript?Url=VC_HomeController"></script>
+<script src="~/Content/js/Base/DevHansOnTable.js"></script>
+<div class="row full-height" ng-controller="HomeController as HomeCtrl" style="height:100%">
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header" style="height:100%">
+                <div style="height:100%;display:table"><div style="display:table-cell;vertical-align:middle"><a class="navbar-brand" href="#" style="padding:10px"><span class="AppIcon FontInSys"></span> INSYS ACCOUNTING MANAGEMENT SYSTEM</a></div></div>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <div class="div-middle notification-bar">
+                    <div class="div-middle-content" style="text-align:-webkit-right">
+                        <div class="fullTextSearch"  dx-autocomplete="FullTextSearchOption" id="FullSearchTextControl" style="display:none">
+                            <div data-options="dxTemplate: {name: 'ItemTemplate'}">
+                                <div style="text-align: left;" class="full-search-template">
+                                    <span class="model-key">({{ID == -1 ? 'New' : ID}})</span>
+                                    <span class="model-user">{{User === null ? '' : '(' + User + ')'}}</span>
+                                    <div class="div-middle">
+                                        <div class="div-middle-content">
+                                            <span class="icon {{ImageName}}" style="color:{{ThemeColor}}"/>
+                                        </div>
+                                        <div class="div-middle-content" style="padding-left:8px">
+                                            <span class="model-name">{{ModelName}}</span>     
+                                            <div class="description">
+                                                {{Description}}
+                                            </div>
+                                            <div class="other-info">{{InfoA}}</div>
+                                            <div class="other-info">{{InfoB}}</div>
+                                            <div class="other-info">{{InfoC}}</div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>    
+                        </div>
+
+                        @*<js-notif icon="mdi mdi-bug" option="NotifBugOption"></js-notif>
+                        <js-notif icon="mdi mdi-email-outline" option="NotifEmailOption"></js-notif>
+                        <js-notif icon="mdi mdi-earth" option="NotifGlobalOption"></js-notif>*@
+                    </div>
+                </div>
+                <div class="navbar-right user-container">
+                    <div class="image-container">
+                        <img class="image-user" src="@CurrentUser.ImageFile" onerror="this.onerror = null; this.src='App_Content/Image/default-user.png';">
+                    </div>
+                    <div class="user-info">
+                        @CurrentUser.Name
+                        <div class="usergroup-container">@CurrentUser.UserGroup</div>
+                    </div>
+                </div>
+            </div>
+             <div dx-menu="dxHomeMenu"></div>
+        </div>
+    </nav>
+    <div class="side-menu">
+        <nav class="navbar navbar-default" role="navigation">
+
+            <div class="side-menu-container">
+                <div class="searchtextbox-container">
+                    <div dx-text-box="SearchTextBox" data-ng-model="SearchValue"></div>
+                </div>
+                <div dx-scroll-view="{
+                        showScrollbar : 'always',
+                        height : '85%'
+                        }">
+                    <div dx-tree-view="treeViewOptions"></div>
+                    @*<div dx-context-menu="treeViewMenuOptions"></div>*@
+                </div>
+                @*<div style="height:7%;background-color:#fff"></div>*@
+            </div>
+        </nav>
+    </div>
+    <div class="container-fluid">
+        <div class="side-body">
+            <div id="JsBackWrapContent" ng-hide="navigationTabs.length > 0" class="outer-div"
+                 style="z-index:1;padding:0px;background-color:#fff">
+                <div class="jsbackwrap">
+                    <img src="~/App_Content/Image/logo.png" />
+                </div>
+            </div>
+            <jstab class="js-navigation-tabs"
+                   tabs="navigationTabs"
+                   currentTabIndex="currentTabIndex"
+                   currentTab="currentTab"
+                   onTabsClear="onTabClear()"
+                   register="registerTab(TabControl)"></jstab>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/signalR/jquery.signalR-2.2.1.min.js"></script>
+<script src="~/signalr/hubs"></script>
+
+
+
+
+

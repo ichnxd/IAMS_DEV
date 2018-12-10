@@ -1,0 +1,971 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");//Url.Encode("Salespipeline/VC_BaseSalespipeline");//Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_WorkOrder = function () {
+            //this.DocDetailPropertyName = 'Proposal_Details';
+        }
+
+        VC_WorkOrder.prototype = Object.create(Base.prototype);
+        VC_WorkOrder.AGING_COUNT = 1;
+
+        VC_WorkOrder.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            VC.onRowPrepared = function (info) {
+                if (info.rowType === 'data') {
+                    if (info.data.Aging >= VC_WorkOrder.AGING_COUNT) {
+                        info.rowElement.addClass('OverAged')
+                    }
+                }
+            };
+
+            VC.AddButtonReport({
+                    Name: 'Work Order Form',
+                    ID_Report: 5250,
+                    requireSingleObject: true
+                });
+            ////////////////////////////
+            VC.$Name_IsDisabled = function () {
+                if (_.CurrentObject.ID_Opportunity !== null && _.CurrentObject.ID_Opportunity !== undefined) return false;
+                return true;
+            }
+
+
+
+            _.butCancel.IsDisabled = function () {
+
+                var _isCanCancel = _.IsCanCancel();
+
+                var Selecteds = null;
+                if (_.ID_ViewType == 2) {
+                    Selecteds = [_.CurrentObject];
+                } else {
+                    Selecteds = _.Grid.getSelectedRowsData();
+                }
+
+                if(Selecteds.length !== 1){
+                    return true;
+                }
+
+                if(Selecteds[0].IsClosed == 1 || Selecteds[0].IsClosed == true){
+                    return true;
+                }
+
+                return _isCanCancel;
+            }
+
+
+            if(_.ID_ViewType == 1){
+
+
+
+                @*/*VC.JSDataService.Query('@Html.EncryptSQL("SELECT * FROM dbo.tDepartment WHERE IsActive = 1 ORDER BY Name")', {
+
+                }).then(function (Data) {
+    
+                    //---------------4
+                    VC.AddActionFilter({
+                        name: 'VC_Employee',
+                        caption: 'Assignee',
+                        SQL: '@Html.EncryptSQL("SELECT * FROM dbo.tEmployee WHERE IsActive = 1  ORDER BY Name")',
+                        params: function () {
+                            var VC_Department = (VC.ActionFilters != undefined ? VC.ActionFilters.VC_Department : -1);
+                            console.log(VC_Department)
+                            return { 'ID_Department': VC_Department  }
+                        },
+                        width: 250,
+                        defaultItems: [
+                            {
+                                ID: -2,
+                                Name: '(All)'
+                            },
+                            {
+                                ID: -1,
+                                Name: '(My Work Order)'
+                            }
+                        ],
+                        value:  -1
+                    });
+                    ///------------------
+    
+                    Data.collection.unshift({
+                        ID: -1,
+                        Name: '(All)'
+                    });
+    
+                    VC.AddActionFilter({
+                        name: 'VC_Department',
+                        caption: 'Department',
+                        width: 150,
+                        dataSource: Data.collection,
+                        isLoadData: true,
+                        displayExpr: 'Name',
+                        valueExpr: 'ID',
+                        value: VC.CurrentUser.ID_Department > 0 ? VC.CurrentUser.ID_Department : -1
+                    });
+    
+    
+    
+                });*/*@
+            }
+
+            if(_.ID_ViewType == 2){
+
+                VC.ValidationRules.push(function () {
+                    var JsDataService =  app.$GetDataService();
+
+                    return JsDataService.Validate( '@Html.EncryptSQL("pWorkOrder_ValidateBeforeSave")',
+                        {
+                            'ID': _.CurrentObject.ID,
+                            'ID_FilingStatus': _.CurrentObject.ID_FilingStatus
+                        }
+                    );
+                });
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    if( Array.isArray(_.CurrentObject.WorkOrder_Members) == false )  _.CurrentObject.WorkOrder_Members = [];
+
+                    if((_.CurrentObject.Schedule_StartDate !== undefined && _.CurrentObject.Schedule_StartDate !== null) || (_.CurrentObject.Schedule_EndDate !== undefined && _.CurrentObject.Schedule_EndDate !== null) ){
+                        if(_.CurrentObject.WorkOrder_Members.length == 0){
+                            brokenRules.push('Members is required')
+                        }else{
+                            var isLeadSelected = false;
+                            $.each(_.CurrentObject.WorkOrder_Members ,function(i,member){
+                                if(member.IsTeamLead == true || member.IsTeamLead == 1){
+                                    isLeadSelected = true;
+                                }
+                            });
+
+                            if(isLeadSelected == false){
+                                brokenRules.push('Atleast 1 Team Lead is required.')
+                            }
+                        }
+                    }
+                    /* if(_.CurrentObject.DateRequired !== undefined && _.CurrentObject.DateRequired !== null){
+                        var DateRequired = new Date(_.CurrentObject.DateRequired);
+                        var Schedule_StartDate = new Date(_.CurrentObject.Schedule_StartDate);
+                        var Schedule_EndDate = new Date(_.CurrentObject.Schedule_EndDate);
+
+                        if( (_.CurrentObject.Schedule_StartDate !== undefined && _.CurrentObject.Schedule_StartDate !== null) || (_.CurrentObject.Schedule_EndDate !== undefined && _.CurrentObject.Schedule_EndDate !== null) ){
+                            if(DateRequired > Schedule_StartDate || DateRequired > Schedule_EndDate){
+                                brokenRules.push('Schedule Start Date / End Date cannot be earlier than date required.')
+                            }
+    
+                            if(Schedule_StartDate > Schedule_EndDate){
+                                brokenRules.push('Schedule End Date cannot be earlier than Start Date.')
+                            }
+                        }
+                    } */
+
+                    if(_.CurrentObject.ID_FilingStatus == 2){
+
+                        var Schedule_StartDate = new Date(_.CurrentObject.Schedule_StartDate);
+                        var Schedule_EndDate = new Date(_.CurrentObject.Schedule_EndDate);
+                        if( (_.CurrentObject.Schedule_StartDate !== undefined && _.CurrentObject.Schedule_StartDate !== null) || (_.CurrentObject.Schedule_EndDate !== undefined && _.CurrentObject.Schedule_EndDate !== null) ){
+                            if(_.CurrentObject.Schedule_EndDate !== undefined && _.CurrentObject.Schedule_EndDate !== null){
+                                if((_.CurrentObject.Schedule_StartDate == undefined || _.CurrentObject.Schedule_StartDate == null)){
+                                    brokenRules.push('Schedule Start Date is required.')
+                                }
+                            }
+                            if(_.CurrentObject.Schedule_StartDate !== undefined && _.CurrentObject.Schedule_StartDate !== null){
+                                if((_.CurrentObject.Schedule_EndDate == undefined || _.CurrentObject.Schedule_EndDate == null)){
+                                    brokenRules.push('Schedule End Date is required.')
+                                }
+                            }
+
+                            if(Schedule_StartDate > Schedule_EndDate){
+                                brokenRules.push('Schedule End Date cannot be earlier than Start Date.')
+                            }
+                        }
+                    }
+
+
+                    // -------------------------------------
+                    // if(_.CurrentObject.StartTime !== null && _.CurrentObject.EndTime !== null && _.CurrentObject.StartTime !== undefined && _.CurrentObject.EndTime !== undefined){
+                    //     var CurrentDate = new Date();
+                    //     var currentTimeStart = new Date(_.CurrentObject.StartTime);
+                    //     var currentTimeEnd = new Date(_.CurrentObject.EndTime);
+                    //     currentTimeStart.setMonth(CurrentDate.getMonth(),CurrentDate.getDay());
+                    //     currentTimeEnd.setMonth(CurrentDate.getMonth(),CurrentDate.getDay());
+
+                    //     currentTimeStart.setYear(CurrentDate.getYear());
+                    //     currentTimeEnd.setYear(CurrentDate.getYear());
+
+                    //     if( currentTimeEnd < currentTimeStart ){
+                    //         brokenRules.push('End Time must not less than Start Time');
+                    //     }else{
+                    //         var diff = currentTimeEnd - currentTimeStart;
+                    //         var minutes = Math.floor((diff/1000)/60);
+                    //         if( minutes < 30 ){
+                    //             brokenRules.push('End Time must have atleast 30 minutes ahead to Start Time');
+                    //         }
+                    //     }
+
+                    //     if(_.CurrentObject.StartTime == _.CurrentObject.EndTime){
+                    //         brokenRules.push('Same Start Time and End Time is not allowed');
+                    //     }
+                    // }
+                    // _.CurrentObject.StartTime = new Date(_.CurrentObject.StartTime).toLocaleString();
+                    // _.CurrentObject.EndTime = new Date(_.CurrentObject.EndTime).toLocaleString();
+
+
+                    if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                });
+
+
+                VC.AddToolBarButtonOnGrid('WorkOrder_Members', {
+                    text: 'Add Member',
+                    icon: 'mdi mdi-package-variant',              
+                    onClick: function () {
+                        VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,Name,Position,ID_Position,ID_Department,Department FROM dbo.vEmployee WHERE ID NOT IN(@IDs) AND IsActive = 1")', {
+                            title: 'Select Member',
+                            ID_View: '98F1CFBD-66A0-41C7-AD55-5309F903097A',
+                            ID_DetailView: 2,
+                            ModelName: 'Item',
+                            ModelIcon: 'mdi mdi-package-variant',
+                            PropertyKey: 'ID',
+                            width: 700,
+                            params: {
+                                'IDs' : Enumerable.From(_.CurrentObject.WorkOrder_Members).Select("$.ID_Employee").ToArray()
+                            }
+                        }).then(function (Members) {
+                            if( Array.isArray(_.CurrentObject.WorkOrder_Members) == false )  _.CurrentObject.WorkOrder_Members = [];
+
+                            $.each(Members,function(i,member){
+                                var newMember = {
+                                    ID: -1,
+                                    Name: member.Name,
+                                    ID_Employee: member.ID,
+                                    Employee: member.Name,
+                                    ID_Position: member.ID_Position,
+                                    Position: member.Position,
+                                    ID_Department: member.ID_Department,
+                                    Department: member.Department,
+                                    IsTeamLead: false
+                                };
+
+                                _.CurrentObject.WorkOrder_Members.push(newMember);
+                            });
+
+                        });
+                    }
+                });
+
+                VC.WorkOrder_ActionTakens_IsCanDelete = function(selectedRows){
+
+                    var IsValid = true;
+                    $.each(selectedRows,function(i,o){
+                        if(VC.CurrentUser.ID !== o.ID_CreatedBy){
+                            IsValid = false;
+                        }
+                    });
+
+                    if(IsValid == false){
+                        VC.MsgBox('Cannot delete Action Taken created by other user');
+                        return false;
+                    }
+
+                    return true;
+                } 
+                
+                VC.AddToolBarButtonOnGrid('WorkOrder_ActionTakens', {
+                    text: 'Add Action',
+                    icon: 'mdi mdi-package-variant',              
+                    onClick: function () {
+                        if( Array.isArray(_.CurrentObject.WorkOrder_ActionTakens) == false )  _.CurrentObject.WorkOrder_ActionTakens = [];
+            
+                        var newAction = {
+                            ID: -1,
+                            Name: null,
+                            ID_Lead: null,
+                            Lead: null,
+                            ID_ActionTaken: null,
+                            ActionTaken: null,
+                            Comment: null,
+                            ID_CreatedBy: null,
+                            CreatedBy: null,
+                            DateCreated: null,
+                            ID_Department: null,
+                            Department: null,
+                            ID_CreatedBy: VC.CurrentUser.ID,
+                            CreatedBy: VC.CurrentUser.Name
+
+                        };
+
+                        _.CurrentObject.WorkOrder_ActionTakens.push(newAction);
+                    }
+                });
+
+
+                VC.WorkOrder_ActionTakens_onColumnChanged = function (e) {
+                    if(e.dataField === 'ID_Lead'){         
+                        if(e.data.ID_Department !== undefined ) {
+                            e.key.ID_Department = e.data.ID_Department;
+                            e.key.Department = e.data.Department;
+                        }
+                        if(e.data.Name !== undefined ) {
+                            e.key.Name = e.data.Name;
+                        }
+                    }
+                    if(e.dataField === 'ID_ActionTaken'){   
+                        if(e.data !== null){
+                            if(e.data.ID !== 1 && e.data.ID !== undefined && e.data.ID !== null){
+                                e.key.ID_Lead = VC.CurrentUser.ID_Employee;
+                                e.key.Lead = VC.CurrentUser.Employee;
+                                e.key.ID_Department = VC.CurrentUser.ID_Department;
+                                e.key.Department = VC.CurrentUser.Department;
+                            } 
+                            if(e.data.ID == 1){
+                                e.key.ID_Lead = null;
+                                e.key.Lead = null;
+                                e.key.ID_Department = null;
+                                e.key.Department = null;
+                            }
+                        }
+                        if(e.key.ID_ActionTaken == null){
+                            e.key.ID_Lead = null;
+                            e.key.Lead = null;
+                            e.key.ID_Department = null;
+                            e.key.Department = null;
+                        }
+                    }
+                }
+
+
+                VC.CustomSave = VC.Save;
+                VC.Save = function () {
+                    if(_.CurrentObject.ID_FilingStatus == 2){
+                        if(_.CurrentObject.Schedule_StartDate !== null && _.CurrentObject.Schedule_StartDate !== undefined){
+                            if(typeof _.CurrentObject.Schedule_StartDate == 'object'){
+                                _.CurrentObject.Schedule_StartDate = _.CurrentObject.Schedule_StartDate.toLocaleDateString()
+                            }
+                        }
+                        if(_.CurrentObject.Schedule_EndDate !== null && _.CurrentObject.Schedule_EndDate !== undefined){
+                            if(typeof _.CurrentObject.Schedule_EndDate == 'object'){
+                                _.CurrentObject.Schedule_EndDate = _.CurrentObject.Schedule_EndDate.toLocaleDateString() 
+                            }
+                        }
+    
+                        if(_.CurrentObject.Schedule_StartTime !== null && _.CurrentObject.Schedule_StartTime !== undefined){
+                            if(typeof _.CurrentObject.Schedule_StartTime == 'object'){
+                                _.CurrentObject.Schedule_StartTime = _.CurrentObject.Schedule_StartTime.toLocaleDateString() + ' ' + _.CurrentObject.Schedule_StartTime.toLocaleTimeString();
+                            }
+                        }
+                        if(_.CurrentObject.Schedule_EndTime !== null && _.CurrentObject.Schedule_EndTime !== undefined){
+                            if(typeof _.CurrentObject.Schedule_EndTime == 'object'){
+                                _.CurrentObject.Schedule_EndTime = _.CurrentObject.Schedule_EndTime.toLocaleDateString() + ' ' + _.CurrentObject.Schedule_EndTime.toLocaleTimeString();
+                            }
+                        }
+                    }
+
+
+                    if(_.CurrentObject.ID_Opportunity > 0){
+                        VC.JSDataService.Validate('@Html.EncryptSQL("pOpportunityIsWorkClosed")',
+                        {
+                            'ID': _.CurrentObject.ID_Opportunity,
+                            'ID_WorkOrder': _.CurrentObject.ID
+                        }
+                        ).then(function(result){
+                            if(result.IsClosed == true || result.IsClosed == 1){
+                                VC.CustomSave();
+                            }else{
+                                VC.MsgBox('There are still pending Work Order for this Opportunity','Work Order');
+                                return;
+                            }
+                        });
+                    }
+                    else{
+                        VC.CustomSave();
+                    }
+
+                };
+
+            }
+
+            /////////////////////////////
+            
+
+        }
+
+        VC_WorkOrder.prototype.isColumnGridEditable = function (PropertyName, e) {
+                        
+            var _ = this;
+            var VC = _.VC;
+            if(PropertyName == 'WorkOrder_ActionTakens'){
+                if(e.data.ID_CreatedBy !== VC.CurrentUser.ID){ 
+                    return false;
+                }
+                else{
+                    if(e.column.dataField !== 'ID_ActionTaken' && e.column.dataField !== 'Comment'){
+                        if(e.data.ID_ActionTaken == 1){
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+        VC_WorkOrder.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+
+            var ID_ContactPerson = VC.GetFormItem('ID_ContactPerson');
+            if(ID_ContactPerson !== null && ID_ContactPerson !== undefined){
+                ID_ContactPerson.editorOptions.onCreateNewObject = function (data) {
+                    if (VC.$scope.CurrentObject.ID_Client == null) {
+                        VC.MsgBox("Please Select a Client Trade Name");
+                        data.cancel = true;
+                        return;
+                    }
+                    data.params = {
+                        ID_Customer: VC.$scope.CurrentObject.ID_Client
+                    };
+                };
+            }
+        }
+
+
+        VC_WorkOrder.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+
+
+
+            VC.AddActionFilter({
+                name: 'VC_Employee',
+                caption: 'Assignee',
+                SQL: '@Html.EncryptSQL("SELECT * FROM dbo.tEmployee WHERE IsActive = 1  ORDER BY Name")',
+                params: function () {
+                    var VC_Department = (VC.ActionFilters != undefined ? VC.ActionFilters.VC_Department : -1);
+                    console.log(VC_Department)
+                    return { 'ID_Department': VC_Department  }
+                },
+                width: 150,
+                defaultItems: [
+                    {
+                        ID: -2,
+                        Name: '(All)'
+                    },
+                    {
+                        ID: -1,
+                        Name: '(My Work Order)'
+                    }
+                ],
+                value:  -1
+            });
+
+
+            VC.AddActionFilter({
+                name: 'VC_Department',
+                caption: 'Department',
+                SQL: '@Html.EncryptSQL("SELECT * FROM dbo.tDepartment WHERE IsActive = 1 ORDER BY Name")',
+                params: function () {
+                    // var VC_Department = (VC.ActionFilters != undefined ? VC.ActionFilters.VC_Department : -1);
+                    // console.log(VC_Department)
+                    // return { 'ID_Department': VC_Department  }
+                    return {};
+                },
+                width: 150,
+                defaultItems: [
+                    {
+                        ID: -2,
+                        Name: '(All)'
+                    },
+                    {
+                        ID: -1,
+                        Name: '(My Department)'
+                    }
+                ],
+                value: -1
+            });
+
+
+
+            
+
+
+        }    
+
+        VC_WorkOrder.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+
+               console.log(VC.$scope.CurrentObject.$dirty,'dirty',e.dataField,e.value)
+            if(VC.$scope.CurrentObject.$dirty === true){
+
+                
+                if (e.dataField == "StartTime") {
+                    console.log(typeof e.value)
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.StartTime = e.value.toLocaleDateString() + ' ' + e.value.toLocaleTimeString();
+                        }
+                    }
+                }
+                if (e.dataField == "EndTime") {
+                    console.log(typeof e.value)
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.EndTime = e.value.toLocaleDateString() + ' ' + e.value.toLocaleTimeString();
+                        }
+                    }
+                }
+                if (e.dataField == "Schedule_StartTime") {
+                    console.log(typeof e.value)
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.Schedule_StartTime = e.value.toLocaleDateString() + ' ' + e.value.toLocaleTimeString();
+                        }
+                    }
+                }
+                if (e.dataField == "Schedule_EndTime") {
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.Schedule_EndTime = e.value.toLocaleDateString() + ' ' + e.value.toLocaleTimeString();
+                        }
+                    }
+
+                }
+        
+                if (e.dataField == "DateRequired") {
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.DateRequired = e.value.toLocaleDateString();
+                        }
+                    }
+                }
+
+                if (e.dataField == "Schedule_StartDate") {
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.Schedule_StartDate = e.value.toLocaleDateString() ;
+                        }
+                    }
+                }
+
+                if (e.dataField == "Schedule_EndDate") {
+                    if (e.value !== null) {
+                        if (typeof e.value === 'object' ) {
+                            _.CurrentObject.Schedule_EndDate = e.value.toLocaleDateString() ;
+                        }
+                    }
+                }
+
+                if (e.dataField == "ID_Client") {
+                    if (e.value !== null) {
+
+                        if (e.value.ParentCompany !== undefined) {
+                            if (e.value.ParentCompany !== null) {
+                                _.CurrentObject.ParentCompany = e.value.ParentCompany;
+                            } else {
+                                _.CurrentObject.ParentCompany = null;
+                            }
+                        }
+                        if (e.value.RegisteredCompanyName !== undefined) {
+                            if (e.value.RegisteredCompanyName !== null) {
+                                _.CurrentObject.RegisteredCompany = e.value.RegisteredCompanyName;
+                            } else {
+                                _.CurrentObject.RegisteredCompany = null;
+                            }
+                        }
+                        if (e.value.Management !== undefined) {
+                            if (e.value.Management !== null) {
+                                _.CurrentObject.Management = e.value.Management;
+                            } else {
+                                _.CurrentObject.Management = null;
+                            }
+                        }
+                        if (e.value.Branch !== undefined) {
+                            if (e.value.Branch !== null) {
+                                _.CurrentObject.Branch = e.value.Branch;
+                            } else {
+                                _.CurrentObject.Branch = null;
+                            }
+                        }
+                        if (e.value.Address !== undefined) {
+                            if (e.value.Address !== null) {
+                                _.CurrentObject.Address = e.value.Address;
+                            } else {
+                                _.CurrentObject.Address = null;
+                            }
+                        }
+                        if (e.value.ID_Contact !== undefined) {
+                            if (e.value.ID_Contact !== null) {
+                                _.CurrentObject.ID_ContactPerson = e.value.ID_Contact;
+                                _.CurrentObject.ContactPerson = e.value.Contact;
+                            } else {
+                                _.CurrentObject.ID_ContactPerson = null;
+                                _.CurrentObject.ContactPerson = null;
+                            }
+                        }
+
+                        if (e.value.Position !== undefined) {
+                            if (e.value.Address !== null) {
+                                _.CurrentObject.Position = e.value.Position;
+                            } else {
+                                _.CurrentObject.Position = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined) {
+                            if (e.value.Phone !== null) {
+                                _.CurrentObject.ContactDetails = e.value.Phone;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.MobileNo !== undefined) {
+                            if (e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = e.value.MobileNo;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined && e.value.MobileNo !== undefined) {
+                            if (e.value.Phone !== null && e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = 'Phone: ' +  e.value.Phone + ' | Mobile: ' + e.value.MobileNo;
+                            }
+                        }
+                        if (VC.$scope.CurrentObject.$dirty == true) {
+                            if (e.value.ParentCompany !== undefined) {
+                                _.CurrentObject.ID_Opportunity = null;
+                                _.CurrentObject.Opportunity = null;
+                            }
+                        }
+                        
+                    }else{
+                        _.CurrentObject.ParentCompany = null;
+                        _.CurrentObject.RegisteredCompany = null;
+                        _.CurrentObject.Management = null;
+                        _.CurrentObject.Branch = null;
+                        _.CurrentObject.Address = null;
+                        _.CurrentObject.ID_Opportunity = null;
+                        _.CurrentObject.Opportunity = null;
+                        _.CurrentObject.ID_ContactPerson = null;
+                        _.CurrentObject.ContactPerson = null;
+                        _.CurrentObject.ContactDetails = null;
+                        _.CurrentObject.Position = null;
+                        _.CurrentObject.Name = null;
+                    }
+                }
+
+                
+                if (e.dataField == "ID_Opportunity") {
+                    console.log(e.value,'xxxx')
+                    if (e.value !== null) {
+                        if (e.value.ProjectName !== undefined) {
+                            if (e.value.ProjectName !== null) {
+                                _.CurrentObject.Name = e.value.ProjectName;
+                                console.log(e.value.ProjectName,'yy')
+                            } else {
+                                console.log(e.value.ProjectName,'xx')
+                                _.CurrentObject.Name = null;
+                            }
+                        }
+
+                        if (e.value.ID_ContactA !== undefined) {
+                            if (e.value.ID_ContactA !== null) {
+                                _.CurrentObject.ID_ContactPerson = e.value.ID_ContactA;
+                                _.CurrentObject.ContactPerson = e.value.ContactA;
+                            } else {
+                                _.CurrentObject.ID_ContactPerson = null;
+                                _.CurrentObject.ContactPerson = null;
+                            }
+                        }
+
+                        if (e.value.Position !== undefined) {
+                            if (e.value.Address !== null) {
+                                _.CurrentObject.Position = e.value.Position;
+                            } else {
+                                _.CurrentObject.Position = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined) {
+                            if (e.value.Phone !== null) {
+                                _.CurrentObject.ContactDetails = e.value.Phone;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.MobileNo !== undefined) {
+                            if (e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = e.value.MobileNo;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined && e.value.MobileNo !== undefined) {
+                            if (e.value.Phone !== null && e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = 'Phone: ' +  e.value.Phone + ' | Mobile: ' + e.value.MobileNo;
+                            }
+                        }
+
+
+                    }else{
+                        _.CurrentObject.ID_ContactPerson = null;
+                        _.CurrentObject.ContactPerson = null;
+                        _.CurrentObject.ContactDetails = null;
+                        _.CurrentObject.Position = null;
+                        _.CurrentObject.Name = null;
+                    }
+                }
+
+
+                if (e.dataField == "ID_ContactPerson") {
+                    if (e.value !== null) {
+
+                        if (e.value.Position !== undefined) {
+                            if (e.value.Address !== null) {
+                                _.CurrentObject.Position = e.value.Position;
+                            } else {
+                                _.CurrentObject.Position = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined) {
+                            if (e.value.Phone !== null) {
+                                _.CurrentObject.ContactDetails = e.value.Phone;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.MobileNo !== undefined) {
+                            if (e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = e.value.MobileNo;
+                            } else {
+                                _.CurrentObject.ContactDetails = null;
+                            }
+                        }
+
+                        if (e.value.Phone !== undefined && e.value.MobileNo !== undefined) {
+                            if (e.value.Phone !== null && e.value.MobileNo !== null) {
+                                _.CurrentObject.ContactDetails = 'Phone: ' +  e.value.Phone + ' | Mobile: ' + e.value.MobileNo;
+                            }
+                        }
+
+                    }else{
+                        _.CurrentObject.ContactDetails = null;
+                        _.CurrentObject.Position = null;
+                    }
+                }
+
+            }
+        }
+        
+        VC_WorkOrder.prototype.onCollectionSource_Load = function (data) {
+           Base.prototype.onCollectionSource_Load.call(this, data);
+            var _ = this;
+            var VC = this.VC;
+            var VC_Department = VC.ActionFilters.VC_Department;
+            var VC_Employee = VC.ActionFilters.VC_Employee;
+
+            console.log('VC_Department',VC_Department)
+            console.log('VC_Employee',VC_Employee)
+
+            
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+            
+            if(VC_Department !== -1 && VC_Department !== -2){
+                WhereCriteria.push("LastID_Department = " + VC_Department );
+            }
+            if(VC_Department == -1){
+                WhereCriteria.push(" (LastID_Department = " + VC.CurrentUser.ID_Department  + " OR LastID_HeadDesignation = " + VC.CurrentUser.ID_Employee + " OR ID_HeadDesignation = " + VC.CurrentUser.ID_Employee + "  )" );
+            }
+
+            if(VC_Employee == -1){
+                WhereCriteria.push("(ID_CreatedBy = " + VC.CurrentUser.ID + " OR LastID_Lead = " + VC.CurrentUser.ID_Employee + ")");
+            }else{
+                if(VC_Employee !== -2){
+                    WhereCriteria.push("(ID_EmployeeCreatedBy = " + VC_Employee + " OR LastID_Lead = " + VC_Employee + ")");
+                }
+            }
+        }
+
+
+        VC_WorkOrder.prototype.onLoad = function () {
+            var _ = this;
+            var VC = _.VC;
+            _.Compute();
+
+            if( Array.isArray(_.CurrentObject.WorkOrder_Members) == false )  _.CurrentObject.WorkOrder_Members = [];
+
+            if(_.CurrentObject.ID_FilingStatus !== 7 && _.CurrentObject.IsClosed !== true && _.CurrentObject.IsClosed !== 1){
+                _.VC.setFormReadOnly(false);
+            }else{
+                _.VC.setFormReadOnly(true);
+            }
+          
+            // _.VC.$scope.WorkOrder_ActionTakens_MenuOptions[0].disabled = true;
+            // _.VC.$scope.WorkOrder_Members_MenuOptions[0].disabled = true;
+
+            if (_.CurrentObject.ID > -1) {
+
+                var JsDataService = app.$GetDataService();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pUpdateWorkOrderNotification")',
+                    {
+                        'ID_WorkOrder': _.CurrentObject.ID,
+                        'ID_User': VC.CurrentUser.ID
+                    }
+                ).then(function (response) {
+                    //var $rootScope = ;
+                    app.$rootScope().$broadcast('OnWorkOrderViewed');
+                });
+            }
+
+
+            if(_.CurrentObject.IsClosed !== true && _.CurrentObject.IsClosed !== 1){
+                if(_.CurrentObject.ID_FilingStatus == 2){
+                    _.VC.$scope.WorkOrder_ActionTakens_MenuOptions[0].disabled = false;
+                    _.VC.$scope.WorkOrder_Members_MenuOptions[0].disabled = false;
+                }else{
+                    _.VC.$scope.WorkOrder_ActionTakens_MenuOptions[0].disabled = true;
+                    _.VC.$scope.WorkOrder_Members_MenuOptions[0].disabled = true;
+                }
+                
+    
+                var ID_Opportunity = _.VC.GetDxControl('ID_Opportunity');
+                var ID_Client = _.VC.GetDxControl('ID_Client');
+                var Name = _.VC.GetDxControl('Name');
+                var Address = _.VC.GetDxControl('Address');
+                var DateRequired = _.VC.GetDxControl('DateRequired');
+                var StartTime = _.VC.GetDxControl('StartTime');
+                var EndTime = _.VC.GetDxControl('EndTime');
+                var ID_ContactPerson = _.VC.GetDxControl('ID_ContactPerson');
+                var ID_WorkOrderType = _.VC.GetDxControl('ID_WorkOrderType');
+                var Instructions = _.VC.GetDxControl('Instructions');
+    
+                var Schedule_StartDate = _.VC.GetDxControl('Schedule_StartDate');
+                var Schedule_EndDate = _.VC.GetDxControl('Schedule_EndDate');
+                var Schedule_StartTime = _.VC.GetDxControl('Schedule_StartTime');
+                var Schedule_EndTime = _.VC.GetDxControl('Schedule_EndTime');
+                
+                var generalTabControls = [];
+                var scheduleTabControls = [];
+    
+    
+                generalTabControls.push(ID_Opportunity);
+                generalTabControls.push(ID_Client);
+                generalTabControls.push(Name);
+                generalTabControls.push(Address);
+                generalTabControls.push(DateRequired);
+                generalTabControls.push(StartTime);
+                generalTabControls.push(EndTime);
+                generalTabControls.push(ID_ContactPerson);
+                generalTabControls.push(ID_WorkOrderType);
+                generalTabControls.push(Instructions);
+    
+                scheduleTabControls.push(Schedule_StartDate);
+                scheduleTabControls.push(Schedule_EndDate);
+                scheduleTabControls.push(Schedule_StartTime);
+                scheduleTabControls.push(Schedule_EndTime);
+    
+    
+                $.each(generalTabControls,function(i,control){
+                    if(control !== undefined && control !== null){
+                        if(_.CurrentObject.ID_FilingStatus == 1){
+                            control.option('readOnly',false)
+                        }else{
+                            control.option('readOnly',true)
+                        }
+                    }
+    
+                });
+    
+                $.each(scheduleTabControls,function(i,control){
+                    if(control !== undefined && control !== null){
+                        if(_.CurrentObject.ID_FilingStatus == 2){
+                            control.option('readOnly',false)
+                        }else{
+                            control.option('readOnly',true)
+                        }
+                    }
+    
+                });
+            }
+            
+
+        }
+
+        VC_WorkOrder.prototype.Compute = function () {
+
+          
+        }
+
+
+        VC_WorkOrder.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pWorkOrderApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_WorkOrder.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pWorkOrderCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_WorkOrder;
+    });
+//</script>
+</text> , false )

@@ -1,0 +1,1064 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        function VC_PurchaseOrder() {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'PurchaseOrderDetails';
+            this.IsCurrencyFromItem = true;
+            //this.IsItemSupplierRequired = true;
+            this.IsRequiredUnitPrice = true;
+            this.CurrentObjectSupplier = {
+                Value: null,
+                Name: 'ID_BusinessPartner',
+                DisplayName: 'Supplier'
+            }
+        }
+
+        VC_PurchaseOrder.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_PurchaseOrder.prototype.Init = function (VC) {
+            this.DefaultFilterValue = -3;
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            //
+            //
+            //
+                   //
+
+
+        //
+        // 2017-08-15
+        if(_.ID_ViewType == 1){
+         VC.onContextMenuPreparing = function (e) {
+                var item = e.row.data.ID_Item;
+                e.items.push({
+                    text: "Copy Doc",
+                    icon: "fa fa-edit",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                       var itemsSelected = _.Grid.getSelectedRowsData();
+                       console.log(itemsSelected[0].ID)
+                       AcctHelper.Create_Copy_PO(itemsSelected[0].ID);
+
+                    }
+                });
+
+            };
+
+        }
+
+            VC.$ID_ShipWarehouse_IsDisabled = function () {
+                if (_.CurrentObject.IsDeliverClient === true) { //VC.$scope.CurrentObject.ID_ShipWarehouse=null;
+                    return true;
+                }
+                return true;
+            }
+            _.butApproved.IsDisabled = function () {
+                var _isCanApproved = _.IsCanApprove();
+                  if (_.ID_ViewType == 2) {
+
+                    if (_isCanApproved == true) {
+
+                        if (_.CurrentObject.ID_FilingStatus == 33) {
+
+                            _isCanApproved = false;
+                        }
+
+                    }
+                }
+
+                return _isCanApproved;
+            }
+
+            _.butCancel.IsDisabled = function () {
+
+                var _isCanCancel = _.IsCanCancel();
+                
+                if (_.ID_ViewType == 2) {
+
+                    if (_isCanCancel == false) {
+
+                        if (_.CurrentObject.ID_FilingStatus == 10) {
+
+                            _isCanCancel = true;
+                        }
+
+                        if (_.CurrentObject.ID_FilingStatus == 17) {
+
+                            _isCanCancel = true;
+                        }
+                    }
+
+
+                }
+
+                var items = [];
+                if(_.ID_ViewType == 1){
+                    items = _.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    items = [_.CurrentObject];
+                }
+                if (_isCanCancel == true) {
+                    var NotAllowed = false;
+                    $.each(items,function(index,item){
+                        if(item.ID_FilingStatus !== 33){
+                            NotAllowed = true;
+                        }else{
+                            if(VC.CurrentUser.ID !== item.ID_CheckedBy){
+                                NotAllowed = true;
+                            }
+                        }
+                    });
+
+                    _isCanCancel = NotAllowed;
+                }
+
+
+                return _isCanCancel;
+            }
+
+
+            //if (this.ID_ViewType == 2) {
+            //    VC.ValidationRules.push(function () {
+            //        return VC.JSDataService.Validate('@Html.EncryptSQL("pValidatePurchaseOrderItems")', {
+            //            'IDs': Enumerable.From(_.CurrentObject.PurchaseOrderDetails).Select('$.ID_Item').ToArray(),
+            //        });
+            //    });
+            //}
+
+            if (this.ID_ViewType == 2) {
+              // VC.ValidationRules.push(function () {
+
+              //     $.each(_.CurrentObject.PurchaseOrderDetails, function (i, detail) {
+
+              //         if(AcctHelper.IsObjNothing(detail.ID_DocDetailParentModel)  ==true ){
+
+              //             detail.ID_DocDetailParentModel = 0;
+              //         }
+              //     });
+
+              //     return VC.JSDataService.Validate('@Html.EncryptSQL("pValidatePOFromPR")', {
+              //        'IDs_PurchaseRequest_Detail': Enumerable.From(_.CurrentObject.PurchaseOrderDetails).Select('$.ID_DocDetail').Where('$.ID_DocDetailParentModel = ' + AcctHelper.Model_ID_PurchaseRequest.toString()).ToArray(),
+              //    });
+              // });
+            }
+
+
+            if (_.ID_ViewType == 2) {
+
+                //pValidateItemSupplier
+                VC.ValidationRules.push(function () {
+                    if(_.CurrentObject.ID_BusinessPartner == null || _.CurrentObject.ID_BusinessPartner == undefined){
+                        return { isValid: true };
+                    }
+
+                    return VC.JSDataService.Validate('@Html.EncryptSQL("pValidateItemSupplier")', {
+                        'IDs': Enumerable.From(_.CurrentObject.PurchaseOrderDetails).Select('$.ID_Item').ToArray(),
+                        'ID_Supplier': _.CurrentObject.ID_BusinessPartner
+                    });
+                });
+
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+                    if (_.CurrentObject.ID_PurchaseOrderType !== 6) {
+                        $.each(_.CurrentObject.PurchaseOrderDetails, function (i, item) {
+                            if (item.ID_Customer === 0 || item.ID_Customer === null || item.ID_Customer === undefined) {
+                                brokenRules.push('Client is required')
+                            }
+                        });
+                    }
+                    if (_.CurrentObject.PrePayment == true) {
+                        if (_.CurrentObject.CashAdvance == 0) {
+                            brokenRules.push('Advance Payment is required if PrePayment is checked ')
+                        }
+                    }
+
+                    if(_.CurrentObject.IsDeliverClient !== true){
+                        if(_.CurrentObject.ID_ShipWarehouse == null || _.CurrentObject.ID_ShipWarehouse == undefined){
+                           brokenRules.push('Warehouse is required ')
+                        }
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+
+                VC.AddToolbarButton({
+                    text: 'Browse',
+
+                    IsDisabled: function () {
+                        if (_.ID_ViewType == 2) {
+
+                            return (VC.$scope.CurrentObject.ID_FilingStatus !== 1);
+                        }
+                        return true;
+                    },
+                    items: [
+                    {
+
+                        text: 'Canvass Sheet',
+                        ID_View: '121121D8-C249-4AB4-82EF-12EC45CD47C4',
+                        onItemClick: function () {
+                            if (_.ID_ViewType == 2) {
+                                var ID_Supplier = _.CurrentObject.ID_BusinessPartner;
+                                if (ID_Supplier == null) {
+                                    VC.MsgBox('Please specify Supplier', 'Purchase Order');
+                                    return;
+                                }
+
+                                if (VC._DeletedItems['PurchaseOrderDetails'] == undefined) {
+
+                                    VC._DeletedItems['PurchaseOrderDetails'] = [];
+                                }
+
+                                var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.PurchaseOrderDetails).Where('$.ID > 0 ').ToArray();
+                                $.each(DeleteDetails, function (i, o) {
+                                    VC._DeletedItems['PurchaseOrderDetails'].push(o);
+                                });
+
+                                AcctHelper.CreatePOFromCanvassSheet(ID_Supplier).then(function (Details) {
+
+                                    _.CurrentObject.PurchaseOrderDetails = Details;
+                                    if (Details.length > 0){
+
+                                        _.CurrentObject.ID_PaymentTerm = Details[0].ID_PaymentTerm;
+                                        _.CurrentObject.PaymentTerm = Details[0].PaymentTerm;
+
+                                    }
+                                    _.Compute();
+                                    //
+                                    //
+                                    //
+
+                                });
+                            } else {
+                                //AcctHelper.CreatePOFromCanvassSheet();
+                            }
+                        }
+                    },
+                    {
+                        text: 'Purchase Request',
+                        onItemClick: function () {
+                            if (_.ID_ViewType == 2) {
+                                //
+                                //
+                                //
+                                var SQL = '@Html.EncryptSQL(@"Select * from vPurchaseRequest_DetailWithSupplier where IsImported = 1 AND IsApproved = 1 AND ID NOT IN (@IDs_PurchaseRequest_Detail)")'
+                                var JsPopUpView = app.$GetPopupView();
+
+                                var IDs_PurchaseRequest_Detail = Enumerable.From(_.CurrentObject.PurchaseOrderDetails).Select('$.ID_PurchaseRequest_Detail').ToArray();
+
+
+                                if(IDs_PurchaseRequest_Detail.length == 0){
+
+                                    IDs_PurchaseRequest_Detail = [0];
+                                }
+
+                                JsPopUpView.BrowseDataSet(SQL, {
+                                    ID_View: '302C406E-4F30-4709-99AC-426D6E36E308',
+                                    params: {
+                                    //  ID_BusinessPartner : ID_Supplier//VC.$scope.CurrentObject.ID_BusinessPartner
+                                        'IDs_PurchaseRequest_Detail': IDs_PurchaseRequest_Detail
+                                    },
+
+                                    title: 'Select Purchase Request Items'
+                                }).then(function (SelectedItems) {
+                                    if(SelectedItems.length > 0){
+                                        _.CurrentObject.ID_BusinessPartner = SelectedItems[0].ID_Supplier,
+                                        _.CurrentObject.Supplier = SelectedItems[0].Supplier;
+                                    }
+                                    $.each(SelectedItems, function (i, record) {
+
+                                        if (VC.$scope.CurrentObject.PurchaseOrderDetails == null) VC.$scope.CurrentObject.PurchaseOrderDetails = [];
+
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_Item: record.ID_Item,
+                                            ItemCode: record.ItemCode,
+                                            Item: record.Description,
+                                            Description: record.Description,
+                                           // Quantity: record.Quantity,
+                                           Quantity:   record.BalanceQuantityByPO,
+                                            Balance: null,
+                                            UnitPrice: record.SupplierCost == null? 0.00 : record.SupplierCost,//record.UnitPrice,
+                                            ID_UOM: record.ID_UOM,
+                                            UOM: record.UOM,
+                                            VatAmt: record.VatAmt,
+                                            TaxScheme: record.TaxScheme,
+                                            ID_TaxScheme: record.ID_TaxScheme,
+                                            TotalAmount: record.TotalAmount,
+                                            DocStatus: 'Pending',
+                                            ID_DocStatus: 1,
+                                            ReferenceNo: record.DocumentNo,
+                                            Comment: null,
+                                            ID_DocDetail: record.ID,
+                                            ID_DocDetailParentModel: AcctHelper.Model_ID_PurchaseRequest,
+                                            ID_Customer: record.ID_Client,
+                                            Customer: record.Customer,
+                                            ID_Currency: record.ID_Currency,
+                                            Currency: record.Currency,
+                                            ExchangeRate: record.ExchangeRate,
+                                            IsFree:record.IsFree,
+                                            ID_Project:record.ID_Project,
+                                            Project:record.Project,
+                                            ID_PurchaseRequest:record.ID_PurchaseRequest,
+                                            ID_PurchaseRequest_Detail:record.ID,
+                                            SupplierCode: record.SupplierCode
+                                        };
+
+                                        VC.$scope.CurrentObject.IsImported = record.IsImported;
+                                        VC.$scope.CurrentObject.ID_Currency = record.ID_Currency;
+                                        VC.$scope.CurrentObject.Currency = record.Currency;
+                                        VC.$scope.CurrentObject.ExchangeRate = record.ExchangeRate;
+                                        VC.$scope.CurrentObject.ID_TransactionType = record.ID_PurchaseRequestType;
+                                        VC.$scope.CurrentObject.PurchaseOrderDetails.push(NewDetail);
+
+                                    });
+
+                                    _.Compute();
+
+
+                                    //
+                                    //
+                                    //
+
+                                });
+                            } else {
+                                AcctHelper.CreatePOFromCanvassSheet();
+                            }
+                        }
+
+
+                    }]
+
+                });
+
+            }
+
+
+            _.butReceive = {
+                text: 'Create Receiving Report',
+                icon: 'mdi mdi-file-outline',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 2) {
+                        return ( [1,7].includes(_.CurrentObject.ID_FilingStatus) || _.CurrentObject.ID_DocStatus == 3 || VC.IsNew() );
+                    } else {
+
+                        var itemsSelected = VC.Grid.getSelectedRowsData();
+                        if (itemsSelected.length == 0) return true;
+
+                        var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+                        if (ID_Suppliers.length > 1) return true;
+
+                        var FullyServedDocs = Enumerable.From(itemsSelected).Where("$.ID_DocStatus == 3").ToArray();
+                        if (FullyServedDocs.length > 0) return true;
+
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus == 1 || $.ID_FilingStatus == 7").ToArray();
+                        if (NotApprovedDocs.length > 0) return true;
+
+                        return false;
+                    }
+                    return true;
+                },
+                isContextMenuOnly: true,
+                onItemClick: function () {
+
+                    var itemsSelected = null;
+
+                    if (_.ID_ViewType == 2) {
+
+                        itemsSelected = [VC.$scope.CurrentObject];
+                    } else {
+
+                        itemsSelected = VC.Grid.getSelectedRowsData();
+                    }
+
+                    AcctHelper.CreateRRFromPO(itemsSelected);
+
+                }
+            }
+
+
+
+            //VC.AddToolbarButton(_.butReceive);
+            // ================== .\. FOR VP
+            //
+            _.butReceiveVP = {
+                text: 'Create Vouchers Payable',
+                icon: 'mdi mdi-file-outline',
+                IsDisabled: function () {
+
+                    if (_.ID_ViewType == 2) {
+
+                        if (_.CurrentObject.ID_FilingStatus == AcctHelper.FilingStatus.Approved || _.CurrentObject.ID_FilingStatus == 17) {
+                            return false;
+                        }
+                        return true;
+                    } else {
+
+                        var itemsSelected = _.Grid.getSelectedRowsData();
+                        if (itemsSelected.length == 0) return true;
+
+                        var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+                        if (ID_Suppliers.length > 1) return true;
+
+                        var FullyServedDocs = Enumerable.From(itemsSelected).Where("$.ID_DocStatus == 3").ToArray();
+                        if (FullyServedDocs.length > 0) return true;
+
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== " + AcctHelper.FilingStatus.Approved).ToArray();
+                        if (NotApprovedDocs.length > 0) return true;
+
+                    }
+                    return false;
+                },
+                isContextMenuOnly: true,
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    if(Selecteds.length > 0){
+                        if(Selecteds[0].ID_FilingStatus == 33){
+                            VC.MsgBox("Selected is still in checked status","Purchase Order");
+                            return;
+                        }
+
+                        if(Selecteds[0].ID_FilingStatus == 10){
+                            VC.MsgBox("Selected is already paid","Purchase Order");
+                            return;
+                        }
+                    }
+
+                    //if (Selecteds[0].PrePayment == true) {
+                        //
+
+                        var isValid
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.Validate('@Html.EncryptSQL("pValidateVP")',
+                            {
+                                'ID_PO': Selecteds[0].ID
+                            }).then(function (data) {
+
+                                if (data.IsExists == true) {
+                                    VC.MsgBox('Document ' + Selecteds[0].Name + ' has already referenced on Vouchers Payable:' + data.VPDOC, 'Purchase Order');
+                                }
+                                else {
+                                    AcctHelper.CreateVPFromPO(Selecteds);
+                                }
+
+                            })
+                        //
+
+                    //}
+                    //else {
+                     //   VC.MsgBox('To continue this transaction, Please check the PrePayment', 'Purchase Order');
+                    //}
+
+
+                }
+            }
+
+            _.butPettyCash = {
+                text: 'Create Petty Cash',
+                icon: 'mdi mdi-file-outline',
+                IsDisabled: function () {
+
+                    if (_.ID_ViewType == 2) {
+
+                        if (_.CurrentObject.ID_FilingStatus == AcctHelper.FilingStatus.Approved || _.CurrentObject.ID_FilingStatus == 17) {
+                            return false;
+                        }
+                        return true;
+                    } else {
+
+                        var itemsSelected = _.Grid.getSelectedRowsData();
+
+                        if (itemsSelected.length == 0) return true;
+
+                        var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+
+                        if (ID_Suppliers.length > 1) return true;
+
+                        var FullyServedDocs = Enumerable.From(itemsSelected).Where("$.ID_DocStatus == 3").ToArray();
+
+                        if (FullyServedDocs.length > 0) return true;
+
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== " + AcctHelper.FilingStatus.Approved).ToArray();
+
+                        if (NotApprovedDocs.length > 0) return true;
+
+                    }
+                    return false;
+                },
+                isContextMenuOnly: true,
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    if (Selecteds[0].PrePayment == true) {
+
+                        AcctHelper.CreatePettyCash(Selecteds);
+                    }
+                    else {
+                        VC.MsgBox('Selected record is not assign for Advance Payment.', 'Purchase Order');
+                    }
+
+
+                }
+            }
+               _.IsCanCheck = function () {
+
+                  var VC = _.VC;
+                  var isDisabled = true;
+
+                  if (_.ID_ViewType == 1) {
+
+                      if (VC.Grid === undefined) return false;
+                      var SelectedRows = VC.Grid.getSelectedRowsData();
+
+                      if (SelectedRows.length != 1) return true;
+                      return  !(SelectedRows[0].ID_FilingStatus === 1  && (SelectedRows[0].isChecked === false || SelectedRows[0].isChecked === null) );
+
+                  } else {
+                      if (_.CurrentObject.ID == -1) {
+                          return true;
+                      }
+                      if (_.CurrentObject.ID_FilingStatus == 1 && (_.CurrentObject.isChecked == false || _.CurrentObject.isChecked == null)  ) {
+                          isDisabled = false;
+                      }
+                  }
+                  return isDisabled;
+              }
+                if(_.ID_ViewType == 2){
+                    if(VC.CurrentUser.ID == 7){
+                        VC.AddToolbarButton({
+                            text: 'Compute',
+                            icon: 'mdi mdi-pencil-box',
+                            color: '#009688',
+                            isContextMenu: true,
+                            IsDisabled:  function() { return false; },
+                            onItemClick: function () {
+                                _.Compute();
+                            }
+                        });
+                    }
+                }
+                VC.AddToolbarButton({
+                    text: 'Check',
+                    icon: 'mdi mdi-pencil-box',
+                    color: '#009688',
+                    isContextMenu: true,
+                    IsDisabled:  _.IsCanCheck,
+                    onItemClick: function () {
+                        var $q = app.$GetAsync();
+                        var JsDataService = app.$GetDataService();
+                        var defer = $q.defer();
+                        var CurrentObjects = null;
+
+
+                        if (_.ID_ViewType == 1) { //ListView
+                            CurrentObjects = _.Grid.getSelectedRowsData();
+                        } else if (_.ID_ViewType == 2) { //DetailView
+                            CurrentObjects = [_.CurrentObject];
+                        }
+
+
+
+                        var ErrorWarehouse = '';
+                        var ErrorPaymentTerm = '';
+                        var ErrorTaxScheme = '';
+
+
+
+                        $.each(CurrentObjects,function(i,item){
+                            if(item.IsDeliverClient == false){
+                                if(item.ID_ShipWarehouse == null || item.ID_ShipWarehouse == undefined){
+                                    ErrorWarehouse += '[' + item.DocumentNo + ']';
+                                }
+                            }
+                            if(item.ID_PaymentTerm == null || item.ID_PaymentTerm == undefined){
+                                ErrorPaymentTerm += '[' + item.DocumentNo + ']';
+                            }
+                            if(item.ID_TaxScheme == null || item.ID_TaxScheme == undefined){
+                                ErrorTaxScheme += '[' + item.DocumentNo + ']';
+                            }
+                        })
+
+                        
+                        if(ErrorWarehouse.length > 0){
+                            VC.MsgBox('Warehouse is required ' + ErrorWarehouse,'Purchase Order');
+                            return;
+                        }                      
+
+                        
+                        if(ErrorPaymentTerm.length > 0){
+                            VC.MsgBox('Payment Term is required ' + ErrorPaymentTerm,'Purchase Order');
+                            return;
+                        }
+                        if(ErrorTaxScheme.length > 0){
+                            VC.MsgBox('Tax Scheme is required ' + ErrorTaxScheme,'Purchase Order');
+                            return;
+                        }
+
+                        var Documents = Enumerable.From(CurrentObjects).Select('$.DocumentNo').ToArray().join();
+
+
+                        VC.ConfirmBox("Do you want to Check the following Document: <br>" + Documents + "").then(function () {
+
+                            VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pCheckedPOStatus")', {
+                                    IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray()
+                            }).then(function (response) {
+
+
+                                    VC.ToastSuccess(Documents + ' Successfully Check');
+                                    if (_.ID_ViewType == 2) {
+                                        _.VC.Reload();
+                                    } else {
+                                        VC.Grid.refresh();
+                                    }
+                                    defer.resolve();
+                            }, function () {
+                                    defer.reject();
+                            });
+
+                                return defer.promise;
+
+                        });
+
+                  }
+
+
+                });
+
+
+                if (_.ID_ViewType == 2) {
+
+
+                }
+
+            VC.AddToolbarButton({
+                text: 'Create',
+                IsDisabled: function () {
+
+                    if (_.ID_ViewType == 2) {
+
+                        return [1,7].includes(_.CurrentObject.ID_FilingStatus)
+
+                    } else {
+
+                        var itemsSelected = _.Grid.getSelectedRowsData();
+
+                        if (itemsSelected.length == 0) return true;
+
+                        var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+                        if (ID_Suppliers.length > 1) return true;
+
+                        var FullyServedDocs = Enumerable.From(itemsSelected).Where("$.ID_DocStatus == 3").ToArray();
+                        if (FullyServedDocs.length > 0) return true;
+
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus == 1 || $.ID_FilingStatus == 7").ToArray();
+                        if (NotApprovedDocs.length > 0) return true;
+
+                    }
+                    return false;
+                },
+                items: [
+                    _.butReceive,
+                    _.butReceiveVP,
+                    //_.butPettyCash
+                ]
+            });
+            //
+            // ===================
+
+            VC.AddButtonReport({
+                Name: 'Purchase Order Form',
+                ID_Report: 4,
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'Purchase Order Form Without Intended Customer',
+                ID_Report: 1023,
+                requireSingleObject: true
+            });
+            if (this.ID_ViewType == 1) {
+                _.DetailSQLDataSource = '@Html.EncryptSQL(@"
+                SELECT Item, Description, Quantity, UnitPrice, TotalAmount , Balance,
+                    DocStatus AS Status FROM dbo.vPurchaseOrder_Detail WHERE ID_PurchaseOrder = @ID_PurchaseOrder
+                ")';
+
+                _.GetDetailSQLDataSourceParameters = function (data) {
+                    return {
+                        'ID_PurchaseOrder': data.ID
+                    }
+                }
+                //
+                //
+                //
+            }
+
+            VC_PurchaseOrder.ComputeCAVAT = function (CAAmount, ID_TaxScheme, VatRate) {
+
+                var Net = 0;
+                var VatEx = 0;
+                var VatAmt = 0;
+
+                switch (ID_TaxScheme) {
+
+                    case 1: //VAT Exclusive
+                        Net = (CAAmount / (1 + (VatRate / 100)));
+                        VatEx = Net * (VatRate / 100);
+                        VatAmt = VatEx;
+
+                        break;
+                    case 2: //VAT Inclusive
+                        Net = (CAAmount / (1 + (VatRate / 100)));
+                        VatEx = Net * (VatRate / 100);
+                        VatAmt = VatEx;
+
+                        break;
+                    case 3: //ZERO Rated
+                        break;
+                }
+                _.CurrentObject.CATotalVat = parseFloat(VatAmt).toFixed(2);
+                _.CurrentObject.CASubtotal = parseFloat(Net).toFixed(2);
+            }
+
+
+        };
+
+
+
+
+
+        VC_PurchaseOrder.prototype.isColumnGridEditable = function (p, e) {
+            //
+            //
+            //
+            var _ = this;
+            var VC = _.VC;
+
+            if (e.column.dataField === 'UnitPrice') {
+                //console.log(e.data)
+                if (e.data.ID_CanvassSheet != undefined && e.data.ID_CanvassSheet != null ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        VC_PurchaseOrder.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            var VC = this.VC;
+
+            //
+			
+            var LoadItemSuppliers = function(){
+                //UnitPrice SELECT * FROM dbo.vItemSupplier
+
+                var ID_Supplier = _.CurrentObject.ID_BusinessPartner;
+				console.log(ID_Supplier)
+                if(ID_Supplier == null || ID_Supplier == undefined){
+                    return;
+                }
+
+                app.$GetDataService().Query('@Html.EncryptSQL(" SELECT * FROM dbo.vItemSupplier WHERE ID_Item IN(@IDs) ")', {
+                    params: {
+                        'IDs': Enumerable.From(_.CurrentObject.PurchaseOrderDetails).Select('$.ID_Item').ToArray()
+                    }
+                }).then(function (data) {
+                    $.each(_.CurrentObject.PurchaseOrderDetails,function(i,item){
+						if (item.ID > -1) return;
+                        if(item.ID_DocDetailParentModel == null || item.ID_DocDetailParentModel == 3201 ){
+
+                            var x = Enumerable.From(data.collection).Where('$.ID_Item == ' + item.ID_Item + ' && $.ID_Supplier == ' + ID_Supplier ).Select('$.Cost').ToArray();
+                            if(x.length > 0){
+                                item.UnitPrice = x[0];
+                            }else{
+                                item.UnitPrice = 0.00;
+                                VC.MsgBox('Please add supplier for Item ( ' + item.Item + ' ) in Master File')
+                            }
+                        }
+                    });
+					_.Compute();
+                });
+
+
+            }
+
+
+            //
+            //
+
+            if (e.dataField == 'ID_BusinessPartner'){
+
+                _.CurrentObjectSupplier.Value = _.CurrentObject.ID_BusinessPartner
+                if (e.value !== null) {
+                    LoadItemSuppliers();
+                }
+
+
+            }
+
+
+            if (e.dataField == 'ID_ShipWarehouse') {
+                if (e.value !== null) {
+                    VC.$scope.CurrentObject.Shipto = 'Intellismart Technology Inc.';
+                    var Contact = (e.value.TelNo == null ? '' :e.value.TelNo) + (e.value.TelNo !== null && e.value.Contact !== null ? ' / ' : '' ) + ( e.value.Contact == null ? '' : e.value.Contact );
+                    VC.$scope.CurrentObject.ShipContact = Contact;
+                    VC.$scope.CurrentObject.ShipAddress = e.value.Address;
+                    VC.$scope.CurrentObject.ShipTIN = e.value.TIN;
+                } else {
+                    VC.$scope.CurrentObject.Shipto = null;
+                    VC.$scope.CurrentObject.ShipContact = null;
+                    VC.$scope.CurrentObject.ShipAddress = null;
+                    VC.$scope.CurrentObject.ShipTIN = null;
+                }
+
+            }
+            if (e.dataField == 'PrePayment') {
+                if (e.value !== null) {
+                    VC.$CashAdvance_IsDisabled = function () {
+                        if (e.value == true) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+            if (e.dataField == 'CashAdvance') {
+                VC_PurchaseOrder.ComputeCAVAT(_.CurrentObject.CashAdvance, _.CurrentObject.ID_TaxScheme, _.CurrentObject.VatRate)
+            }
+            if (e.dataField == 'ID_TaxScheme' && _.CurrentObject.PrePayment == true) {
+                VC_PurchaseOrder.ComputeCAVAT(_.CurrentObject.CashAdvance, _.CurrentObject.ID_TaxScheme, _.CurrentObject.VatRate)
+            }
+            if (e.dataField === 'ID_TaxScheme') {
+
+                var ID_TaxScheme = _.CurrentObject.ID_TaxScheme
+                $.each(_.CurrentObject.PurchaseOrderDetails, function (i, item) {
+                    item.ID_TaxScheme = ID_TaxScheme
+                });
+
+            }
+
+            if (e.dataField == 'IsImported'){
+                if(_.CurrentObject.IsImported == true){
+                    _.CurrentObject.ID_TaxScheme = 3;
+                    $.each(_.CurrentObject.PurchaseOrderDetails, function (i, item) {
+                        item.ID_TaxScheme = 3;
+                    });
+                    _.Compute();
+                }
+            }
+
+        }
+
+        VC_PurchaseOrder.prototype.onLoad = function () {
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+
+            _.CurrentObjectSupplier.Value = _.CurrentObject.ID_BusinessPartner
+
+            if (this.VC.$scope.$params !== undefined && this.VC.$scope.$params !== null) {
+                
+                if (this.VC.$scope.$params.saveOnLoad == true) {
+                    _.VC.$timeout(function () {
+                        if (_.VC.$scope.CurrentObject.ID_PaymentTerm == null) {
+                            _.VC.$scope.CurrentObject.ID_PaymentTerm = 2;
+                        }
+                        _.VC.PerformSave();
+                        _.VC.$scope.$params.saveOnLoad = false;
+                    });
+
+                }
+            }
+
+            if(_.CurrentObject.IsAutoApproved == 1 && _.CurrentObject.isEditable == 1){
+                console.log(VC)
+                       _.CurrentObject.isEditable = 0;
+                       VC.IsFormReadOnly = false;
+                       VC.butSave.disabled = false;
+                       VC.butSaveClose.disabled = false;
+                       VC.setID_ShipWarehouseEnabled(true);
+                       VC.setID_ShipWarehouseReadOnly(false);
+                       VC.RefreshToolBar();
+
+            }
+
+
+        }
+
+
+        VC_PurchaseOrder.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+            VC.PurchaseOrderDetails_OnRowInserted = function (newObject) {
+
+                newObject.ID_TaxScheme = _.CurrentObject.ID_TaxScheme
+                _.Compute();
+            }
+        }
+
+        //
+        //
+        //
+         VC_PurchaseOrder.prototype.PerformApproved = function (items) {
+             //
+           var _ = this;
+            var VC = _.VC;
+
+            if(_.ID_ViewType == 1){
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if(SelectedRows[0].isChecked == false || SelectedRows[0].isChecked == null) {
+                        VC.MsgBox("Please Check this document first");
+                          return;
+                    }
+
+            }
+            else  {
+                    if(_.CurrentObject.isChecked == false || _.CurrentObject.isChecked == null){
+                         VC.MsgBox("Please Check this document first");
+                         return;
+                    };
+            }
+
+             //
+
+               baseModelHelper.prototype.PerformApproved.call(this, items);
+
+         }
+        VC_PurchaseOrder.prototype.Approve = function (Items) {
+
+            var _ = this;
+            var VC = _.VC;
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            var items = []
+            if(_.ID_ViewType == 1){
+                items = VC.Grid.getSelectedRowsData();
+            }
+            if(_.ID_ViewType == 2){
+                items = [_.CurrentObject];
+            }
+
+
+            var IsValid = true;
+            var Msg = '';
+            $.each(items,function(i,item){
+                if(item.IsDeliverClient == false){
+                if(item.ID_ShipWarehouse == null || item.ID_ShipWarehouse == undefined){
+                    IsValid = false;
+                    Msg = item.DocumentNo + ' : Warehouse is required.'
+                }
+                }
+
+                if(item.ID_PaymentTerm == null || item.ID_PaymentTerm == undefined){
+                    IsValid = false;
+                    Msg = item.DocumentNo + ' : Payment Term is required.'
+                }
+            });
+
+
+
+            if(IsValid){
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pPurchaseOrderApprove")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser'
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+            }
+            else{
+                VC.MsgBox(Msg,'Purchase Order');
+                defer.reject();
+            }
+
+
+
+
+            return defer.promise;
+        }
+
+
+        VC_PurchaseOrder.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPurchaseOrderCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+        //
+        //
+        //
+
+        VC_PurchaseOrder.prototype.onCollectionSource_Load = function (data) {
+            baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+            var filterValue = VC.ActionFilters.VC_StatusFilter;
+            var WhereCriteria = data.WhereCriteria;
+            switch (filterValue) {
+                case -3:
+                    WhereCriteria.push("ID_DocStatus != 3");
+                    break;
+            }
+        }
+
+        return VC_PurchaseOrder;
+    });
+//</script>
+</text> , false);

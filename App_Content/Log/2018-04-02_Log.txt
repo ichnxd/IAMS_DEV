@@ -1,0 +1,45 @@
+4/2/2018 9:09:58 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:09:59 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:09:59 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (EquipmentSection, 6245).
+The statement has been terminated..
+4/2/2018 9:10:00 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:19:24 AM: _pGetDataSet ---> Invalid column name 'ishowtab'..
+4/2/2018 9:19:28 AM: _pGetDataSet ---> Incorrect syntax near ','..
+4/2/2018 9:19:37 AM: _pGetDataSet ---> Invalid column name 'ishowtab'..
+4/2/2018 9:33:11 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:33:11 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (PaymentTermsSection, 6245).
+The statement has been terminated..
+4/2/2018 9:33:11 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:33:12 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:33:12 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:12 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:12 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:13 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:13 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_DEV_20180305.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/2/2018 9:34:14 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (PaymentTermsTab, 6245).
+The statement has been terminated..
+4/2/2018 9:37:53 AM: _pGetDataSet ---> Invalid column name 'IsongirdTab'..
+4/2/2018 9:55:16 AM: _pGetDataSet ---> Invalid column name 'isongrid'..
+4/2/2018 10:04:28 AM: _pGetDataSet ---> Invalid column name 'isshowtab'..
+4/2/2018 10:04:34 AM: _pGetDataSet ---> Invalid column name 'isshowtab'..
+4/2/2018 10:04:39 AM: _pGetDataSet ---> Invalid column name 'isshowtab'..
+4/2/2018 10:24:08 AM: _pGetDataSet ---> Invalid column name 'isshow'..
+4/2/2018 10:24:13 AM: _pGetDataSet ---> Invalid column name 'isshowtablabel'..
+4/2/2018 10:33:14 AM: _pGetDataSet ---> Invalid column name 'isongrid'..
+4/2/2018 10:34:04 AM: _pGetDataSet ---> Invalid column name 'id_sect'..
+4/2/2018 3:04:53 PM: _pGetDataSet ---> The multi-part identifier "cols.Caption" could not be bound..
+4/2/2018 3:04:58 PM: _pGetDataSet ---> The multi-part identifier "colsspan.Caption" could not be bound..
+4/2/2018 3:05:01 PM: _pGetDataSet ---> The multi-part identifier "colspan.Caption" could not be bound..

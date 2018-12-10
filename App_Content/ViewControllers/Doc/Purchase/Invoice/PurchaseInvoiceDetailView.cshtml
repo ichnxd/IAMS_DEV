@@ -1,0 +1,43 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocDetailView");
+    var PurchaseInvoice = Url.Encode("Doc/Purchase/Invoice/PurchaseInvoice");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}'
+                        ,'/JsApp/GetScript?Url=@{@PurchaseInvoice}' , 'AcctHelper'], function (BaseClass,PurchaseInvoice,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+
+            _.DocDetailPropertyName = 'PurchaseInvoiceDetails';
+
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            _.Approve = function() {
+                return PurchaseInvoice.Approve( [_.$scope.CurrentObject]);
+            };
+
+            _.Cancel = function() {
+                return PurchaseInvoice.Cancel( [_.$scope.CurrentObject] );
+            };
+
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

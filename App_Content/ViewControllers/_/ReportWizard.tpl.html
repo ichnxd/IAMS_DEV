@@ -1,0 +1,11 @@
+﻿<div dx-multi-view="MultiViewOptions" dx-item-alias="itemObj">
+<div data-options="dxTemplate: { name: 'item' }">
+    <div style="margin:25px;">
+        <h1>{{itemObj.title}}</h1>
+        <p>&nbsp;</p>
+        <div style="text-align:left;" ng-repeat="(key, value) in itemObj.data">
+            <p>{{key}}: <b>{{value}}</b></p>
+        </div>
+    </div>
+</div>
+</div>

@@ -1,0 +1,52 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+   Layout = null;
+   //var BaseVCUrl = null; //Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        var VC_BOM_Services = function () {
+            //this.DocDetailPropertyName = "Contacts";
+        }
+       
+        VC_BOM_Services.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BOM_Services.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            
+        }
+
+        VC_BOM_Services.prototype.onCurrentObjectChanged = function (e) {
+            var VC = this.VC;
+            var _ = this;
+            var CurrentObject = VC.$scope.CurrentObject;
+            if(e.dataField == "ID_Item"){
+
+                if(e.value !== null)
+                {
+                     if(e.value.Code !== null && e.value.Code !== undefined)
+                        {
+                        _.CurrentObject.Name = e.value.Name ;
+                        _.CurrentObject.DisplayName = e.value.Name ;
+                        _.CurrentObject.SKUcode = e.value.SKUCode;
+                       
+                        }
+
+                }
+                else{
+                      
+                        _.CurrentObject.Name = null ;
+                        _.CurrentObject.DisplayName = null ;
+                        _.CurrentObject.SKUcode = null;
+                }
+   
+            }
+        };
+
+        return VC_BOM_Services;
+    });
+//</script>
+</text> , false )

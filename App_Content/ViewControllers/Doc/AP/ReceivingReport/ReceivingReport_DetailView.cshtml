@@ -1,0 +1,223 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocDetailView");
+    var ReceivingReport = Url.Encode("Doc/AP/ReceivingReport/ReceivingReport");
+
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}'
+                        ,'/JsApp/GetScript?Url=@{@ReceivingReport}','AcctHelper'], function (app,BaseClass,ReceivingReport,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+
+            _.DocDetailPropertyName = 'ReceivingReportDetail';
+
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            _.Approve = function() {
+                return ReceivingReport.Approve( [_.$scope.CurrentObject]);
+            };
+
+            _.Cancel = function() {
+                return ReceivingReport.Cancel( [_.$scope.CurrentObject] );
+            };
+
+            _.butReceive = {
+                text: 'Create Vouchers Payable',
+                disabled: false,
+                IsDisabled : function() {
+                    return ( _.$scope.CurrentObject.ID_FilingStatus !== 2 || _.$scope.CurrentObject.ID_DocStatus == 3 || _.$scope.CurrentObject.ID_DocStatus == 6) || _.IsNew();
+                },
+                onItemClick: function () {
+                    AcctHelper.CreateVoucherPayable( [_.$scope.CurrentObject] );
+                }
+            }
+
+            _.ButReport = {
+                text: 'Receiving Report Form',
+                icon: 'jspp-icon js-file-2',
+                color: '#000',
+                IsDisabled: function () {
+                    return !(_.$scope.CurrentObject.ID > -1);
+                },
+                onItemClick: function () {
+                    _.ViewReport( _.$scope.CurrentObject.ID, ReceivingReport.RPT_RECEIVINGREPORTFORM,  _.$scope.CurrentObject.Name + ' Form' , {
+                        ID : _.$scope.CurrentObject.ID
+                    } );
+                }
+            }
+
+            _.AddToolbarButton(_.ButReport);
+
+            var GenerateSerial = function(Detail) {
+                app.$modal().Show({
+                    title : Detail.Description + ' (' + Detail.Quantity + ')',
+                    ViewSrc:'App_Content/ViewControllers/Templates/EditSerial.tpl.html',
+                    width : 600,
+                    InitController : function(_$scope) {   
+                        _$scope.GridOption = {
+                            dataSource : Detail.ReceivingReportDetail_Serials,
+                            columns : [
+                                { dataField : "ID" , width : 50 , allowEditing : false }
+                              , { dataField : "Name" , caption : 'Serial', validationRules:[{type:'required',message:'Please input a serial number.'}]}
+                              , { dataField : "Comment" }
+                            ],
+                            height : '100%',
+                            editing : {
+                                allowAdding : false,
+                                allowDeleting : false,
+                                allowUpdating : true ,
+                                mode : 'cell'
+                            }
+                        };
+                    }
+                }).then( function()  { 
+                
+                });
+            }
+
+            var editSerial = function(Detail) { 
+                if ( Detail.ReceivingReportDetail_Serials == undefined ) Detail.ReceivingReportDetail_Serials = [];
+
+                console.log( Detail.ReceivingReportDetail_Serials );
+
+                if ( Detail.ReceivingReportDetail_Serials.length == 0 )  {
+                    VC.ConfirmBox( 'Generate Serials?' , 'Receiving Report').then(function() {  
+                        for ( var i = 0 ; i < Detail.Quantity; i++ )  { 
+                            Detail.ReceivingReportDetail_Serials.push({
+                                ID : -1,
+                                Name : null,
+                                Comment : null,
+                            });
+                        }
+                        VC.$timeout( function() { 
+                            GenerateSerial(Detail);
+                        },500);
+                        
+                    });   
+                } else {
+                    GenerateSerial(Detail);
+                }
+            };
+
+            _.AddToolbarButton(_.butReceive);
+
+            _.onContextMenuPreparing_ReceivingReportDetail = function(e) { 
+
+                e.items.unshift({
+                    text: "Edit Serials",
+                    icon: "fa fa-edit",
+                    //template: "contextItem" ,
+                    onItemClick: function () {
+                        var CurrentData = _.$scope.CurrentObject.ReceivingReportDetails[e.rowIndex];
+                        editSerial( CurrentData );
+                        
+                    }
+                });
+            }
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.OnFormInitialized = function() {
+            BaseClass.prototype.OnFormInitialized.call(this);
+
+            var _ = this;
+
+            _.butBrowsePO.option('onClick',function() {
+                //
+                //
+                //
+                if ( _.$scope.CurrentObject.ID_BusinessPartner == null ) { 
+                    _.MsgBox('Please select a supplier','Recieving Report');
+                    return;
+                }
+                _.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vPendingPurchaseOrderDetail 
+                                                    WHERE ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @ID_Details )")', {
+                    title: 'Select Purchase Order (' + _.$scope.CurrentObject.Supplier + ')',
+                    ID_View: '2F104CA3-8533-4181-9C39-EE3A1B234C59',
+                    params : {
+                         'ID_BusinessPartner' : _.$scope.CurrentObject.ID_BusinessPartner
+                       , 'ID_Details' : Enumerable.From(_.$scope.CurrentObject.ReceivingReportDetail).Select('$.ID_DocDetail').ToArray()
+                    },
+                    onCustomizeColumns : function( columns ) { 
+                        $.each( columns, function(i,c)  { 
+                            if ( c.dataField == "DocumentNo") { 
+                                c.caption = "PO No.";
+                            }
+                            if ( c.dataField == "Date") { 
+                                c.caption = "PO Date";
+                            }
+                        });
+                    }
+                }).then( function(Details)  { 
+                    if ( _.$scope.CurrentObject.ReceivingReportDetail == null ) _.$scope.CurrentObject.ReceivingReportDetail = [];
+                    $.each(Details,function( i , d ) { 
+                        var detail = { 
+                            ID : -1,
+                            RefID : d.ID,
+                            Code : d.Code,
+                            Quantity : d.Balance,
+                            RefQuantity : d.Balance,
+                            UnitPrice : d.UnitPrice,
+                            TotalAmount : d.TotalAmount,
+                            ID_UOM : d.ID_UOM,
+                            ID_Item : d.ID_Item,
+                            Description : d.Description,
+                            Notes : d.Notes,
+                            ID_TaxScheme : d.ID_TaxScheme,
+                            VatAmt : d.VatAmt,
+                            Item : d.Item,
+                            UOM : d.UOM,
+                            TaxScheme : d.TaxScheme,
+                            ID_DocDetail : d.ID,
+                            Reference : d.DocumentNo + ':' + d.ID,
+                            ID_DocModel : 65,
+                            DocStatus : ''
+                        }
+                        _.$scope.CurrentObject.ReceivingReportDetail.push( detail );
+                    });
+                });
+
+
+            });
+        }
+
+        @{@ControllerName}.prototype.onLoad = function() {
+            BaseClass.prototype.onLoad.call(this);
+            var _ = this;
+
+            if ( _.$scope.CurrentObject.ID_FilingStatus === 6 ) {
+
+                _.setFormReadOnly( true );
+
+                _.butApproved.disabled = true;
+
+                _.butCancel.disabled = true;
+
+                _.butSave.disabled = true;
+
+                _.butReceive.disabled = true;
+
+                _.RefreshToolBar();
+
+            }
+
+        }
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

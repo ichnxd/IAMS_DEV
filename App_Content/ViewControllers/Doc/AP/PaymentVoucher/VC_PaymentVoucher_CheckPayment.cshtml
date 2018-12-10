@@ -1,0 +1,39 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_CheckPayment = function () { }
+
+        VC_CheckPayment.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_CheckPayment.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+
+            
+            if (e.dataField === 'ID_BankAccount') {
+                if (e.value !== null) {
+                    if (e.value.ID_Bank !== undefined) {
+                        _.CurrentObject.Bank = e.value.Bank;
+                        _.CurrentObject.ID_Bank = e.value.ID_Bank;      
+                    }   
+                }
+            }
+
+        }
+
+        return VC_CheckPayment;
+
+    });
+//</script>
+</text> , false);
+
+
+

@@ -1,0 +1,169 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var VC_CodeEditorView = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var quill = null;
+
+            
+
+            hljs.configure({
+                languages: ['javascript', 'C#', 'SQL', 'HTML']
+            });
+
+            //
+            //
+            //
+
+            var escapeHTML = function (html) {
+                return html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            };
+
+            var CurrentScript = null;
+
+            $scope.FormContextMenu = {
+                items: [
+                    {
+                        id : 1,
+                        text: 'Open',
+                        icon: 'fa fa-folder-open'
+                    },
+                    {
+                        id : 2,
+                        text: 'Save',
+                        icon: 'fa fa-save'
+                    },
+                ],
+                onItemClick: function (e) {
+                    switch (e.itemData.id) {
+                        case 1:
+                            //
+                            //
+                            //
+                            app.$GetDataService().Post('/JsApp/GetViewControllerFileList').then(function (response) {
+                                var FileList = JSON.parse(response.data);
+                                _.ShowDataOnList(FileList, 'Select File').then(function (data) {
+
+                                    CurrentScript = data;
+
+                                    app.$GetDataService().Post('/JsApp/GetViewScript', {
+                                        DirectoryPath: data.DirectoryPath
+                                    }).then(function (response) {
+                                        
+                                        quill.pasteHTML(0, '<pre>' + escapeHTML(response.data) + '</pre>');
+                                        
+                                    });
+                                });
+                            });
+                            break;
+                        case 2:
+                            if ($scope.$params.Text !== undefined) {
+                                var State = null;
+                                try {
+                                    State = JSON.stringify(JSON.parse(quill.getText()));
+                                } catch (ex) {
+                                    alert(ex);
+                                    return;
+                                }
+
+                                app.$GetDataService().Post('/JsApp/SaveViewGridLookupState', {
+                                    formatKey: $scope.$params.FormatKey,
+                                    format: State
+                                }).then(function (response) {
+                                    DevExpress.ui.notify('Layout Save.', 'success', 1000);
+                                });
+                                return;
+                            };
+                            if (CurrentScript === null) return;
+                            _.ConfirmBox('Do you want to save changes?', 'Code Editor').then(function () {
+
+                               
+
+
+                                var base64String = app.Base64.encode(quill.getText());
+                                app.$GetDataService().Post('/JsApp/SaveViewScript', {
+                                    Script: base64String,
+                                    DirectoryPath: app.Base64.encode(CurrentScript.DirectoryPath),
+                                    ID_Model: CurrentScript.ID_Model
+                                }).then(function (response) {
+                                
+                                    DevExpress.ui.notify('Save Successfully', 'success', 1000);
+
+                                });
+                            });
+                            break;
+                        case 3:
+                            if (quill !== null) {
+                                _.ConfirmBox('Clear?', 'Code Editor').then(function () {
+
+                                    quill.setText('');
+                                    CurrentScript = null;
+                                });
+                            }
+                            break;
+                    }
+                }
+            }
+
+            var timeOut = app.$GetTimeOut();
+
+            timeOut(function () {
+             
+
+                quill = new Quill('#editor', {
+                    theme: 'snow',
+                    modules: {
+                        syntax: true,
+                        toolbar: []
+                    }
+                });
+
+                if ($scope.$params.Text !== undefined) {
+                    timeOut(function () {
+                        quill.pasteHTML(0, '<pre>' + $scope.$params.Text + '</pre>');
+                    }, 500);
+                    return;
+                }
+
+                if (CurrentObject !== null) {
+
+                    CurrentScript = CurrentObject;
+                    CurrentScript.DirectoryPath = CurrentObject.ViewController;
+                    CurrentScript.ID_Model = CurrentObject.ID;
+
+                    if (CurrentObject.ViewController !== null) {
+
+                        app.$GetDataService().Post('/JsApp/GetViewScript', {
+                            DirectoryPath: CurrentObject.ViewController,
+                            ID_Model: CurrentObject.ID,
+                        }).then(function (response) {
+
+                            if (response.data === undefined) return;
+
+                            quill.pasteHTML(0, '<pre>' + escapeHTML(response.data) + '</pre>');
+
+                        });
+                    }
+
+                }
+
+
+
+            },1000);
+            
+        }
+
+        VC_CodeEditorView.prototype = Object.create(BaseClass.prototype);
+        
+        return VC_CodeEditorView;
+    });
+//</script>
+</text> , false )

@@ -1,0 +1,13 @@
+﻿@using JSWebProject.Controllers;
+@{
+    ViewBag.Title = "ReportPartialTemplate";
+}
+@Html.DevExpress().DocumentViewer(settings =>
+{
+    settings.Name = ((ReportModel)Model).Name;
+    settings.Height = Unit.Percentage(100);
+    //settings.CallbackRouteValues = new { Controller = "ReportView", Action = "ReportPartialTemplate", ID_Report = ((ReportModel)Model).ID_Report };
+    settings.Report = ((ReportModel)Model).Report;
+    settings.ClientSideEvents.Init = "DocumentViewer_Init";
+    settings.ClientSideEvents.CallbackError = "DocumentViewer_onError";
+}).GetHtml()

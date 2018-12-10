@@ -1,0 +1,2 @@
+4/20/2018 9:49:47 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180419_174819.dbo.tCustomer'; column does not allow nulls. UPDATE fails.
+The statement has been terminated..

@@ -1,0 +1,3 @@
+5/2/2018 10:27:30 AM: _pGetDataSet ---> Invalid column name 'isshocaption'..
+5/2/2018 10:27:36 AM: _pGetDataSet ---> Invalid column name 'isshowcaption'..
+5/2/2018 10:27:46 AM: _pGetDataSet ---> Incorrect syntax near ','..

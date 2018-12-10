@@ -1,0 +1,30 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var CalendarViewController = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            //
+            //
+            //
+
+            $scope.CalendarOption = {
+                width: '100%',
+                height: '100%'
+            };
+
+        }
+
+        CalendarViewController.prototype = Object.create(BaseClass.prototype);
+        
+        return CalendarViewController;
+    });
+//</script>
+</text> , false )
+

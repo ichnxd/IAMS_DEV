@@ -1,0 +1,29 @@
+10/29/2018 9:32:16 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20181015_9388_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/29/2018 9:33:06 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (<NULL>, 9952).
+The statement has been terminated..
+10/29/2018 9:35:02 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (<NULL>, 9952).
+The statement has been terminated..
+10/29/2018 9:35:17 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelListView_Detail' with unique index 'AK_tModelListView_Name_ID_ListView'. The duplicate key value is (<NULL>, 9952).
+The statement has been terminated..
+10/29/2018 9:36:01 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20181015_9388_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/29/2018 9:53:43 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20181015_9388_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/29/2018 9:53:59 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelListView', table 'IAMS_20181015_9388_DEV.dbo._tModelListView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/29/2018 8:53:59 PM: pProjectChangeRequestApprove ---> A cursor with the name 'zz_cursor' already exists.
+The cursor is already open.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist..
+10/29/2018 8:54:03 PM: pProjectChangeRequestApprove ---> A cursor with the name 'zz_cursor' already exists.
+The cursor is already open.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist..
+10/29/2018 8:56:02 PM: pProjectChangeRequestCancel ---> A cursor with the name 'zz_cursor' already exists.
+The cursor is already open.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist.
+A cursor with the name 'zz_cursor' does not exist..

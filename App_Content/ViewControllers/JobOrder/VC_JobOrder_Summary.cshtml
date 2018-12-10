@@ -1,0 +1,96 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, BaseClass) {
+
+        function VC_JobOrder_Summary() { }
+
+        VC_JobOrder_Summary.prototype = Object.create(BaseClass.prototype);
+
+        VC_JobOrder_Summary.prototype.onInitListView = function (VC) {
+            BaseClass.prototype.onInitListView.call(this, VC);
+            var _ = this;
+
+            var IsDisabled = function () {
+                var SelectedItems = (_.ID_ViewType == 1 ? VC.Grid.getSelectedRowsData() : [VC.$scope.CurrentObject]);
+                if (SelectedItems.length !== 1) return true;
+                var CurrentObject = SelectedItems[0];
+                if (CurrentObject.ID_CreatedBy !== VC.CurrentUser.ID) return true;
+                return false;
+            }
+
+            VC.AddToolbarButton({
+                text: 'Start',
+                icon: 'mdi mdi-play',
+                color: '#006600',
+                isContextMenu: true,
+                IsDisabled: function () {
+                    if (IsDisabled() == true) return true;
+                    return false;
+                },
+                onItemClick: function () {
+
+                }
+            });
+
+            VC.AddToolbarButton({
+                text: 'End',
+                icon: 'mdi mdi-checkbox-marked-circle-outline',
+                color: '#000',
+                isContextMenu: true,
+                IsDisabled: function () {
+                    if (IsDisabled() == true) return true;
+                    return false;
+                },
+                onItemClick: function () {
+
+                }
+            });
+
+            VC.AddToolbarButton({
+                text: 'Hold',
+                icon: 'mdi mdi-pause',
+                color: '#b2b200',
+                isContextMenu: true,
+                IsDisabled: function () {
+                    if (IsDisabled() == true) return true;
+                    return false;
+                },
+                onItemClick: function () {
+
+                }
+            });
+
+            //
+            //
+            //
+
+            VC.AddToolbarButton({
+                text: 'Add Comment',
+                icon: 'mdi mdi-comment-outline',
+                color: '#7f7fff',
+                isContextMenu: true,
+                IsDisabled: function () {
+                    var SelectedItems = (_.ID_ViewType == 1 ? VC.Grid.getSelectedRowsData() : [VC.$scope.CurrentObject]);
+                    if (SelectedItems.length !== 1) return true;
+                    var CurrentObject = SelectedItems[0];
+                    return false;
+                },
+                onItemClick: function () {
+
+                }
+            });
+
+        }
+
+        return VC_JobOrder_Summary;
+    });
+//</script>
+</text> , false);
+

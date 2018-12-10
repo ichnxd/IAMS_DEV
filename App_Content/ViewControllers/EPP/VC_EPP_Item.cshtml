@@ -1,0 +1,187 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, BaseClass, AcctHelper) {
+
+        var VC_EPP_Item = function () { }
+        
+        VC_EPP_Item.prototype = Object.create(BaseClass.prototype);
+
+        VC_EPP_Item.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+	        var filesImgControl = [];
+
+            if (_.ID_ViewType === 2) {
+         
+                var _Save = VC.Save;
+                VC.Save = function () {
+                    if (_.FilesToUpLoad.length > 0) {
+                        $.each(_.FilesToUpLoad, function (i, f) {
+                            VC.$FilesToUpload.push({
+                                parentPropertyName: 'EPP_Item_Gallerys',
+                                propertyName: 'ImagePath',
+                                fileName: f.name,
+                                file: f,
+                                isImage: true,
+                                isResize: true,
+                                height: 800,
+                                width: 1100,
+                                ID_Ref: f.ID_Ref,
+                                isSaveThumbnail: true
+                                //isSaveThumbnail : true
+                            });
+                        });
+                    }
+                    _Save.call(VC);
+                };
+
+                VC.AddToolBarButtonOnGrid('EPP_Item_Customers', {
+                    text: 'Add Customer(s)',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+
+                        VC.BrowseDataSet('@Html.EncryptSQL("SELECT ID, CustomerCode AS Code, Name  FROM tBusinessPartner WHERE isActive = 1 AND isCustomer = 1")', {
+                            title: 'Select Customer(s)',
+                            //ID_View: '33C30EAC-E983-4E89-8DB9-C04AEAB92F33',
+                            PropertyKey: 'ID',
+                            pageSize: 30,
+                        }).then(function (Customers) {
+                            
+                            if (VC.$scope.CurrentObject.EPP_Item_Customers == undefined || VC.$scope.CurrentObject.EPP_Item_Customers == null) {
+                                VC.$scope.CurrentObject.EPP_Item_Customers = [];
+                            }
+
+                            $.each(Customers, function (i, c) {
+                                VC.$scope.CurrentObject.EPP_Item_Customers.push({
+                                    ID_BusinessPartner: c.ID,
+                                    Name: c.Name,
+                                    Customer: c.Name,
+                                    Code: c.Code,
+                                    IsActive: true
+                                });
+                            });
+
+
+                        });
+
+
+                    }
+                });
+
+
+                VC.onGridInitialized_EPP_Item_Gallerys = function (e) {
+
+                    e.option('onRowPrepared', function (r) {
+                        if (r.rowType == 'data') {
+                            r.rowElement.css({ height: 50 });
+                        }
+                    });
+
+                    VC.AddToolBarButtonOnGrid('EPP_Item_Gallerys', {
+                        text: 'Add Photo(s)',
+                        icon: 'mdi mdi-package-variant',
+                        onClick: function () {
+                            VC.JSDataService.UploadFile({
+                                height: 550,
+                                accept: 'image/x-png,image/gif,image/jpeg',
+                                closeOnConfirm: false
+                            }).then(function (data) {
+                                console.log(data);
+                                if (data.files.length == 0) return;
+                                data.component.hide();
+                                //e.columnOption('Name', 'width', 100);
+                                //
+                                //
+                                //
+                                var Details = [];
+                                $.each(data.files, function (i, f) {
+                                    console.log(f);
+                                    _.FilesToUpLoad.push(f);
+                                    VC.$scope.CurrentObject.EPP_Item_Gallerys.push({
+                                        ImageName: f.name,
+                                        ImagePath: f.name,
+                                        isActive: true
+                                    });
+                                });
+                            });
+                        }
+                    });
+                    e.option('wordWrapEnabled', true);
+                    e.columnOption('ID', 'fixed', false);
+                    
+                    e.columnOption('Name', 'cellTemplate', function (container, options) {
+                        var data = options.row.data;
+                        if (data.ImagePath !== null) {
+                            if (data.ID < 0) {
+                                var Files = Enumerable.From(_.FilesToUpLoad).Where("$.name === '" + data.ImagePath + "'").ToArray();
+                                if (data.IsImagaLoaded !== true) {
+                                    var ImgControl = $('<img class="dx-image-view" scr="" ></img>');
+                                    if (Files.length === 1) {
+                                        var reader = new FileReader();
+                                        reader.onload = function (f) {
+                                            ImgControl.attr('src', f.target.result);
+                                            data.IsImagaLoaded = true;
+                                            filesImgControl.push({
+                                                ID: data.ID,
+                                                HtmlPreview: ImgControl
+                                            });
+                                        }
+                                        Files[0].ID_Ref = data.ID;
+                                        reader.readAsDataURL(Files[0]);
+                                        container.html(ImgControl);
+                                    }
+                                } else {
+                                    var Img = Enumerable.From(filesImgControl).Where('$.ID === ' + data.ID).ToArray()[0];
+                                    container.html(Img.HtmlPreview);
+                                    return;
+                                }
+                            } else {
+                                if (data.IsImagaLoaded !== true) {
+                                    var ImgControl = $('<img class="dx-image-view" scr="" ></img>');
+                                    ImgControl.attr('src', data.ImagePath);
+                                    filesImgControl.push({
+                                        ID: data.ID,
+                                        HtmlPreview: ImgControl
+                                    });
+                                    container.html(ImgControl);
+                                } else {
+                                    var Img = Enumerable.From(filesImgControl).Where('$.ID === ' + data.ID).ToArray()[0];
+                                    container.html(Img.HtmlPreview);
+                                    return;
+                                }
+                            }
+                        }
+                    });
+
+                };
+            }
+        }
+
+        VC_EPP_Item.prototype.onLoad = function (e) {
+            this.FilesToUpLoad = [];
+        }
+
+        VC_EPP_Item.prototype.onCurrentObjectChanged = function (e) {
+            BaseClass.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            var VC = this.VC;
+            if(e.dataField == 'ID_Item'){
+                //if (e.value !== null) {
+                //    _.CurrentObject.Name = e.value.Name;
+                //} else {
+                //    _.CurrentObject.Name = null;
+                //}
+            }
+
+        }
+
+        return VC_EPP_Item;
+    });
+//</script>
+</text> , false )

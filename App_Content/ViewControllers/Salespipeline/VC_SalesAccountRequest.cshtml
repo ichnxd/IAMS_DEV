@@ -1,0 +1,165 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','@BaseVCUrl'], function (app, Base) {
+
+        var VC_SalesAccountRequest = function () { }
+
+        VC_SalesAccountRequest.prototype = Object.create(Base.prototype);
+
+        VC_SalesAccountRequest.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+  
+
+        }
+        VC_SalesAccountRequest.prototype.onLoad = function () {
+            var _ = this;
+            var VC = _.VC
+            //_.butCancel.text ='Can';
+
+            
+ 
+            //_.butCancel.IsDisabled = function(){
+            //    if(_.CurrentObject.ID_FilingStatus !== 1){
+            //        return true;
+            //    } 
+            //    return false;
+            //}
+            //_.butApproved.IsDisabled = function(){
+            //    if(_.CurrentObject.ID_FilingStatus !== 1){
+            //        return true;
+            //    } 
+            //    return false;
+            //}
+
+            if(_.ID_ViewType == 2){
+                VC.butNew.visible = true;
+
+                if(_.CurrentObject.ID_FilingStatus !== 1){
+                    VC.setFormReadOnly(true)
+                }else{
+                    VC.setFormReadOnly(false)
+                }
+            }
+
+        }
+
+        VC_SalesAccountRequest.prototype.onCurrentObjectChanged = function (e) {
+            Base.prototype.onCurrentObjectChanged.call(this, e);
+            var VC = this.VC;
+            var _ = this;
+
+            if ( e.dataField == 'ID_AccountExecutive_From' && VC.$scope.CurrentObject.$dirty != undefined  ) { 
+                VC.GetDxControl('ID_Customer').$dirty = true;
+				VC.GetDxControl('ID_Customer').Clear();
+			}
+        }
+        VC_SalesAccountRequest.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+            _.butCancel.text ='Deny';
+            var CurrentObject = null;
+
+ 
+            _.butCancel.IsDisabled = function(){
+                var CurrentObject = null;
+                CurrentObject = VC.GetSelectedRows();
+                if(CurrentObject.length == 0){
+                    return true;
+                }
+                if(CurrentObject[0].ID_FilingStatus !== 1){
+                    return true;
+                } 
+                return false;
+            }
+            _.butApproved.IsDisabled = function(){
+                var CurrentObject = null;
+                CurrentObject = VC.GetSelectedRows();
+                if(CurrentObject.length == 0){
+                    return true;
+                }
+                if(CurrentObject[0].ID_FilingStatus !== 1){
+                    return true;
+                } 
+                return false;
+            }
+        }
+
+        VC_SalesAccountRequest.prototype.Approve = function (Items) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesAccountRequestApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                VC.ToastSuccess('Successfully Approved.');
+
+                if (_.ID_ViewType == 2) {
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+        VC_SalesAccountRequest.prototype.Cancel = function (Items,Reason) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+ 
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesAccountRequestDeny")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'Reason': Reason,
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                VC.ToastSuccess('Successfully Denied');
+
+                if (_.ID_ViewType == 2) {
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+                defer.resolve();
+            }, function () {
+                VC.ToastError('An error occured!');
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+
+        return VC_SalesAccountRequest;
+    });
+//</script>
+</text> , false )

@@ -1,0 +1,2581 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app'], function (app) {
+
+        var AccountingHelper = function () {
+            var _ = this;
+
+
+        }
+
+        AccountingHelper.MsgBox = function (message, title, options) {
+            if (title == undefined) title = 'IAMS';
+            return DevExpress.ui.dialog.alert(message, title);
+            //return this.JsPopUpView.MsgBox(message, title, options);
+
+        }
+        AccountingHelper.ReplaceAll = function( word, replaceWhat , replaceTo ){
+
+            if(word == null){ word = "" };
+            if(replaceTo == null){ replaceTo = "" };
+
+            word = word.split(replaceWhat).join(replaceTo);
+            return word;
+        };
+        AccountingHelper.ValidatePhoneNo = function( phone , length , min ){
+
+            if(min == undefined || min == null) min = length;
+
+            var x = phone;
+
+            x = this.ReplaceAll(x,'-','');
+            x = this.ReplaceAll(x,')','');
+            x = this.ReplaceAll(x,'(','');
+            x = this.ReplaceAll(x,'+','');
+
+            x = x.trim();
+
+            if(x.length >= min){
+                var y = x.substring(0,min);
+                y = this.ReplaceAll(y,' ','');
+                y = this.ReplaceAll(y,'_','');
+                if(y.length !== min){
+                    return false;
+                }
+            }else{
+                return false;
+            }
+            x = this.ReplaceAll(x,' ','');
+            x = this.ReplaceAll(x,'_','');
+
+
+            if(x.length < length && x.length !== min ){
+                return false;
+            }else{
+                return true;
+            }
+
+        };
+
+        AccountingHelper.PurchaseInvoice = 65;
+        AccountingHelper.ReceivingReport = 2124;
+        AccountingHelper.VouchersPayable = 3118;
+        AccountingHelper.PaymentVoucher = 3120;
+        AccountingHelper.DeliveryReceipt = 3129;
+        AccountingHelper.SalesInvoice = 4210;
+        AccountingHelper.Diary  = 6243;
+        AccountingHelper.Opportunity  = 4142;
+        AccountingHelper.PurchaseReturn = 2149;
+        AccountingHelper.SalesReturn = 5272;
+        AccountingHelper.Replenishment = 9357;
+        AccountingHelper.PettyCash = 5275;
+        AccountingHelper.ColllectionReceipt = 4173;
+
+        AccountingHelper.ID_View_ItemIssuance = 4169;
+        AccountingHelper.ID_View_DeliveryReceipt = 3129;
+        AccountingHelper.ID_View_SalesOrder = 3126;
+        AccountingHelper.ID_View_PurchaseOrder = 1026;
+        AccountingHelper.ID_View_Liquidation = 9317;
+        AccountingHelper.ID_View_PettyCash = 6241;
+        AccountingHelper.ID_View_PettyCash_Details = 9337;
+        AccountingHelper.ID_View_Customer = 3102;
+        AccountingHelper.ID_ViewItemRequest = 9379;
+
+        AccountingHelper.Model_ID_SalesOrder = 2165;
+        AccountingHelper.Model_ID_DeliveryReceipt = 2168;
+        AccountingHelper.Model_ID_SalesReturn = 5272;
+        AccountingHelper.Model_ID_SalesInvoice = 3249;
+        AccountingHelper.Model_ID_PurchaseOrder = 65;
+        AccountingHelper.Model_ID_ReceivingReport = 2142;
+        AccountingHelper.Model_ID_Liquidation = 8351;
+        AccountingHelper.Model_ID_PettyCash = 5275;
+        AccountingHelper.Model_ID_SalesEndorsement = 5279;
+        AccountingHelper.Model_ID_ItemRequest = 8412;
+        AccountingHelper.Model_ID_PurchaseRequest = 3201;
+
+        
+        AccountingHelper.fGetSelectedObjectValuesNumeric = function(objects, propertyName){
+
+            var enumProperyName = '$.' + propertyName;
+
+            var result =  Enumerable.From(objects).Where(enumProperyName + ' != null').Select(enumProperyName).ToArray();
+
+            if(result.length == 0){
+                result = [0];
+            }
+
+            return result;
+        };
+
+        AccountingHelper.CreatePOFromPR = function (Items) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetPurchaseOrder")',
+                {
+                    'ID': -1,
+                    'ID_Refs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'IsPR': 1
+                }
+            ).then(function (PurchaseOrder) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Purchase Order (New)',
+                    ID_ViewType: 2,
+                    ViewID: 1026,
+                    CurrentObject: PurchaseOrder,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+
+        var CreatePO = function (ID_BusinessPartner, Details) {
+
+            //var defer = app.$GetAsync().defer();
+            var JsDataService = app.$GetDataService();
+            return JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetPurchaseOrder")',
+                {
+                    'ID': -1,
+                    'ID_Refs': Enumerable.From(Details).Select('$.ID').ToArray(),
+                    'ID_Supplier': ID_BusinessPartner,
+                    'ID_PaymentTerm': parseInt(Enumerable.From(Details).Select('$.ID_PaymentTerm').ToArray() )
+                }
+
+            );
+        }
+
+
+         var CreateCustomerCurrentObject = function () {
+
+            //var defer = app.$GetAsync().defer();
+            var JsDataService = app.$GetDataService();
+            return JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetCustomer")',
+                {
+                    'ID': -1,
+                }
+
+            );
+
+        }
+
+        AccountingHelper.customParseFloat = function(value){
+
+            var isNegative = false;
+            var convertedNumber  = 0;
+
+            if(value === null || value === '' || value === undefined){
+
+                return 0;
+            }
+
+            if(typeof value == "number"){
+
+                value = value.toString();
+            }
+
+            if(value.includes("-") == true) isNegative = true;
+
+            value = value.replace(/[^0-9.]/g, "");
+
+            convertedNumber = parseFloat(value);
+
+            if(isNegative == true ){
+
+                convertedNumber = 0 - convertedNumber;
+            }
+
+            return convertedNumber
+        };
+
+        AccountingHelper.formatDecimalNumber = function(value, maxFractionDigits){
+
+            value = AccountingHelper.customParseFloat(value);
+
+            if(maxFractionDigits == undefined || maxFractionDigits == null) maxFractionDigits = 2;
+
+            if(value == undefined) value = 0;
+
+           var  result =  value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: maxFractionDigits});
+
+            if(result == "NaN"){
+
+                result = '0.00';
+            }
+
+           return result;
+        };
+
+
+        AccountingHelper.CreateNewCustomer = function (customerName) {
+
+            var defer = app.$GetAsync().defer();
+
+            var customerObj = CreateCustomerCurrentObject();
+
+            customerObj.Name = customerName;
+
+            var emitParam = {
+
+                ID: app.getRandomInt(),
+                Caption: 'Customer (New)',
+                ID_ViewType: 2,
+                ViewID: AccountingHelper.ID_View_Customer,
+                ImageName: '',
+                CurrentObject:customerObj,
+            }
+
+
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", emitParam);
+
+
+           return defer.promise;
+
+        }
+
+        AccountingHelper.InitArrayedObj = function(obj){
+
+
+
+            if(obj ==undefined){
+
+                obj = [];
+            }
+
+            if(obj == null){
+
+                obj = [];
+            }
+console.log(obj);
+           return obj;
+        }
+
+        AccountingHelper.IsObjNothing = function(obj){
+
+            if(obj == undefined){
+
+                return true;
+            }
+
+            if(obj ==null){
+
+                return true;
+            }
+           return false;
+        }
+
+        AccountingHelper.OpenDetailView = function (data) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: data.Caption == undefined ? "New" : data.Caption,
+                ID_ViewType: 2,
+                ViewID: data.ID_View,
+                ImageName: data.ImageName,
+                ID_CurrentObject: data.ID_CurrentObject !== undefined ? data.ID_CurrentObject : - 1,
+                params: data.params
+            });
+        }
+
+        AccountingHelper.CreateNewOpportunity = function (ID_Customer) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+
+                ID: app.getRandomInt(),
+                Caption: 'Opportunity (New)',
+                ID_ViewType: 2,
+                ViewID: 4142,
+                ImageName: '',
+                ID_CurrentObject : -1,
+                params: {
+                    'ID_Customer': ID_Customer
+                }
+            });
+        }
+
+        AccountingHelper.CreatePOFromCanvassSheet = function (ID_BusinessPartner, ID_CanvassSheet) {
+            var defer = null;
+            var SQL = null;
+
+            if (ID_CanvassSheet == undefined) {
+                if (ID_BusinessPartner === undefined) {
+                    SQL = '@Html.EncryptSQL("SELECT * FROM vCanvassSheet_Detail_Suppliers WHERE ID_FilingStatus = 2 AND IsUseSupplier = 1")';
+                } else {
+                    defer = app.$GetAsync().defer();
+                    SQL = '@Html.EncryptSQL("SELECT * FROM vCS_SupplierWithPO WHERE ID_FilingStatus = 2 AND IsUseSupplier = 1 AND ID_Supplier = @ID_Supplier")';
+                }
+            } else {
+                SQL = '@Html.EncryptSQL("SELECT * FROM vCanvassSheet_Detail_Suppliers WHERE ID_FilingStatus = 2 AND IsUseSupplier = 1 AND ID_CanvassSheet = @ID_CanvassSheet")';
+            }
+
+            var JsPopUpView = app.$GetPopupView();
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Canvass Sheet',
+                ID_View: '704707EC-AA18-4754-A8B5-516506943452',
+                params: {
+                    'ID_Supplier': ID_BusinessPartner,
+                    'ID_CanvassSheet': ID_CanvassSheet
+                }
+            }).then(function (Details) {
+
+                var Suppliers = Enumerable.From(Details).Select("$.ID_Supplier").Distinct().ToArray();
+                if (Suppliers.length > 1) return;
+
+                CreatePO(Suppliers[0], Details).then(function (PurchaseOrder) {
+
+
+                    if (ID_BusinessPartner != undefined) {
+
+
+                        defer.resolve(PurchaseOrder.PurchaseOrderDetails);
+                        return;
+                    }
+
+
+                    var $rootScope = app.$rootScope();
+                    $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt(),
+                        Caption: 'Purchase Order (New)',
+                        ID_ViewType: 2,
+                        ViewID: 1026,
+                        CurrentObject: PurchaseOrder,
+                        ImageName: ''
+
+                    });
+                });
+            });
+            if (ID_BusinessPartner != undefined) {
+                return defer.promise;
+            }
+        };
+
+
+      AccountingHelper.CreatePOFromCanvassSheetV2 = function(ID_CanvassSheet){
+          var defer = null;
+          var SQL = null;
+            SQL = '@Html.EncryptSQL("SELECT * FROM vCS_SupplierWithPO WHERE ID_FilingStatus = 2 AND IsUseSupplier = 1 AND ID_CanvasSheet = @ID_CanvassSheet ")';
+            var JsPopUpView = app.$GetPopupView();
+            JsPopUpView.BrowseDataSet(SQL, {
+              title: 'Select Canvass Sheet',
+              ID_View: '704707EC-AA18-4754-A8B5-516506943452',
+              params: {
+                  'ID_CanvassSheet': ID_CanvassSheet
+              }
+            }).then(function(Details){
+
+                 var Suppliers = Enumerable.From(Details).Select("$.ID_Supplier").Distinct().ToArray();
+                if (Suppliers.length > 1) return;
+
+                CreatePO(Suppliers[0], Details).then(function (PurchaseOrder) {
+
+                    var $rootScope = app.$rootScope();
+                    $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt(),
+                        Caption: 'Purchase Order (New)',
+                        ID_ViewType: 2,
+                        ViewID: 1026,
+                        CurrentObject: PurchaseOrder,
+                        ImageName: ''
+
+                    });
+                });
+
+            })
+      }
+
+
+
+        AccountingHelper.ViewItem = function (ID_Item) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Item',
+                ID_ViewType: 2,
+                ViewID: 2,
+                ID_CurrentObject: ID_Item,
+                ImageName: ''
+            });
+        }
+
+        AccountingHelper.ViewLiquidation = function (ID_Liquidation) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Liquidation',
+                ID_ViewType: 2,
+                ViewID: 9317,
+                ID_CurrentObject: ID_Liquidation,
+                ImageName: ''
+            });
+        }
+
+        AccountingHelper.ViewCashAdvance = function (ID_CA) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Cash Advance',
+                ID_ViewType: 2,
+                ViewID: 9308,
+                ID_CurrentObject: ID_CA,
+                ImageName: ''
+            });
+        }
+
+        AccountingHelper.OpenPurchaseOrder = function (ID_PurchaseOrder) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+
+                ID: app.getRandomInt(),
+                Caption: 'Purchase Order',
+                ID_ViewType: 2,
+                ViewID: 1026,
+                ID_CurrentObject: ID_PurchaseOrder,
+                ImageName: ''
+
+            });
+        }
+
+        AccountingHelper.OpenSalesOrder = function (ID_SalesOrder) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+
+                ID: app.getRandomInt(),
+                Caption: 'Sales Order',
+                ID_ViewType: 2,
+                ViewID: 3126,
+                ID_CurrentObject: ID_SalesOrder,
+                ImageName: ''
+
+            });
+        }
+        AccountingHelper.OpenDiary = function (ID_Current) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+
+                ID: app.getRandomInt(),
+                Caption: 'Diary',
+                ID_ViewType: 2,
+                ViewID: 6243,
+                ID_CurrentObject: ID_Current,
+                ImageName: ''
+
+            });
+        }
+
+        AccountingHelper.OpenOpportunity = function (ID_Current) {
+            var $rootScope = app.$rootScope();
+            $rootScope.$emit("CallNewTabMethod", {
+
+                ID: app.getRandomInt(),
+                Caption: 'Opportunity',
+                ID_ViewType: 2,
+                ViewID: 4142,
+                ID_CurrentObject: ID_Current,
+                ImageName: ''
+
+            });
+        }
+        AccountingHelper.CreateSalesEndorsement = function (Opportunity,onCurrentObjectSaved ) {
+
+            app.$rootScope().$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Sales Endorsement (New)',
+                ID_ViewType: 2,
+                ViewID: 6245,
+                ImageName: '',
+                ID_CurrentObject: -1,
+                params: {
+                    'ID_Opportunity': Opportunity.ID
+                },
+                $onCurrentObjectSaved: onCurrentObjectSaved
+            });
+        };
+
+        AccountingHelper.CreateWorkOrder = function (Opportunity) {
+
+            app.$rootScope().$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Work Order (New)',
+                ID_ViewType: 2,
+                ViewID: 10459,
+                ImageName: '',
+                ID_CurrentObject: -1,
+                params: {
+                    'ID_Opportunity': Opportunity.ID
+                }
+            });
+        };
+
+
+        AccountingHelper.CreateProposal = function (Opportunity, onCurrentObjectSaved) {
+
+            app.$rootScope().$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Proposal (New)',
+                ID_ViewType: 2,
+                ViewID: 9389,
+                ImageName: '',
+                ID_CurrentObject: -1,
+                params: {
+                    'ID_Opportunity': Opportunity.ID
+                },
+                $onCurrentObjectSaved: onCurrentObjectSaved
+            });
+        };
+        AccountingHelper.CreateSalesSchedFromCA = function (ID_CA) {
+
+            app.$rootScope().$emit("CallNewTabMethod", {
+                ID: app.getRandomInt(),
+                Caption: 'Sales Calendar (New)',
+                ID_ViewType: 2,
+                ViewID: 9258,
+                ImageName: '',
+                ID_CurrentObject: -1,
+                params: {
+                    'ID_CA': ID_CA
+                }
+            });
+        };
+
+
+        AccountingHelper.CreateTemplate = function(content, fileName, mimeType) {
+            var a = document.createElement('a');
+            mimeType = mimeType || 'application/octet-stream';
+
+            if (navigator.msSaveBlob) { // IE10
+                return navigator.msSaveBlob(new Blob([content], { type: mimeType }),     fileName);
+            } else if ('download' in a) { //html5 A[download]
+                a.href = 'data:' + mimeType + ',' + encodeURIComponent(content);
+                a.setAttribute('download', fileName);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                return true;
+            } else { //do iframe dataURL download (old ch+FF):
+                var f = document.createElement('iframe');
+                document.body.appendChild(f);
+                f.src = 'data:' + mimeType + ',' + encodeURIComponent(content);
+
+                setTimeout(function() {
+                document.body.removeChild(f);
+                }, 333);
+                return true;
+            }
+        }
+
+
+        AccountingHelper.CreateAutoPOFromCanvassSheet = function (ID_CanvasSheet) {
+
+            var SQL = '@Html.EncryptSQL("SELECT * FROM vCanvassSheet_Detail_Suppliers WHERE ID_FilingStatus = 2 AND IsUseSupplier = 1 AND ID_CanvasSheet = @ID_CanvassSheet")';
+            app.$GetDataService().Query(SQL, {
+                params: {
+                    ID_CanvassSheet: ID_CanvasSheet
+                }
+            }).then(function (data) {
+                var ID_BusinessPartnerList = Enumerable.From(data.collection).Select('$.ID_Supplier').Distinct().ToArray();
+
+                    var timelog = 0;
+                $.each(ID_BusinessPartnerList, function (i, ID_BusinessPartner) {
+                    var POItems = Enumerable.From(data.collection).Where('$.ID_Supplier==' + ID_BusinessPartner).ToArray();
+                    timelog += 1000
+                    CreatePO(ID_BusinessPartner, POItems).then(function (PurchaseOrder) {
+                        var timeout = app.$GetTimeOut();
+                        timeout(function () {
+                            var $rootScope = app.$rootScope();
+
+                            $rootScope.$emit("CallNewTabMethod", {
+                                ID: app.getRandomInt(),
+                                Caption: 'Purchase Order (New)',
+                                ID_ViewType: 2,
+                                ViewID: 1026,
+                                CurrentObject: PurchaseOrder,
+                                ImageName: '',
+                                params: {
+                                    saveOnLoad: true
+                                }
+                            }, timelog);
+
+                        });
+                    });
+                });
+            });
+        }
+        //
+        //
+
+        AccountingHelper.CreateCanvasSheetFromPurchaseRequest = function (Items) {
+            //JULIUS 1-5-2017
+            var SQL = '@Html.EncryptSQL("SELECT * FROM vPendingPRItemForCanvass WHERE ID_PurchaseRequest IN ( @ID_PurchaseRequests  ) ")';
+            var JsPopUpView = app.$GetPopupView();
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Purchase Request',
+                ID_View: '1C93C734-8EAB-4965-96B1-E5541B3AAF90',
+                params: {
+                    'ID_PurchaseRequests': Enumerable.From(Items).Select("$.ID").ToArray()
+                }
+            }).then(function (Details) {
+                //
+                //
+                //
+                var JsDataService = app.$GetDataService();
+
+                JsDataService.pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetCanvasSheet")',
+                       {
+                           'ID': -1,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray()
+                       }
+                   ).then(function (CanvassSheet) {
+
+
+                       var $rootScope = app.$rootScope();
+
+
+                       /***    Load Last Use Supplier from Canvass  ***/
+
+                       if (CanvassSheet.CanvasSheetDetails == undefined || CanvassSheet.CanvasSheetDetails == null) CanvassSheet.CanvasSheetDetails = [];
+
+                       $.each(CanvassSheet.CanvasSheetDetails, function (i, detail) {
+
+                           var lastUsedSuppliers = AccountingHelper.GetLastUseSupplierFromCanvassSheet(detail.ID, detail.ID_Item, detail.ID_UOM);
+                           detail.CanvasSheetDetailSuppliers = lastUsedSuppliers;
+                       });
+
+                       /***    Load Last Use Supplier from Canvass END ***/
+
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Canvass Sheet (New)',
+                           ID_ViewType: 2,
+                           ViewID: 4152,
+                           CurrentObject: CanvassSheet,
+                           ImageName: ''
+
+                       });
+
+                   });
+
+
+
+            });
+        }
+
+
+        AccountingHelper.CreateCanvasSheetFromItemRequest = function (Items) {
+            //JULIUS 1-5-2017
+            var SQL = '@Html.EncryptSQL("SELECT *,ID As ID_ItemRequest_Detail FROM vItemRequest_Detail WHERE ID_ItemRequest IN ( @ID_ItemRequests  ) And Not ID IN( SELECT ID_ItemRequest_Detail FROM dbo.tCanvasSheet_Detail dt INNER JOIN dbo.tCanvasSheet cs ON cs.ID = dt.ID_CanvasSheet WHERE ID_ItemRequest_Detail > 0  AND cs.ID_FilingStatus  NOT IN(1,7)  ) ")';
+            var JsPopUpView = app.$GetPopupView();
+
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Item Request',
+                ID_View: '21118F8B-6A80-4744-BE2A-3FF9D62F2BFC',
+                params: {
+                    'ID_ItemRequests': Enumerable.From(Items).Select("$.ID").ToArray()
+                }
+            }).then(function (Details) {
+                //
+                //
+                //
+
+                var JsDataService = app.$GetDataService();
+
+                JsDataService.pGetCurrentObject(
+
+                   '@Html.EncryptSQL("pGetCanvasSheet")',
+                       {
+                           'ID': -1,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray(),
+                           'ID_DocParentDetail' : AccountingHelper.Model_ID_ItemRequest
+                       }
+                   ).then(function (CanvassSheet) {
+
+
+                       var $rootScope = app.$rootScope();
+
+
+                       /***    Load Last Use Supplier from Canvass  ***/
+
+                       if (CanvassSheet.CanvasSheetDetails == undefined || CanvassSheet.CanvasSheetDetails == null) CanvassSheet.CanvasSheetDetails = [];
+
+                       $.each(CanvassSheet.CanvasSheetDetails, function (i, detail) {
+
+                           var lastUsedSuppliers = AccountingHelper.GetLastUseSupplierFromCanvassSheet(detail.ID, detail.ID_Item, detail.ID_UOM);
+                           detail.CanvasSheetDetailSuppliers = lastUsedSuppliers;
+                       });
+
+                       /***    Load Last Use Supplier from Canvass END ***/
+
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Canvass Sheet (New)',
+                           ID_ViewType: 2,
+                           ViewID: 4152,
+                           CurrentObject: CanvassSheet,
+                           ImageName: ''
+
+                       });
+
+                   });
+
+
+
+            });
+        }
+
+        AccountingHelper.CreateSalesOrderFromSalesEndorsement = function (ID_SalesEndorsement) {
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+               '@Html.EncryptSQL("pGetSalesOrder")',
+                   {
+                       'ID': -1,
+                       'ID_SalesEndorsement': ID_SalesEndorsement,
+                       'ID_DocDetailParentModel': 5279//AccountingHelper.Model_ID_ItemRequest
+                   }
+               ).then(function (SalesOrder) {
+                   var $rootScope = app.$rootScope();
+                   $rootScope.$emit("CallNewTabMethod", {
+                       ID: app.getRandomInt(),
+                       Caption: 'Sales Order (New)',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.ID_View_SalesOrder,
+                       CurrentObject: SalesOrder,
+                       ImageName: ''
+                   });
+               });
+        }
+
+        AccountingHelper.CreateSalesOrderFromItemRequest = function (Items) {
+            //Joseph 2017-06-20  10:42 am
+            var fGetSalesOrder = function(Details){
+
+                var JsDataService = app.$GetDataService();
+                JsDataService.pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetSalesOrder")',
+                       {
+                           'ID': -1,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray(),
+                           'ID_DocDetailParentModel' : AccountingHelper.Model_ID_ItemRequest
+                       }
+                   ).then(function (SalesOrder) {
+
+                       var $rootScope = app.$rootScope();
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Sales Order (New)',
+                           ID_ViewType: 2,
+                           ViewID:  AccountingHelper.ID_View_SalesOrder,
+                           CurrentObject: SalesOrder,
+                           ImageName: ''
+
+                       });
+
+                   });
+            };
+
+            var SQL = '@Html.EncryptSQL("SELECT *,ID As ID_ItemRequest_Detail FROM vItemRequest_Detail WHERE ID_ItemRequest IN ( @ID_ItemRequests  ) And Not ID IN( SELECT ID_ItemRequest_Detail FROM dbo.tSalesOrder_Detail dt INNER JOIN dbo.tSalesOrder cs ON cs.ID = dt.ID_SalesOrder WHERE ID_ItemRequest_Detail > 0  AND cs.ID_FilingStatus  NOT IN(1,7)  ) ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Item Request',
+                ID_View: '3B1984EC-B0F2-436A-9607-845C0EF97EEF',
+                params: {
+                    'ID_ItemRequests': Enumerable.From(Items).Select("$.ID").ToArray()
+                }
+            }).then(fGetSalesOrder);
+        }
+
+
+        AccountingHelper.CreateDeliveryReceiptFromItemRequest = function (Items) {
+            //Joseph 2017-06-20  10:42 am
+            var fGetDeliveryReceipt = function(Details){
+
+                var JsDataService = app.$GetDataService();
+                JsDataService.pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetDeliveryReceipt")',
+                       {
+                           'ID': -1,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray(),
+                           'ID_DocDetailParentModel' : AccountingHelper.Model_ID_ItemRequest
+                       }
+                   ).then(function (DeliveryReceipt) {
+
+                       var $rootScope = app.$rootScope();
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Delivery Receipt (New)',
+                           ID_ViewType: 2,
+                           ViewID:  AccountingHelper.ID_View_DeliveryReceipt,
+                           CurrentObject: DeliveryReceipt,
+                           ImageName: ''
+
+                       });
+
+                   });
+            };
+
+            var SQL = '@Html.EncryptSQL("SELECT *,ID As ID_ItemRequest_Detail FROM vItemRequest_Detail WHERE ID_ItemRequest IN ( @ID_ItemRequests  ) And Not ID IN( SELECT ID_ItemRequest_Detail FROM dbo.tSalesOrder_Detail dt INNER JOIN dbo.tSalesOrder cs ON cs.ID = dt.ID_SalesOrder WHERE ID_ItemRequest_Detail > 0  AND cs.ID_FilingStatus  NOT IN(1,7)  ) ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Item Request',
+                ID_View: '3B1984EC-B0F2-436A-9607-845C0EF97EEF',
+                params: {
+                    'ID_ItemRequests': Enumerable.From(Items).Select("$.ID").ToArray()
+                }
+            }).then(fGetDeliveryReceipt);
+        }
+
+
+        AccountingHelper.CreateItemIssuanceFromItemRequest = function (Items) {
+            //Joseph 2017-06-20  10:42 am
+            var fGetItemIssuance = function(Details){
+
+                var JsDataService = app.$GetDataService();
+                JsDataService.pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetItemIssuance")',
+                       {
+                           'ID': -1,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray(),
+                           'ID_DocDetailParentModel' : AccountingHelper.Model_ID_ItemRequest
+                       }
+                   ).then(function (ItemIssuance) {
+
+                       var $rootScope = app.$rootScope();
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Item Issuance (New)',
+                           ID_ViewType: 2,
+                           ViewID:  AccountingHelper.ID_View_ItemIssuance,
+                           CurrentObject: ItemIssuance,
+                           ImageName: ''
+
+                       });
+
+                   });
+            };
+
+            var SQL = '@Html.EncryptSQL("SELECT *,ID As ID_ItemRequest_Detail FROM vItemRequest_Detail WHERE ID_ItemRequest IN ( @ID_ItemRequests  ) and ID_DocDetail is null   and ID_FilingStatus = 33 ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                title: 'Select Item Request',
+                ID_View: '3B1984EC-B0F2-436A-9607-845C0EF97EEF',
+                params: {
+                    'ID_ItemRequests': Enumerable.From(Items).Select("$.ID").ToArray()
+                }
+            }).then(fGetItemIssuance);
+        }
+
+
+        AccountingHelper.GetLastUseSupplierFromCanvassSheet = function (ID_Canvass_Detail, ID_Item, ID_UOM) {
+
+            var CanvasSheetDetailSuppliers = [];
+
+            app.$GetDataService().Query('@Html.EncryptSQL("SELECT TOP 3 * FROM DBO.fGetLastCanvassSupplierByItem(@ID_Item,@ID_UOM)")', {
+                params: {
+
+                    'ID_Item': ID_Item,
+                    'ID_UOM': ID_UOM
+                }
+            }).then(function (data) {
+
+
+                $.each(data.collection, function (i, record) {
+
+                    var timeout = app.$GetTimeOut();
+
+                    timeout(function () {
+
+                        if (record.ID_PaymentTerm == undefined){
+
+                            record.ID_PaymentTerm =null;
+                            record.PaymentTerm =null;
+                        }
+
+                        CanvasSheetDetailSuppliers.push(
+                            {
+                                ID: 0 - app.getRandomInt(),
+                                UnitPrice: record.CanvassPrice,
+                                IsUseSupplier: record.IsUseSupplier,
+                                ID_Supplier: record.ID_Supplier,
+                                Supplier: record.Name_Supplier,
+                                ID_Canvass_Detail: ID_Canvass_Detail,
+                                ID_PaymentTerm: record.ID_PaymentTerm,
+                                PaymentTerm: record.PaymentTerm
+                            }
+
+                        );
+
+                    }, 1000);
+
+                });
+
+            });
+
+            return CanvasSheetDetailSuppliers;
+        }
+
+
+
+
+
+
+
+        AccountingHelper.CreateRRFromPO = function (Items) {
+
+            var SQL = '@Html.EncryptSQL(@"SELECT Balance, ID, ItemCode, DocumentNo, Quantity,Description, UnitPrice, TotalAmount, UOM,
+                 DocStatus FROM vPurchaseOrder_Detail
+                 WHERE ID_PurchaseOrder IN ( @ID_PurchaseOrders ) AND Balance > 0")';
+
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '6BA2BD5C-9FDC-49D4-9463-33811564D72B',
+                params: {
+                    ID_PurchaseOrders: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Purchase Order(s)'
+            }).then(function (PurchaseOrderDetails) {
+
+                AccountingHelper.CreateReceivingReport(PurchaseOrderDetails);
+
+            });
+
+        }
+
+
+
+     //
+        //===================
+
+        AccountingHelper.CreateVPFromPO = function (Items) {
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetVouchersPayable")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_MODEL': 65
+                }
+            ).then(function (VouchersPayable) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Vouchers Payable (New)',
+                    ID_ViewType: 2,
+                    ViewID: AccountingHelper.VouchersPayable,
+                    CurrentObject: VouchersPayable,
+                    ImageName: ''
+
+                });
+
+
+            });
+
+        }
+
+
+          //===================
+
+        AccountingHelper.CreatePettyCash = function (Items) {
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetPettyCash")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_ParentModel': AccountingHelper.Model_ID_PurchaseOrder
+                }
+            ).then(function (pettyCash) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Petty Cash (New)',
+                    ID_ViewType: 2,
+                    ViewID:   AccountingHelper.ID_View_PettyCash,
+                    CurrentObject: pettyCash,
+                    ImageName: ''
+
+                });
+
+
+            });
+
+        }
+
+         AccountingHelper.CreatePettyCashFromRR = function (Items) {
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetPettyCash")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_ParentModel': AccountingHelper.Model_ID_ReceivingReport
+                }
+            ).then(function (pettyCash) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Petty Cash (New)',
+                    ID_ViewType: 2,
+                    ViewID:   AccountingHelper.ID_View_PettyCash,
+                    CurrentObject: pettyCash,
+                    ImageName: ''
+
+                });
+
+
+            });
+
+        }
+
+
+         //
+        //===================
+
+        AccountingHelper.Create_Liquidation_From_CashAdvance = function (ID_CashAdvanceRequest) {
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetLiquidation")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'ID_CashAdvanceRequest': ID_CashAdvanceRequest
+                }
+            ).then(function (liquidation) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Liquidation New',
+                    ID_ViewType: 2,
+                    ViewID: AccountingHelper.ID_View_Liquidation,
+                    CurrentObject: liquidation,
+                    ImageName: ''
+
+                });
+
+
+            });
+
+        }
+
+
+        //===================
+        //
+        AccountingHelper.CreateVPFromPODetails = function (Items) {
+
+            var SQL = '@Html.EncryptSQL(@"SELECT Balance, ID, ItemCode, DocumentNo, Quantity,Description, UnitPrice, TotalAmount, UOM,
+                 DocStatus, BalanceInVP FROM vPurchaseOrder_Detail
+                 WHERE ID_PurchaseOrder IN ( @ID_PurchaseOrders ) ")';
+
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '6BA2BD5C-9FDC-49D4-9463-33811564D72B',
+                params: {
+                    ID_PurchaseOrders: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Purchase Order(s)'
+            }).then(function (PurchaseOrderDetails) {
+
+              //  AccountingHelper.CreateReceivingReport(PurchaseOrderDetails);
+              //
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetVouchersPayable")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'IDs_Ref': Enumerable.From(PurchaseOrderDetails).Select('$.ID').ToArray(),
+                    'ID_Model': 65
+                }
+            ).then(function (VouchersPayable) {
+
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Vouchers Payable (New)',
+                    ID_ViewType: 2,
+                    ViewID: AccountingHelper.VouchersPayable,
+                    CurrentObject: VouchersPayable,
+                    ImageName: ''
+
+                });
+
+
+
+            });
+              //
+
+            });
+
+        }
+        //
+        //===================
+
+        AccountingHelper.CreatePurchaseInvoice = function (Items, ID_ModelRef) {
+
+            var SQL = null, ViewID = null;
+
+            if (ID_ModelRef == 65) {
+                SQL = '@Html.EncryptSQL(@"SELECT Balance, ID, ItemCode, DocumentNo, Quantity,Description, UnitPrice, TotalAmount, UOM,
+                    DocStatus FROM vPurchaseOrder_Detail
+                 WHERE ID_PurchaseOrder IN ( @ID_Details ) AND Balance > 0")';
+                ViewID = 'ED2E90B4-C0BC-4E76-9A36-93C1FBAEF7D6';
+            } else {
+                SQL = '@Html.EncryptSQL(@"SELECT Balance, ID, ItemCode, DocumentNo, Quantity,Description, UnitPrice, TotalAmount, UOM,
+                    DocStatus FROM vReceivingReport_Detail
+                 WHERE ID_ReceivingReport IN ( @ID_Details ) AND Balance > 0")';
+                ViewID = '1B3C0139-FF9D-4D79-8B0E-9214D7F0D2E5';
+
+            }
+
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: ViewID,
+                params: {
+                    ID_Details: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: ID_ModelRef == 65 ? 'Select Purchase Order(s)' : 'Select Receiving Reports'
+            }).then(function (Details) {
+
+                var JsDataService = app.$GetDataService();
+
+                JsDataService.pGetCurrentObject(
+
+                   '@Html.EncryptSQL("pGetPurchaseInvoice")',
+                       {
+                           'ID': -1,
+                           'ID_Model_Ref': ID_ModelRef,
+                           'ID_Details_Ref': Enumerable.From(Details).Select('$.ID').ToArray(),
+                       }
+                   ).then(function (PurchaseInvoice) {
+
+
+                       var $rootScope = app.$rootScope();
+
+                       $rootScope.$emit("CallNewTabMethod", {
+
+                           ID: app.getRandomInt(),
+                           Caption: 'Purchase Invoice (New)',
+                           ID_ViewType: 2,
+                           ViewID: 3108,
+                           CurrentObject: PurchaseInvoice,
+                           ImageName: ''
+
+                       });
+
+                   });
+
+            });
+
+        }
+
+        AccountingHelper.CreateReceivingReport = function (PurchaseOrderDetails) {
+
+
+            var JsDataService = app.$GetDataService();
+
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetReceivingReport")',
+                {
+                    'ID_Model_Ref': 65,
+                    'ID_Details_Ref': Enumerable.From(PurchaseOrderDetails).Select('$.ID').ToArray(),
+                }
+            ).then(function (ReceivingReport) {
+
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Receiving Report (New)',
+                    ID_ViewType: 2,
+                    ViewID: 3103,
+                    CurrentObject: ReceivingReport,
+                    ImageName: ''
+
+                });
+
+
+
+            });
+
+        };
+
+        AccountingHelper.CreateVoucherPayable = function (ReceivingReports) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetVouchersPayable")',
+               {
+                   'ID': -1,
+                   'IDs_Ref': Enumerable.From(ReceivingReports).Select('$.ID').ToArray(),
+                   'ID_Model': 2142
+               }
+           ).then(function (VoucherPayable) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Vouchers Payable (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.VouchersPayable,
+                   CurrentObject: VoucherPayable,
+                   ImageName: ''
+
+               });
+
+
+           });
+
+        }
+
+        AccountingHelper.FilingStatus = {
+            Filed: 1,
+            Approved: 2,
+            Disapproved: 3,
+            Pending: 4,
+            Partial: 5,
+            FullyServed: 6,
+            Cancelled: 7,
+            Posted: 8,
+            Payable: 9,
+            Paid: 10,
+            Applied: 21,
+            ForLiquidation: 25,
+            Liquidated: 27,
+            PartiallyPaid: 17,
+            Checked : 33,
+            Canvassed : 11
+        }
+
+        AccountingHelper.CreatePaymentVoucher = function (VoucherPayables) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetPaymentVoucher")',
+               {
+                   'IDs_Ref': Enumerable.From(VoucherPayables).Select('$.ID').ToArray(),
+                    'ID_Model': 3118,
+               }
+           ).then(function (PaymentVoucher) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Payment Voucher (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.PaymentVoucher,
+                   CurrentObject: PaymentVoucher,
+                   ImageName: ''
+
+               });
+
+
+           });
+
+        }
+
+        AccountingHelper.CreatePaymentVoucherFromRP = function (Replenishment) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetPaymentVoucher")',
+               {
+                   'IDs_Ref': Enumerable.From(Replenishment).Select('$.ID').ToArray(),
+                   'ID_Model': 8391,
+               }
+           ).then(function (PaymentVoucher) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Payment Voucher (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.PaymentVoucher,
+                   CurrentObject: PaymentVoucher,
+                   ImageName: ''
+
+               });
+
+
+           });
+
+        }
+        AccountingHelper.CreateVPFromRP = function (Replenishment) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetVouchersPayable")',
+               {
+                   'IDs_Ref': Enumerable.From(Replenishment).Select('$.ID').ToArray(),
+                   'ID_MODEL': 8391,
+               }
+           ).then(function (VP) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Vouchers Payable (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.VouchersPayable,
+                   CurrentObject: VP,
+                   ImageName: ''
+
+               });
+
+
+           });
+
+        }
+        AccountingHelper.CreatePaymentVoucherFromSI = function (SI) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetPaymentTransaction")',
+               {
+                   'IDs_Ref': Enumerable.From(SI).Select('$.ID').ToArray(),
+                   'ID_Model': 3249,
+               }
+           ).then(function (ColllectionReceipt) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Collection Receipt (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.ColllectionReceipt,
+                   CurrentObject: ColllectionReceipt,
+                   ImageName: ''
+
+
+               });
+
+
+           });
+
+        }
+
+        AccountingHelper.CreateReplenishmentFromPC = function (PettyCash) {
+            app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetReplenishment")',
+               {
+                   'IDs_Ref': Enumerable.From(PettyCash).Select('$.ID').ToArray(),
+               }
+           ).then(function (Replenishment) {
+
+               var $rootScope = app.$rootScope();
+
+               $rootScope.$emit("CallNewTabMethod", {
+
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Replenishment (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.Replenishment,
+                   CurrentObject: Replenishment,
+                   ImageName: ''
+
+               });
+
+
+           });
+
+        }
+
+
+        AccountingHelper.ValidateAccountingPeriod = function(VC){
+            var JsDataService = app.$GetDataService();
+            return; // cancel muna to
+            JsDataService.pGetCurrentObject('@Html.EncryptSQL("pValidateAccountingPeriod")', {
+                params: {}
+            }).then(function (data) {
+                if (data.isValid == false) {
+                    VC.MsgBox('Accounting Period is not open. Please create manual or contact your Accounting Admin', 'Accounting')
+                }
+            })
+        }
+
+        AccountingHelper.CreateSalesOrder = function (Items) {
+
+
+
+            var SQL = '@Html.EncryptSQL(@"SELECT
+                                          ID, ID_Item, ItemCode, Item, Item Description ,  Balance as Quantity,
+                                          UnitPrice, ID_UOM, UOM, VatAmt,
+                                          ID_TaxScheme, TaxScheme,
+                                          TotalAmount ,
+                                          ID_ParentModel ID_DocDetailParentModel,
+                                          DocumentNo ReferenceNo
+                                          FROM dbo.vQuotation_Detail
+                                          WHERE
+                                            ID_Quotation IN ( @ID_Quotations ) AND
+                                            Balance  > 0
+
+
+                                          ")';
+
+
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '62AA26CC-B907-4D3F-8301-8639F536B975',
+                params: {
+                    ID_Quotations: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Quotation Items'
+            }).then(function (QuotationDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                    '@Html.EncryptSQL("pGetSalesOrder")',
+                    {
+                        'ID_Details_Ref': Enumerable.From(QuotationDetails).Select('$.ID').ToArray(),
+                    }
+                ).then(function (SalesOrder) {
+
+                    var $rootScope = app.$rootScope();
+
+                    $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt() * -1,
+                        Caption: 'Create Sales Order',
+                        ID_ViewType: 2,
+                        ViewID: 3126,
+                        CurrentObject: SalesOrder,
+                        ImageName: ''
+
+                    });
+
+
+                });
+
+            });
+
+        }
+
+
+        AccountingHelper.roundToTwo = function (num) {
+            return +(Math.round(num + "e+2") + "e-2");
+        }
+
+
+        AccountingHelper.GetTaxAmt = function (ID_TaxScheme, VatRate, Amount) {
+            var VatAmt = 0.00;
+            switch (ID_TaxScheme) {
+                case 1: //VAT Exclusive
+                    var VatEx = Amount * (VatRate / 100);
+                    VatAmt = VatEx;
+                    //item.TotalAmount = Amount + roundToTwo(VatEx);
+                    break;
+                case 2: //VAT Inclusive
+                    VatAmt = (Amount / (1 + (VatRate / 100))) * (VatRate / 100);
+                    break;
+                case 3: //ZERO Rated
+                    VatAmt = 0;
+                    break;
+                case 4: //BillingStatement
+                    VatAmt = 0;
+                    break;
+            }
+            return VatAmt.toFixed(2);
+        }
+
+        AccountingHelper.Create_DeliveryReceipt_From_SaleOrder = function (Items) {
+            var _ = this;
+            var VC = _.VC;
+
+            // - (dbo.fGetSalesOrderItemQuantityBalanceFromSalesInvoice(1001) +  dbo.fGetSalesOrderItemQuantityBalancefromDeliveryReceipt(1001))   Quantity
+            var SQL = '@Html.EncryptSQL(@" SELECT ID, ItemCode,Item,  (RemaingIRQty) as Quantity,
+                                                UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo,DeliveryAddress,ID_CustomerOrderType FROM dbo.vSalesOrder_Detail
+                                                WHERE ID_SalesOrder IN ( @ID_SalesOrder )  and Balance > 0")';
+                                                //and RemaingIRQty > 0 ")';
+                                                //Balance > 0")';
+
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '17DD7EB8-F8B1-4AA7-80F9-F85D27284BB2',
+                params: {
+                    ID_SalesOrder: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Sales Order Items'
+            }).then(function (SalesOrderDetails) {
+                if(SalesOrderDetails.length > 0){
+                    if(SalesOrderDetails[0].ID_CustomerOrderType == 6){
+                        var DeliveryAddresses = Enumerable.From(SalesOrderDetails).Select("$.DeliveryAddress").Distinct().ToArray();
+                        if(DeliveryAddresses.length > 1){
+                            AccountingHelper.MsgBox('Cannot add EPP Sales with different delivery address.');
+                            return;
+                        }
+
+                    }
+                }
+
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetDeliveryReceipt")',
+                   {
+                       'ID_Details_Ref': Enumerable.From(SalesOrderDetails).Select('$.ID').ToArray(),
+                   }
+                ).then(function (DeliveryReceipt) {
+
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Delivery Receipt',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.DeliveryReceipt,
+                       CurrentObject: DeliveryReceipt,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+///
+//
+       AccountingHelper.CreateDiaryFromOpportunity = function(Items){
+             app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetDiary")',
+               {
+                   'ID': -1,
+                   'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                   'ID_Model': 3181
+               }
+           ).then(function (Diary) {
+
+               var $rootScope = app.$rootScope();
+               $rootScope.$emit("CallNewTabMethod", {
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Diary (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.Diary,
+                   CurrentObject: Diary,
+                   ImageName: ''
+
+               });
+
+
+           });
+        }
+
+        // 6 = phone call || 1 = Email
+        AccountingHelper.CreateDiaryFromCustomer = function(Items,Type){
+             app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetDiary")',
+               {
+                   'ID': -1,
+                   'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                   'ID_Model': 5283,
+                   'DiaryType': Type
+               }
+           ).then(function (Diary) {
+
+               var $rootScope = app.$rootScope();
+               $rootScope.$emit("CallNewTabMethod", {
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Diary (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.Diary,
+                   CurrentObject: Diary,
+                   ImageName: ''
+
+               });
+
+
+           });
+        }
+
+       AccountingHelper.CreateDiaryFromContacts = function(Items, type){
+             app.$GetDataService().pGetCurrentObject(
+               '@Html.EncryptSQL("pGetDiary")',
+               {
+                   'ID': -1,
+                   'IDs_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                   'ID_Model': 5284,
+                   'DiaryType' : type
+               }
+           ).then(function (Diary) {
+
+               var $rootScope = app.$rootScope();
+               $rootScope.$emit("CallNewTabMethod", {
+                   ID: app.getRandomInt() * -1,
+                   Caption: 'Diary (New)',
+                   ID_ViewType: 2,
+                   ViewID: AccountingHelper.Diary,
+                   CurrentObject: Diary,
+                   ImageName: ''
+
+               });
+
+
+           });
+        }
+
+         AccountingHelper.Create_PurchaseOrder_From_SaleOrder = function (Items) {
+            var SQL = '@Html.EncryptSQL(@" SELECT  ID, ItemCode, Item,Quantity, UOM, UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo FROM dbo.vSalesOrder_Detail
+            WHERE ID_SalesOrder IN ( @ID_SalesOrder )")';
+            var JsPopUpView = app.$GetPopupView();
+
+            var salesOrder = Items;
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: 'E94B2AD6-BAE3-4013-9D0D-8D2DF8D2C6DC',
+                params: {
+                    ID_SalesOrder: Enumerable.From(salesOrder).Select('$.ID').ToArray()
+                },
+                title: 'Select Sales Order Items'
+            }).then(function (SalesOrderDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetPurchaseOrder")',
+                   {
+                       'ID_Refs': Enumerable.From(SalesOrderDetails).Select('$.ID').ToArray(),
+                       'ID_ParentModel'  :   AccountingHelper.Model_ID_SalesOrder,
+                   }
+               ).then(function (PurchaseOrder) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Purchase Order',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.ID_View_PurchaseOrder,
+                       CurrentObject: PurchaseOrder,
+                       ImageName: ''
+
+                   });
+
+
+               });
+
+            });
+        };
+
+        
+
+//---lester
+         AccountingHelper.Create_ItemRequest_From_SaleOrder = function (Items) {
+            var SQL = '@Html.EncryptSQL(@" SELECT  det.*, oh.OnHand from vSalesOrder_Detail det
+            left join vInventoryOnHand oh on oh.ID = det.ID_Item
+            WHERE  det.Quantity - isnull(det.TotalIRQty,0)  > 0 and det.ID_SalesOrder IN ( @ID_SalesOrder ) ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            var salesOrder = Items;
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '7C560EC4-162B-46B9-A7DD-C836BFE9DCB3',
+                params: {
+                    ID_SalesOrder: Enumerable.From(salesOrder).Select('$.ID').ToArray()
+                },
+                title: 'Select Sales Order Items'
+            }).then(function (SalesOrderDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetItemRequest")',
+                   {
+                       'ID_Refs': Enumerable.From(SalesOrderDetails).Select('$.ID').ToArray(),
+                       'ID_ParentModel'  :   AccountingHelper.Model_ID_ItemRequest,
+                   }
+               ).then(function (ItemRequest) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Item Request',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.ID_ViewItemRequest,
+                       CurrentObject: ItemRequest,
+                       ImageName: ''
+
+                   });
+
+
+               });
+
+            });
+        };
+        //
+        //
+
+        AccountingHelper.Create_SalesInvoice_From_SaleOrder = function (Items) {
+            // var SQL = '@Html.EncryptSQL(@" SELECT  ID, ItemCode, Item, Quantity,UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo FROM dbo.vSalesOrder_Detail
+            // WHERE ID_SalesOrder IN ( @ID_SalesOrder ) and dbo.fzGetTotalDownpayment(@ID_SalesOrder) < SOTotalAmount")';
+            var SQL = '@Html.EncryptSQL(@" SELECT  ID, ItemCode, Item, Quantity,UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo FROM vGetPendingSalesOrder
+            WHERE ID_SalesOrder IN ( @ID_SalesOrder ) and dbo.fzGetTotalDownpayment(@ID_SalesOrder) < SOTotalAmount")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '68DCA0A3-8446-46A9-B285-46D72383577A',
+                params: {
+                    ID_SalesOrder: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Sales Order Items'
+            }).then(function (SalesOrderDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetSalesInvoice")',
+                   {
+                       'ID_Details_Ref': Enumerable.From(SalesOrderDetails).Select('$.ID').ToArray(),
+                       'ID_ParentModel': AccountingHelper.Model_ID_SalesOrder,
+
+                   }
+               ).then(function (SalesInvoice) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Sales Invoice',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.SalesInvoice,
+                       CurrentObject: SalesInvoice,
+                       ImageName: ''
+
+                   });
+
+
+               });
+
+            });
+        };
+
+        AccountingHelper.Create_SalesInvoice_From_DeliveryReceipt = function (Items) {
+            var _ = this;
+            var VC = _.VC;
+            var SQL = '@Html.EncryptSQL(@"   SELECT ID, ItemCode, Item, Quantity,UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo,ID_CustomerOrderType FROM vDeliveryReceipt_Detail
+            WHERE ID_DeliveryReceipt IN ( @ID_DeliveryReceipt ) And Balance <> 0")';
+            var JsPopUpView = app.$GetPopupView();
+
+            var EPP = Enumerable.From(Items).Select('$.ID').Where('$.ID_SOType == 6 && $.IsDelivered !== true').ToArray();
+
+            if(EPP.length > 0){
+                AccountingHelper.MsgBox('EPP Sales not yet delivered.');
+                return;
+            }
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: 'F08C4103-FA69-403F-A149-75FCD3FEF491',
+                params: {
+                    ID_DeliveryReceipt: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Delivery Receipt Items'
+            }).then(function (DeliveryReceiptDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetSalesInvoice")',
+                   {
+                       'ID_Details_Ref': Enumerable.From(DeliveryReceiptDetails).Select('$.ID').ToArray(),
+                       'ID_ParentModel': AccountingHelper.Model_ID_DeliveryReceipt,
+                   }
+               ).then(function (SalesInvoice) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Sales Invoice',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.SalesInvoice,
+                       CurrentObject: SalesInvoice,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+//-
+
+      AccountingHelper.Create_Warranty_From_DeliveryReceipt = function (Items) {
+            var SQL = '@Html.EncryptSQL(@"   SELECT ID, ItemCode, Item, Quantity,UnitPrice,VatAmt,TaxScheme,TotalAmount,DocumentNo FROM vDeliveryReceipt_Detail
+            WHERE ID_DeliveryReceipt IN ( @ID_DeliveryReceipt )")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '1E49425E-7F43-4DF0-8EF8-136934E13DF2',
+                params: {
+                    ID_DeliveryReceipt: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Delivery Receipt Items'
+            }).then(function (DeliveryReceiptDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetWarranty")',
+                   {
+                       'ID_Details_Ref': Enumerable.From(DeliveryReceiptDetails).Select('$.ID').ToArray()
+                   }
+               ).then(function (warranty) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create warranty',
+                       ID_ViewType: 2,
+                       ViewID: 9391, // -- warranty detail view
+                       CurrentObject: warranty,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+
+//--
+//-- 2018-08-15 --
+          AccountingHelper.Create_Copy_PO = function (ID_PurchaseOrder) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetPurchaseOrder")',
+                {
+                    'ID': ID_PurchaseOrder,
+                     ID_Refs: []
+                }
+            ).then(function (PurchaseOrder) {
+
+                PurchaseOrder.ID = -1;
+                PurchaseOrder.ID_FilingStatus = 1;
+                PurchaseOrder.DocumentNo = '(Auto)';
+                PurchaseOrder.isChecked = false;
+                PurchaseOrder.ID_CheckedBy = null;
+                PurchaseOrder.CheckedBy = null;
+                PurchaseOrder.ID_ApprovedBy = null;
+                PurchaseOrder.ApprovedBy = null;
+                PurchaseOrder.DateApproved = null;
+                PurchaseOrder.ID_CanceledBy = null;
+                PurchaseOrder.CancelledBy = null;
+                PurchaseOrder.DateCanceled = null;
+                PurchaseOrder.ID_LastModifiedBy = null;
+                PurchaseOrder.LastModifiedBy = null;
+                PurchaseOrder.DateModified = null;
+                PurchaseOrder.ID_CreatedBy = null;
+                PurchaseOrder.CreatedBy = null;
+                PurchaseOrder.DateCreated = null;
+                PurchaseOrder.Date = null;
+
+                $.each(PurchaseOrder.PurchaseOrderDetails, function(i,d){
+                    d.ID = -1;
+                    d.Balance = 0;
+                    d.BalanceInVP = 0;
+                    d.CanvassSheet = null;
+                    d.ID_CanvassSheet =null;
+                    d.DocStatus = null;
+                    d.ID_DocDetail = null;
+                    d.ID_DocDetailParentModel = null;
+                    d.ID_DocStatus = null;
+                    d.ID_PurchaseRequest = null;
+                    d.ID_PurchaseRequest_Detail = null;
+                    d.D_PurchaseOrder = null;
+                    d.ReferenceNo = null;
+
+
+                });
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Purchase Order (New)',
+                    ID_ViewType: 2,
+                    ViewID: 1026,
+                    CurrentObject: PurchaseOrder,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+     AccountingHelper.Create_Copy_SO = function (ID_SalesOrder) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetSalesOrder")',
+                {
+                    'ID': ID_SalesOrder,
+                     ID_Details_Ref: []
+                }
+            ).then(function (SalesOrder) {
+
+                SalesOrder.ID = -1;
+                SalesOrder.ID_FilingStatus = 1;
+                SalesOrder.DocumentNo = '(Auto)';
+                SalesOrder.ID_ApprovedBy = null;
+                SalesOrder.ApprovedBy = null;
+                SalesOrder.DateApproved = null;
+                SalesOrder.ID_CanceledBy = null;
+                SalesOrder.CancelledBy = null;
+                SalesOrder.DateCanceled = null;
+                SalesOrder.ID_LastModifiedBy = null;
+                SalesOrder.LastModifiedBy = null;
+                SalesOrder.DateModified = null;
+                SalesOrder.ID_CreatedBy = null;
+                SalesOrder.CreatedBy = null;
+                SalesOrder.DateCreated = null;
+                SalesOrder.Date = null;
+                SalesOrder.FilingStatus = null;
+                SalesOrder.DocStatus = null;
+                SalesOrder.ID_DocStatus = null;
+                SalesOrder.SIDownPayment = null;
+
+                $.each(SalesOrder.SalesOrder_Details, function(i,d){
+                   d.ID = -1;
+                   d.ID_SalesOrder = null;
+                   d.Balance = 0;
+                   d.DocDetailParentModel = null;
+                   d.ID_DocDetailParentModel = null;
+                   d.ID_DocStatus = null;
+                   d.ID_ParentModel = 2165;
+
+                   d.ReferenceNo = null;
+
+                });
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Sales Order (New)',
+                    ID_ViewType: 2,
+                    ViewID: AccountingHelper.ID_View_SalesOrder,
+                    CurrentObject: SalesOrder,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+
+       AccountingHelper.Create_Copy_PR = function (ID_PurchaseRequest) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetPurchaseRequest")',
+                {
+                    'ID': ID_PurchaseRequest
+                }
+            ).then(function (PurchaseRequest) {
+
+                PurchaseRequest.ID = -1;
+                PurchaseRequest.ID_FilingStatus = 1;
+                PurchaseRequest.DocumentNo = '(Auto)';
+                PurchaseRequest.ID_ApprovedBy = null;
+                PurchaseRequest.ApprovedBy = null;
+                PurchaseRequest.DateApproved = null;
+                PurchaseRequest.ID_CanceledBy = null;
+                PurchaseRequest.CancelledBy = null;
+                PurchaseRequest.DateCanceled = null;
+                PurchaseRequest.ID_LastModifiedBy = null;
+                PurchaseRequest.LastModifiedBy = null;
+                PurchaseRequest.DateModified = null;
+                PurchaseRequest.ID_CreatedBy = null;
+                PurchaseRequest.CreatedBy = null;
+                PurchaseRequest.DateCreated = null;
+                PurchaseRequest.Date = null;
+                PurchaseRequest.FilingStatus = null;
+                PurchaseRequest.ID_ReceivedBy = null;
+                PurchaseRequest.ReceivedBy = null;
+                PurchaseRequest.ID_DoneBy = null;
+                PurchaseRequest.DoneBy = null;
+
+                $.each(PurchaseRequest.PurchaseRequestDetails, function(i,d){
+
+                   d.ReferenceNo = null;
+                   d.ID = -1;
+                   d.IsCanvassed = false;
+                   d.IsPurchased = false;
+                   d.Reference = null;
+                   d.ID_PurchaseRequest = null;
+                   d.ID_DocDetail = null;
+                   d.ID_DocStatus = null;
+                   d.Balance = 0;
+                });
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Purchase Request (New)',
+                    ID_ViewType: 2,
+                    ViewID: 4162,
+                    CurrentObject: PurchaseRequest,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+
+     AccountingHelper.Create_Copy_Item = function (ID_Item) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetItem")',
+                {
+                    'ID': ID_Item,
+                     ID_Details_Ref: []
+                }
+            ).then(function (Item) {
+
+                Item.ID = -1;
+                Item.Code = null;
+                Item.ID_CanceledBy = null;
+                Item.CancelledBy = null;
+                Item.DateCanceled = null;
+                Item.ID_LastModifiedBy = null;
+                Item.LastModifiedBy = null;
+                Item.DateModified = null;
+                Item.ID_CreatedBy = null;
+                Item.CreatedBy = null;
+                Item.DateCreated = null;
+                Item.Date = null;
+
+                if(Item.BillOfMaterials == undefined || Item.BillOfMaterials == null)  Item.BillOfMaterials = []
+                $.each(Item.BillOfMaterials, function(i,d){
+                   d.ID = -1;
+                   d.ID_Parent = null;
+                });
+
+
+                if(Item.ItemSuppliers == undefined || Item.ItemSuppliers == null) Item.ItemSuppliers = []
+                $.each(Item.ItemSuppliers, function(i,d){
+                   d.ID = -1;
+                   d.ID_Item = null;
+                   d.LastUpdatedPrice = 0.00;
+                });
+
+
+                if(Item.ItemConversions == undefined || Item.ItemConversions == null) Item.ItemConversions = []
+                $.each(Item.ItemConversions, function(i,d){
+                   d.ID = -1;
+                   d.ID_Item = null;
+                });
+
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Item (New)',
+                    ID_ViewType: 2,
+                    ViewID: 2,
+                    CurrentObject: Item,
+                    ImageName: ''
+                });
+            });
+        };
+
+
+ //--
+
+      AccountingHelper.Create_Copy_CA = function (ID_CashAdvance) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetCashAdvanceRequest")',
+                {
+                    'ID': ID_CashAdvance,
+                     ID_Details_Ref: []
+                }
+            ).then(function (CashAdvance) {
+
+                CashAdvance.ID = -1;
+                CashAdvance.ID_FilingStatus = 1;
+                CashAdvance.DocumentNo = '(Auto)';
+                CashAdvance.ID_ApprovedBy = null;
+                CashAdvance.ApprovedBy = null;
+                CashAdvance.DateApproved = null;
+                CashAdvance.ID_CanceledBy = null;
+                CashAdvance.CancelledBy = null;
+                CashAdvance.DateCanceled = null;
+                CashAdvance.ID_LastModifiedBy = null;
+                CashAdvance.LastModifiedBy = null;
+                CashAdvance.DateModified = null;
+                CashAdvance.ID_CreatedBy = null;
+                CashAdvance.CreatedBy = null;
+                CashAdvance.DateCreated = null;
+                CashAdvance.IsPosted = null,
+                CashAdvance.DatePosted = null;
+                CashAdvance.Date = null;
+                CashAdvance.FilingStatus = null;
+                CashAdvance.ID_ReleaseBy = null;
+                CashAdvance.DateRelease = null;
+                CashAdvance.ID_ReceivedBy = null;
+                CashAdvance.DateReceived = null;
+                CashAdvance.DateLiquidation = null;
+                CashAdvance.ID_Liquidation = null;
+                CashAdvance.HasPettyCash = 0;
+                CashAdvance.IsPaid = null;
+                CashAdvance.ID_VouchersPayable = null;
+                CashAdvance.TotalLiquidatedCost = 0;
+                CashAdvance.ReimbursementAmount = 0;
+                CashAdvance.ChangeAmount = 0;
+				CashAdvance.Liquidation = null;
+				CashAdvance.PCVNo = null;
+				CashAdvance.PCRVNo = null;
+
+                $.each(CashAdvance.CashAdvanceRequest_CashAdvances, function(i,d){
+                   d.ID = -1;
+                   d.ID_CashAdvanceRequest = null;
+
+                });
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Cash Advance (New)',
+                    ID_ViewType: 2,
+                    ViewID: 9308,
+                    CurrentObject: CashAdvance,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+		  AccountingHelper.Create_ItemReturn_From_ISS = function (Items) {
+            var SQL = '@Html.EncryptSQL(@"   SELECT det.ID ,det.ItemCode ,det.Name as Item,det.Quantity ,det.UnitPrice,hed.DocumentNo
+			FROM   vItemIssuance_Detail det LEFT JOIN dbo.tItemIssuance hed ON hed.ID = det.ID_ItemIssuance
+            WHERE ID_ItemIssuance IN ( @ID_ItemIssuance )")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '67F89A00-1B38-4D64-91AA-5A05CB151BC9',
+                params: {
+                    ID_ItemIssuance: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Issuance Items'
+            }).then(function (ItemIssuanceDetails) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetItemReturn")',
+                   {
+                       'IDs': Enumerable.From(ItemIssuanceDetails).Select('$.ID').ToArray()
+                   }
+               ).then(function (itemReturn) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Item Return',
+                       ID_ViewType: 2,
+                       ViewID: 4183,
+                       CurrentObject: itemReturn,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+        //
+         AccountingHelper.Create_ItemTransfer_From_Consignment = function (Items) {
+            var SQL = '@Html.EncryptSQL(@"   SELECT * FROM dbo.vConsignmentForIT
+            WHERE IDHead IN ( @ID_Consignment ) and balance <> 0 ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '99A0D41B-F1D3-4E1A-AB02-758858A72FIT',
+                params: {
+                    ID_Consignment: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Consignment Items'
+            }).then(function (Consignment) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetItemTransfer")',
+                   {
+                       'IDs': Enumerable.From(Consignment).Select('$.ID').ToArray()
+                   }
+               ).then(function (Consignment) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Item Transfer',
+                       ID_ViewType: 2,
+                       ViewID: 4185,
+                       CurrentObject: Consignment,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+		        //
+                //
+                //-xxx
+         AccountingHelper.Create_SI_From_ItemTransfer = function (Items) {
+            var SQL = '@Html.EncryptSQL(@"   SELECT * FROM dbo.vItemTransferForSI
+            WHERE ID_ItemTransfer IN ( @ID_ItemTransfer ) and balance <> 0 ")';
+            var JsPopUpView = app.$GetPopupView();
+
+            JsPopUpView.BrowseDataSet(SQL, {
+                ID_View: '785B101D-A897-4342-BD91-85EECA7B2D4SI',
+                params: {
+                    ID_ItemTransfer: Enumerable.From(Items).Select('$.ID').ToArray()
+                },
+                title: 'Select Item Transfer Items'
+            }).then(function (ItemTransfer) {
+
+                app.$GetDataService().pGetCurrentObject(
+                   '@Html.EncryptSQL("pGetSalesInvoice")',
+                   {
+                        'ID_Details_Ref': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_ParentModel': 3224,
+                   }
+               ).then(function (ItemTransfer) {
+
+                   var $rootScope = app.$rootScope();
+
+                   $rootScope.$emit("CallNewTabMethod", {
+
+                       ID: app.getRandomInt() * -1,
+                       Caption: 'Create Sales Invoice',
+                       ID_ViewType: 2,
+                       ViewID: 4210,
+                       CurrentObject: ItemTransfer,
+                       ImageName: ''
+
+                   });
+
+               });
+
+            });
+        };
+
+
+                //
+                //
+        AccountingHelper.Create_Copy_Opp = function (ID_Opportunity,ID_SalesEndorsement, opt) {
+            console.log('SEF',ID_SalesEndorsement)
+            if (opt == undefined || opt === null) opt = {};
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetOpportunity")',
+                {
+                    'ID': ID_Opportunity,
+                }
+            ).then(function (Opportunity) {
+
+                Opportunity.ID = -1;
+                Opportunity.ID_CreatedBy = null;
+                Opportunity.Opportunity = '(Auto)'
+                Opportunity.CreatedBy = null;
+                Opportunity.LastModifiedBy = null;
+                Opportunity.ID_LastModifiedBy = null;
+                Opportunity.OpportunityStage = null;
+                Opportunity.ID_OpportunityStage = null;
+                Opportunity.WonLostDate = null;
+                Opportunity.RefOpp = (ID_SalesEndorsement == -1 ? null : Opportunity.DocumentNo)  ;
+                Opportunity.DocumentNo = null;
+                Opportunity.IsEndorsed = 0;
+                Opportunity.DateEngaged = null;
+                Opportunity.ID_RefOpportunity = (ID_SalesEndorsement == -1 ? null : ID_Opportunity) ;
+
+                $.each(Opportunity.Opportunity_Details, function(i,d){
+                    d.ID = -1;
+                    d.ID_CreatedBy = null;
+                    d.ID_LastModifiedBy = null;
+                    d.ID_Opportunity = null;
+                });
+
+                $.each(Opportunity.Opportunity_PaymentTermss, function (i, d) {
+                    d.ID = -1;
+                    d.ID_CreatedBy = null;
+                    d.ID_LastModifiedBy = null;
+                    d.ID_Opportunity = null;
+
+                });
+
+                $.each(Opportunity.Opportunity_Services, function (i, d) {
+                    d.ID = -1;
+                    d.ID_CreatedBy = null;
+                    d.ID_LastModifiedBy = null;
+                    d.ID_Opportunity = null;
+
+                });
+
+                $.each(Opportunity.Opportunity_BOMs, function (i, d) {
+                    d.ID = -1;
+                    d.ID_CreatedBy = null;
+                    d.ID_LastModifiedBy = null;
+                    d.ID_Opportunity = null;
+
+                });
+
+                var $rootScope = app.$rootScope();
+
+               console.log('Opportunity--->',Opportunity);
+
+                $rootScope.$emit("CallNewTabMethod", {
+                    ID: app.getRandomInt(),
+                    Caption: 'Opportunity (New)',
+                    ID_ViewType: 2,
+                    ViewID: 4142,
+                    CurrentObject: Opportunity,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+	AccountingHelper.Create_Copy_LQ = function (ID_Liquidation) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetLiquidation")',
+                {
+                    'ID': ID_Liquidation
+                }
+            ).then(function (Liquidation) {
+
+            Liquidation.ID = -1;
+            Liquidation.DocumentNo = '(Auto)';
+            Liquidation.Name = null;
+            Liquidation.ID_CreatedBy = null;
+            Liquidation.CreatedBy = null;
+            Liquidation.LastModifiedBy = null;
+            Liquidation.ID_ApprovedBy = null;
+            Liquidation.ApprovedBy = null;
+            Liquidation.ID_LastModifiedBy = null;
+            Liquidation.ID_FilingStatus = 1;
+            Liquidation.FilingStatus = 'Filed';
+            Liquidation.ID_ReleasedBy = null;
+            Liquidation.IsPosted = null,
+            Liquidation.DatePosted = null;
+            Liquidation.ReleasedBy = null;
+            Liquidation.ReleasedDate = null;
+            Liquidation.PCRVControlNo = null;
+            Liquidation.ID_Location = null;
+            Liquidation.Date = null;
+
+
+            $.each(Liquidation.Liquidation_Details, function(i,d){
+                d.ID = -1;
+                d.Date = null;
+            });
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Liquidation (New)',
+                    ID_ViewType: 2,
+                    ViewID: 9317,
+                    CurrentObject: Liquidation,
+                    ImageName: ''
+
+                });
+
+
+            });
+        };
+        //
+        //===================
+
+        AccountingHelper.Create_SPL_Client = function (ID_CustomerLead) {
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+                '@Html.EncryptSQL("pGetCustomer")',
+                {
+                    'ID' : -1,
+                    'ID_Session' : null,
+                    'ID_CustomerLead': ID_CustomerLead
+                }
+            ).then(function (Client) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: 'Client New',
+                    ID_ViewType: 2,
+                    ViewID: 6249,
+                    CurrentObject: Client,
+                    ImageName: ''
+
+                });
+
+
+            });
+
+        }
+
+
+        AccountingHelper.Create_Copy_JV = function (ID_JournalVoucher) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetJournalVoucher")',
+                {
+                    'ID': ID_JournalVoucher
+                }).then(function (JV) {
+                    JV.ID = 1;
+                    JV.DateCreated = null;
+                    JV.DateModified = null;
+                    JV.ID_CreatedBy = null;
+                    JV.ID_LastModifiedBy = null;
+                    JV.ID_Company = null;
+                    JV.Comment = null;
+                    JV.ID_CostCenter = null;
+                    JV.ID_AccountingSetup = null;
+                    JV.ID_AcctYear = null;
+                    JV.ID_AcctPeriod = null;
+                    JV.Description = null;
+                    JV.ID_PostedBy = null;
+                    JV.DatePosted = null;
+                    JV.IsReversal = 0;
+                    JV.ID_BookOfAccount = 5;
+                    JV.BookOfAccount = 'General Journal';
+                    JV.ID_FilingStatus = 1;
+
+                    $.each(JV.JournalVoucher_Details, function (i, d) {
+                        d.ID = -1;
+                        d.ID_JournalVoucher = null;
+                    });
+
+
+                    var $rootScope = app.$rootScope();
+
+                    $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt(),
+                        Caption: 'Journal Voucher New',
+                        ID_ViewType: 2,
+                        ViewID: 5213,
+                        CurrentObject: JV,
+                        ImageName: ''
+
+                    });
+                    
+                });
+        };
+
+
+        AccountingHelper.CreatePickListFromSalesOrder = function (ID_SalesOrder) {
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+               '@Html.EncryptSQL("pGetPickList")',
+                   {
+                       'ID': -1,
+                       'ID_SalesOrder' : ID_SalesOrder
+                   }
+               ).then(function (PickList) {
+                   var $rootScope = app.$rootScope();
+                   $rootScope.$emit("CallNewTabMethod", {
+                       ID: app.getRandomInt(),
+                       Caption: 'Pick List (New)',
+                       ID_ViewType: 2,
+                       ViewID: 10487,
+                       CurrentObject: PickList,
+                       ImageName: ''
+                   });
+               });
+        }
+
+
+         AccountingHelper.CreateDRFromPickList = function (ID_PickList) {
+            var JsDataService = app.$GetDataService();
+            JsDataService.pGetCurrentObject(
+               '@Html.EncryptSQL("pGetDeliveryReceipt")',
+                   {
+                       'ID': -1,
+                       'ID_PickList' : ID_PickList
+                   }
+               ).then(function (DeliveryReceipt) {
+                   var $rootScope = app.$rootScope();
+                   $rootScope.$emit("CallNewTabMethod", {
+                       ID: app.getRandomInt(),
+                       Caption: 'Delivery Receipt (New)',
+                       ID_ViewType: 2,
+                       ViewID: AccountingHelper.ID_View_DeliveryReceipt,
+                       CurrentObject: DeliveryReceipt,
+                       ImageName: ''
+                   });
+               });
+        }
+
+        //===================
+        	AccountingHelper.itemsPerWarehouse = function (ID_Item_OnHand) {
+            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetInventorySummaryPerWarehouse")',
+                {
+                    'ID': ID_Item_OnHand
+                }
+            ).then(function (InventorySummaryPerWarehouse) {
+                    
+            });
+        };
+
+        //==================
+        //
+        //
+
+        return AccountingHelper;
+
+    });
+//</script>
+</text> , false )

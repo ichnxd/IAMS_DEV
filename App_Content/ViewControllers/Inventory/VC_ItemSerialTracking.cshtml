@@ -1,0 +1,54 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_ItemSerialTracking = function () { }
+
+        VC_ItemSerialTracking.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_ItemSerialTracking.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            if (this.ID_ViewType === 1) {
+                VC.onContextMenuPreparing = function (e) {
+                    var CurrentObject = e.row.data;
+                    if (CurrentObject.ID_Model_out !== null) {
+                        e.items.unshift({
+                            text: "Open " + CurrentObject.RefNoOut,
+                            icon: "mdi mdi-tab",
+                            onItemClick: function () {
+                                var SQL = '@Html.EncryptSQL(@"SELECT TOP 1 DV.ID AS ID_DetailView FROM dbo.[_tModel] M
+                                LEFT JOIN dbo.[_tModelView] MV ON M.ID_ModelView = MV.ID
+                                LEFT JOIN dbo.[_tModelDetailView] DV ON MV.ID_ModelDetailView = DV.ID
+                                WHERE M.ID = @ID_Model")';
+                                VC.JSDataService.Query(SQL, {
+                                    params: {
+                                        'ID_Model': CurrentObject.ID_Model_out
+                                    }
+                                }).then(function (data) {
+
+                                    app.$rootScope().$emit("CallNewTabMethod", {
+                                        ID: app.getRandomInt(),
+                                        Caption: '',
+                                        ID_ViewType: 2,
+                                        ViewID: data.collection[0].ID_DetailView,
+                                        ID_CurrentObject: CurrentObject.ID_Doc_Out,
+                                        ImageName: ''
+                                    });
+                                });
+                            }
+                        });
+
+                    }
+                }
+            }
+        }
+
+        return VC_ItemSerialTracking;
+    });
+//</script>
+</text> , false )

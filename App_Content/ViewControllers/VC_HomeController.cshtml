@@ -1,0 +1,1331 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var SPL_USERGROUP = new int[] { 1, 2, 3, 4, 5};
+    int ID_UserGroup = ViewBag.CurrentUser.ID_UserGroup;
+    string DiarySQL = null;
+    string DiarySQLCount = null;
+    if (SPL_USERGROUP.Contains(ID_UserGroup)) {
+        switch (ID_UserGroup) {
+            case 1:
+            case 2:
+            case 3:
+                DiarySQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vDiaryNotification WHERE isActive = 1");
+                DiarySQLCount = HtmlHelperExtensions._EncryptSQL("SELECT COUNT(ID) AS Count FROM vDiaryNotification WHERE isActive = 1");
+                break;
+            case 4: // BUSINESSUNIT HEAD
+                DiarySQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vDiaryNotification WHERE isActive = 1 AND ID_BusinessUnit = " + ViewBag.CurrentUser.ID_BusinessUnit);
+                DiarySQLCount = HtmlHelperExtensions._EncryptSQL("SELECT COUNT(ID) AS Count FROM vDiaryNotification WHERE isActive = 1 AND ID_BusinessUnit = " + ViewBag.CurrentUser.ID_BusinessUnit);
+                break;
+            case 5: // SALES 
+                DiarySQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vDiaryNotification WHERE isActive = 1 AND ID_CreatedBy = " + ViewBag.CurrentUser.ID);
+                DiarySQLCount = HtmlHelperExtensions._EncryptSQL("SELECT COUNT(ID) AS Count FROM vDiaryNotification WHERE isActive = 1 AND ID_CreatedBy = " + ViewBag.CurrentUser.ID);
+                break;
+        }
+    }
+
+    ///
+
+    string WorkOrderSQL = null;
+    string WorkOrderSQLCount = null;
+
+    WorkOrderSQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vWorkOrderNotification WHERE isActive = 1 AND (ID_Lead = " + ViewBag.CurrentUser.ID_Employee + " OR LastID_HeadDesignation = " + ViewBag.CurrentUser.ID_Employee + " OR ID_HeadDesignation = " + ViewBag.CurrentUser.ID_Employee + " ) ORDER BY DateCreatedActionTaken DESC");
+    WorkOrderSQLCount = HtmlHelperExtensions._EncryptSQL(@"SELECT COUNT(W.ID) AS Count FROM vWorkOrderNotification W LEFT JOIN tWorkOrder_Notification WN ON WN.ID_workOrder = W.ID AND WN.ID_User = " + ViewBag.CurrentUser.ID + " WHERE WN.ID IS NULL AND W.isActive = 1 AND (W.ID_Lead = " + ViewBag.CurrentUser.ID_Employee + " OR W.LastID_HeadDesignation = " + ViewBag.CurrentUser.ID_Employee + " OR w.ID_HeadDesignation = " + ViewBag.CurrentUser.ID_Employee + " )");
+
+    //
+    //
+    string ApprovalSQL = null;
+    string ApprovalSQLCount = null;
+    if (ViewBag.CurrentUser.IsApprover == true) {
+        ApprovalSQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vApproverMatrixNotification WHERE ID_Approver = " + ViewBag.CurrentUser.ID_Employee);
+        ApprovalSQLCount = HtmlHelperExtensions._EncryptSQL("SELECT COUNT(ID) AS Count FROM vApproverMatrixNotification WHERE ID_Approver = " + ViewBag.CurrentUser.ID_Employee);
+    }
+    string ReminderSQL = HtmlHelperExtensions._EncryptSQL("SELECT * FROM vReminderNotification WHERE ID_CreatedBy = " + ViewBag.CurrentUser.ID.ToString() + " ORDER BY ID DESC");
+    string ReminderSQLCount = HtmlHelperExtensions._EncryptSQL("SELECT COUNT(ID) as Count FROM vReminderNotification WHERE ID_CreatedBy = " + ViewBag.CurrentUser.ID.ToString() );
+    //
+    //
+    //
+    int TabLimit = ViewBag.TabLimit;
+}
+@Html.JsMinify(@<text>
+//<script>
+    app.controller('HomeController', ['$http', '$scope',
+        '$timeout', 'JSDataService', '$urlRouter', '$rootScope', 'JsModalFactory',
+        'JsPopUpView', 'CacheFactory', '$base64', 'toastr', '$q', 'JsWizardView',
+    function ($http, $scope, $timeout, JSDataService, $urlRouter, $rootScope, JsModalFactory, JsPopUpView, CacheFactory, $base64, toastr, $q, JsWizardView) {
+
+        var _ = this;
+
+        var ActiveModels = [];
+        var QuickNavigations = [];
+
+        var ApprovalNotif = null;
+        var WorkOrderNotif = null;
+
+        var proxy = $.connection.IAppHub;
+
+        var ISSUETRACKER_MODEL = 3179;
+
+        proxy.client.onSessionTimeOut = function () {
+            JsPopUpView.ShowSessionTimeout();
+        }
+
+        proxy.client.onSqlException = function (message) {
+            DevExpress.ui.notify(message, 'error', 3000);
+        };
+
+        proxy.client.onSqlValidation = function (message) {
+            DevExpress.ui.dialog.alert(message, 'Validation');
+        }
+
+        proxy.client.onApplicationError = function (message) {
+            DevExpress.ui.notify(message, 'error', 3000);
+        }
+
+        proxy.client.onConnectionInit = function () {
+            var ID_CurrentUser = $rootScope.CurrentUser.ID;
+            proxy.server.register(ID_CurrentUser);
+        };
+
+        proxy.client.onNotificationRecieved = function (Message, ID_Model, ID_CurrentObject, ImageName, Colour, ID_NotificationType) {
+            //console.log(Message);
+            DevExpress.ui.notify({
+                position: {
+                    my: 'bottom left', at: 'bottom left', of: window, offset: '10, -10'
+                },
+                displayTime: 3000,
+                type: 'custom',
+                contentTemplate: function (e) {
+                    if (ImageName == null) ImageName = 'default-user.png'
+                    return '<div class="js-activity-notif div-middle" style="background-color:' + Colour + '"><div class="div-middle-content icon-holder"><div class="image-container"><img class="image-user" src="App_Content/Image/Thumbnails/' + ImageName
+                        + '" onerror=""/></div></div><div class="div-middle-content"><div style="line-height:14px;font-weight:100;white-space:pre-wrap">' + Message + '</div></div></div>'
+                }
+            });
+            if ( ID_NotificationType === 2 ) { //Approvals
+                if  ( ApprovalNotif !== null ) {
+                    ApprovalNotif.RefreshCount();
+                }
+            }
+
+        };
+
+        $.connection.hub.disconnected(function () { });
+
+        $scope.$on('OnWorkOrderViewed', function() {
+            WorkOrderNotif.RefreshCount();
+            //alert('refreshCount');
+        });
+
+
+        var JSTabCache = CacheFactory.get('JSTabCache');
+
+        if (!JSTabCache) {
+            JSTabCache = CacheFactory('JSTabCache', {
+                cacheFlushInterval: 60 * 60 * 1000,
+                deleteOnExpire: 'aggressive',
+                storageMode: 'localStorage'
+
+            });
+        }
+
+        var getRandomInt = function (min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        document.body.onkeydown = function (e) {
+            if (e.ctrlKey === true && e.keyCode == 32) {
+                ToggleSideMenuNavigation();
+            };
+
+            if (e.ctrlKey === true && e.keyCode == 116) {
+                RefreshApplicationCache();
+            };
+
+            if (e.keyCode === 116) {
+                e.preventDefault();
+                DevExpress.ui.dialog.confirm('Do you want to Reload Application?', 'IAMS').done(
+                    function (dialogResult) {
+                        
+                        if (dialogResult == true) {
+                            TabControl.RefreshCache();
+                            var CacheState = JSTabCache.get('/CurrentState');
+                            var Tab = CacheState.CurrentTabState[CacheState.CurrentTabState.length - 1];
+                            window.location.replace('/Home');
+                        }
+                    }
+                );
+            }
+        };
+
+        var RefreshApplicationCache = function () {
+            JSDataService.Post('/Home/LogOut').then(function () {
+                JSTabCache.destroy();
+                //var appCache = window.applicationCache;
+                //appCache.update();
+                //if (appCache.status == window.applicationCache.UPDATEREADY) {
+                //    appCache.swapCache();
+                //}
+                window.localStorage.clear();
+                window.location.replace('/Home');
+            });
+        }
+
+        $scope.ReposiveBoxOption = {
+            rows: [
+                { ratio: 2 },
+                { ratio: 8 },
+            ],
+            cols: [
+                { ratio: 1 }
+            ]
+        };
+
+        $scope.onEmpPictureClick = function () {
+            JsWizardView.Show({
+                Template: '<div dx-form="FormOptions" style="padding:10px"></div>',
+                title: 'Upload Picture',
+                width: 450,
+                height: 450,
+                closeOnConfirm: false,
+                InitController: function (s) {
+                    s.CurrentObject = {
+                        ImgSrc: null
+                    }
+
+                    var file = null;
+
+                    s.FormOptions = {
+                        items: [
+                            {
+                                dataField: 'ImgSrc',
+                                editorType: 'jDxImage',
+                                editorOptions: {
+                                    onFormUploaderValueChanged: function (e) {
+                                        file = e.value;
+                                    }
+                                },
+                                label: {
+                                    //text: '',
+                                    visible: false
+                                }
+                            }
+                        ]
+                    }
+
+                    s.onPositiveClick = function (d) {
+                        if (file === null) return;
+                        JSDataService.SaveEmployeePicture(@ViewBag.CurrentUser.ID_Employee,file).then(function() {
+                            DevExpress.ui.dialog.alert('Upload Picture Successfully! Refresh your application', 'IAMS');
+                            d.hide();
+                        });
+                    }
+                }
+            });
+        }
+
+
+//-------------------------------------------------------
+
+$scope.WorkderOrderNotifOption = {
+    title: "Work Order",
+    SQL: '@WorkOrderSQL',
+    height: 650,
+    width: 600,
+    SQLCount: '@WorkOrderSQLCount',
+    onInitialized: function (component) {
+        WorkOrderNotif = component;
+    },
+    onItemClick: function (e) {
+        var data = {
+            ID: 6243 * 1000 * -1,
+            Caption: e.itemData.Name,
+            ID_ViewType: 2,
+            ViewID: 10459,
+            ID_CurrentObject: e.itemData.ID,
+            //ImageName: e.itemData.ImageName,
+        };
+        OnNavigationClick(data, true);
+    },
+    itemTemplate: function (e) {
+        if (e.Thumbnail === null || e.Thumbnail === undefined) e.Thumbnail = 'default-user.png';
+        var Div = '<div class="Global-Notification"><div class="date"><div>' + e.DateActionTaken + '</div><div>' + e.CreatedByActionTaken + '</div></div>' +
+                    '<div class="div-middle">' +
+                    '<div class="div-middle-content">' +
+                        '<div class="Image" style="background-color:#026466"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                    '</div>' +
+                    '<div class="div-middle-content Text"><div class="display-name" style="color:#026466">' + e.DocumentNo + ' <span style="font-size:8.5px">(' + e.Aging + ')</span></div><div>' + e.ActionTaken + ' - ' + e.Lead + '</div><div>' + e.WorkOrderType + '</div></div>' +
+                '</div></div>';
+        return Div;
+    }
+}
+
+///-----------------------------------------------------
+
+
+@if (SPL_USERGROUP.Contains(ID_UserGroup) == true) {
+    <text>
+        $scope.ToDoNotifOption = {
+            title: "To Do's",
+            SQL: '@DiarySQL',
+            height: 650,
+            width: 600,
+            SQLCount: '@DiarySQLCount',
+            onInitialized: function (e) {
+
+            },
+            onItemClick: function (e) {
+                var data = {
+                    ID: 6243 * 1000 * -1,
+                    Caption: e.itemData.Name,
+                    ID_ViewType: 2,
+                    ViewID: 6243,
+                    ID_CurrentObject: e.itemData.ID,
+                    //ImageName: e.itemData.ImageName,
+                };
+                OnNavigationClick(data, true);
+            },
+            itemTemplate: function (e) {
+                if (e.Thumbnail === null || e.Thumbnail === undefined) e.Thumbnail = 'default-user.png';
+                var Div = '<div class="Global-Notification"><div class="date"><div>' + e.DiaryDate + '</div><div>' + e.CreatedBy + '</div></div>' +
+                            '<div class="div-middle">' +
+                            '<div class="div-middle-content">' +
+                                '<div class="Image" style="background-color:#026466"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text"><div class="display-name" style="color:#026466">' + e.DiaryType + ' <span style="font-size:8.5px">(' + e.Aging + ')</span></div><div>' + e.Customer + '</div><div>' + ( e.Note !== null ? e.Note : '' ) + '</div></div>' +
+                        '</div></div>';
+                return Div;
+            }
+        }
+        </text>
+    }
+
+        $scope.butNavigationOption = {
+            icon: 'mdi mdi-menu',
+            onClick: function (e) {
+                $("#JsContainerApp").toggleClass("toggled");
+            }
+        }
+@if (ViewBag.CurrentUser.IsApprover == true) {
+    <text>
+        $scope.ApproverNotifOption = {
+            title: 'For Approvals',
+            height: 600,
+            width: 520,
+            SQL: '@ApprovalSQL',
+            SQLCount: '@ApprovalSQLCount',
+            SearchEnabled: true,
+            onInitialized: function (component) {
+                ApprovalNotif = component;
+            },
+            itemTemplate: function (e) {
+                if (e.Thumbnail === null) e.Thumbnail = 'default-user.png';
+                var Div = '<div class="Global-Notification"><div class="date">' + e.StartDate + '</div>' +
+                            '<div class="div-middle">' +
+                            '<div class="div-middle-content">' +
+                                '<div class="Image" style="background-color:#026466"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text"><div class="display-name" style="color:' + e.PrimaryColor + '">' + e.DisplayName + '</div><div style="font-size:14px">' + e.CreatedBy + '</div><div>' + e.Aging + '</div></div>' +
+                        '</div></div>';
+                return Div;
+            },
+            onItemClick: function (e) {
+                var data = {
+                    ID: e.itemData.ID_DetailView * 1000 * e.itemData.ID_CurrentObject,
+                    Caption: e.itemData.DisplayName !== null ? e.itemData.DisplayName : e.itemData.text,
+                    ID_ViewType: 2,
+                    ViewID: e.itemData.ID_DetailView,
+                    ID_CurrentObject: e.itemData.ID_CurrentObject,
+                    ImageName: e.itemData.ImageName,
+                };
+                OnNavigationClick(data, true);
+            }
+        }
+    </text>
+ }
+
+        $scope.FavoritesNotifOption = {
+            title: 'Quick Access',
+            items: [],
+            //SearchEnabled: true,
+            onItemClick: function (e) {
+                var data = {
+                    ID: e.itemData.ID_DetailView * 1000 * -1,
+                    Caption: e.itemData.DisplayName !== null ? e.itemData.DisplayName : e.itemData.text,
+                    ID_ViewType: 2,
+                    ViewID: e.itemData.ID_DetailView,
+                    ID_CurrentObject: -1,
+                    ImageName: e.itemData.ImageName,
+                };
+                OnNavigationClick(data, true);
+            },
+            itemTemplate: function (e) {
+                var Div = '<div class="div-middle Quick-Access">' +
+                            '<div class="div-middle-content Icon" style="background-color:' + e.PrimaryColor + '">' +
+                                '<span class="' + e.ImageName + '"></span>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text">New ' + (e.DisplayName != null ? e.DisplayName : e.text) + '</div>' +
+                        '</div>';
+                return Div;
+            },
+            onDxListInitialized: function (e) {
+                //console.log(QuickNavigations);
+                e.option('items', Enumerable.From(QuickNavigations).Where('$.ID_DetailView !== 0').ToArray());
+            }
+        }
+
+
+        $scope.AccountNotifOption = {
+            title: 'My Account',
+            itemTemplate: function (e) {
+                var Div = '<div class="div-middle Quick-Access">' +
+                            '<div class="div-middle-content Icon" style="background-color:' + e.PrimaryColor + '">' +
+                                '<span class="' + e.ImageName + '"></span>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text">' + (e.DisplayName != null ? e.DisplayName : e.text) + '</div>' +
+                        '</div>';
+                return Div;
+            },
+            width: 250,
+            height: 230,
+            items: [
+                 @if (ViewBag.CurrentUser.ID == 1) { //System Admin Only
+                    @:{
+                                         @:    ID: -10000,
+                                         @:    text: 'Backup Database',
+                                         @:    ImageName: 'mdi mdi-database',
+                                         @:    PrimaryColor: 'blue',
+                                         @:
+
+                    @:},
+                }
+                @if (ViewBag.CurrentUser.ID == 1) { //System Admin Only
+                    @:{
+                    @:    ID: -20000,
+                    @:    text: 'Publish View Scripts',
+                    @:    ImageName: 'mdi mdi-layers',
+                    @:    PrimaryColor: 'blue',
+                    @:
+                    @:},
+                }
+                {
+                    ID: -10002,
+                    text: 'Refresh Application',
+                    ImageName: 'mdi mdi-refresh',
+                    PrimaryColor: 'green',
+                },
+                {
+                    ID: -10001,
+                    text: 'Log Out',
+                    ImageName: 'mdi mdi-logout',
+                    PrimaryColor: 'red',
+                }
+            ],
+            onItemClick: function (data) {
+                switch (data.itemData.ID) {
+                    case -10000:
+                        window.open('/Home/BackupDatabase');
+                        break;
+                    case -10003:
+                        ToggleSideMenuNavigation();
+                        break;
+                    case -10002:
+                        //var appCache = window.applicationCache;
+                        //appCache.update();
+                        //if (appCache.status == window.applicationCache.UPDATEREADY) {
+                        //    appCache.swapCache();
+                        //}
+                        RefreshApplicationCache();
+                        break;
+                    case -10001:
+                        DevExpress.ui.dialog.confirm('Do you want to Logout', 'IAMS').done(function (dialogResult) {
+                            if (dialogResult) {
+                                JSDataService.Post('/Home/LogOut').then(function () {
+                                    JSTabCache.destroy();
+
+                                    //var appCache = window.applicationCache;
+                                    //appCache.update();
+                                    //if (appCache.status == window.applicationCache.UPDATEREADY) {
+                                    //    appCache.swapCache();
+                                    //}
+
+                                    window.location.replace('/Login');
+                                });
+                            }
+                        });
+                        break;
+                    case -20000:
+
+                        JSDataService.Query('@Html.EncryptSQL("SELECT * FROM _vBuildViews ORDER BY ID")').then(function(r) {  
+                            var length = r.collection.length;
+                            $.each(r.collection,function(i,n){
+                                if ( n.ID_ViewType === 2) { 
+                                    $http.get('/JsApp/DetailView?ID=' + n.ID_View + '&ViewName=' + n.Name + '&isMinify=1').then(function (r) {
+                                        JSDataService.Post('/JsApp/PublishJs', {
+                                            ID_View: n.ID_View,
+                                            Script: r.data,
+                                            ViewName: n.Name,
+                                            ID_ViewType: 2
+                                        }).then(function () {
+                                            console.log((i+1) + "/" + length);
+                                        });
+                                    });
+                                } else if ( n.ID_ViewType == 1) { 
+                                    $http.get('/JsApp/ListView?ID=' + n.ID_View + '&ViewName=' + n.Name + '&isMinify=1').then(function (r) {
+                                        JSDataService.Post('/JsApp/PublishJs', {
+                                            ID_View: n.ID_View,
+                                            Script: r.data,
+                                            ViewName: n.Name,
+                                            ID_ViewType: 1
+                                        }).then(function () {
+                                            console.log((i+1) + "/" + length);
+                                        });
+
+                                    });
+                                }
+                            });
+                        });
+                        break;
+                }
+            }
+        }
+
+
+        $scope.ReminderNotifOption = {
+            title: 'Reminders',
+            SQL: '@ReminderSQL',
+            SQLCount: '@ReminderSQLCount',
+            height: 550,
+            SearchEnabled: true,
+            itemTemplate: function (e) {
+                if (e.Thumbnail === null) e.Thumbnail = 'default-user.png';
+                var Div = '<div class="Global-Notification"><div class="date">' + e.NotifDate + '</div>' +
+                            '<div class="div-middle">' +
+                            '<div class="div-middle-content">' +
+                                '<div class="Image" style="background-color:' + e.PrimaryColor + '"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text"><div class="display-name" style="color:' + e.PrimaryColor + '">' + e.DisplayName + '</div><div>' + e.Name + '</div></div>' +
+                        '</div></div>';
+                return Div;
+            },
+            onItemClick: function (e) {
+                var data = {
+                    ID: e.itemData.ID_DetailView * 1000 * e.itemData.ID_CurrentObject,
+                    Caption: e.itemData.DisplayName !== null ? e.itemData.DisplayName : e.itemData.text,
+                    ID_ViewType: 2,
+                    ViewID: e.itemData.ID_DetailView,
+                    ID_CurrentObject: e.itemData.ID_CurrentObject,
+                    ImageName: e.itemData.ImageName,
+                };
+                //console.log('alert xxxx',data);
+                OnNavigationClick(data, true);
+            }
+        }
+@if (ViewBag.CurrentUser.ID == 1 ) {
+    <text>
+        $scope.NotifGlobalOption = {
+            title: 'Activity Log',
+            SQL: '@Html.EncryptSQL("SELECT * FROM vAuditTrailNotification WHERE ID_AuditType <> 4 ORDER BY ID DESC")',
+            onLoadDataSource: function (data) {
+                data.FilterExpr = "ID_Model IN (" + ActiveModels + ")";
+            },
+            height: 550,
+            itemTemplate: function (e) {
+                if (e.Thumbnail === null) e.Thumbnail = 'default-user.png';
+                var Div = '<div class="Global-Notification"><div class="date">' + e.NotifDate + '</div>' +
+                            '<div class="div-middle">' +
+                            '<div class="div-middle-content">' +
+                                '<div class="Image" style="background-color:' + e.PrimaryColor + '"><img class="image-user" src="App_Content/Image/Thumbnails/' + e.Thumbnail + '" onerror=""/></div>' +
+                            '</div>' +
+                            '<div class="div-middle-content Text"><div class="display-name" style="color:' + e.PrimaryColor + '">' + e.DisplayName + '</div><div style="white-space:pre-wrap">' + e.Name + '</div></div>' +
+                        '</div></div>';
+                return Div;
+            },
+            onItemClick: function (e) {
+
+                var data = {
+                    ID: e.itemData.ID_DetailView * 1000 * e.itemData.ID_CurrentObject,
+                    Caption: e.itemData.DisplayName !== null ? e.itemData.DisplayName : e.itemData.text,
+                    ID_ViewType: 2,
+                    ViewID: e.itemData.ID_DetailView,
+                    ID_CurrentObject: e.itemData.ID_CurrentObject,
+                    ImageName: e.itemData.ImageName,
+                };
+
+
+                OnNavigationClick(data, true);
+            }
+        }
+    </text>
+ }
+
+        $scope.ReportMenuItems = {
+            visible: false
+        };
+
+        $scope.AnalyticsMenuItems = {
+            visible: false
+        };
+
+        $scope.HelpMenuItems = {
+            visible: false
+        };
+
+        $scope.dxHomeMenu = {
+            bindingOptions: {
+                'items[1]': 'ReportMenuItems',
+                'items[2]': 'AnalyticsMenuItems',
+                'items[3]': 'HelpMenuItems'
+            },
+            items: [
+                {
+                    text: 'View',
+                    icon: 'mdi mdi-view-dashboard',
+                    items: [
+                        //{ ID: -10003, icon: 'mdi mdi-view-list', text: 'Show/Hide Navigation' },
+                        { ID: -10004, icon: 'mdi mdi-close-box', text: 'Close Active Tab' },
+                        { ID: -10005, icon: 'mdi mdi-close-box-outline', text: 'Close All Tabs' }
+
+                    ]
+                },
+                {
+                    text: "Reports",
+                    icon: 'mdi mdi-note-outline',
+                    items: [
+
+                    ]
+                }, {
+                    text: "Analytics",
+                    icon: 'mdi mdi-chart-areaspline',
+                    items: [
+
+                    ]
+                },
+                {
+                    text: 'Help',
+                    icon: 'mdi mdi-help',
+                    items: [
+                        //{ icon: 'mdi mdi-webpack', text: 'Developers' },
+
+                    ]
+                },
+                {
+                    text: 'About',
+                    icon: 'mdi mdi-information-outline',
+                    items: [
+                        //{ icon: 'mdi mdi-webpack', text: 'Developers' },
+                        { ID: -20005, icon: 'mdi mdi-information', text: 'Software Version' }
+                    ]
+                },
+
+
+            ],
+            onItemClick: function (data) {
+
+                if (data.itemData.IsParent == true) {
+                    if ($rootScope.CurrentUser.IsDeveloperMode === true) {
+                        if (data.jQueryEvent.ctrlKey == true) {
+                            OnNavigationClick({
+                                ID: getRandomInt(),
+                                Caption: 'Navigation',
+                                ID_ViewType: 2,
+                                ViewID: 11,
+                                ID_CurrentObject: data.itemData.ID,
+                                ImageName: ''
+                            }, false);
+
+                            return;
+                        }
+                    }
+                }
+
+                if (data.itemData.IsReport === true) {
+                    if ($rootScope.CurrentUser.IsDeveloperMode === true) {
+                        if (data.jQueryEvent.ctrlKey == true && data.jQueryEvent.altKey == false) {
+                            OnNavigationClick({
+                                ID: getRandomInt(),
+                                Caption: 'Navigation',
+                                ID_ViewType: 2,
+                                ViewID: 11,
+                                ID_CurrentObject: data.itemData.ID,
+                                ImageName: ''
+                            }, false);
+                            return;
+                        }
+                        if (data.jQueryEvent.ctrlKey == true && data.jQueryEvent.altKey == true) {
+                            JsPopUpView.OpenDetailView(4156, {
+                                ID_CurrentObject: data.itemData.ID_Report,
+                                fullScreen: true
+                            });
+                            return;
+                        }
+                    }
+                    OnNavigationClick(data.itemData);
+                    return;
+                }
+
+                if (data.itemData.IsDashboard === true) {
+                    OnNavigationClick({
+                        ID: getRandomInt(),
+                        Caption: data.itemData.Caption,
+                        ID_ViewType: 7,
+                        ViewID: data.itemData.ViewID,
+                        ID_CurrentObject: data.itemData.ID,
+                        ImageName: data.itemData.icon
+                    }, false);
+                    return;
+                }
+
+
+                switch (data.itemData.ID) {
+                    case -10000:
+                        window.open('/Home/BackupDatabase');
+                        break;
+                    case -10003:
+                        ToggleSideMenuNavigation();
+                        break;
+                    case -10001:
+                        DevExpress.ui.dialog.confirm('Do you want to Logout', 'IAMS').done(function (dialogResult) {
+                            if (dialogResult) {
+                                JSDataService.Post('/Home/LogOut').then(function () {
+                                    JSTabCache.destroy();
+
+                                    //var appCache = window.applicationCache;
+                                    //appCache.update();
+                                    //if (appCache.status == window.applicationCache.UPDATEREADY) {
+                                    //    appCache.swapCache();
+                                    //}
+
+                                    window.location.replace('/Login');
+                                });
+                            }
+                        });
+                        break;
+                    case -10002:
+                        RefreshApplicationCache();
+                        break;
+                    case -50001:
+                        //
+                        //
+                        //
+
+                        break;
+                    case -10004:
+                        TabControl.CloseCurrentTab();
+                        break;
+                    case -10005:
+                        TabControl.CloseAllTabs();
+                        break;
+                    case -20005:
+                        JsPopUpView.ShowAboutView();
+                        break;
+                }
+            }
+        };
+
+
+        $scope.Navigations = [];
+
+        $scope.navigationTabs = [];
+        $scope.currentTabIndex = 0;
+        $scope.currentTab = null;
+
+        $rootScope.$on("CallNewTabMethod", function (event, Navigation) {
+            OnNavigationClick(Navigation);
+        });
+
+        var ToggleSideMenuNavigation = function () {
+            $("#JsContainerApp").toggleClass("toggled");
+        }
+
+        var generateID = function () {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            for (var i = 0; i < 5; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return text;
+        }
+
+        var getRandomInt = function () {
+            var min = 1000, max = 9999;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        var TabControl = null;
+
+
+        var OnNavigationClick = function (navigationObject, IsNewInstance) {
+
+            if (navigationObject.ID_ViewType == 4) {
+                if (navigationObject.StateName == null) {
+                    navigationObject.StateName = navigationObject.Name + 'ReportState';
+                }
+            }
+            if (navigationObject.IsParent == true) return;
+
+            var CurrentNavigation = null;
+
+            if (IsNewInstance === undefined) IsNewInstance = false;
+
+            if (IsNewInstance === false) {
+
+                CurrentNavigation = Enumerable.From($scope.navigationTabs)
+                    .Where(function (nav) {
+                        return nav.id == navigationObject.ID
+                    }).FirstOrDefault();
+
+            }
+
+
+            if (CurrentNavigation != null) {
+
+                $scope.currentTab = CurrentNavigation;
+                $scope.currentTabIndex = CurrentNavigation.id;
+
+            } else {
+
+                if ($scope.navigationTabs.length === @Html.Raw(TabLimit) ) { //6 Tabs
+                    //Maximum Tabs
+                    DevExpress.ui.dialog.alert('Please Close other tabs to continue.', 'Maximum number of tabs reach.');
+                    return;
+                }
+
+                if (IsNewInstance === true) {
+                    navigationObject.ID = navigationObject.ID * getRandomInt(2, 100);
+                }
+
+                if ( _.isNavTabClick == true ) return;
+                _.isNavTabClick = true;
+                $timeout(function () {
+
+                    var idTab = generateID();
+                    //if (navigationObject.ID_CurrentObject == null || navigationObject.ID_CurrentObject == undefined) {
+                    //    if (navigationObject.CurrentObject == null || navigationObject.CurrentObject == undefined) {
+                    //        navigationObject.ID_CurrentObject = -1;
+                    //    }
+                    //}
+
+                    $scope.navigationTabs.push({
+                        id: navigationObject.ID //* (navigationObject.ID_CurrentObject )
+                     , title: navigationObject.Caption
+                     , icon: navigationObject.ImageName
+                     , ID_ViewType: navigationObject.ID_ViewType
+                     , fixed: true
+                     , ID_View: navigationObject.ViewID
+                     , ID_CurrentObject: navigationObject.ID_CurrentObject
+                     , ID_Report: navigationObject.ID_Report
+                     , ListViewTab : navigationObject.ListViewTab
+                     , CurrentObject: navigationObject.CurrentObject
+                     , params: navigationObject.params
+                     , _ID: idTab
+                     , $onCurrentObjectSaved: navigationObject.$onCurrentObjectSaved
+                     , $ClosedAfterSaved: navigationObject.$ClosedAfterSaved
+                     , toolTipOption: {
+                         target: '#' + idTab,
+                         position: "top",
+                         onInitialized: function (e) {
+                             e.component.tabid = navigationObject.ID;
+                             $timeout(function () {
+                                 $('#' + idTab).unbind().hover(function () {
+                                     if (e.component.tabid === $scope.currentTab.id) return;
+                                     e.component.show();
+                                 }, function () {
+                                     e.component.hide();
+                                 });
+                             }, 1000);
+
+                         }
+                     }
+                    });
+
+                    $timeout(function () {
+                        $scope.currentTab = $scope.navigationTabs[$scope.navigationTabs.length - 1];
+                        $scope.currentTabIndex = $scope.currentTab.id;
+                        $scope.currentTab.IsInit = navigationObject.IsInit;
+                        TabControl.SwitchTab($scope.currentTab);
+                        _.isNavTabClick = false;
+                    });
+
+                },500);
+            }
+        }
+
+        $scope.SearchValue = '';
+
+        var SearchBox = null;
+
+        $scope.SearchTextBox = {
+            placeholder: 'Search',
+            showClearButton: true,
+            mode: 'search',
+            visible: false,
+            onInitialized: function (e) {
+                SearchBox = e.component;
+            }
+        };
+
+
+        var dxTreeViewContextMenu = null;
+
+        $scope.treeViewMenuOptions = {
+            onInitialized: function (e) {
+                dxTreeViewContextMenu = e.component;
+            },
+            target: '#none',
+            items: [],
+            onItemClick: function (e) {
+                switch (e.itemData.id) {
+                    case 1:
+                        //
+                        //
+                        //
+                        var win = window.open('ReportView/Viewer?ID=' + e.component.option("ID_Report"), '_blank');
+                        win.focus();
+
+                        //var form = $("<form/>").attr({
+                        //    method: "post",
+                        //    action: 'ReportView/Viewer',
+                        //    target: "_blank"
+                        //})
+                        //.append($("<input type='hidden' name='ID'/>").attr('value',))
+                        //.appendTo('body').submit().remove();
+                        break;
+                    case 2:
+
+                        break;
+                }
+            }
+        }
+
+        $scope.treeViewOptions = {
+            bindingOptions: {
+                searchValue: "SearchValue",
+                items: "Navigations",
+            },
+            //itemTemplate: 'Item',
+            itemTemplate: function (itemData, itemIndex, itemElement) {
+                var html = null;
+
+                if (itemData.IsParent == true) {
+                    html = '<div class="js-container JS-Nav-Parent">';
+                } else {
+                    html = '<div class="js-container JS-Nav-Icon">';
+                }
+                html += '<div class="js-container-navitem">';
+                html += '<div class="icon">';
+                if (itemData.IsParent == true) {
+                    html += '<span class="icon fa nav-folder-icon"></span> '
+                } else {
+                    html += '<span class="icon ' + itemData.ImageName + '"></span>';
+                }
+                html += '</div>';
+                html += '<div class="caption">';
+                if (itemData.IsParent == true) {
+                    html += '<span class="is-parent navigation-name">' + itemData.text + '</span>';
+                } else {
+                    html += '<span class="navigation-name">' + itemData.text + '</span>';
+                }
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+                return html;
+            },
+            noDataText: "",
+            onItemContextMenu: function (e) {
+                //var Items = [];
+                //if (e.itemData.ID_ViewType === 3) {
+                //    var target = e.itemElement;
+                //    id = target.parent().attr("data-item-id");
+                //    target.attr("id", id);
+                //    dxTreeViewContextMenu.option("target", "#" + id);
+                //    dxTreeViewContextMenu.option("ID_Report", e.itemData.ID_Report);
+                //    Items.push({ id: 1, text: "Open Report in new tab", icon: 'mdi mdi-tab-unselected' });
+                //}
+
+                //dxTreeViewContextMenu.option("items", Items);
+            },
+            onItemClick: function (e) {
+                if (e.itemData.ID == -1000) {
+                    window.open("ReportDesigner");
+                    return;
+                }
+
+                var IsNewInstance = e.jQueryEvent.altKey === true && e.jQueryEvent.ctrlKey === true;
+
+                var navigation = e.itemData;
+
+                if ($rootScope.CurrentUser.IsDeveloperMode === true) {
+
+                    if (e.jQueryEvent.ctrlKey == true && e.jQueryEvent.shiftKey == true) {
+                        if (navigation.ID_Model !== undefined && navigation.ID_Model !== null) {
+                            if (navigation.ID_Model == 0) return;
+                            JsPopUpView.OpenDetailView(4, {
+                                ID_CurrentObject: navigation.ID_Model,
+                                fullScreen: true
+                            });
+                        }
+                        return;
+                    }
+
+                    if (e.jQueryEvent.ctrlKey == true && e.jQueryEvent.altKey == false) {
+                        //
+                        //
+                        // OPEN NAVIGATION WINDOW
+
+                        var navigationObject = {
+
+                            ID: getRandomInt(),
+                            Caption: 'Navigation',
+                            ID_ViewType: 2,
+                            ViewID: 11,
+                            ID_CurrentObject: navigation.ID,
+                            ImageName: ''
+
+                        };
+
+                        OnNavigationClick(navigationObject, false);
+
+                        return;
+                    }
+                }
+
+                if (navigation.IsParent) {
+                    if (navigation.items.length > 0) {
+                        var treeView = $(e.element).dxTreeView('instance');
+                        if (e.node.expanded) {
+                            treeView.collapseItem(e.itemElement)
+                        } else {
+                            treeView.expandItem(e.itemElement);
+                        }
+                    }
+                } else {
+                    OnNavigationClick(navigation, IsNewInstance);
+                }
+            }
+        }
+
+        $scope.CloseAllWindow = function () {
+            TabControl.CloseAllTabs();
+        }
+
+        $scope.registerTab = function (tabControl) {
+
+            TabControl = tabControl;
+
+            JSDataService.Query('@Html.EncryptSQL("Select * From tHelp WHERE IsActive = 1")',
+            {
+                params: {}
+            }).then(function(response){
+                if (response.collection.length == 0) return;
+                var collection = response.collection;
+
+                var _parent = Enumerable.From(collection).Where('$.ID_Parent == null').ToArray();
+                var HelpData = [];
+
+                var loadItems = function(ParentData){
+                    var _childs = Enumerable.From(collection).Where('$.ID_Parent == ' + ParentData.ID ).ToArray();
+                    if(_childs.length > 0){
+                        ParentData.items = [];
+                        $.each(_childs,function(i,o){
+                            var newParent = { ID: o.ID , icon: 'mdi mdi-help-circle', text: o.Name, CurrentObject: o };
+                            loadItems(newParent);
+                            ParentData.items.push(newParent);
+                        });
+                    }else{
+                        ParentData.onClick = function(e){
+                            console.log(e)
+
+                            $rootScope.$emit("CallNewTabMethod", {
+
+                                ID: -14505 * e.itemData.ID,
+                                Caption: e.itemData.text,
+                                ID_ViewType: 5,
+                                ViewID: 14515,
+                                ImageName: e.itemData.icon,
+                                icon: e.itemData.icon,
+                                params: {
+                                    ID: e.itemData.ID,
+                                    CurrentObject: e.itemData.CurrentObject
+                                }
+                                //$Tab.params
+                            });
+                        };
+                    }
+                };
+
+
+                $.each(_parent,function(i,o){
+                    var newParent = { ID: o.ID , icon: 'mdi mdi-help-circle', text: o.Name, CurrentObject: o };
+
+                    loadItems(newParent);
+                    HelpData.push(newParent);
+                });
+                if(HelpData.length > 0){
+                    $scope.HelpMenuItems.items = HelpData;
+                    $scope.HelpMenuItems.visible = true;
+                }
+
+                //{ ID: -20005, icon: 'mdi mdi-information', text: 'Software Version' }
+            });
+
+
+            JSDataService.GetNavigations().then(function (Navigations) {
+                var ReportNavigations = Enumerable.From(Navigations).Where('$.ID === -10000').ToArray()[0].items;
+                var AnalyticsNavigations = Enumerable.From(Navigations).Where('$.ID === 5196').ToArray()
+
+                if (AnalyticsNavigations != undefined && AnalyticsNavigations != null) {
+                    if (AnalyticsNavigations.length > 0) {
+                        AnalyticsNavigations = AnalyticsNavigations[0].items;
+                    }
+                }
+
+                var FixReportNavigation = function (navigation) {
+                    if (navigation.ID_Model > 0) ActiveModels.push(navigation.ID_Model);
+                    if (navigation.ID_Report > 0 || navigation.ViewID > 0) {
+                        navigation.items = undefined;
+                        if (navigation.ID_Report > 0) {
+                            navigation.IsReport = true;
+                            navigation.icon = 'mdi mdi-file-hidden';
+                        } else {
+                            navigation.icon = 'mdi mdi-chart-histogram';
+                            navigation.IsDashboard = true;
+                        }
+                        return;
+                    }
+
+                    if (navigation.items.length > 0) {
+                        navigation.IsReportNav = true;
+                        $.each(navigation.items, function (i, n) {
+                            FixReportNavigation(n);
+                        });
+                    }
+
+                    if (navigation.items.length == 0) {
+                        navigation.items = undefined;
+                        navigation.IsReportNav = true;
+                    }
+
+                    if (navigation.ID_Report > 0 || navigation.ViewID > 0) {
+                        if (navigation.ID_Report > 0) {
+                            navigation.icon = 'mdi mdi-file-hidden';
+                            navigation.IsReport = true;
+                        } else {
+                            navigation.icon = 'mdi mdi-chart-histogram';
+                            navigation.IsDashboard = true;
+                        }
+                    } else {
+                        navigation.IsReportNav = true;
+                        navigation.icon = 'mdi mdi-folder-open';
+                    }
+                }
+
+                if (ReportNavigations !== null) {
+                    $.each(ReportNavigations, function (i, item) {
+                        FixReportNavigation(item);
+                    });
+                    $scope.ReportMenuItems.items = ReportNavigations;
+                    if (ReportNavigations.length > 0) {
+                        $scope.ReportMenuItems.visible = true;
+                    }
+                }
+
+                if (AnalyticsNavigations !== undefined) {
+                    if (AnalyticsNavigations.length > 0) {
+                        $.each(AnalyticsNavigations, function (i, item) {
+                            FixReportNavigation(item);
+                        });
+                        $scope.AnalyticsMenuItems.items = AnalyticsNavigations;
+                        $scope.AnalyticsMenuItems.visible = true;
+                    }
+                }
+
+                var CleanNavigations = function (Navigation) {
+                    if (Navigation.IsParent !== true) {
+                        if (Navigation.IsQuickNavigation === true) {
+                            var QuickNav = Enumerable.From(QuickNavigations).Where('$.ID_Model == ' + Navigation.ID_Model).SingleOrDefault();
+                            if (QuickNav === undefined) {
+                                QuickNavigations.push(Navigation);
+                            }
+                            return;
+                        }
+                    }
+
+                    Navigation.items = Enumerable.From(Navigation.items).Where(function (nav) {
+                        if (nav.ID_Model > 0) {
+                            ActiveModels.push(nav.ID_Model);
+                            if (nav.IsQuickNavigation === true) {
+                                var QuickNav = Enumerable.From(QuickNavigations).Where('$.ID_Model == ' + nav.ID_Model).SingleOrDefault();
+                                if (QuickNav === undefined) {
+                                    QuickNavigations.push(nav);
+                                }
+                            }
+                        }
+                        if (nav.IsParent === true && nav.items.length == 0) {
+                            return false;
+                        }
+                        return true;
+                    }).ToArray();
+                    $.each(Navigation.items, function (i, n) {
+                        if (n.ID_Model > 0) ActiveModels.push(n.ID_Model);
+                        if (n.IsQuickNavigation === true) {
+                            var QuickNav = Enumerable.From(QuickNavigations).Where('$.ID_Model == ' + n.ID_Model).SingleOrDefault();
+                            if (QuickNav === undefined) {
+                                QuickNavigations.push(n);
+                            }
+                        }
+                        CleanNavigations(n);
+                    });
+                }
+                //5196 Analytics
+                var tempNavigations = Enumerable.From(Navigations).Where('$.ID !== -10000 && $.ID !== 5196').ToArray();
+                $.each(tempNavigations, function (i, n) {
+                    if (n.ID_Model > 0) ActiveModels.push(n.ID_Model);
+                    CleanNavigations(n);
+                });
+
+                SearchBox.option('visible', ActiveModels.length >= 5);
+
+                ActiveModels = Enumerable.From(ActiveModels).Distinct().ToArray().join(",");
+
+                $scope.Navigations = tempNavigations;
+
+                var CacheState = JSTabCache.get('/CurrentState');
+
+                if (CacheState !== undefined) {
+
+                    if (CacheState.CurrentTabState.length > 0) {
+
+                        var CurrentTabIndex = null;
+
+                        $.each([CacheState.CurrentTabState[CacheState.CurrentTabState.length - 1]], function (index, tab) {
+
+                            $timeout(function () {
+
+                                console.log('Cache Tab',tab);
+
+                                $scope.navigationTabs.push(tab);
+
+                                tab.IsRepaint = true;
+
+                                CurrentTabIndex = tab.id;
+
+                                TabControl.SwitchTab(tab);
+
+                            }, 500);
+                        });
+
+                        $timeout(function () {
+                            $scope.currentTabIndex = CurrentTabIndex;
+                        }, 500);
+
+                        return;
+                    }
+
+                }
+
+            });
+        }
+
+
+        $scope.FullTextSearchOption = {
+            dataSource: {
+                load: function (loadOptions) {
+                    var defer = $q.defer();
+                    JSDataService.Query('@Html.EncryptSQL("SELECT h.*, U.Name AS [User] FROM vQuickSearchView h LEFT JOIN tUser U ON h.ID_CreatedBy = U.ID")', {
+                        FilterExpr: "SearchExpr LIKE '%" + loadOptions.searchValue + "%' AND ID_Model IN (" + ActiveModels + ")",
+                        showProgress: false
+                    }, loadOptions.skip).then(
+                        function (data) {
+                            if (data.collection.length == 0) {
+                                data.collection.push({
+                                    IsNoResultFound: true,
+                                    ThemeColor : '#000',
+                                    ImageName: 'mdi mdi-magnify',
+                                    Description : 'No results found for ' + loadOptions.searchValue
+                                });
+                            }
+                            defer.resolve(data.collection);
+                        }
+                    );
+                    return defer.promise;
+                }
+            },
+            itemTemplate: 'sample',
+            mode: 'search',
+            minSearchLength: 3,
+            searchTimeout: 500,
+            maxItemCount:30,
+            onInitialized: function (e) {
+                $('#FullSearchTextControl').css({ 'display': 'block' });
+            },
+            onEnterKey: function(e) {
+                var searchValue = e.component.option('value');
+                if (searchValue !== null && searchValue !== undefined ){
+                    if (searchValue.length > 2) {
+                        e.component._search(searchValue);
+                    }
+                }
+            },
+            width: 300,
+            valueExpr: 'Description',
+            onOpened: function (e) {
+                if (e.component.IsSetMinWidth == undefined) {
+                    e.component._popup.option('minWidth', 550);
+                    e.component.IsSetMinWidth = true;
+                }
+            },
+            placeholder: 'Search IAMS',
+            showClearButton: true,
+            onItemClick: function (e) {
+                var CurrentItem = e.itemData;
+                if ( CurrentItem.IsNoResultFound == true ) {
+                    return;
+                }
+                var data = {
+                    ID: getRandomInt(),
+                    Caption: CurrentItem.ModelName,
+                    ID_ViewType: 2,
+                    ViewID: CurrentItem.ID_DetailView,
+                    ID_CurrentObject: CurrentItem.ID,
+                    ImageName: CurrentItem.ImageName
+                };
+                if ( e.itemData.ID_DetailView === 4156 ) {
+                    data.ID_Report = CurrentItem.ID;
+                    data.ID_ViewType = 3;
+                    data.ViewID
+                }
+                OnNavigationClick(data, true);
+                e.component.reset();
+            }
+        };
+
+        $timeout(function () {
+
+            JSDataService.GetCurrentUser().then(function (CurrentUser) {
+
+                $rootScope.CurrentUser = CurrentUser;
+
+                setTimeout(function () {
+                    $.connection.hub.start({ jsonp: true }).done(function () {
+
+                    });
+                }, 500);
+                require([
+                     'app'
+                   , 'baseView'
+                   , 'baseCustom'
+                   , 'baseListViewController'
+                   , 'baseDetailViewController'
+                   , 'AcctHelper'
+                   , 'baseModelHelper'
+                ],function(){
+
+
+                });
+            });
+
+        }, 1000);
+    }]);
+    //</script>
+</text> , false )

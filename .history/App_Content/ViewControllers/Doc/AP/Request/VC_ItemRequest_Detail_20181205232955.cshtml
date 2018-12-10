@@ -1,0 +1,27 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_ItemRequest_Detail = function () {
+      
+        }
+        
+        VC_ItemRequest_Detail.prototype = Object.create(baseDoc.prototype);
+          
+        VC_ItemIssuance.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+            console.log(VC);
+
+        }
+                    
+        return VC_ItemRequest_Detail;
+    });
+//</script>
+</text> , false )

@@ -1,0 +1,87 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/DetailView?ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}&IsBase=1'], function (app, BaseClass) {
+
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            // COde Here
+            //
+
+
+            var customDatasouceCount = 0;
+
+            _.AddToolBarButtonOnGrid('ReportDataSourceList',{
+            
+                name: 'Add DataSource',
+                onItemClick: function(){
+
+                    console.log( _.$scope.CurrentObject);
+                    customDatasouceCount++;
+
+                    var intialData = {
+
+                        ID:-1    ,
+                        SqlCommand : '',
+                        IsActive: true,
+                        IsMain: false,
+                        Name: 'Custom DataSource ' + customDatasouceCount.toString(),
+                        ID_ReportDatasource: null
+                    
+                    };
+
+                    if( _.$scope.CurrentObject.ReportDataSourceList == null){
+                    
+                        _.$scope.CurrentObject.ReportDataSourceList =[intialData];
+
+                    }else{
+                    
+                        _.$scope.CurrentObject.ReportDataSourceList.push(intialData);
+                    }
+
+                }
+            
+            }) ;
+
+
+            _.butGenerateReport = {
+                name: 'Generate Report',
+                disabled: false,
+                IsDisabled : function() {
+                    return false;
+                },
+                Click: function () {
+
+                    if( _.$scope.CurrentObject.ID != -1){
+                    
+                        window.open( '/ReportDesigner?ID_Report=' + _.$scope.CurrentObject.ID + '&IsCreatedByWizardReport=1' );
+                    }
+
+                }
+            }
+ 
+            _.AddToolbarButton(_.butGenerateReport);
+
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+    });
+//</script>
+</text> , false )

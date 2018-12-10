@@ -1,0 +1,18 @@
+﻿@{
+    Layout = null;
+}
+<div class="js-treeview">
+    <div class="view-header" style="background-color:#ff6a00">
+        <div class="header row">
+            <div class="col-md-6">
+                <span class="{{Icon}}" /> {{DisplayName}}
+            </div>
+            <div class="col-md-6">
+                <div class="searchBox" dx-text-box="SearchTextBoxOption"></div>
+            </div>
+        </div>
+        <div dx-menu="BaseMenuOption" class="js-grid-toolbar"></div>
+    </div>
+    <div dx-tree-view="treeViewOptions"></div>
+    <div dx-context-menu="treeViewMenuOptions"></div>
+</div>

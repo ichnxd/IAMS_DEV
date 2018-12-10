@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Visible="false" Text="Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Grid ComponentName="gridDashboardItem1" Name="Grid 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" IsMasterFilterCrossDataSource="true">
+      <InteractivityOptions MasterFilterMode="Multiple" IsDrillDownEnabled="true" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="None" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[TransactionCount]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[TotalTransactionAmount]" UniqueName="DataItem3">
+          <NumericFormat FormatType="Number" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Total Count">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount">
+          <Measure UniqueName="DataItem3" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem2" Name="Purchase Order" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimPurchaseOrder].[PONumber].[PONumber]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" SortOrder="None" UniqueName="DataItem4" />
+        <Measure DataMember="[Measures].[Total Qty]" UniqueName="DataItem5" />
+        <Dimension DataMember="[DimPurchaseOrder].[PO Date].[PO Date]" UniqueName="DataItem6" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="PO No" Weight="65.599455040871931">
+          <Dimension UniqueName="DataItem3" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Weight="68.767029972752042">
+          <Dimension UniqueName="DataItem6" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Weight="67.208787465940048">
+          <Measure UniqueName="DataItem5" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Weight="59.468664850136243">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="65.260984332425068" FixedWidth="21.315990447998047" WidthType="FitToContent">
+          <Dimension UniqueName="DataItem4" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem4" Name="Receiving Report" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[RR TotalAmount]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimReceivingReport].[RR No].[RR No]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" SortOrder="None" UniqueName="DataItem4" />
+        <Measure DataMember="[Measures].[RR Total Qty]" UniqueName="DataItem5" />
+        <Dimension DataMember="[DimReceivingReport].[RR Date].[RR Date]" UniqueName="DataItem6" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Weight="47.521551724137929">
+          <Dimension UniqueName="DataItem3" />
+        </GridDimensionColumn>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem6" />
+        </GridDimensionColumn>
+        <GridMeasureColumn WidthType="FitToContent">
+          <Measure UniqueName="DataItem5" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="102.80172413793103" WidthType="FitToContent">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="74.676724137931032" WidthType="FitToContent">
+          <Dimension UniqueName="DataItem4" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem5" Name="Vouchers Payable" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimVouchersPayable].[VPNo].[VPNo]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" SortOrder="None" UniqueName="DataItem4" />
+        <Measure DataMember="[Measures].[VP TotalAmount]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimVouchersPayable].[VP Date].[VP Date]" UniqueName="DataItem5" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="VP No" Weight="127.93017456359102">
+          <Dimension UniqueName="DataItem3" />
+        </GridDimensionColumn>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem5" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Weight="61.159600997506232">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="35.910224438902745">
+          <Dimension UniqueName="DataItem4" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem6" Name="Payment Voucher" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[Total PV Amt]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimPaymentVoucher].[Document No].[Document No]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" SortOrder="None" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimPaymentVoucher].[PV Date].[PV Date]" UniqueName="DataItem5" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="PV No" Weight="83.910891089108915" WidthType="FitToContent">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem5" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="66.089108910891085" WidthType="FitToContent">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" WidthType="FitToContent">
+          <Dimension UniqueName="DataItem1" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem3" Name="Filing Status" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[VP Count]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[PurchaseOrder Count]" UniqueName="DataItem4" />
+        <Measure DataMember="[Measures].[RR Count]" UniqueName="DataItem2" />
+        <Measure DataMember="[Measures].[PV Count]" UniqueName="DataItem5" />
+        <Measure DataMember="[Measures].[TransactionCount]" UniqueName="DataItem7">
+          <NumericFormat FormatType="Number" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[TotalTransactionAmount]" UniqueName="DataItem8">
+          <NumericFormat FormatType="Number" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="Status" Weight="107.8239608801956">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="PO" Weight="65.464547677261621">
+          <Measure UniqueName="DataItem4" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="RR" Weight="69.315403422982882">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="VP" Weight="66.7481662591687">
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="PV" Weight="59.046454767726161">
+          <Measure UniqueName="DataItem5" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Count" Weight="82.151589242053788">
+          <Measure UniqueName="DataItem7" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount" Weight="74.44987775061125">
+          <Measure UniqueName="DataItem8" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <TreeView ComponentName="treeViewDashboardItem1" Name="Tree View 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions IgnoreMasterFilters="false" />
+      <DataItems>
+        <Dimension DataMember="[DimDateTime].[Year].[Year]" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" UniqueName="DataItem2" />
+      </DataItems>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem1" />
+        <Dimension UniqueName="DataItem2" />
+      </FilterDimensions>
+    </TreeView>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="treeViewDashboardItem1" Weight="10.006715916722632" />
+      <LayoutGroup Orientation="Vertical" Weight="28.341168569509737">
+        <LayoutItem DashboardItem="gridDashboardItem1" Weight="50.05464480874317" />
+        <LayoutItem DashboardItem="gridDashboardItem3" Weight="49.94535519125683" />
+      </LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="28.676964405641371">
+        <LayoutItem DashboardItem="gridDashboardItem2" Weight="50.05464480874317" />
+        <LayoutItem DashboardItem="gridDashboardItem4" Weight="49.94535519125683" />
+      </LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="32.975151108126262">
+        <LayoutItem DashboardItem="gridDashboardItem5" Weight="50.05464480874317" />
+        <LayoutItem DashboardItem="gridDashboardItem6" Weight="49.94535519125683" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

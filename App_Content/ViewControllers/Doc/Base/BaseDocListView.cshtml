@@ -1,0 +1,184 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    int ID_View = ViewBag.ID;
+    string ViewName = ViewBag.ViewName;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/ListView?ID=@{@ID_View}&ViewName=@{@ViewName}&IsBase=1'], function (BaseClass) {
+
+        var BaseListView = function () { }
+
+        BaseListView.prototype = Object.create( BaseClass.prototype );
+
+        BaseListView.prototype.Init = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            BaseClass.prototype.Init.call(this,$scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var _ = this;
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                isContextMenu: true,
+                disabled: true,
+                IsDisabled: function () {
+                    var SelectedRows = _.Grid.getSelectedRowsData();
+                    return !(SelectedRows.length == 1 && SelectedRows[0].ID_FilingStatus !== 2);
+                },
+                onItemClick: function () {
+
+                    var itemSelected = Enumerable.From(_.Grid.getSelectedRowsData()).Where("$.ID_DocStatus !== 3").Distinct().ToArray();
+
+                    if (itemSelected.length == 0) return;
+
+                    _.PerformApproved(itemSelected);
+
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                disabled: true,
+                isContextMenu: true,
+                IsDisabled: function () {
+                    var SelectedRows = _.Grid.getSelectedRowsData();
+                    return !(SelectedRows.length == 1 && SelectedRows[0].ID_FilingStatus !== 7);
+                },
+                onItemClick: function () {
+
+                    var itemSelected = Enumerable.From(_.Grid.getSelectedRowsData()).Where("$.ID_DocStatus !== 3").Distinct().ToArray();
+                    if (itemSelected.length == 0) return;
+                    _.PerformCancel(itemSelected);
+                }
+            }
+
+            _.ButReport = {
+                text: 'Report',
+                icon: 'jspp-icon js-file-2',
+                color: '#000',
+                disabled: false,
+                onItemClick: function () {
+                  
+                }
+            }
+
+            _.AddToolbarButton(_.ButReport);
+
+            _.AddToolbarButton(_.butApproved);
+
+            _.AddToolbarButton(_.butCancel);
+
+           
+            //
+            // MASTER DETAIL
+            //
+
+            //if (_.DetailSQLDataSource !== undefined) {
+
+                _.$scope.dataGridOptions.masterDetail = {
+                    enabled: true,
+                    template: function (container, options) {
+
+                        var ContainerDetails = $('<div></div>').addClass('inner-details');
+
+                        if (options.data.Comment != null) {
+
+                            $("<div>").text("Comment : " + options.data.Comment).appendTo(ContainerDetails);
+
+                        }
+
+                        ContainerDetails.appendTo(container);
+
+                        _.InnerCustomizeText =  function (e) {
+                            if (e.value != null) {
+                                if (typeof e.value == 'number') {
+                                    return Globalize.format(e.value, "n2")
+                                }
+                            }
+                            return e.valueText;
+                        };
+
+                        $("<div>").addClass("internal-grid").dxDataGrid({
+                            columnAutoWidth: true,
+                            dataSource: {
+                                load: function (loadOptions) {
+                                    var deferred = _.$q.defer();
+
+                                    var data = {
+                                        params: _.GetDetailSQLDataSourceParameters(options.data)
+                                    };
+
+                                    _.JSDataService.Query(_.DetailSQLDataSource, data).then(function (data) {
+
+                                        deferred.resolve(data.collection);
+
+                                    });
+
+                                    return deferred.promise;
+                                }, totalCount: function () {
+                                    return 0;
+                                }
+                            },
+                            showBorders : true,
+                            customizeColumns: function (columns) {
+
+                                $.each(columns, function (c, o) {
+
+                                    o.customizeText = _.InnerCustomizeText;
+
+                                    if (o.dataField == 'Description') {
+                                        o.width = 250;
+                                    }
+
+
+                                });
+
+                            }
+                        }).appendTo(container);
+
+                    }
+                }
+            //}
+
+        }
+
+        BaseListView.prototype.PerformApproved = function (items) {
+            var _ = this;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            _.ConfirmBox("Are you sure you want to approve the following Document(s): <br>" + Documents + "", _.LvModel.DisplayName).then(function () {
+                if (_.Approve !== undefined) {
+                    _.Approve(items).then(function () {
+                        //_.ScMsgBox(Documents + ' Successfully Approved', _.LvModel.DisplayName);
+                        _.ToastSuccess(Documents + ' Successfully Approved');
+                        _.Grid.refresh();
+                    });
+                }
+            });
+        }
+
+        
+
+        BaseListView.prototype.PerformCancel = function (items) {
+            var _ = this;
+            var Documents = Enumerable.From(items).Select('$.DocumentNo').ToArray().join();
+            _.ConfirmBox("Are you sure you want to cancel the following Document(s): <br>" + Documents + "", _.LvModel.DisplayName).then(function () {
+                if (_.Cancel !== undefined) {
+                    _.Cancel(items).then(function () {
+                        //_.ScMsgBox(Documents + ' Successfully Cancelled', _.LvModel.DisplayName);
+                        _.ToastSuccess(Documents + ' Successfully Cancelled');
+                        _.Grid.refresh();
+                    });
+                }
+            });
+        }
+
+        return BaseListView;
+
+    });
+//</script>
+</text> , false)

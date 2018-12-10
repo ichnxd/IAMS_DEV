@@ -1,0 +1,823 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_ItemRequest = function () {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'ItemRequest_Details';
+            this.SerialsEnabled = true;
+            this.AddItemWithInventory = true;
+        }
+
+        VC_ItemRequest.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_ItemRequest.prototype.onInitDetailView = function (VC) {
+
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            this.$isHidePrice = true;
+            var _ = this
+
+            VC.onContextMenuPreparing_ItemRequest_Details = function (e) {
+
+                fRemoveOpenDetail(e.items);
+
+                e.items.unshift(
+                {
+                    text: "Open Detail",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+
+                        var rowIndex = e.rowIndex;
+                        var record = VC.$scope.CurrentObject.ItemRequest_Details[rowIndex];
+
+                        _.$timeout(function () {
+
+                            VC.OpenOnNewWindow(9380, record).then(function (CurrentData) {
+
+                                VC.$scope.CurrentObject.ItemRequest_Details[rowIndex] = s;
+                          
+                                e.component.repaint();
+                            });
+                        });  
+
+                    }
+                });
+      
+                if(VC.CurrentUser.ID_UserGroup !== 16 ){ //
+
+                    return;
+                }
+
+                e.items.unshift(
+                {
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        var Item = _.CurrentObject.ItemRequest_Details[e.rowIndex];
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+                            VC.MsgBox('Please specify Quantity', 'Assemble \ Dissamble');
+                            return;
+                        }
+                        console.log(Item)
+                        if(Item.IsSerialized !== true){
+                            VC.MsgBox('Item '+ Item.Description +' is not Serialized', 'Assemble \ Dissamble');
+                            return;
+                        }
+                        _.BrowseSerials(e, Item,_.CurrentObject.ID_Warehouse);
+                    }
+                });
+
+              
+
+       
+            }
+        }
+          
+        var fRemoveOpenDetail = function(items){
+            
+            var index = -1;
+
+            items.forEach(function(detail,i) {
+                
+                if(detail.text == 'Open Detail'){
+
+                    index = i;
+                }
+            });
+
+            if(index > -1){
+
+                items.splice( index, 1 );
+            }
+        };
+
+        VC_ItemRequest.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+
+           // if(VC.CurrentUser.ID_UserGroup !== 16 && VC.CurrentUser.ID_UserGroup !== 1 && VC.CurrentUser.ID_UserGroup !== 3 && VC.CurrentUser.ID_UserGroup !== 2){ //
+            if(VC.CurrentUser.ID_UserGroup !== 16){ //
+             _.SerialsEnabled = false;
+
+            }
+
+            
+       _.BrowseSerials = function (e, Item, ID_Warehouse) {
+                var SQL = '@Html.EncryptSQL("SELECT * FROM vInventoryHistoryPerWarehouse_Serials2 WHERE ID_Item = @ID_Item and ID_Warehouse = @ID_Warehouse")';
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_Warehouse: ID_Warehouse == null? -1 : ID_Warehouse
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: '29CE3580-AF64-4A06-9097-D6F19A05D536',
+                    title: 'Select Item Serial (' + Item.Description + ')',
+                    params: params
+
+                }).then(function (Serials) {
+
+                    if ( _.CurrentObject.ItemRequest_Details[e.rowIndex]['ItemRequest_Detail_Serials'] == undefined)  _.CurrentObject.ItemRequest_Details[e.rowIndex]['ItemRequest_Detail_Serials'] = []
+                   $.each(Serials, function(i,d){
+                       _.CurrentObject.ItemRequest_Details[e.rowIndex]['ItemRequest_Detail_Serials'].push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Description
+                       })
+                   });
+
+                });
+            }
+
+            _.isHideSRPByPR  = true;
+            _.IsRequiredUnitPrice  = false;  // For IST-00497
+
+            _.butCreateCanvassSheet = {
+                text: 'Canvass Sheet',
+                onItemClick: function () {
+
+                        var CurrentObjects = null;
+                        if (_.ID_ViewType == 1) { //ListView
+                            CurrentObjects = VC.Grid.getSelectedRowsData();
+                        } else if (_.ID_ViewType == 2) { //DetailView
+                            CurrentObjects = [VC.$scope.CurrentObject];
+                        }
+                        AcctHelper.CreateCanvasSheetFromItemRequest(CurrentObjects);
+
+                }
+            };
+
+            _.butCreateSalesOrder = {
+                text: 'Sales Order',
+                onItemClick: function () {
+                   AcctHelper.CreateSalesOrderFromItemRequest([VC.$scope.CurrentObject]);
+                }
+            };
+
+            _.butCreateDeliveryReceipt = {
+                text: 'Delivery Receipt',
+                onItemClick: function () {
+                   AcctHelper.CreateDeliveryReceiptFromItemRequest([VC.$scope.CurrentObject]);
+                }
+            };
+
+             _.butCreateItemIssuance = {
+                text: 'Item Issuance',
+                onItemClick: function () {
+                   AcctHelper.CreateItemIssuanceFromItemRequest([VC.$scope.CurrentObject]);
+                }
+            };
+
+
+
+            /*VC.AddToolbarButton({
+                text: 'Create',
+                IsDisabled: function () {
+
+                    if(_.ID_ViewType == 2){
+
+                        return (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved ) || VC.IsNew();;
+                    }
+
+                    return true;
+                },
+                items: [ _.butCreateCanvassSheet, _.butCreateSalesOrder, _.butCreateDeliveryReceipt, _.butCreateItemIssuance ]
+            });*/
+
+
+
+            /*Templory muna kapag nkadropdown ung mga button, hindi nag ra run si IsDisabled na function */
+            /*VC.AddToolbarButton({
+                text: 'Create',
+                items:[_.butCreateCanvassSheet,_.butCreatePurchaseOrder  ]
+            });*/
+            /*Templory muna kapag nkadropdown ung mga button, hindi nag ra run si IsDisabled na function */
+
+            // VC.AddButtonReport({
+            //     Name: 'Item Request Form',
+            //     ID_Report: 3155,
+            //     requireSingleObject: true
+            // });
+
+        //    VC.AddButtonReport({
+        //         Name: 'Accountabily Form',
+        //         ID_Report: 3159,
+        //         requireSingleObject: true
+        //     });
+
+            VC.AddButtonReport({
+                Name: 'Equipment Loan Form',
+                ID_Report: 3159,
+                requireSingleObject: true
+            });
+
+            _.SetClientLookUpEnabled = function () {
+
+                var IsDisabled =true;
+
+                var LU_Client = VC.GetDxControl('ID_Client');
+
+                var ID_PurchaseRequestType = _.CurrentObject.ID_PurchaseRequestType;
+                var IsImported = _.CurrentObject.IsImported;
+
+                ID_PurchaseRequestType = ID_PurchaseRequestType !== undefined && ID_PurchaseRequestType !== null ? ID_PurchaseRequestType : null;
+
+                if ( ID_PurchaseRequestType === 7 || IsImported == true || ID_PurchaseRequestType === 4) {
+
+                    IsDisabled =false;
+                }
+
+                LU_Client.option('disabled', IsDisabled);
+
+            }
+
+            if (_.ID_ViewType == 2) {
+
+
+
+                //var ID_ProjectOption  = VC.GetFormItem('ID_Project');
+                //ID_ProjectOption.validationRules = [{
+                //    type: 'custom',
+                //    validationCallback: function (options) {
+                //        if ( !( _.CurrentObject.ID_PurchaseRequestType == 2 || _.CurrentObject.ID_PurchaseRequestType == 3 ) ) {
+                //            if (_.CurrentObject.ID_Client == null) {
+                //                console.log(_.CurrentObject);
+                //                options.rule.message = 'Please specify project.';
+                //                return false;
+                //            }
+                //        }
+                //        return true;
+                //    }
+                //}];
+
+                //
+                //
+                // Lester 07/17/2017 10:03 AM
+              VC.ValidationRules.push(function () {
+                     var brokenRules = [];
+
+                     console.log('xxxxxaaa')
+
+                if(_.CurrentObject.ItemRequest_Details == undefined) _.CurrentObject.ItemRequest_Details = []
+
+                // $.each(_.CurrentObject.ItemRequest_Details, function(i,d){
+                //     console.log(d.ReqQTY < d.Quantity)
+                //       if(d.ReqQTY < d.Quantity){
+                //           brokenRules.push('Served QTY must not be greater than Req QTY on item' + d.Description)
+                //       }
+                //   });
+                     if(brokenRules.length > 0){
+                         return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                     }
+
+                     return { isValid: true };
+
+                 })
+
+                VC.ValidationRules.push(function () {
+                    var JsDataService = app.$GetDataService();
+                    var items = [];
+                    var brokenRules = [];
+
+                    if (_.CurrentObject.ID_Warehouse == null) {
+                        return { isValid: true };
+                    }
+
+
+                    VC.ReloadOnHand();
+                    $.each(_.CurrentObject.ItemRequest_Details, function (index, item) {
+                        if (item.NonInventoriable !== true) {
+                            items.push({
+                                'ID': item.ID_Item,
+                                'Code': '',
+                                'Name': item.Description,
+                                'Quantity': item.ReqQTY,
+                                'ID_UOM': item.ID_UOM,
+                                'ID_Warehouse': _.CurrentObject.ID_Warehouse,
+                                'OnHand': 0
+                            });
+                        }
+                    });
+
+                    return JsDataService.Validate('@Html.EncryptSQL("pValidateItemInventory")',
+                        {
+                            'Items': items
+                        }
+                    );
+                });
+
+                VC.ReloadOnHand = function () {
+                    if (_.CurrentObject.ID_Warehouse == null) {
+                        if(_.CurrentObject.ItemRequest_Details == undefined) _.CurrentObject.ItemRequest_Details = [];
+                        $.each(_.CurrentObject.ItemRequest_Details, function (index, item) {
+                            item.OnHand = 0;
+                        });
+
+                        return;
+                    }
+
+                    var  JsDataService = app.$GetDataService();;
+                    JsDataService.Query('@Html.EncryptSQL("Select ID, OnHand From vInventoryOnHandPerWarehouse WHERE ID_Warehouse = @ID_Warehouse AND ID IN(@IDs)")', {
+                        params: {
+                            'ID_Warehouse': _.CurrentObject.ID_Warehouse == null ? 0 : _.CurrentObject.ID_Warehouse,
+                            'IDs': Enumerable.From(_.CurrentObject.ItemRequest_Details).Select('$.ID_Item').ToArray(),
+                        }
+                    }).then(function (data) {
+                        $.each(_.CurrentObject.ItemRequest_Details, function (index, item) {
+                            item.ID_Item
+                            $.each(data.collection, function (i, o) {
+                                if (o.ID == item.ID_Item) {
+                                    item.OnHand = o.OnHand;
+                                    console.log(o.OnHand,'x')
+                                }
+                            });
+                        });
+                    });
+                }
+
+                // VC.AddToolbarButton({
+                //          text: 'Browse Sales Order',
+                //          ID_View: 'EAFA3EBA-BFBE-44F2-BCA6-E4235ED69597',
+                //          IsDisabled: function(){
+                //              if(_.CurrentObject.ID_FilingStatus == 1){
+                //                  return false;
+                //              }
+                //              return true;
+                //          },
+                //          onItemClick: function () {
+                //                 if(_.CurrentObject.ID_Client == undefined && _.CurrentObject.ID_Client == null){
+                //                     VC.MsgBox('Please select Customer first');
+                //                     return;
+                //                 }
+                //                 if(_.ID_PurchaseRequestType !== undefined && _.ID_PurchaseRequestType !== null){
+                //                     if(_.ID_PurchaseRequestType !== 4){
+                //                     VC.MsgBox('Browsing Sales Order is for Trade Only');
+                //                     return;
+                //                     }
+                //                 }
+
+                //         //   var SQL =  '@Html.EncryptSQL(@" SELECT  det.*, oh.OnHand from vSalesOrder_Detail det
+                //         //                                  left join vInventoryOnHand oh on oh.ID = det.ID_Item
+                //         //                                  WHERE ID_BusinessPartner = @ID_CLient")';
+                //         //                                  // and  det.Quantity - isnull(det.TotalIRQty,0)  > 0
+
+                //              var SQL =  '@Html.EncryptSQL(@" Select * from vSalesOrder_Detail where ID_BusinessPartner = @ID_BusinessPartner")';
+                //              var JsPopUpView = app.$GetPopupView();
+
+                //              JsPopUpView.BrowseDataSet(SQL, {
+                //                  ID_View: '3C225237-6338-4AAB-A998-96C2506ED86C',
+                //                  params: {
+                //                      'ID_BusinessPartner': _.CurrentObject.ID_Client
+                //                  },
+                //                  title: 'Select Sales Order'
+                //              }).then(function(Details){
+                //                  console.log(Details);
+                //                  // $.each(Details, function(index, data){
+                //                  //     var NewDetail = []
+
+                //                  //  NewDetail = {
+                //                  //      ID : -1,
+                //                  //      Desription : data.Item,
+                //                  //      ReqQTY :
+
+
+                //                  //  }
+
+                //                  // })
+                //              })
+
+                //          }
+                // });
+                
+
+            //     VC.AddToolbarButton({
+            //         text: 'Create',
+            //              ID_View: 'EAFA3EBA-BFBE-44F2-BCA6-E4235ED69597',
+            //              onItemClick: function () {
+            //                   if (_.ID_ViewType === 1) {
+
+            //                     var itemsSelected = _.Grid.getSelectedRowsData();
+            //                     AcctHelper.CreateItemIssuanceFromItemRequest(itemsSelected);
+
+            //                        }
+            //                    else if (_.ID_ViewType === 2) {
+
+            //                    AcctHelper.CreateItemIssuanceFromItemRequest([_.CurrentObject]);
+            //                       }
+            //               }
+
+            //   })
+
+                /*
+                // var ID_ClientOption = VC.GetFormItem('ID_Client');
+                // ID_ClientOption.validationRules = [{
+                //     type: 'custom',
+                //     validationCallback: function (options) {
+                //         if (_.CurrentObject.ID_PurchaseRequestType == 4 || _.CurrentObject.ID_PurchaseRequestType == 7) {
+                //             if (_.CurrentObject.ID_Client == null) {
+                //                 options.rule.message = 'Client is required';
+                //                 return false;
+                //             }
+                //         }
+                //         return true;
+                //     }
+                // }];
+                //
+                //
+                //
+                *///Dec. 4, 2018
+
+
+
+            }
+
+            if (this.ID_ViewType === 2) {
+
+            //   VC.CustomSave = VC.Save;
+            //   var ID_UserGroup = VC.CurrentUser.ID_UserGroup
+            //
+            //   VC.Save = function () {
+
+            //       if(ID_UserGroup == 16) {
+            //           VC.CurrentObject
+            //        }
+            //       VC.CustomSave();
+            //   }
+
+            }
+            _.IsCanCheck = function () {
+
+                  var VC = _.VC;
+                  var isDisabled = true;
+
+                  //if(VC.CurrentUser.ID_UserGroup !== 16 && VC.CurrentUser.ID_UserGroup !== 1 && VC.CurrentUser.ID_UserGroup !== 3 && VC.CurrentUser.ID_UserGroup !== 2){
+                  if(VC.CurrentUser.ID_UserGroup !== 16){
+                      return true;
+                  }
+                  if (_.ID_ViewType == 1) {
+
+                      if (VC.Grid === undefined) return false;
+                      var SelectedRows = VC.Grid.getSelectedRowsData();
+
+                      if (SelectedRows.length != 1) return true;
+                      return  !(SelectedRows[0].ID_FilingStatus !== 33 );
+
+                  } else {
+                      if (_.CurrentObject.ID == -1) {
+                          return true;
+                      }
+                      if (_.CurrentObject.ID_FilingStatus  == 2 ) {
+                          isDisabled = false;
+                      }
+                      else{
+                           isDisabled = true;
+                      }
+                  }
+
+                  if(_.ID_ViewType == 2){
+                      $.each(_.CurrentObject.ItemRequest_Details, function (i, d) {
+                          if(d.Quantity == 0 || d.Quantity == undefined || d.Quantity == null){
+                              isDisabled = true;
+                          }
+                      });
+                  }
+
+                  return isDisabled;
+              }
+
+                if(_.ID_ViewType == 2){
+
+                    // VC.AddToolbarButton({
+                    //     text: 'Check',
+                    //     icon: 'mdi mdi-pencil-box',
+                    //     color: '#009688',
+                    //     isContextMenu: true,
+                    //     IsDisabled:  _.IsCanCheck,
+                    //     onItemClick: function () {
+                    //         var $q = app.$GetAsync();
+                    //         var JsDataService = app.$GetDataService();
+                    //         var defer = $q.defer();
+                    //         var CurrentObjects = null;
+                    //         var isCanSave = true;
+
+                    //         //=== validate serial
+                    //         $.each(_.CurrentObject.ItemRequest_Details, function (i, d) {
+
+
+                    //                 if (d.IsSerialized === true) {
+                    //                     if (Enumerable.From(d['ItemRequest_Detail_Serials']).Where('$.Name == null').ToArray().length > 0) {
+                    //                         brokenRules.push('Serial(s) is required for Item (' + d.Item + ')');
+                    //                     } else {
+
+                    //                         if (d['ItemRequest_Detail_Serials'] == undefined) { d['ItemRequest_Detail_Serials'] = [] }
+                    //                         if (d['ItemRequest_Detail_Serials'] == null) { d['ItemRequest_Detail_Serials'] = [] }
+
+                    //                         var isSerialsUnique = Enumerable.From(d['ItemRequest_Detail_Serials']).Select('$.Name').Distinct().ToArray().length === d['ItemRequest_Detail_Serials'].length;
+                    //                         if (isSerialsUnique === false) {
+                    //                             VC.MsgBox('Serial(s) must be unique for Item (' + d.Item + ')');
+                    //                             isCanSave = false;
+                    //                             return;
+                    //                         }
+                    //                     }
+
+
+                    //                     if ((d.Quantity) !== d['ItemRequest_Detail_Serials'].length) {
+                    //                         VC.MsgBox('Serial(s) count must be same with Quantity for Item (' + d.Item + ')');
+                    //                         isCanSave = false;
+                    //                         return;
+                    //                     }
+
+                    //                 }
+
+                    //         });
+                    //         // end
+                    //     if(isCanSave == false) {
+                    //         return;
+                    //     }
+                    //     else{
+                    //     if(_.CurrentObject.$dirty == true){
+                    //                     VC.MsgBox("Pending changes must be save first");
+                    //                     return;
+                    //             }
+                    //     if (_.ID_ViewType == 1) { //ListView
+                    //         CurrentObjects = _.Grid.getSelectedRowsData();
+                    //     } else if (_.ID_ViewType == 2) { //DetailView
+                    //         CurrentObjects = [_.CurrentObject];
+                    //     }
+                    //     var Documents = Enumerable.From(CurrentObjects).Select('$.DocumentNo').ToArray().join();
+                    //     VC.ConfirmBox("Do you want to Check the following Document: <br>" + Documents + "").then(function () {
+                    //         VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pUpdateItemReqStatus")', {
+                    //                 IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                    //                 ID_Session: '#ID_CurrentUser'
+                    //         }).then(function (response) {
+                    //                 defer.resolve();
+                    //         }, function () {
+                    //                 defer.reject();
+                    //         });
+
+                    //         VC.ToastSuccess(Documents + ' Successfully Check');
+                    //         if (_.ID_ViewType == 2) {
+                    //             _.VC.Reload();
+                    //         } else {
+                    //             VC.Grid.refresh();
+                    //         }
+                    //             return defer.promise;
+
+                    //     });
+                    //     }
+
+                    // }
+
+                    // });
+                }
+
+
+        }
+
+        ///======
+        VC_ItemRequest.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var Item = e.key;
+            var VC = _.VC;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+             if (e.dataField === 'Quantity') {
+                //    if(ID_UserGroup !== 16 && ID_UserGroup !== 1 && ID_UserGroup !== 3 &&  ID_UserGroup !== 2 ){ // Warehousing, Admin, Dev, PMS &&
+                    // if(ID_UserGroup !== 16){ // Warehousing, Admin, Dev, PMS &&
+                    //     VC.MsgBox('Served Qty is for Warehousing Dept. only')
+                    //     _.CurrentObject.ItemRequest_Details[e.rowIndex].Quantity = 0 ;
+                    //     return;
+                    // }
+                    var Qty = _.CurrentObject.ItemRequest_Details[e.rowIndex].Quantity;
+                    var ReqQty = _.CurrentObject.ItemRequest_Details[e.rowIndex].ReqQTY;
+
+                    Qty = Qty == undefined ? 0 : (Qty == null ? 0 : Qty) ;
+                    ReqQty = ReqQty == undefined ? 0 : (ReqQty == null ? 0 : ReqQty) ;
+                    //console.log(Qty,ReqQty)
+                    // if(Qty > ReqQty ){
+                    //     VC.MsgBox('Served Qty must no exceed requested quantity.')
+                    //     _.CurrentObject.ItemRequest_Details[e.rowIndex].Quantity = 0 ;
+                    //     return;
+                    // }
+
+                    if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+                        if (e.data.Quantity == 0) return;
+                        e.grid.deselectAll();
+                        var DocDetailSerialName = _.DocSerialPropertyName != undefined ? _.DocSerialPropertyName : _.DocDetailPropertyName.substring(0, _.DocDetailPropertyName.length - 1) + '_Serials';
+
+                        Item[DocDetailSerialName] = [];
+
+                        if (_.NewSerials == true) {
+                            for (var i = 0; i < e.data.Quantity; i++) {
+                                Item[DocDetailSerialName].push({
+                                    ID: -1,
+                                    Name: null,
+                                    Code: Item.ItemCode
+                                });
+                            };
+
+                            _.VC.$timeout(function () {
+                                e.grid.selectRowsByIndexes([e.rowIndex]);
+                            }, 500);
+                        } else {
+                            _.BrowseSerials(e, Item, _.CurrentObject.ID_Warehouse);
+                        }
+                    }
+                }
+
+        //       if (e.dataField === 'ReqQTY') {
+        //            console.log(_.CurrentObject.ItemRequest_Details[e.rowIndex].ReqQTY)
+        //       }
+
+
+            VC.ReloadOnHand();
+
+        }
+        ///=====
+        VC_ItemRequest.prototype.onDetailRowUpdated = function (Detail) {
+            baseModelHelper.prototype.onDetailRowUpdated.call(this, Detail);
+        }
+
+        VC_ItemRequest.prototype.onLoad = function () {
+             var _ = this;
+             var VC = _.VC;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+            if(ID_UserGroup ==  16 ){ //-- Warehousing Dept
+               if(_.CurrentObject.ID_FilingStatus !== 2){
+                       VC.butSave.disabled = true;
+                       VC.butSaveClose.disabled = true;
+                       VC.setFormReadOnly(true);
+               }
+               else {
+
+                       VC.butSave.disabled = false;
+                       VC.butSaveClose.disabled = false;
+                  }
+            }
+
+            else{
+                if(_.CurrentObject.ID_FilingStatus !== 1){
+                       VC.butSave.disabled = true;
+                       VC.butSaveClose.disabled = true;
+                       VC.setFormReadOnly(true);
+                }
+                else{
+                     VC.butSave.disabled = false;
+                     VC.butSaveClose.disabled = false;
+                }
+
+
+            }
+
+
+       // xID_USergroup
+       //    if(ID_UserGroup ==  1 || ID_UserGroup ==  2 || ID_UserGroup ==  3 ){
+       //        if(_.CurrentObject.ID_FilingStatus == 33 || _.CurrentObject.ID_FilingStatus == 6 || _.CurrentObject.ID_FilingStatus == 7 ){
+       //               VC.butSave.disabled = true;
+       //               VC.butSaveClose.disabled = true;
+       //               VC.setFormReadOnly(true);
+       //        }
+       //        else{
+       //             VC.butSave.disabled = false;
+       //             VC.butSaveClose.disabled = false;
+       //             VC.setFormReadOnly(false);
+       //        }
+       //    }
+
+
+
+            if (VC.$scope.CurrentObject.ID == -1) {
+                if (VC.IsFormReadOnly != undefined) {
+                    if (VC.IsFormReadOnly == true) {
+                        VC.setFormReadOnly(false);
+                    }
+                }
+            }
+        }
+
+
+        VC_ItemRequest.prototype.onCurrentObjectChanged = function (e) {
+
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = this.VC;
+
+            // if (e.dataField === "ID_PurchaseRequestType" || e.dataField === "IsImported" ) {
+
+            //     var LU_Client = VC.GetDxControl('ID_Client');
+            //     _.CurrentObject.ID_Client = null;
+            //     LU_Client.option('value', null);
+
+            //     _.SetClientLookUpEnabled(); //IF PR TYPE IS DUE TO CUSTOMER
+
+            // }
+
+            if (e.dataField == 'ID_Warehouse') {
+                VC.ReloadOnHand();
+            }
+            //
+            //
+                if (e.dataField == 'ID_Client') {
+                    console.log(e.value,'xxxxxxxxxaaaaaa')
+                        if (e.value !== null) {
+                            if (e.value.ID_Contact !== null && e.value.ID_Contact !== undefined) {
+                                VC.$timeout(function () {
+                                    console.log(e.value.DefaultContact,e.value.ID_Contact )
+                                    VC.$scope.CurrentObject.Contact = e.value.DefaultContact ;
+                                    VC.$scope.CurrentObject.ID_Contact = e.value.ID_Contact
+                                });
+                            }
+                        }
+                        else{
+                                VC.$timeout(function () {
+                                    VC.$scope.CurrentObject.Contact = null ;
+                                    VC.$scope.CurrentObject.ID_Contact =null;
+                                });
+                        }
+
+
+                    }
+            //
+            //
+
+        }
+        
+        //====
+         VC_ItemRequest.prototype.PerformApproved = function (items) {
+             //
+            var _ = this;
+            var VC = _.VC;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup
+               
+
+            if(ID_UserGroup == 16){
+                VC.MsgBox('Warehousing Department is not allowed to approve this transaction.','Item Request')
+                return;
+            }
+
+               baseModelHelper.prototype.PerformApproved.call(this, items);
+
+         }
+        //====
+
+
+        VC_ItemRequest.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemRequestApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_ItemRequest.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemRequestCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason' : Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_ItemRequest;
+
+    });
+//</script>
+</text> , false);

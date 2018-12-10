@@ -1,0 +1,25 @@
+11/27/2018 10:34:23 AM: _pGetDataSet ---> Invalid column name 'ishowlabel'..
+11/27/2018 10:37:35 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:38:11 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:38:12 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:38:13 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (SerialHistoryTab, 10489).
+The statement has been terminated..
+11/27/2018 10:38:13 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:38:37 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:39:02 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:39:03 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:39:04 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 10:39:04 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181120_91625_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/27/2018 2:04:04 PM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'Jade 502 Rosewood Pointe Levi Mariano Ave. Acacia Estates Ususan Tuktukan Taguig City.1637' to data type int..
+11/27/2018 2:04:18 PM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'makati 123  makati Cembo Makati City.1214' to data type int..
+11/27/2018 2:04:42 PM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'makati 123  makati Cembo Makati City.1214' to data type int..
+11/27/2018 10:18:29 PM: pGetModelFilingStatusAvailable ---> Invalid column name 'ID_FilingStatus'..

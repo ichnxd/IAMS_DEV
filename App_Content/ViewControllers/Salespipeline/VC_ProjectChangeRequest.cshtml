@@ -1,0 +1,667 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_ProjectChangeRequest = function () { }
+
+        VC_ProjectChangeRequest.prototype = Object.create(Base.prototype);
+
+        VC_ProjectChangeRequest.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+
+        }
+
+        VC_ProjectChangeRequest.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+            
+            if (_.ID_ViewType == 2) {
+
+                VC_ProjectChangeRequest_ViewDetail_Init(_,VC);
+
+                VC.ProjectChangeRequest_Details_onColumnChanged = function (e) {
+
+                    _.Compute();
+                }
+            }
+
+        }
+
+        var VC_ProjectChangeRequest_ViewDetail_Init = function(_,VC)  {
+
+
+            VC.ValidationRules.push(function () {
+
+                var brokenRules = [];
+
+                if(VC.$scope.CurrentObject.ProjectChangeRequest_Details == null || VC.$scope.CurrentObject.ProjectChangeRequest_Details == undefined){
+
+                    VC.$scope.CurrentObject.ProjectChangeRequest_Details = [];
+                }
+
+                if (VC.$scope.CurrentObject.ID_SalesOrder == null || VC.$scope.CurrentObject.ID_SalesOrder === 0) {
+
+                    brokenRules.push('Please select Active Sales Order record.');
+                }
+
+                if (VC.$scope.CurrentObject.ID_ReasonType == null || VC.$scope.CurrentObject.ID_ReasonType === 0) {
+
+                    brokenRules.push('Reason is required.');
+                }
+
+
+                VC.$scope.CurrentObject.ProjectChangeRequest_Details.forEach(function(detail) {
+
+                    if(detail.ID_NewItem == 0 || detail.ID_NewItem == null){
+
+                        brokenRules.push('Please select new Item for '+ detail.ItemDescription_Old + '.');
+                    }else{
+
+                        if(detail.UnitPrice == 0 && detail.IsFree != true){
+
+                            brokenRules.push('Unit Price is required for item .' + detail.ItemDescription_New + '.');
+
+                            console.log(detail);
+                        }
+                    }
+
+                });
+
+
+                if(VC.$scope.CurrentObject.ProjectChangeRequest_Details.length == 0 ){
+
+                    brokenRules.push('Sales Order Item record is required.');
+                }
+
+
+                if (brokenRules.length > 0) {
+                    return {
+                        isValid: false,
+                        brokenRules: brokenRules
+                    }
+                }
+
+                return { isValid: true };
+
+            });
+
+            var fBrowseItemFromSalesOrder = function(){
+
+                var query = '@Html.EncryptSQL(@"SELECT * FROM vSalesOrder_Detail_QtyBalance_NonLabor WHERE ID_SalesOrder = @ID_SalesOrder AND ID_SalesOrder_Detail NOT IN (@ID_SO_Details)  AND ID NOT IN ( SELECT    ID_SalesOrder_Detail  FROM vUsedSODetIDsByPCR WHERE ID_ProjectChangeRequest <> @ID_PCR )  ")';
+
+                VC.BrowseDataSet(query, {
+                    title: 'Select Sales Order Items',
+                    ID_View: '3488D60C-637F-4209-B53D-DF5DCB60CD7F',
+                    width: '78%',
+                    params: {
+                        'ID_PCR': VC.$scope.CurrentObject.ID,
+                        'ID_SO_Details': AcctHelper.fGetSelectedObjectValuesNumeric(VC.$scope.CurrentObject.ProjectChangeRequest_Details,'ID_SalesOrder_Detail') ,
+                        'ID_SalesOrder': VC.$scope.CurrentObject.ID_SalesOrder
+                    }
+                }).then(function (SelectedItems) {
+
+                    $.each(SelectedItems, function (i, record) {
+
+                        var newDetail = {
+
+                            ID: _.rndID(),
+                            ID_SalesOrder_Detail : record.ID,
+                            ID_OldItem: record.ID_Item,
+                            ItemDescription_Old : record.Item,
+                            ItemBrand_Old: record.Brand,
+                            ItemModelCode_Old: record.ModelCode,
+                            ItemQty_Old: record.Balance,
+                            ID_ItemCategory_Old: record.ID_ItemCategory,
+                            ID_Brand_Old: record.ID_Brand,
+                            IsFree: record.IsFree
+                        };
+
+                        VC.$scope.CurrentObject.ProjectChangeRequest_Details.push(newDetail);
+                   
+                    });
+
+                    _.Compute();
+                });
+            }
+
+            var fRemoveOpenDetail = function(items){
+                
+                var index = -1;
+            
+
+                items.forEach(function(detail,i) {
+
+                 
+                    if(detail.text == 'Open Detail'){
+
+                        index = i;
+                    }
+                });
+
+                console.log(index);
+
+                if(index > -1){
+
+                    items.splice( index, 1 );
+                }
+            };
+
+            VC.onContextMenuPreparing_ProjectChangeRequest_Details = function (e) {
+
+                fRemoveOpenDetail(e.items);
+
+                if(e.row != undefined){
+
+                    e.items.unshift({
+                        text: "Change Item",
+                        icon: "mdi mdi-menu",
+                        onItemClick: function () {
+
+                            var options = {
+
+                                VC: VC,
+                                ID_Brand_Old:  e.row.key.ID_Brand_Old,
+                                ID_ItemCategory_Old: e.row.key.ID_ItemCategory_Old,
+                                ID_ProjectChangeRequest_Detail: e.row.key.ID
+                            };
+                    
+                            fBrowseItemByBrand(options);
+                        
+                            _.Compute();
+                        }
+                    });
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('ProjectChangeRequest_Details', {
+                text: 'Add Item',
+                icon: 'mdi mdi-package-variant',
+                onClick: fBrowseItemFromSalesOrder
+            });
+     
+        }
+
+        var fBrowseItemByBrand = function(options){
+            console.log('options',options);
+            var VC = options.VC;
+            var ID_Brand_Old = options.ID_Brand_Old;
+            var ID_ItemCategoryOld = options.ID_ItemCategory_Old;
+            var ID_ProjectChangeRequest_Detail = options.ID_ProjectChangeRequest_Detail;
+
+            var fGetProjectChangeRequest_Detail_By_ID = function(ID){
+
+                var pcrDetails = Enumerable.From( VC.$scope.CurrentObject.ProjectChangeRequest_Details).Where("$.ID == " + ID.toString()).ToArray();
+                var pcrDetail;
+
+                if(pcrDetails.length > 0){
+
+                    pcrDetail = pcrDetails[0];
+                }
+                return pcrDetail;
+            };
+
+            var pcrDetail = fGetProjectChangeRequest_Detail_By_ID(ID_ProjectChangeRequest_Detail);
+            if(pcrDetail == null) return false;
+
+            var query = '@Html.EncryptSQL(@"SELECT ID, Code, ModelCode, SupplierCode,  Name, Brand, PrimaryUOM, IsSerialized, ID_ItemCategory FROM vItem WHERE CONVERT(DATE,LastTransactionDate ) BETWEEN CONVERT(DATE,DATEADD(yy,-2,GETDATE())) AND CONVERT(DATE,GETDATE()) AND ID <> @ID_Item AND ID_ItemGroup = @IDItemCategoryOld")';
+
+            VC.BrowseDataSet(query, {
+                title: 'Select Item',
+                ID_View: '0B1B507C-63C2-4072-800B-98BAB935B8FB',
+                width: '80%',
+                params: {
+
+                    'IDItemCategoryOld' : ID_ItemCategoryOld,
+                    'ID_Item': pcrDetail.ID_OldItem,
+                }
+            }).then(function (SelectedItems) {
+
+                $.each(SelectedItems, function (i, record) {
+
+                    pcrDetail.ID_NewItem = record.ID,
+                    pcrDetail.ItemDescription_New = record.Name,
+                    pcrDetail.ItemBrand_New = record.Brand,
+                    pcrDetail.ItemModelCode_New = record.ModelCode,
+                    pcrDetail.ItemQty_New =  pcrDetail.ItemQty_Old,
+                    pcrDetail.ID_Brand_New = record.ID_Brand
+                    pcrDetail.ID_ItemCategory_New = record.ID_ItemCategory
+                });
+
+                
+                VC.GetGridEditor('ProjectChangeRequest_Details').refresh();
+            });
+        }
+
+        VC_ProjectChangeRequest.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_ProjectChangeRequest.prototype.Compute = function () {
+
+            Base.prototype.Compute.call(this);
+            
+            var VC = this.VC;
+            var _ = this;
+
+            $.each(VC.$scope.CurrentObject.ProjectChangeRequest_Details, function (i, record) {
+
+                if(record.UnitPrice == null) record.UnitPrice = 0;
+
+                record.Amount = record.UnitPrice * record.ItemQty_Old;
+
+                console.log(record);
+            });
+        }
+
+        VC_ProjectChangeRequest.prototype.onCurrentObjectChanged = function (e) {
+
+            Base.prototype.onCurrentObjectChanged.call(this, e);
+
+            var VC = this.VC;
+            var _ = this;
+
+            if (e.dataField === 'ID_SalesOrder') _ID_SalesOrder_onCurrentObjectChanged(e, VC);
+        }
+
+        var _ID_SalesOrder_onCurrentObjectChanged = function(e, VC){
+            
+            if(VC.$scope.CurrentObject.$dirty == true){
+
+                VC._DeletedItems['ProjectChangeRequest_Details'] = Enumerable.From(VC.$scope.CurrentObject.ProjectChangeRequest_Details).Where("$.ID > 0").ToArray()
+                VC.$scope.CurrentObject.ProjectChangeRequest_Details = [];
+            }
+
+            if (e.value != null) {
+
+                var ID_SalesOrder = VC.$scope.CurrentObject.ID_SalesOrder;
+
+                var query = '@Html.EncryptSQL("Select * From vSalesOrder_SalesEndorsemennt WHERE ID_SalesOrder = @ID_SalesOrder")';
+
+                VC.Query(query, {
+                    params:{
+
+                        'ID_SalesOrder': ID_SalesOrder,
+                    }
+                }).then(function (result) {
+               
+                   $.each(result, function (i, record) {
+                    
+                        VC.$scope.CurrentObject.SEFNo = record.SEFNo;
+                        VC.$scope.CurrentObject.Trade = record.Trade;
+                        VC.$scope.CurrentObject.Branch = record.Branch;
+                    });
+
+                });
+
+            }else{
+
+                //Reset Fields for Sales Endorsement
+                VC.$scope.CurrentObject.SEFNo = '';
+                VC.$scope.CurrentObject.Trade = '';
+                VC.$scope.CurrentObject.Branch = '';
+
+                console.log(VC._DeletedItems);
+            }
+        }
+
+        VC_ProjectChangeRequest.prototype.onLoad = function () {
+
+			Base.prototype.onLoad.call(this);
+
+			var _ = this;
+			var VC = _.VC;
+
+            if (_.ID_ViewType == 2) {
+
+                var gridSODetail =  VC.GetGridEditor('ProjectChangeRequest_Details');
+
+                var cellTemplate = function (container, options) {
+
+                    console.log(options.row);
+                    
+                    $('<div />').dxButton({
+                        text:'...',
+                        type: '',
+                        elementAttr:{
+                            'class':'btn-delete-grid-row',
+                        },
+                        onClick: function (e) {
+
+                            var _options = {
+
+                                VC: VC,
+                                ID_Brand_Old: options.row.key.ID_Brand_Old,
+                                ID_ItemCategory_Old: options.row.key.ID_ItemCategory_Old,
+                                ID_ProjectChangeRequest_Detail: options.row.key.ID
+                            };
+                      
+                            fBrowseItemByBrand(_options);
+                        }
+                    }).appendTo(container);
+                };
+
+                gridSODetail.columnOption('Code', 'caption', 'Change')
+                gridSODetail.columnOption('Code', 'cellTemplate', cellTemplate)
+            }
+
+        }
+        
+
+
+        
+        var USERGROUP_DEVELOPER = 2;
+        var USERGROUP_PROJECT_MANAGER = 3;
+        var USERGROUP_BUSINESSN_UNIT_HEAD = 4;
+        var USERGROUP_BUSINESSN_UNIT_MANAGER = 5;
+        var EMPLOYEEPOSITION_ADMINISTRATIVE_ASSISTANT_FOR_SALES = 8;
+
+        var FILTER_VALUE_ALL = -2;
+        var FILTER_VALUE_MYPCR = -1;
+        var FILTER_VALUE_CurrentEmployee = -1;
+
+        VC_ProjectChangeRequest.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+
+            var SQL_AccountExecutive = '';
+            var SQL_BusinessUnit = '';
+
+            switch (VC.CurrentUser.ID_UserGroup) {
+
+                case USERGROUP_BUSINESSN_UNIT_HEAD:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+                    break;
+                case USERGROUP_BUSINESSN_UNIT_MANAGER:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1 AND (ID = @CreatedBy_ID_Employee OR ID_CreatedBy = @ID_CreatedBy)")';
+                    break;
+                default:
+                    SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1")';
+                    break;
+            }
+
+            if(VC.CurrentUser.ID_Position == EMPLOYEEPOSITION_ADMINISTRATIVE_ASSISTANT_FOR_SALES){
+
+                SQL_AccountExecutive = '@Html.EncryptSQL("SELECT ID, Name FROM vAccountExecutives WHERE isActive = 1 AND ID_BusinessUnit = @ID_BusinessUnit")';
+            }
+
+            if  (
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_DEVELOPER || 
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_PROJECT_MANAGER || 
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_BUSINESSN_UNIT_HEAD || 
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_BUSINESSN_UNIT_MANAGER ||
+                    VC.CurrentUser.ID_Position == EMPLOYEEPOSITION_ADMINISTRATIVE_ASSISTANT_FOR_SALES 
+                ) {
+
+                var fGet_VC_Employee_DefaultValue = function(){
+
+                    var value = 0;
+
+                    //Developer, PM and QA Test
+                    if  (
+                        VC.CurrentUser.ID_UserGroup == USERGROUP_DEVELOPER || 
+                        VC.CurrentUser.ID_UserGroup == USERGROUP_PROJECT_MANAGER
+                    ) {
+
+                        value = FILTER_VALUE_ALL;
+                    }else if(VC.CurrentUser.ID_UserGroup == USERGROUP_BUSINESSN_UNIT_MANAGER){
+
+                        value = FILTER_VALUE_MYPCR;
+                    }else if(
+                        VC.CurrentUser.ID_UserGroup == USERGROUP_BUSINESSN_UNIT_HEAD || 
+                        VC.CurrentUser.ID_Position == EMPLOYEEPOSITION_ADMINISTRATIVE_ASSISTANT_FOR_SALES
+                    ){
+
+                        value = FILTER_VALUE_ALL;
+                    }         
+
+                    return value;
+                };
+
+
+                var defaultItems = [];
+
+                defaultItems.push(
+                    {
+                        ID: -1,
+                        Name: 'My PCR'
+                    },
+                );
+
+                if(fGet_VC_Employee_DefaultValue() == FILTER_VALUE_ALL){
+
+                    defaultItems.push(
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                    );
+                }
+                
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'BDM',
+                    SQL: SQL_AccountExecutive,
+                    params: {
+                        'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit
+                    },
+                    width: 120,
+                    defaultItems: defaultItems,
+                    value: fGet_VC_Employee_DefaultValue()
+                });
+
+                if (
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_DEVELOPER || 
+                    VC.CurrentUser.ID_UserGroup == USERGROUP_PROJECT_MANAGER
+                ) {
+                    VC.AddActionFilter({
+                        name: 'VC_BusinessUnit',
+                        caption: 'BU',
+                        SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vBusinessUnit WHERE isActive = 1")',
+                        width: 100,
+                        defaultItems: [
+                            {
+                                ID: -1,
+                                Name: '(All)'
+                            }
+                        ],
+                        value: -1
+                    });
+                }
+            }
+
+        }
+        
+        VC_ProjectChangeRequest.prototype.onCollectionSource_Load = function (data) {
+
+            Base.prototype.onCollectionSource_Load.call(this, data);
+
+            var _ = this;
+            var VC = this.VC;
+            var VC_Stages = VC.ActionFilters.VC_Stages;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+            var ID_BusinessUnit = VC_BusinessUnit;
+
+            var VC_Employee = VC.ActionFilters.VC_Employee;
+            var VC_BusinessUnit = VC.ActionFilters.VC_BusinessUnit;
+
+            if (ID_BusinessUnit == undefined) ID_BusinessUnit = 0;
+
+
+            console.log('VC_BusinessUnit',VC_BusinessUnit);
+            console.log('VC_Employee',VC_Employee);
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (ID_UserGroup == USERGROUP_DEVELOPER ||  ID_UserGroup == USERGROUP_PROJECT_MANAGER ) { 
+
+                if (VC_BusinessUnit !== -1 ) WhereCriteria.push("ID_BusinessUnit = " + VC_BusinessUnit);
+
+                if (VC_Employee != FILTER_VALUE_ALL ) {
+
+                    if (VC_Employee == FILTER_VALUE_CurrentEmployee ) WhereCriteria.push("CreatedBy_ID_Employee = " +  VC.CurrentUser.ID_Employee);
+                    if (VC_Employee != FILTER_VALUE_CurrentEmployee ) WhereCriteria.push("CreatedBy_ID_Employee = " +  VC_Employee);
+                }
+            }
+            else if (ID_UserGroup == USERGROUP_BUSINESSN_UNIT_HEAD || VC.CurrentUser.ID_Position == EMPLOYEEPOSITION_ADMINISTRATIVE_ASSISTANT_FOR_SALES ) { 
+
+                WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit);
+
+                if (VC_Employee != FILTER_VALUE_ALL ) {
+
+                    if (VC_Employee == FILTER_VALUE_CurrentEmployee ) WhereCriteria.push("CreatedBy_ID_Employee = " +  VC.CurrentUser.ID_Employee);
+                    if (VC_Employee != FILTER_VALUE_CurrentEmployee ) WhereCriteria.push("CreatedBy_ID_Employee = " +  VC_Employee);
+                }
+
+            }else if (ID_UserGroup == USERGROUP_BUSINESSN_UNIT_MANAGER) {
+
+
+                WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit);
+                WhereCriteria.push("CreatedBy_ID_Employee = " + VC.CurrentUser.ID_Employee);
+            }
+
+
+            ///
+            var filterValue = VC.ActionFilters.VC_StatusFilter == undefined ? -2 : VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (filterValue < 0) {
+                switch ( filterValue) {
+                    case -2:
+                        WhereCriteria.push("ID_FilingStatus <> 7"); //Cancelleds
+                        break;
+                    case -3:
+                        WhereCriteria.push("ID_FilingStatus NOT IN (7,10, 38, 37,2,36)");
+                        break;
+                }
+            } else {
+                WhereCriteria.push("ID_FilingStatus = " + filterValue) //Cancelled
+            }
+
+            ///
+        }
+
+        var fOpenSOTab = function(JsDataService, ID_SalesOrder){
+
+            JsDataService.pGetCurrentObject('@Html.EncryptSQL("pGetSalesOrder")',
+            {
+                'ID': ID_SalesOrder,
+            }
+            ).then(function (SalesOrder) {
+
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    ID_ViewType: 2,
+                    ViewID: 3126,
+                    CurrentObject: SalesOrder,
+                    params: {
+                        saveOnLoad: true
+                    }
+                });
+
+            });
+
+        }
+
+        VC_ProjectChangeRequest.prototype.Approve = function (Items) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            var IDs = Enumerable.From(Items).Select('$.ID').ToArray();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProjectChangeRequestApprove")',
+                {
+                    'IDs': IDs,
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+
+                VC.ToastSuccess('Successfully Approved.');
+
+                if (_.ID_ViewType == 2) {
+
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+
+                // Enumerable.From(Items).ToArray().forEach(function(SO) {
+
+                //     fOpenSOTab(JsDataService, SO.ID_SalesOrder);
+                // });
+
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+        VC_ProjectChangeRequest.prototype.Cancel = function (Items,Reason) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+ 
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProjectChangeRequestCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'Reason': Reason,
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                VC.ToastSuccess('Successfully Cancelled');
+
+                if (_.ID_ViewType == 2) {
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+
+                // Enumerable.From(Items).ToArray().forEach(function(SO) {
+
+                //     fOpenSOTab(JsDataService, SO.ID_SalesOrder);
+                // });
+
+                defer.resolve();
+            }, function () {
+                VC.ToastError('An error occured!');
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+
+        return VC_ProjectChangeRequest;
+    });
+//</script>
+</text> , false )

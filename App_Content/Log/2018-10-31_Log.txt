@@ -1,0 +1,11 @@
+10/31/2018 10:46:35 AM: _pGetDataSet ---> Invalid column name 'IsOnGrid'..
+10/31/2018 4:38:18 PM:  ---> Cannot insert the value NULL into column 'IsFree', table 'IAMS_20181015_9388_DEV.dbo.tSalesOrder_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/31/2018 4:40:41 PM:  ---> Cannot insert the value NULL into column 'IsFree', table 'IAMS_20181015_9388_DEV.dbo.tSalesOrder_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/31/2018 4:40:51 PM:  ---> Cannot insert the value NULL into column 'IsFree', table 'IAMS_20181015_9388_DEV.dbo.tSalesOrder_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/31/2018 4:41:54 PM:  ---> Cannot insert the value NULL into column 'IsFree', table 'IAMS_20181015_9388_DEV.dbo.tSalesOrder_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/31/2018 4:42:59 PM:  ---> Cannot insert the value NULL into column 'IsFree', table 'IAMS_20181015_9388_DEV.dbo.tSalesOrder_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

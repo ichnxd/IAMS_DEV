@@ -1,0 +1,264 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var DashboardView = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            this.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            var _ = this;
+
+        $scope.Onclick = function(Module)
+        {
+            
+            switch(Module)
+            {
+                case 1: $scope.ARGridOption = $scope.POGridOption
+                break;
+
+                case 2: $scope.ARGridOption = $scope.POGridOption
+                break;
+            }
+
+            $scope.GetARData(Module)
+                
+        }
+
+        $scope.dataSource = [];
+
+        $scope.POGridOption = {
+                 title: 'Unserved Documents',
+                 color: '#000',
+                 size: '150%',
+                 height: '350',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.dataSource,
+                 columns:[
+                        { dataField: 'ID', dataType: 'string' },
+                        { dataField: 'DocumentNo', dataType: 'string'},
+                        { dataField: 'Date', dataType: 'Date', caption: 'Date'},
+                        { dataField: 'TotalAmount', dataType: 'number', caption: 'Total Amount' , format:'fixedPoint',  precision: 2}
+                ] 
+         }
+        
+        $scope.ARGridOption = $scope.POGridOption
+
+        $scope.GetARData = function(Module)
+        {
+         var JsDataService = app.$GetDataService();
+         JsDataService.pGetCurrentObject('@Html.EncryptSQL("pGetARData")',
+         {
+                'Model': Module
+         }).then(function (data) {
+             
+                    $scope.dataSource.length = 0;
+                    $.each(angular.copy(data.Data),function(i,item){
+                    $scope.dataSource.push(item);
+                    });
+             
+              var RefreshGrid = $('#ARGrid').dxDataGrid('instance');
+                     if(RefreshGrid !== undefined){
+                         RefreshGrid.refresh();
+                     }
+
+             })
+        }
+        
+        
+        var JsDataService = app.$GetDataService();
+        JsDataService.pGetCurrentObject('@Html.EncryptSQL("pGetARTotal")',
+            {
+                'Model': 1
+            }).then(function (data) {
+                    $scope.PurchaseOrder = data.POTotal; 
+                    $scope.ReceivingReport = data.RRTotal;
+                    $scope.VouchersPayable = data.VPTotal;
+                    $scope.PaymentVoucher = data.PVTotal;
+             })
+        //-- Purchase Order
+        $scope.POSummaryDataSource = [];
+        $scope.POSummaryGridOption = {
+                 title: 'PO Summary',
+                 color: '#000',
+                 size: '130%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.POSummaryDataSource,
+                 columns:[
+                        { dataField: 'Name', dataType: 'string' },
+                        { dataField: 'Total', dataType: 'number'}
+                ] 
+         }
+         //-- RR
+        $scope.RRSummaryDataSource = [];
+        $scope.RRSummaryGridOption = {
+                 title: 'RR Summary',
+                 color: '#000',
+                 size: '130%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.RRSummaryDataSource,
+                 columns:[
+                        { dataField: 'Name', dataType: 'string' },
+                        { dataField: 'Total', dataType: 'number'}
+                ] 
+         }
+        //-- VP
+        $scope.VPSummaryDataSource = [];
+        $scope.VPSummaryGridOption = {
+                 title: 'VP Summary',
+                 color: '#000',
+                 size: '130%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.VPSummaryDataSource,
+                 columns:[
+                        { dataField: 'Name', dataType: 'string' },
+                        { dataField: 'Total', dataType: 'number'}
+                ] 
+         }
+
+        //-- PV
+        $scope.PVSummaryDataSource = [];
+        $scope.PVSummaryGridOption = {
+                 title: 'PV Summary',
+                 color: '#000',
+                 size: '130%',
+                 columnAutoWidth: true,
+                 rowAlternationEnabled: true,
+                 dataSource: $scope.PVSummaryDataSource,
+                 columns:[
+                        { dataField: 'Name', dataType: 'string' },
+                        { dataField: 'Total', dataType: 'number'}
+                ] 
+         }
+         
+         $scope.pgetARTotalSummary = function(Model){
+         var JsDataService = app.$GetDataService();
+         JsDataService.pGetCurrentObject('@Html.EncryptSQL("pgetARTotalSummary")',
+         {
+                'ID_Model': Model
+         }).then(function (data) {
+             switch(Model)
+             {
+                 case 1:
+                         $scope.POSummaryDataSource.length = 0;
+                         $.each(angular.copy(data.Data),function(i,item){
+                         $scope.POSummaryDataSource.push(item);
+                         });
+                     var RefreshGrid = $('#ARGrid').dxDataGrid('instance');
+                     if(RefreshGrid !== undefined){
+                         RefreshGrid.refresh();
+                     }
+                 break;   
+                 case 2:
+                         $scope.RRSummaryDataSource.length = 0;
+                         $.each(angular.copy(data.Data),function(i,item){
+                         $scope.RRSummaryDataSource.push(item);
+                         });
+                     var RefreshGrid = $('#ARGrid').dxDataGrid('instance');
+                    if(RefreshGrid !== undefined){
+                         RefreshGrid.refresh();
+                     }
+                 break;    
+                 case 3:
+                         $scope.VPSummaryDataSource.length = 0;
+                         $.each(angular.copy(data.Data),function(i,item){
+                         $scope.VPSummaryDataSource.push(item);
+                         });
+                     var RefreshGrid = $('#ARGrid').dxDataGrid('instance');
+                     if(RefreshGrid !== undefined){
+                         RefreshGrid.refresh();
+                     }
+                 break;               
+                 case 4:
+                         $scope.PVSummaryDataSource.length = 0;
+                         $.each(angular.copy(data.Data),function(i,item){
+                         $scope.PVSummaryDataSource.push(item);
+                         });
+
+                     var RefreshGrid = $('#ARGrid').dxDataGrid('instance');
+                     if(RefreshGrid !== undefined){
+                         RefreshGrid.refresh();
+                     }
+                    
+                 break;                      
+             }
+                      
+                       
+             })
+       }
+
+        $scope.Onclick(1);
+        $scope.POSummary =  $scope.POSummaryGridOption;
+        $scope.pgetARTotalSummary(1);
+        $scope.RRSummary =  $scope.RRSummaryGridOption
+        $scope.pgetARTotalSummary(2);
+        $scope.VPSummary =  $scope.VPSummaryGridOption
+        $scope.pgetARTotalSummary(3);
+        $scope.PVSummary =  $scope.PVSummaryGridOption
+        $scope.pgetARTotalSummary(4);
+        
+    var fruits = [
+    { fruit: '3M Philippines',consumed:5 },
+    { fruit: 'Advance Card Systems Ltd.', consumed: 10 },
+    { fruit: 'Aperture Trading Corp.', consumed: 15 },
+    { fruit: 'Azitsorog', consumed: 10 },
+    { fruit: 'Bridge Distribution Inc..', consumed: 15 },
+    { fruit: '3M Philippines',consumed:5 },
+    { fruit: 'Advance Card Systems Ltd.', consumed: 10 },
+    { fruit: 'Aperture Trading Corp.', consumed: 15 },
+    { fruit: 'Azitsorog', consumed: 10 },
+    { fruit: 'Bridge Distribution Inc..', consumed: 15 }
+    ];
+        $scope.PieOptions = {
+        dataSource: fruits,
+
+        commonSeriesSettings: {
+        argumentField: 'fruit'
+        },
+        series: [
+            { valueField: 'consumed' }
+        ]
+    }
+
+
+
+    var fruits = [
+     { fruit: 'PR', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'CS', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'PO', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'RR', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'VP', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'PV', approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8 },
+     { fruit: 'PRN',approved:10,FullyServed:5,PartiallyServed:4,FullyServed:3,Paid:2,PartiallyPaid:8}]
+
+     $scope.chartOptions = {
+        dataSource: fruits,
+        title: "AP Summary",
+        commonSeriesSettings: {
+            argumentField: 'fruit',
+            type: 'bar'
+        },
+        series: [
+            { valueField: 'approved' , title: 'Approved'},
+            { valueField: 'FullyServed' },
+            { valueField: 'PartiallyServed' },
+            { valueField: 'Paid' },
+            { valueField: 'PartiallyPaid' },
+        ]
+    }
+     }
+
+
+   
+        DashboardView.prototype = Object.create(BaseClass.prototype);
+
+        return DashboardView;
+    });
+//</script>
+</text> , false )

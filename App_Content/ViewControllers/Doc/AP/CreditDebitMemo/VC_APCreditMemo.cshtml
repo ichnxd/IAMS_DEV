@@ -1,0 +1,350 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+          "use strict"
+
+        var VC_APCreditMemo = function () {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'APCreditMemo_details';
+        }
+        
+        VC_APCreditMemo.prototype = Object.create(baseModelHelper.prototype);
+
+        //Initialization Start
+        VC_APCreditMemo.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            VC.AddButtonReport({
+                    Name: 'Credit Memo Form',
+                    ID_Report: 2052,
+                    requireSingleObject: true
+            });
+
+            if (_.ID_ViewType == 2) {
+
+                VC_APCreditMemo_ViewDetail_Init(_,VC);
+                VC_APCreditMemo_ViewDetail_Init_Validation(_,VC);
+            }
+
+            _.IsAddItemDisabled = true;
+            _.IsDetailRequired = false;
+            
+        }
+
+        var VC_APCreditMemo_ViewDetail_Init = function(_,VC)
+        {
+
+            if (_.CurrentObject.APCreditMemo_details == undefined) {
+                _.CurrentObject.APCreditMemo_details = []
+            }
+
+            if (_.CurrentObject.APCreditMemo_details == null) {
+                _.CurrentObject.APCreditMemo_details = []
+            }
+
+            if (_.CurrentObject.APCreditMemo_Particulars == undefined) {
+                _.CurrentObject.APCreditMemo_Particulars = []
+            }
+
+            if (_.CurrentObject.APCreditMemo_Particulars == null) {
+                _.CurrentObject.APCreditMemo_Particulars = []
+            }
+
+            /**Temporary remove Add Item**/
+            var APCreditMemo_details_MenuOption  = VC.$scope.APCreditMemo_details_MenuOptions;
+            APCreditMemo_details_MenuOption.splice(0,1);
+            /**              END           **/
+
+            VC.AddToolBarButtonOnGrid('APCreditMemo_Particulars', 
+            {
+                text: 'Add Particular Entry',
+                icon: 'mdi mdi-package-variant',
+                onClick: function(){
+
+                    var newDetail  =
+                        {
+                                ID: _.rndID()
+                            ,   Particular: ''
+                            ,   Amount: 0.00
+                            ,   ID_APCreditMemo:  _.CurrentObject.ID
+                        };
+
+                        VC.$timeout(function(){
+                            
+                            VC.$scope.CurrentObject['APCreditMemo_Particulars'].push(newDetail);
+
+                            VC.GetGridEditor('APCreditMemo_Particulars').refresh();
+                                
+                        });
+                }          
+            }, true);
+
+        }
+        //Initialization End
+
+        var VC_APCreditMemo_ViewDetail_Init_Validation = function(_,VC)
+        {
+            
+            VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+                    if(_.CurrentObject.APCreditMemo_Particulars.length == 0){
+
+                        brokenRules.push('Insert a particular atleast one.')
+                    }
+
+                    $.each(_.CurrentObject.APCreditMemo_Particulars, function(i,particular){
+
+                        var ErrorMsg = 'The ';
+                        var ErrorMsgAmount = 'Particular';
+                        var ErrorMsgParticular = 'Amount';
+                        var isValidParticular = true;
+                        var isValidAmount = true;
+
+                        if(particular.Particular == ''){
+                            
+                            isValidParticular = false;
+                        }
+
+                        if(particular.Amount == 0  ){
+                            
+                            isValidAmount = false;
+                        }
+
+                        if(isValidAmount == false && isValidParticular ==false ){
+
+                            ErrorMsg += ' Particular and Amount are';
+                        }else if(isValidAmount == true && isValidParticular ==false){
+
+                            ErrorMsg += ' Particular is';
+                        }else{
+                            ErrorMsg += ' Amount is';
+                        }
+
+                        if(isValidAmount == false || isValidParticular ==false ){
+                            
+                            ErrorMsg += ' required at row ' + (i + 1).toString() + '.';
+
+                            brokenRules.push(ErrorMsg)
+                        }
+
+                    });
+
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+            });
+        }
+
+
+        VC_APCreditMemo.prototype.onLoad = function(){
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+            
+            if (_.ID_ViewType == 2) {
+
+                if (_.CurrentObject.APCreditMemo_details == undefined) {
+                    _.CurrentObject.APCreditMemo_details = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_details == null) {
+                    _.CurrentObject.APCreditMemo_details = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_Particulars == undefined) {
+                    _.CurrentObject.APCreditMemo_Particulars = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_Particulars == null) {
+                    _.CurrentObject.APCreditMemo_Particulars = []
+                }
+          
+            }
+
+            _.butCancel.IsDisabled = function () {
+            
+                var _isCanCancel = _.IsCanCancel();
+
+                if (_.ID_ViewType == 2) {
+
+                    if(_isCanCancel == false) {
+
+                        if(_.CurrentObject.ID_FilingStatus == 21){
+
+                            _isCanCancel = true;
+                        }
+                    }
+
+                }else{
+                        
+
+                
+                }
+
+                return _isCanCancel;
+            }
+           
+        }
+
+        //
+        VC_APCreditMemo.prototype.onCurrentObjectChanged = function (e) {
+  
+             this.Compute();
+        }
+        //
+
+
+        //Computation Start
+        VC_APCreditMemo.prototype.Compute = function () {
+
+            var _ = this;
+            var VC = this.VC;
+
+            if (this.ID_ViewType == 2) {
+
+                if (_.CurrentObject.APCreditMemo_details == undefined) {
+                    _.CurrentObject.APCreditMemo_details = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_details == null) {
+                    _.CurrentObject.APCreditMemo_details = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_Particulars == undefined) {
+                    _.CurrentObject.APCreditMemo_Particulars = []
+                }
+
+                if (_.CurrentObject.APCreditMemo_Particulars == null) {
+                    _.CurrentObject.APCreditMemo_Particulars = []
+                }
+
+                var EWTAmt = 0.00;
+                var TotalVat = 0.00;
+                var TotalAmt = 0.00;
+                var Subtotal = 0.00;
+
+                if (_.CurrentObject.APCreditMemo_details !== null) {
+
+                    $.each(_.CurrentObject.APCreditMemo_details, function (i, detail) {
+
+                        Subtotal += detail.GrossAmount;
+                        TotalAmt += detail.TotalAmount;
+                        TotalVat += detail.VATAmount;
+                    });
+                }
+
+
+                if (_.CurrentObject.APCreditMemo_Particulars !== null) {
+
+                    $.each(_.CurrentObject.APCreditMemo_Particulars, function (i, detail) {
+
+                        Subtotal += detail.Amount;
+                        TotalAmt += detail.Amount;
+
+                    });
+                }
+
+                _.CurrentObject.TotalVat = TotalVat;
+                _.CurrentObject.Subtotal = Subtotal;
+                _.CurrentObject.TotalAmount = TotalAmt;
+
+            }
+    
+        }
+        //Computation End
+
+
+        VC_APCreditMemo.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            VC.APCreditMemo_details_onColumnChanged = function (e) {
+                _.Compute();
+            };
+
+            VC.APCreditMemo_Particulars_onColumnChanged = function (e) {
+                _.Compute();
+            };
+        }
+
+        VC_APCreditMemo.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_APCreditMemo.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPCreditMemoApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+  
+
+        VC_APCreditMemo.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPCreditMemoCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_APCreditMemo;
+
+    });
+//</script>
+</text> , false);
+
+
+

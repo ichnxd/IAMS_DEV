@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Purchasing Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="Total PO Amount by Month" DataSource="dashboardOlapDataSource1" FilterString="[DataItem2] In ('[DimFilingStatus].[Filing Status].&amp;[Approved]', '[DimFilingStatus].[Filing Status].&amp;[Paid]', '[DimFilingStatus].[Filing Status].&amp;[Partial]', '[DimFilingStatus].[Filing Status].&amp;[Partially Paid]')">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" UniqueName="DataItem2" />
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" SortOrder="None" ColoringMode="Hue" UniqueName="DataItem0" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension UniqueName="DataItem2" />
+      </HiddenDimensions>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+    </Chart>
+    <Chart ComponentName="chartDashboardItem2" Name="TOP 5 Purchase Item by Month" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimItem].[ItemName].[ItemName]" ColoringMode="Hue" TopNEnabled="true" TopNMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Line Total]" UniqueName="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX Visible="false" EnableZooming="true" />
+    </Chart>
+    <Chart ComponentName="chartDashboardItem3" Name="TOP 5 Suppliers" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" ColoringMode="Hue" TopNEnabled="true" TopNMeasure="DataItem2" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem2" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem2" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX Visible="false" EnableZooming="true" />
+    </Chart>
+    <Pivot ComponentName="pivotDashboardItem1" Name="Pivot 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[Total Qty]" UniqueName="DataItem4" />
+        <Dimension DataMember="[DimPurchaseOrder].[PONumber].[PONumber]" SortOrder="Descending" SortByMeasure="DataItem2" UniqueName="DataItem1" />
+      </DataItems>
+      <Rows>
+        <Row UniqueName="DataItem0" />
+        <Row UniqueName="DataItem1" />
+      </Rows>
+      <Values>
+        <Value UniqueName="DataItem4" />
+        <Value UniqueName="DataItem2" />
+      </Values>
+    </Pivot>
+  </Items>
+  <ColorScheme>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-4567727">
+      <DimensionKeys>
+        <DimensionKey>
+          <Definition DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" />
+          <Value Type="System.String" Value="[DimPurchaseOrder].[FilingStatus].&amp;[Approved]" />
+        </DimensionKey>
+      </DimensionKeys>
+    </Entry>
+  </ColorScheme>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="49.966420416386839">
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="49.966420416386839" />
+        <LayoutItem DashboardItem="pivotDashboardItem1" Weight="49.966420416386839" />
+      </LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="50.033579583613161">
+        <LayoutItem DashboardItem="chartDashboardItem2" Weight="50.033579583613161" />
+        <LayoutItem DashboardItem="chartDashboardItem3" Weight="50.033579583613161" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

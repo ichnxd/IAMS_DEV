@@ -1,0 +1,316 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','@BaseVCUrl'], function (app, Base) {
+
+        var VC_SalesTarget_Detail = function () { 
+            
+        }
+
+        
+        VC_SalesTarget_Detail.prototype = Object.create(Base.prototype);
+
+        VC_SalesTarget_Detail.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+             
+            var _ = this;
+
+          
+        }
+
+        VC_SalesTarget_Detail.prototype.onCurrentObjectSaved = function(CurrentObject){
+            
+            var _ = this;
+            var VC = _.VC;
+
+
+
+
+        };
+
+
+
+
+        VC_SalesTarget_Detail.prototype.onCurrentObjectChanged = function(e){
+            Base.prototype.onCurrentObjectChanged.call(e);
+              
+            var _ = this;
+            var VC = _.VC;    
+
+            if(e.dataField ==='Yearly'){
+                 if(_.CurrentObject.Yearly !== 0 && _.CurrentObject.Yearly !== null){
+                    var Yearly = _.CurrentObject.Yearly;
+                    var Monthly = Yearly / 12;
+                    var Quarterly = Yearly / 4;
+
+                    _.CurrentObject.Quarterly = Quarterly;
+                    _.CurrentObject.Monthly = Monthly
+                    _.CurrentObject.Q1 = Quarterly;
+                    _.CurrentObject.Q2 = Quarterly;
+                    _.CurrentObject.Q3 = Quarterly;
+                    _.CurrentObject.Q4 = Quarterly;
+                    _.CurrentObject.Month1 = Monthly;
+                    _.CurrentObject.Month2 = Monthly;
+                    _.CurrentObject.Month3 = Monthly;
+                    _.CurrentObject.Month4 = Monthly;
+                    _.CurrentObject.Month5 = Monthly;
+                    _.CurrentObject.Month6 = Monthly;
+                    _.CurrentObject.Month7 = Monthly;
+                    _.CurrentObject.Month8 = Monthly;
+                    _.CurrentObject.Month9 = Monthly;
+                    _.CurrentObject.Month10 = Monthly;
+                    _.CurrentObject.Month11 = Monthly;
+                    _.CurrentObject.Month12 = Monthly;
+                 }
+                 else{
+                     //_.CurrentObject.Yearly
+                    _.CurrentObject.Quarterly = 0;
+                    _.CurrentObject.Monthly = 0;
+                    _.CurrentObject.Q1 = 0;
+                    _.CurrentObject.Q2 = 0;
+                    _.CurrentObject.Q3 = 0;
+                    _.CurrentObject.Q4 = 0;
+                    _.CurrentObject.Month1 = 0;
+                    _.CurrentObject.Month2 = 0;
+                    _.CurrentObject.Month3 = 0;
+                    _.CurrentObject.Month4 = 0;
+                    _.CurrentObject.Month5 = 0;
+                    _.CurrentObject.Month6 = 0;
+                    _.CurrentObject.Month7 = 0;
+                    _.CurrentObject.Month8 = 0;
+                    _.CurrentObject.Month9 = 0;
+                    _.CurrentObject.Month10 = 0;
+                    _.CurrentObject.Month11 = 0;
+                    _.CurrentObject.Month12 = 0;
+                 }
+            }
+
+            if(e.dataField ==='Quarterly'){
+                 if(_.CurrentObject.Quarterly !== 0 && _.CurrentObject.Quarterly !== null){
+                     
+                    var Quarterly = _.CurrentObject.Quarterly;
+                    var Yearly = Quarterly * 4;
+                    var Monthly = Quarterly / 3;
+
+                    _.CurrentObject.Yearly = Yearly
+                    _.CurrentObject.Monthly = Monthly
+                    _.CurrentObject.Q1 = Quarterly;
+                    _.CurrentObject.Q2 = Quarterly;
+                    _.CurrentObject.Q3 = Quarterly;
+                    _.CurrentObject.Q4 = Quarterly;
+                    _.CurrentObject.Month1 = Monthly;
+                    _.CurrentObject.Month2 = Monthly;
+                    _.CurrentObject.Month3 = Monthly;
+                    _.CurrentObject.Month4 = Monthly;
+                    _.CurrentObject.Month5 = Monthly;
+                    _.CurrentObject.Month6 = Monthly;
+                    _.CurrentObject.Month7 = Monthly;
+                    _.CurrentObject.Month8 = Monthly;
+                    _.CurrentObject.Month9 = Monthly;
+                    _.CurrentObject.Month10 = Monthly;
+                    _.CurrentObject.Month11 = Monthly;
+                    _.CurrentObject.Month12 = Monthly;
+                 }
+                 else{
+                    _.CurrentObject.Yearly = 0;
+                    _.CurrentObject.Monthly = 0;
+                    _.CurrentObject.Q1 = 0;
+                    _.CurrentObject.Q2 = 0;
+                    _.CurrentObject.Q3 = 0;
+                    _.CurrentObject.Q4 = 0;
+                    _.CurrentObject.Month1 = 0;
+                    _.CurrentObject.Month2 = 0;
+                    _.CurrentObject.Month3 = 0;
+                    _.CurrentObject.Month4 = 0;
+                    _.CurrentObject.Month5 = 0;
+                    _.CurrentObject.Month6 = 0;
+                    _.CurrentObject.Month7 = 0;
+                    _.CurrentObject.Month8 = 0;
+                    _.CurrentObject.Month9 = 0;
+                    _.CurrentObject.Month10 = 0;
+                    _.CurrentObject.Month11 = 0;
+                    _.CurrentObject.Month12 = 0;
+                 }
+            }
+
+            if(e.dataField ==='Monthly'){
+                 if(_.CurrentObject.Monthly !== 0 && _.CurrentObject.Monthly !== null){
+
+                    var Monthly =  _.CurrentObject.Monthly;
+                    var Yearly = Monthly * 12;
+                    var Quarterly = Monthly * 3;
+
+                    _.CurrentObject.Quarterly = Quarterly;
+                    _.CurrentObject.Yearly = Yearly;
+                    _.CurrentObject.Q1 = Quarterly;
+                    _.CurrentObject.Q2 = Quarterly;
+                    _.CurrentObject.Q3 = Quarterly;
+                    _.CurrentObject.Q4 = Quarterly;
+                    _.CurrentObject.Month1 = Monthly;
+                    _.CurrentObject.Month2 = Monthly;
+                    _.CurrentObject.Month3 = Monthly;
+                    _.CurrentObject.Month4 = Monthly;
+                    _.CurrentObject.Month5 = Monthly;
+                    _.CurrentObject.Month6 = Monthly;
+                    _.CurrentObject.Month7 = Monthly;
+                    _.CurrentObject.Month8 = Monthly;
+                    _.CurrentObject.Month9 = Monthly;
+                    _.CurrentObject.Month10 = Monthly;
+                    _.CurrentObject.Month11 = Monthly;
+                    _.CurrentObject.Month12 = Monthly;
+                 }
+                 else{
+                    _.CurrentObject.Yearly = 0;
+                    _.CurrentObject.Quarterly = 0;
+                    _.CurrentObject.Q1 = 0;
+                    _.CurrentObject.Q2 = 0;
+                    _.CurrentObject.Q3 = 0;
+                    _.CurrentObject.Q4 = 0;
+                    _.CurrentObject.Month1 = 0;
+                    _.CurrentObject.Month2 = 0;
+                    _.CurrentObject.Month3 = 0;
+                    _.CurrentObject.Month4 = 0;
+                    _.CurrentObject.Month5 = 0;
+                    _.CurrentObject.Month6 = 0;
+                    _.CurrentObject.Month7 = 0;
+                    _.CurrentObject.Month8 = 0;
+                    _.CurrentObject.Month9 = 0;
+                    _.CurrentObject.Month10 = 0;
+                    _.CurrentObject.Month11 = 0;
+                    _.CurrentObject.Month12 = 0;
+                 }
+            }
+
+            if(e.dataField ==='Q1' || e.dataField ==='Q2' || e.dataField ==='Q3' || e.dataField ==='Q4'){
+
+                var Quarterly = null
+
+                if(e.dataField ==='Q1') Quarterly = _.CurrentObject.Q1;
+                if(e.dataField ==='Q2') Quarterly = _.CurrentObject.Q2;
+                if(e.dataField ==='Q3') Quarterly = _.CurrentObject.Q3;
+                if(e.dataField ==='Q4') Quarterly = _.CurrentObject.Q4;
+
+                 if(Quarterly !== 0 && Quarterly !== null){
+
+                    var Monthly = Quarterly / 3;          
+
+                    if(e.dataField ==='Q1'){
+                        _.CurrentObject.Month1 = Monthly;
+                        _.CurrentObject.Month2 = Monthly;
+                        _.CurrentObject.Month3 = Monthly;
+                    }
+                    if(e.dataField ==='Q2'){
+                        _.CurrentObject.Month4 = Monthly;
+                        _.CurrentObject.Month5 = Monthly;
+                        _.CurrentObject.Month6 = Monthly;
+                    }
+                    if(e.dataField ==='Q3'){
+                        _.CurrentObject.Month7 = Monthly;
+                        _.CurrentObject.Month8 = Monthly;
+                        _.CurrentObject.Month9 = Monthly;
+                    }
+                    if(e.dataField ==='Q4'){
+                        _.CurrentObject.Month10 = Monthly;
+                        _.CurrentObject.Month11 = Monthly;
+                        _.CurrentObject.Month12 = Monthly;
+                    }
+
+                 }
+                 else{
+
+                    if(e.dataField ==='Q1'){
+                        _.CurrentObject.Month1 = 0;
+                        _.CurrentObject.Month2 = 0;
+                        _.CurrentObject.Month3 = 0;
+                    }
+                    if(e.dataField ==='Q2'){
+                        _.CurrentObject.Month4 = 0;
+                        _.CurrentObject.Month5 = 0;
+                        _.CurrentObject.Month6 = 0;
+                    }
+                    if(e.dataField ==='Q3'){
+                        _.CurrentObject.Month7 = 0;
+                        _.CurrentObject.Month8 = 0;
+                        _.CurrentObject.Month9 = 0;
+                    }
+                    if(e.dataField ==='Q4'){
+                        _.CurrentObject.Month10 = 0;
+                        _.CurrentObject.Month11 = 0;
+                        _.CurrentObject.Month12 = 0;
+                    }
+                 }
+            }
+
+            if(e.dataField ==='Month1' || 
+               e.dataField ==='Month2' || 
+               e.dataField ==='Month3' || 
+               e.dataField ==='Month4' || 
+               e.dataField ==='Month5' || 
+               e.dataField ==='Month6' || 
+               e.dataField ==='Month7' || 
+               e.dataField ==='Month8' || 
+               e.dataField ==='Month9' || 
+               e.dataField ==='Month10' || 
+               e.dataField ==='Month11' || 
+               e.dataField ==='Month12' ){
+                   
+                return; // nag compute kasi ulit ung Quarterly
+                var Monthly = null
+
+                if(e.dataField ==='Month1') Monthly = _.CurrentObject.Month1;
+                if(e.dataField ==='Month2') Monthly = _.CurrentObject.Month2;
+                if(e.dataField ==='Month3') Monthly = _.CurrentObject.Month3;
+                if(e.dataField ==='Month4') Monthly = _.CurrentObject.Month4;
+                if(e.dataField ==='Month5') Monthly = _.CurrentObject.Month5;
+                if(e.dataField ==='Month6') Monthly = _.CurrentObject.Month6;
+                if(e.dataField ==='Month7') Monthly = _.CurrentObject.Month7;
+                if(e.dataField ==='Month8') Monthly = _.CurrentObject.Month8;
+                if(e.dataField ==='Month9') Monthly = _.CurrentObject.Month9;
+                if(e.dataField ==='Month10') Monthly = _.CurrentObject.Month10;
+                if(e.dataField ==='Month11') Monthly = _.CurrentObject.Month11;
+                if(e.dataField ==='Month12') Monthly = _.CurrentObject.Month12;
+                
+
+                if(Monthly == undefined && Monthly == null) Monthly = 0;
+                
+                if(e.dataField ==='Month1' || e.dataField ==='Month2' || e.dataField ==='Month3') {
+                    _.CurrentObject.Q1 = _.CurrentObject.Month1 + _.CurrentObject.Month2 + _.CurrentObject.Month3;
+                }
+                if(e.dataField ==='Month4' || e.dataField ==='Month5' || e.dataField ==='Month6') {
+                    _.CurrentObject.Q2 = _.CurrentObject.Month4 + _.CurrentObject.Month5 + _.CurrentObject.Month6;
+                }
+                if(e.dataField ==='Month7' || e.dataField ==='Month8' || e.dataField ==='Month9') {
+                    _.CurrentObject.Q3 = _.CurrentObject.Month7 + _.CurrentObject.Month8 + _.CurrentObject.Month9;
+                }
+                if(e.dataField ==='Month10' || e.dataField ==='Month11' || e.dataField ==='Month12') {
+                    _.CurrentObject.Q4 = _.CurrentObject.Month10 + _.CurrentObject.Month11 + _.CurrentObject.Month12;
+                }
+
+
+                 
+
+            }
+
+        }
+
+        VC_SalesTarget_Detail.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            
+
+            var _ = this;
+
+
+
+        
+        };
+    
+        return VC_SalesTarget_Detail;
+    });
+//</script>
+</text> , false )

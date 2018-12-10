@@ -1,0 +1,4 @@
+10/16/2018 3:02:56 PM: pCashAdvanceRequestRelease ---> Unable to Transact. Please approve your Previous DPCM.
+10/16/2018 6:48:26 PM: pCashAdvanceRequestRelease ---> Unable to Transact. Please approve your Previous DPCM.
+10/16/2018 6:53:41 PM: pCashAdvanceRequestRelease ---> Insufficient fund.
+10/16/2018 6:54:00 PM: pCashAdvanceRequestRelease ---> Insufficient fund.

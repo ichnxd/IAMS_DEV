@@ -1,0 +1,80 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = "~/Views/BaseView/BaseDashboardView.cshtml";
+}
+<style>
+	.dashboard .col-sm-3 {
+		color : white;
+		font-size: 15px;
+		text-align: center;
+	}
+</style>
+<div class="dashboard container">
+	  <div class="col-sm-6">
+		  <div style="font-size: 15px; color : black; text-align: center">Most Used Supplier</div>
+	 <div style="padding:10px" dx-pie-chart="PieOptions"></div>
+	 </div>
+	  <div class="col-sm-6">
+		  <div style="padding:10px" dx-chart="chartOptions"></div>
+	  </div>
+	
+	<!--<div class="row">
+		<div class = "col-sm-3">
+			<div style= "height : 75px ; background-color: #61bb46" ng-click = "Onclick(1)">Purchase Request <br> {{PurchaseOrder}} </div>
+			<div style= "height : 75px ;background-color : #fdb827" ng-click = "Onclick(1)">Canvass Sheet <br> {{PurchaseOrder}} </div>
+			<div style= "height : 75px ;background-color : #f5821f" ng-click = "Onclick(1)">Purchase Order  <br> {{PurchaseOrder}} </div>
+			<div style= "height : 75px ;background-color : #e03a3e" ng-click = "Onclick(2)">Receiving Report <br> {{ReceivingReport}}</div>
+			<div style= "height : 75px ;background-color : #963d97" ng-click = "Onclick(3)">Vouchers Payable <br> {{VouchersPayable}}</div>
+			<div style= "height : 75px ;background-color : #009ddc" ng-click = "Onclick(4)">Payment Voucher <br> {{PaymentVoucher}}</div>	
+			<div style= "height : 75px ;background-color : #F16A70" ng-click = "Onclick(4)">Purchase Return <br> {{PaymentVoucher}}</div>			
+
+			
+		</div>
+		<div class="col-md-9">
+			<div class="summary-caption" style="padding:10px 0 10px 0; color:{{ARGridOption.color}}; font-size:{{ARGridOption.size}}">
+			{{ARGridOption.title}}
+			</div>
+			<div id="ARGrid" dx-data-grid="ARGridOption"></div>
+			<div class = "col-sm-3"> 
+				<div style= "height : 60px ;background-color : #4D4D4D" >Purchase Orders<br> $0.00 </div>
+				<div style= "height : 60px ;background-color : #F16A70" >Pending PO Qty<br> 100 </div>
+			</div>	
+			<div class = "col-sm-3"> 
+				<div style= "height : 60px ;background-color : #4D4D4D" >Unpaid Receiving<br> $0.00 </div>
+			</div>			
+		</div>-->
+		<!--here -->
+		<!--<div class ="col-md-5">
+	   <div class ="row">
+		
+		<div class ="col-md-2">
+			<div class="summary-caption" style="padding:10px 0 10px 0; color:{{POSummary.color}}; font-size:{{POSummary.size}}">
+			{{POSummary.title}}
+			</div>
+			<div id="POGrid" dx-data-grid="POSummary"></div>
+
+			<div class="summary-caption" style="padding:10px 0 10px 0; color:{{PVSummary.color}}; font-size:{{PVSummary.size}}">
+			{{PVSummary.title}}
+			</div>
+			<div id="PVGrid" dx-data-grid="PVSummary"></div>
+		</div>
+		<div class = "col-md-2">
+			<div class="summary-caption" style="padding:10px 0 10px 0; color:{{RRSummary.color}}; font-size:{{POSummary.size}}">
+			{{RRSummary.title}}
+			</div>
+			<div id="RRGrid" dx-data-grid="RRSummary"></div>			
+		</div>
+		<div class ="col-md-2">
+			<div class="summary-caption" style="padding:10px 0 10px 0; color:{{VPSummary.color}}; font-size:{{VPSummary.size}}">
+			{{VPSummary.title}}
+			</div>
+			<div id="VPGrid" dx-data-grid="VPSummary"></div>			
+		</div>
+	</div>
+		</div>-->
+	<!--here -->
+	<!--</div>-->
+	
+	 
+</div>

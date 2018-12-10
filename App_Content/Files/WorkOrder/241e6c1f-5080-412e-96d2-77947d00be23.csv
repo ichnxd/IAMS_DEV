@@ -1,0 +1,761 @@
+Code,Quantity,Cost,Serial,Customer
+I000000954,1,44520,0MY1HTRHB00020,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100006,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100007,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100008,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100011,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100012,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100013,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100015,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100016,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100017,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100018,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100019,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRJ100020,PERF Restaurant Inc. - Burger King
+I000000954,1,44520,0MY1HTRHA00003,PERF Restaurant Inc. - Burger King
+I000000954,1,38000,0MY1HTJGC00017,"Globe Telecom, Inc."
+I000000954,1,38000,0MY1HTJGC00021,"Globe Telecom, Inc."
+I000000954,1,38000,0MY1HTRH600004D,"Globe Telecom, Inc."
+I000000954,1,38000,0MY1HTRHB00008,"Globe Telecom, Inc."
+I000000954,1,36000,03SDHNFJ300002,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300009,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300015,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300016,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300017,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300018,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300019,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300020,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300021,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300022,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300023,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300024,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300025,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300026,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300027,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300028,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300029,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300030,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300031,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300032,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300033,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300034,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300035,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300036,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300037,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300039,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300040,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300041,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300043,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300045,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300046,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300047,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300049,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300050,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300051,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300053,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300055,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300056,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300057,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300058,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300059,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300061,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300062,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300063,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300065,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300067,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300068,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300069,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300070,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300072,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300079,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300081,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300083,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300084,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300085,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300086,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300087,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300088,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300089,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300090,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300091,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300093,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300094,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,03SDHNFJ300098,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTJGC00014,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200001,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200002,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200003,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200004,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200005,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200006,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200007,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200008,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200009,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200010,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200011,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200012,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200013,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200015,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200016,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200018,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200020,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200021,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200022,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200023,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200024,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200025,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200026,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200027,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200028,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200029,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200030,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200031,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200032,"SM Lifestyle Entertainment, Inc."
+I000000954,1,36000,0MY1HTRJ200033,"SM Lifestyle Entertainment, Inc."
+I000001175,1,36575,03J4HNDJ400002,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400003,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400008,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400011,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400013,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400018,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400019,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400020,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400021,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400023,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400025,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400026,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400027,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400031,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400032,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400040,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400043,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400045,Goldilocks - Head Office
+I000001175,1,36575,03J4HNDJ400047,Goldilocks - Head Office
+I000001173,1,32200,03J7HNDJ200024,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200026,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200027,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200029,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200032,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200034,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200035,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200037,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200038,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200039,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200040,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200041,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200042,Intellismart Technology Inc.
+I000001173,1,32200,03J7HNDJ200043,Intellismart Technology Inc.
+I000001173,1,32200,0MX9HTRHA00028,Intellismart Technology Inc.
+I000000950,1,14500,02XVHNDJ400002,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400004,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400005,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400006,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400008,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400009,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400010,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400012,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400014,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400017,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400019,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400021,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400022,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400023,Motortrade Nationwide Corp.
+I000000950,1,14500,02XVHNDJ400024,Motortrade Nationwide Corp.
+I000000950,1,14500,0MXUHTRGC00029,Motortrade Nationwide Corp.
+I000000950,1,14500,0MXUHTRH600010,Motortrade Nationwide Corp.
+I000000950,1,14500,0MXUHTRJ100014,Motortrade Nationwide Corp.
+I000000950,1,14500,0MXUHTRJ100015,Motortrade Nationwide Corp.
+I000000950,1,20000,02XVHNDJ400001,"Fresh N' Famous Foods, Inc."
+I000000950,1,20000,02XVHNJ400013,"Fresh N' Famous Foods, Inc."
+I000000950,1,20000,02XVHNJ400016,"Fresh N' Famous Foods, Inc."
+I000000950,1,20000,02XVHNJ400020,"Fresh N' Famous Foods, Inc."
+I000000952,1,25000,03J3HNDJ200012,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ200016,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300021,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300027,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300032,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300034,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300039,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300052,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300058,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300059,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300083,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300118,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300120,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300121,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300131,Goldilocks - Head Office
+I000000952,1,25000,03J3HNDJ300136,Goldilocks - Head Office
+I000001892,1,11500,02203NDH900001,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900007,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900011,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900013,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900014,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900015,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900017,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900020,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900328,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900336,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900338,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900339,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900340,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900342,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900343,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900344,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900345,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900346,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900347,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900350,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900351,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900352,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900353,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900354,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900356,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900357,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900358,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900359,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900360,Alphaland Balesin Island Resort Corporation
+I000001892,1,11500,02203NDH900361,Alphaland Balesin Island Resort Corporation
+I000001892,1,11000,02203NAHB00001,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00003,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00004,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00005,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00006,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00008,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00009,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00010,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00013,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00015,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00017,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00020,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00022,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00023,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00024,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00026,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00028,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00029,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00030,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00031,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00032,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00033,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00034,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00035,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00036,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00037,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00038,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00039,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00040,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00041,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00042,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00043,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00044,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00045,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00046,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00047,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00048,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00049,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00050,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00051,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00053,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00054,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00055,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00057,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00058,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00059,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00060,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00061,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00063,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00064,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00067,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00068,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00070,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00071,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00072,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00073,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00074,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00075,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00076,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00077,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00079,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00081,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00083,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00086,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00087,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00088,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00089,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00090,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00091,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00092,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00096,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00098,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00106,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00108,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00110,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00111,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00112,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00113,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00114,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00119,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00122,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00124,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00125,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00126,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00127,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00128,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00129,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00130,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00131,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00133,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00134,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00135,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00142,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00143,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00144,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00145,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00146,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00148,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00149,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00150,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00152,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00156,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00157,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00159,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00161,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00162,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00163,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00164,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00165,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00166,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00167,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00168,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00169,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00170,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00171,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00172,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00173,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00174,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00175,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00176,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00177,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00178,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00179,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00180,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00181,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00182,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00183,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00184,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00185,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00188,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00189,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00190,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00191,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00192,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00193,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00194,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00195,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00196,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00197,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00198,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00199,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00200,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00201,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00202,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00205,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00206,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00207,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00209,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00210,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00211,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00212,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00213,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00214,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00216,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00217,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00219,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00220,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00221,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00222,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00224,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00227,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00230,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00232,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00235,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00237,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00240,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00242,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00243,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00248,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00251,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00252,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00254,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00256,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00257,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00261,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00262,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00263,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00264,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00265,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00266,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00267,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00269,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00271,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00272,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00273,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00275,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00277,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00278,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00279,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00281,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00283,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00284,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00285,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00287,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00288,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00290,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00292,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00295,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00296,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00297,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00298,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00299,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00301,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00303,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00304,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00305,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00307,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00308,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00309,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00310,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00311,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00312,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00313,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00315,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00316,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00317,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00318,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00319,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00322,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00323,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00324,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00325,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00326,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00331,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00333,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00334,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00335,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00338,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00339,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00340,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00341,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00342,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00343,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00344,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00346,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00347,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00348,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00349,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00350,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00351,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00352,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00353,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00354,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00355,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00356,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00357,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00358,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00359,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00360,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00361,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00363,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00364,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00366,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00368,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00369,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00372,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00373,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00376,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00378,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00379,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00381,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00383,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00384,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00386,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00388,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00390,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00391,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00394,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00396,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00397,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00399,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00400,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00401,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00402,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00403,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00404,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00407,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00408,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00409,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00410,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00412,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00416,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00418,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00419,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00420,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00421,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00423,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00424,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00425,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00426,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00427,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00432,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00434,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00436,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00437,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NAHB00438,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NDH900327,Roxaco Vanguard Hotels Corporation
+I000001892,1,11000,02203NDH900332,Roxaco Vanguard Hotels Corporation
+I000001897,1,16000,02213NAHA00012,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NAHA00014,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NAHA00024,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NAHA00025,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NAHA00042,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NDHB00001,Alphaland Balesin Island Resort Corporation
+I000001897,1,16000,02213NDHB00002,Alphaland Balesin Island Resort Corporation
+I000001905,1,19439.28,021V3NAHC00025,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00040,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00067,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00088,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00091,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00130,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00132,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00138,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00142,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00147,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00148,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00151,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00180,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00182,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00184,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00185,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00200,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00201,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00202,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00209,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00216,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00218,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00220,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00226,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00229,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00244,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00245,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00259,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00264,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00267,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00271,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00276,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00279,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00280,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00287,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00313,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00317,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00321,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00322,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00325,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00326,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00327,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00328,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00329,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00331,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00332,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00334,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00335,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00336,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00338,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00340,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00341,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00342,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00343,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00345,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00346,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00351,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00357,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00360,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00362,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00365,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00367,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00370,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00371,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAHC00375,"North Triangle Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400001,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400002,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400003,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400004,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400005,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400006,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400007,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400008,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400009,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400010,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400011,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400012,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400013,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400014,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400015,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400016,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400017,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400018,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400019,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400020,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400021,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400022,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400023,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400024,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400025,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400026,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400027,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400028,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400029,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400030,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400031,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400032,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400033,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400034,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400035,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400036,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400037,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400038,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400039,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400040,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400041,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400042,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400043,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400044,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400045,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400046,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400047,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400048,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400049,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400050,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400051,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400052,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400053,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400054,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400055,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400056,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400057,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400058,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400059,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400060,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400061,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400062,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400063,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400064,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400065,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400066,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400067,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400068,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400069,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400070,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400071,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400072,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400073,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400074,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400075,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400076,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400077,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400078,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400079,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400080,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400081,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400082,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400083,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400084,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400085,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400086,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400087,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400088,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400089,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400090,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400091,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400092,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400093,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400094,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400095,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400096,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400097,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400098,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400099,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400100,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400101,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400102,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400103,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400104,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400105,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400106,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400107,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400108,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400109,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400110,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400111,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400112,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400113,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400114,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400115,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400116,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400117,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400118,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400119,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400120,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400121,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400122,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400123,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400124,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400125,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400126,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400127,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400128,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400129,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400130,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400131,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400132,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400133,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400134,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400135,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400136,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400137,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400138,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400139,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400140,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400141,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400142,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400143,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400144,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400145,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400146,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400147,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400148,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400149,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400150,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400151,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400152,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400153,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400154,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400155,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400156,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400157,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400158,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,19439.28,021V3NAJ400159,"Capitol Central Hotel Ventures, Inc."
+I000001905,1,100,021V3NAJ400160,"Capitol Central Hotel Ventures, Inc."
+I000003890,1,37000,03NGHNFJ400001,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400002,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400003,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400004,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400005,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400007,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400008,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400010,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400014,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400015,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400016,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400017,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400019,China Banking Corporation
+I000003890,1,37000,03NGHNFJ400023,China Banking Corporation

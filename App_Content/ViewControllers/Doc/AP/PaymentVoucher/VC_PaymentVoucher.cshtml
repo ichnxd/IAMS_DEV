@@ -1,0 +1,1617 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+Layout = null;
+var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>w
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_PaymentVoucher = function () {
+            this.DocModuleParent = 'AccountsPayable';
+        }
+
+        VC_PaymentVoucher.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_PaymentVoucher.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+
+
+                var ShowDateReleased = function(){
+                    var $q = app.$GetAsync();
+                    var defer = $q.defer();
+                    app.$modal().Show({
+                        ViewSrc: 'App_Content/ViewControllers/Templates/EditSerial.tpl.html',
+                        title: 'Release Checks',
+                        width: 550,
+                        height: 200,
+                        closeOnConfirm: true,
+                        showCloseButton: false,
+                        InitController: function ($scope) {
+                            $scope.Data = [];
+                            $.each(_.CurrentObject.PaymentVoucher_CheckPayments,function(i,checks){
+                                if(checks.ID > 0 && checks.DateReleased == null){
+                                    $scope.Data.push({ ID: checks.ID , CheckNo: checks.CheckNo, DateReleased: new Date() });
+                                }
+                            });
+
+                            $scope.GridOption = {
+                                columnAutoWidth: true,
+                                rowAlternationEnabled: true,
+                                columns: [
+                                    { dataField: 'ID', dataType: 'number', caption: 'ID' ,allowEditing: false},
+                                    { dataField: 'CheckNo', dataType: 'string', caption: 'Check Number',allowEditing: false },
+                                    { dataField: 'DateReleased', dataType: 'date', caption: 'Date Released', allowEditing: true },
+                                ],
+                                bindingOptions : {
+                                    'dataSource' : 'Data'
+                                },
+                                editing: {
+                                    editEnabled: true,
+                                    editMode: 'cell',
+                                    insertEnabled: false,
+                                    removeEnabled: false
+                                },
+                                onRowUpdated: function(e){
+                                    //console.log(e)
+                                }
+
+                            }
+
+                            $scope.onPositiveClick = function () {
+                                VC.$timeout(function () {
+                                    defer.resolve($scope.Data);
+                                },500);
+                            };
+
+
+                            $scope.onNegativeClick = function () {
+                                //console.log('reject')
+                                defer.reject();
+                            };
+                        }
+                    });
+
+
+
+                    return defer.promise;
+                }
+
+                VC.AddToolbarButton({
+                    text: 'Update Record',
+                    items: [
+                        {
+                            text: 'Update SI No./Date',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                return _.CurrentObject.ID === -1;
+                            },
+                            onItemClick: function () {
+
+                                var SI ;
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px"><div>SI No.</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">SI Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Update Supplier SI No./Date',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            SalesInvoice: _.CurrentObject.SINO,
+                                            SalesInvoiceDate: new Date()
+                                        };
+
+                                        s.dxTextBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.SalesInvoice'
+                                            }
+                                        }
+
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.SalesInvoiceDate'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.SalesInvoice == null) {
+                                                VC.MsgBox("Sales Invoice Number is required.")
+                                                return;
+                                            };
+
+                                            if (s.CurrentObject.SalesInvoiceDate == null) {
+                                                VC.MsgBox("Sales Invoice Date is required.")
+                                                return;
+                                            };
+
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdateSupplierSI")', {
+                                                'ID': _.CurrentObject.ID,
+                                                'InvoiceNumber': s.CurrentObject.SalesInvoice,
+                                                'InvoiceDate': s.CurrentObject.SalesInvoiceDate
+                                            }).then(function () {
+                                                VC.ToastSuccess('Update Successfully');
+                                                 _.VC.Reload();
+                                                d.hide();
+                                                 
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            text: 'Update Check Detail',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                return _.CurrentObject.ID === -1;
+                            },
+                            onItemClick: function () {
+                                if(_.CurrentObject.PaymentVoucher_CheckPayments == null || _.CurrentObject.PaymentVoucher_CheckPayments == undefined) _.CurrentObject.PaymentVoucher_CheckPayments = [];
+
+                                if(_.CurrentObject.PaymentVoucher_CheckPayments.length == 0){
+                                    VC.MsgBox("No check payment found!")
+                                    return;
+                                }
+
+                                app.$modal().Show({
+                                    //Template:  '<div style ="padding:10px"><div >Date</div> <div dx-date-box="dxDateBoxOption"></div></div>',
+                                    Template: '<div style="padding:10px"><div>Check No</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">Check Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    
+                                    title: 'Update Check Detail',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            CheckNo: _.CurrentObject.PaymentVoucher_CheckPayments[0].CheckNo,
+                                            CheckDate: _.CurrentObject.PaymentVoucher_CheckPayments[0].CheckDate // new Date()
+                                        };
+                                        
+                                        s.dxTextBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.CheckNo'
+                                            }
+                                        }
+
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.CheckDate'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            //CheckNo
+												console.log(s.CurrentObject.CheckNo,s.CurrentObject.CheckDate)
+											  if ((s.CurrentObject.CheckNo == null || s.CurrentObject.CheckNo == '') && s.CurrentObject.CheckDate == null) {
+												  VC.MsgBox("Either Check Number or Check Date is required.")
+												  return;
+											  };
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdateCheckDate")', {
+                                                'ID': _.CurrentObject.ID,
+                                                'CheckNo': s.CurrentObject.CheckNo,
+                                                'CheckDate': s.CurrentObject.CheckDate
+
+                                            }).then(function () {
+                                                VC.Reload();
+                                                VC.ToastSuccess('Update Successfully');
+                                                d.hide();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            text: 'Released',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                if (_.CurrentObject.ID_FilingStatus !== 2) {
+                                    return true;
+                                }
+                                if (_.CurrentObject.IsReleased == true) {
+                                    return true;
+                                }
+
+                                return false;
+                            },
+                            onItemClick: function () {
+
+                                ShowDateReleased().then(function(data){
+
+                                    var hasNullDate = false;
+                                    var Dates = [];
+
+                                    $.each(data,function(i,item){
+                                        console.log(item)
+                                        if(item.DateReleased == null){
+                                            hasNullDate = true
+                                        }else{
+                                            item.DateReleased = new Date(item.DateReleased).toLocaleDateString("en-US");
+                                        }
+                                    });
+                                    if(hasNullDate == true){
+                                        VC.MsgBox("Date Released is required.");
+                                        return;
+                                    }
+
+                                    //return;
+
+                                    $.each(data,function(i,item){
+                                        Dates.push({ ID: item.ID , Date: item.DateReleased })
+                                    });
+
+                                    var JsDataService = app.$GetDataService();
+
+                                    JsDataService.ExecSQLProc(
+                                        '@Html.EncryptSQL("pPaymentVoucherReleased")',
+                                        {
+                                            'ID': _.CurrentObject.ID,
+                                            'Date': Dates
+                                        }
+                                    ).then(function (response) {
+                                        VC.ToastSuccess('Released Successfully');
+                                        if(_.ID_ViewType == 2){
+                                            VC.Reload();
+                                        }
+                                    }, function () {
+
+                                    });
+
+                                });
+                            }
+                        },
+                        //---start 08/25-2017
+                        {
+                            text: 'Update Uploading',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                return _.CurrentObject.ID === -1;
+                            },
+                            onItemClick: function () {
+
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px">'
+                                    + '<div style="padding-top:5px">Reference No.</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Update Uploading',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            ReferenceNo: null,
+                                            UploadedDate: new Date()
+                                        };
+
+                                        s.dxTextBoxOption = {
+                                            placeholder: "Reference No.",
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.ReferenceNo'
+                                            }
+                                        }
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.UploadedDate'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.ReferenceNo == null) {
+                                                VC.MsgBox("Reference No is required.")
+                                                return;
+                                            };
+                                            if (s.CurrentObject.UploadedDate == null) {
+                                                VC.MsgBox("Date is required.")
+                                                return;
+                                            };
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdatePVUploading")', {
+                                                'ID': _.CurrentObject.ID,
+                                                'RefNo': s.CurrentObject.ReferenceNo,
+                                                'Date': s.CurrentObject.UploadedDate
+                                            }).then(function () {
+                                                VC.ToastSuccess('Update Successfully');
+                                                d.hide();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        
+                        {
+                            text: 'Update Auto-Debit',
+                            icon: 'mdi mdi-package-variant',
+                            IsDisabled: function () {
+                                return _.CurrentObject.ID === -1;
+                            },
+                            onItemClick: function () {
+
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px">'
+                                    + '<div style="padding-top:5px">Reference No.</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Update Auto-Debit No./Date',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            Reference: null,
+                                            Date: new Date()
+                                        };
+                                        s.dxTextBoxOption = {
+                                            placeholder: "Reference No.",
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.Reference'
+                                            }
+                                        }
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.Date'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.Reference == null) {
+                                                VC.MsgBox("Reference is required.")
+                                                return;
+                                            };
+                                            if (s.CurrentObject.Date == null) {
+                                                VC.MsgBox("Date is required.")
+                                                return;
+                                            };
+
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdatePVAutoDebit")', {
+                                                'ID': _.CurrentObject.ID,
+                                                'RefNo' : s.CurrentObject.Reference,
+                                                'Date': s.CurrentObject.Date
+                                            }).then(function () {
+                                                VC.ToastSuccess('Update Successfully');
+                                                d.hide();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                        //---end 08/25-2017
+                    ]
+                });
+            }
+
+            VC.AddButtonReport({
+                Name: 'Payment Voucher Form',
+                ID_Report: 18,
+                requireSingleObject: true
+            });
+			
+			 if (_.ID_ViewType === 1) {
+                VC.AddButtonReport({
+                    Name: 'Payment Voucher Form (Batch)',
+                    ID_Report: 4214,
+                    requireSingleObject: true,
+                    IsMultiSelect: true
+                });
+            }
+
+            //VC.AddButtonReport({
+            //    Name: 'Check Amount',
+            //    ID_Report: 1041,
+            //    requireSingleObject: true
+            //});
+            //VC.AddButtonReport({
+            //    Name: 'Check Date',
+            //    ID_Report: 1042,
+            //    requireSingleObject: true
+            //});
+            var _ = this;
+			
+			 VC.AddToolbarButton({
+				text: 'Generate Text File',
+				onItemClick: function () {
+					var CurrentObject = _.getCurrentObject();
+					var SelectedItems = (_.ID_ViewType == 1 ? VC.Grid.getSelectedRowsData() : [VC.$scope.CurrentObject]);
+					if (SelectedItems.length !== 1) return;
+					CurrentObject = SelectedItems[0];
+					window.open('/JsApp/GetTextFile?ID_PaymentVoucher=' + CurrentObject.ID);
+				}
+			});
+
+            if (_.ID_ViewType == 2 ) {
+
+               
+
+                VC.AddToolBarButtonOnGrid('PaymentVoucherNonTrades', {
+                    text: 'Add Particulars',
+                    icon: 'mdi mdi-package-variant',
+                    IsDisabled: function () {
+                        if (_.CurrentObject.ID_Customer > 0 || _.CurrentObject.ID_FilingStatus > 1) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    onClick: function () {
+                        if (_.CurrentObject.PaymentVoucherNonTrades == undefined) _.CurrentObject.PaymentVoucherNonTrades = [];
+
+                        _.CurrentObject.PaymentVoucherNonTrades.push({
+                            ID: -1,
+                            Name: null,
+                            Comment: null,
+                            Particulars: null,
+                            Code: null,
+                            ID_COA: null,
+                            ID_SubsidiaryType: null,
+                            ID_Subsidiary: 0,
+                            COA: '-',
+                            Subsidiary: '-',
+                            TotalAmount: 0.00
+                        });
+                    }
+                }, true);
+                //
+                VC['PaymentVoucherNonTrades_ID_Subsidiary_onColumnDataSourceLoad'] = function (data, e) {
+                    //console.log('change')
+                    data.params.ID_SubsidiaryType = e.ID_SubsidiaryType == undefined ? null : e.ID_SubsidiaryType;
+                    data.params.ID_COA = e.ID_COA == undefined ? null: e.ID_COA;
+                }
+
+
+                //
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    if (_.CurrentObject.ExchangeRate == 0) {
+                        brokenRules.push('Exchange Rate is required')
+                    }
+                    if (_.CurrentObject.PaymentVoucherDetails == undefined) _.CurrentObject.PaymentVoucherDetails = [];
+                    if (_.CurrentObject.PaymentVoucherNonTrades == undefined || _.CurrentObject.PaymentVoucherNonTrades == null) _.CurrentObject.PaymentVoucherNonTrades = [];
+
+
+                 //   if( _.CurrentObject.PaymentVoucherDetails.length === 0 && _.CurrentObject.PaymentVoucherNonTrades.length === 0 ) {
+                 //       brokenRules.push('Must atleast have 1 detail record.');
+                 //   }
+
+                    if (_.CurrentObject.PaymentVoucherDetails.length > 0) {
+                        if ((_.CurrentObject.ID_Supplier == null || _.CurrentObject.ID_Supplier == undefined) && (_.CurrentObject.ID_Employee  == null || _.CurrentObject.ID_Employee == undefined)){
+                            brokenRules.push('Supplier is required')
+                        }
+                    }
+                    if (_.CurrentObject.CreditMemos == undefined) _.CurrentObject.CreditMemos = [];
+                    if (_.CurrentObject.CreditMemos.length > 0) {
+                        if (_.CurrentObject.ID_Customer == null || _.CurrentObject.ID_Customer == undefined) {
+                            brokenRules.push('Customer is required')
+                        }
+                    }
+
+                    //if (_.CurrentObject.TotalPVAmt.toFixed(2) !== _.CurrentObject.TotalPayment.toFixed(2)) {
+                    //    brokenRules.push('Total Payment must be equal to Total PV Amount')
+                    //}
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                })
+
+           VC.ValidationRules.push(function () {
+
+               if(_.CurrentObject.PaymentVoucher_CheckPayments === undefined ||_.CurrentObject.PaymentVoucher_CheckPayments === null ) _.CurrentObject.PaymentVoucher_CheckPayments = [];
+
+                   console.log(_.CurrentObject.PaymentVoucher_CheckPayments,'1')
+
+               if(_.CurrentObject.PaymentVoucher_CheckPayments.length > 0){
+
+
+                    if(_.CurrentObject.PaymentVoucher_CheckPayments[0].CheckNo !== 0){
+
+                            var JsDataService = app.$GetDataService();
+                            return JsDataService.Validate( '@Html.EncryptSQL("pPVCheckNo")',
+                                {
+
+                                    'Check': _.CurrentObject.PaymentVoucher_CheckPayments[0].CheckNo,
+                                    'ID_PaymentVoucher': VC.$scope.CurrentObject.ID
+                                }
+                            )
+                    };
+               }
+
+
+
+               //console.log('asdafas')
+
+
+                return { isValid: true };
+           });
+
+                //
+                //
+                var fReplenishment = function () {
+                    if (_.CurrentObject.ID_Customer > 0) {
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    var IDs = Enumerable.From(_.CurrentObject.PaymentVoucherNonTrades).Select('$.ID_Replenishment').ToArray();
+                    var sql = '@Html.EncryptSQL(@"SELECT * FROM vReplenishment WHERE ID_FilingStatus = 2 AND ID NOT IN (@selected_ID_PurchaseOrder)  and ID_CreatedBy = @ID_User") ';
+                    var filterParam = {
+                        'selected_ID_PurchaseOrder': IDs,
+                        'ID_User': VC.CurrentUser.ID
+                    };
+                    var browseDataSetParam =
+                    {
+                        title: 'Browse Replenishment',
+                        ID_View: 'D0E24C64-454B-4EDA-AC98-6493DCBF0E0E',
+                        params: filterParam
+                    };
+
+                    var browseDataSetThen = function (item) {
+
+                        if (_.CurrentObject.PaymentVoucherNonTrades == undefined) _.CurrentObject.PaymentVoucherNonTrades = []
+
+                        var pvNontradesExisting = null;
+
+                        if (_.CurrentObject.PaymentVoucherNonTrades.length > 0) {
+
+                            pvNontradesExisting = _.CurrentObject.PaymentVoucherNonTrades[0];
+
+                            if (pvNontradesExisting.ID_Replenishment == undefined || pvNontradesExisting.ID_Replenishment == null) {
+
+                                pvNontradesExisting.ID_Replenishment = 0;
+                            }
+                        }
+
+
+                        $.each(item, function (i, record) {
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                RPDate: record.Date,
+                                Replenishment: record.Name,
+                                Particulars: record.Name,
+                                CustomedParticular: record.Name,
+                                ID_Replenishment: record.ID,
+                                TotalAmount: record.TotalAmount,
+                                ID_COA: null,
+                                COA: '-',
+                                ID_SubsidiaryType: null,
+                                ID_Subsidiary: 0,
+                                Subsidiary: '-'
+                            };
+
+
+                            console.log(pvNontradesExisting);
+
+                            if (pvNontradesExisting != null) {
+
+                                if (pvNontradesExisting.ID_Replenishment == 0 && pvNontradesExisting.TotalAmount == 0) {
+
+                                    pvNontradesExisting.ID = _.rndID();
+                                    pvNontradesExisting.RPDate = record.Date;
+                                    pvNontradesExisting.Replenishment = record.Name;
+                                    pvNontradesExisting.Particulars = record.Name;
+                                    pvNontradesExisting.CustomedParticular = record.Name;
+                                    pvNontradesExisting.ID_Replenishment = record.ID;
+                                    pvNontradesExisting.TotalAmount = record.TotalAmount;
+
+                                } else {
+
+                                    _.CurrentObject.PaymentVoucherNonTrades.push(NewDetail);
+                                }
+                            } else {
+
+                                _.CurrentObject.PaymentVoucherNonTrades.push(NewDetail);
+                            }
+
+                        });
+
+                        _.Compute();
+
+                    }
+
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+
+                }
+
+                var fVoucherPayable = function () {
+
+                    if (_.CurrentObject.ID_PaymentVoucherType == null || _.CurrentObject.ID_PaymentVoucherType == undefined) {
+                        VC.MsgBox('Select PV Type');
+                        return;
+                    }
+                    if (_.CurrentObject.ID_Customer > 0) {
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    if((_.CurrentObject.ID_Supplier == undefined || _.CurrentObject.ID_Supplier == null) && (_.CurrentObject.ID_Employee == undefined || _.CurrentObject.ID_Employee == null)){
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    var sql = '@Html.EncryptSQL(@" SELECT
+                                            ID,Name,DocumentNo,
+                                            Date,ID_PaymentTerm,VoucherPayableType,ID_VoucherType,TotalAmount,
+                                            TotalPaymentAmount , RemainingBalance, PaymentTerm,ID_Currency,Currency,ExchangeRate,PesoAmount, Payee, Description , ID_Employee, ID_Supplier
+                                            FROM dbo.vVouchersPayableApprovePartially
+                                            WHERE
+                                            ID_FilingStatus IN (2,17 ) AND ID_VoucherType = @ID_VPType AND
+                                            ID NOT IN ( @ID_Details ) And ( ID_Supplier = @ID_Supplier OR ID_Employee =  @ID_Employee)"
+                                                    )';
+                    var filterParam = {
+                        'ID_Details': Enumerable.From(_.CurrentObject.PaymentVoucherDetails).Select('$.ID_VouchersPayable').ToArray(),
+                        'ID_Supplier': _.CurrentObject.ID_Supplier,
+                        'ID_VPType': _.CurrentObject.ID_PaymentVoucherType,
+						'ID_Employee': _.CurrentObject.ID_Employee
+                    };
+                    var browseDataSetParam =
+                    {
+                        title: 'Browse Vouchers Payable',
+                        ID_View: 'D0E24C64-454B-4EDA-AC98-6493DCBF0E0E',
+                        params: filterParam
+                    };
+
+                    var browseDataSetThen = function (item) {
+
+                        if (_.CurrentObject.PaymentVoucherDetails == null) _.CurrentObject.PaymentVoucherDetails = [];
+                        if (_.CurrentObject.PaymentVoucher_Detail_NonTrades == null) _.CurrentObject.PaymentVoucher_Detail_NonTrades = [];
+
+
+                        $.each(item, function (i, o) {
+                            var newDetail = {
+                                ID_VouchersPayable: o.ID,
+                                Balance: o.RemainingBalance,
+                                NetPayable: o.TotalAmount,
+                                PVAmount: o.RemainingBalance,
+                                VouchersPayable: o.Name,
+                                VPDate: o.Date
+                            };
+
+                            VC.$timeout(function () {
+
+                                _.CurrentObject.ID_Currency = o.ID_Currency;
+                                _.CurrentObject.Currency = o.Currency;
+                                _.IsExchangeRateFixed = true;
+                                _.CurrentObject.ExchangeRate = o.ExchangeRate;
+
+                                _.CurrentObject.ID_PaymentTerm = o.ID_PaymentTerm;
+                                _.CurrentObject.PaymentTerm = o.PaymentTerm;
+
+                                _.CurrentObject.PesoAmount = o.PesoAmount;
+                                _.CurrentObject.ID_PaymentVoucherType = o.ID_VoucherType;
+                                _.CurrentObject.Payee = o.Payee;
+                                _.CurrentObject.Description = o.Description;
+                                var dxPVType = VC.GetDxControl('ID_PaymentVoucherType');
+                                if (dxPVType !== null) {
+                                    dxPVType.option("disabled", true)
+                                }
+
+                                if (_.CurrentObject.ID_PaymentVoucherType == 1) {
+                                    var countBeforePush = _.CurrentObject.PaymentVoucherDetails.length;
+                                    _.CurrentObject.PaymentVoucherDetails.push(newDetail);
+                                    if (countBeforePush == 0) {
+                                        VC.GetGridEditor('PaymentVoucherDetails').refresh();
+                                    }
+                                }
+                                if (_.CurrentObject.ID_PaymentVoucherType == 2) {
+                                    var countBeforePush = _.CurrentObject.PaymentVoucher_Detail_NonTrades.length;
+                                    _.CurrentObject.PaymentVoucher_Detail_NonTrades.push(newDetail);
+                                    if (countBeforePush == 0) {
+                                        VC.GetGridEditor('PaymentVoucher_Detail_NonTrades').refresh();
+                                    }
+                                }
+                                _.Compute();
+                            }, 100);
+
+                        });
+
+                    }
+
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+
+                }
+                VC.AddToolbarButton({
+                    text: 'Browse',
+                    IsDisabled: function () {
+
+                        var IsDisabled = true;
+
+                        if (_.CurrentObject.ID_FilingStatus == 1 && IsDisabled == true) {
+
+                            IsDisabled = false;
+                        }
+
+                        if (_.CurrentObject.ID_FilingStatus == 0 && IsDisabled == true) {
+
+                            IsDisabled = false;
+                        }
+
+                        if (_.CurrentObject.ID_FilingStatus == null && IsDisabled == true) {
+
+                            IsDisabled = false;
+                        }
+                        if (_.CurrentObject.ID_Customer > null && IsDisabled == false) {
+
+                            IsDisabled = true;
+                        }
+
+                        return IsDisabled;
+                    },
+                    items: [
+                        {
+                            text: 'Vouchers Payable',
+                            icon: 'mdi mdi-package-variant',
+                            onClick: fVoucherPayable
+                        }
+                        //,
+                        //{
+                        //    text: 'Replenishment',
+                        //    icon: 'mdi mdi-package-variant',
+                        //    onClick: fReplenishment
+                        //}
+                    ]
+                });
+
+
+                //
+                //
+            }
+        }
+        VC_PaymentVoucher.prototype.onInitDetailView = function (VC) {
+
+            var _ = this;
+            //
+            //
+            //
+
+            if (_.CurrentObject.CreditMemos == undefined) {
+
+                _.CurrentObject.CreditMemos = [];
+            }
+
+
+            var JsPopUpView = app.$GetPopupView();
+
+            var AddModeOfPayment = function (ID_Payment, PropertyName) {
+                var TotalVPAmt = _.CurrentObject.TotalPVAmtDue;
+                var TotalPayment = _.CurrentObject.TotalPayment;
+                var Balance = TotalVPAmt - TotalPayment;
+
+                if (TotalVPAmt === 0) {
+                    VC.MsgBox("Total VP Amount is 0");
+                    return;
+                }
+
+                //if (Balance === 0) return;
+
+                var ID_DetailView = null;
+                switch (ID_Payment) {
+                    case 1:
+                        ID_DetailView = 9252
+                        break;
+                    case 2:
+                        ID_DetailView = 3124
+                        break;
+                    case 3:
+                        ID_DetailView = 3122
+                        break;
+                    case 4:
+                        ID_DetailView = 3123
+                        break;
+                    //-- start 08/29/2017
+                    case 5:
+                        ID_DetailView = 9413
+                        break;
+                    case 6:
+                        ID_DetailView = 9415
+                        break;
+                     //-- end 08/29/2017
+                }
+
+
+                VC.OpenOnNewWindowByID(ID_DetailView, -1, {
+                    fullScreen: false,
+                    InitController: function (scope) {
+                        switch (ID_Payment) {
+                            case 1:
+                                scope.CurrentObject.CheckAmt = angular.copy(Balance);
+                                scope.CurrentObject.PesoAmount = Balance * _.CurrentObject.ExchangeRate;
+
+                                scope.$watch('CurrentObject.PesoAmount',function(){
+                                    scope.CurrentObject.CheckAmt = scope.CurrentObject.PesoAmount / _.CurrentObject.ExchangeRate;
+                                });
+                                break;
+                            case 2:
+                                scope.CurrentObject.TransferAmt = Balance;
+                                break;
+                            case 3:
+                            case 4:
+                                scope.CurrentObject.TotalCost = Balance;
+                                break;
+                            //-- start 08/29/2017
+                            case 5:
+                                scope.CurrentObject.TotalAmount = Balance;
+                                break;
+                            case 6:
+                                scope.CurrentObject.TotalAmount = Balance;
+                                break;
+                            //-- end 08/29/2017
+                        }
+
+                        if (scope.CurrentObject.ID_FilingStatus == undefined || scope.CurrentObject.ID_FilingStatus == null) {
+
+                            scope.CurrentObject.ID_FilingStatus = 0;
+                            scope.CurrentObject.FilingStatus = '';
+                        }
+
+                    },
+                 //   validate: function (Object) {
+                 //   var JsDataService = app.$GetDataService();
+                 //   return JsDataService.Validate( '@Html.EncryptSQL("pPVCheckNo")',
+                 //       {
+                 //           'Check': scope.CurrentObject.CheckNo
+                 //       }
+                 //   )
+                 //   },
+                    IsEditingOnly: true,
+                    width: $(window).width() * 0.50,
+                    shading: true
+                }).then(function (currentPayment) {
+
+                    //if (_.CurrentObject[PropertyName] == undefined) {
+                    //    _.CurrentObject[PropertyName] = [];
+                    //}
+
+                    if (_.CurrentObject[PropertyName] === null || _.CurrentObject[PropertyName] === undefined) {
+                        _.CurrentObject[PropertyName] = [];
+                    }
+
+                    currentPayment.CheckAmt = currentPayment.PesoAmount / _.CurrentObject.ExchangeRate;
+
+                    if (PropertyName === "PaymentVoucher_CheckPayments") {
+                        if (currentPayment.CheckDate instanceof Date) {
+                            currentPayment.CheckDate = currentPayment.CheckDate.toLocaleDateString() + ' ' + currentPayment.CheckDate.toLocaleTimeString();
+                        }
+                    }
+
+                    _.CurrentObject[PropertyName].push(currentPayment);
+
+                    VC.$timeout(function () {
+
+                        //VC.GetGridEditor(PropertyName).refresh();
+                        _.Compute();
+                    }, 500);
+
+                },function(){
+                    _.Compute();
+                });
+
+            };
+            // start 08/25/2016
+           var fUploading = function() {
+
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px"><div>Reference No</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">Uploaded Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Add Uploading',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            ReferenceNo: null,
+                                            UploadedDate: null
+                                        };
+
+                                        s.dxTextBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.ReferenceNo'
+                                            }
+                                        }
+
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.UploadedDate'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.ReferenceNo == null) {
+                                                VC.MsgBox("Reference No is required.")
+                                                return;
+                                            };
+
+                                            if(_.CurrentObject.PaymentVoucher_Uploadings == undefined) _.CurrentObject.PaymentVoucher_Uploadings = [];
+                                            _.CurrentObject.PaymentVoucher_Uploadings.push({
+                                                Name : s.CurrentObject.ReferenceNo,
+                                                Date : s.CurrentObject.UploadedDate
+                                            })
+                                             d.hide();
+                                        }
+                                    }
+                                });
+
+                        }
+             var fAutoDebit = function() {
+
+                                app.$modal().Show({
+                                    Template: '<div style="padding:10px"><div>Reference No</div><div dx-text-box="dxTextBoxOption"></div>'
+                                    + '<div style="padding-top:5px">Uploaded Date</div><div dx-date-box="dxDateBoxOption"></div></div>',
+                                    title: 'Add Auto Debit',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            ReferenceNo: null,
+                                            UploadedDate: null
+                                        };
+
+                                        s.dxTextBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.ReferenceNo'
+                                            }
+                                        }
+
+                                        s.dxDateBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.UploadedDate'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            if (s.CurrentObject.ReferenceNo == null) {
+                                                VC.MsgBox("Reference No is required.")
+                                                return;
+                                            };
+
+                                            if(_.CurrentObject.PaymentVoucher_AutoDebits == undefined) _.CurrentObject.PaymentVoucher_AutoDebits = [];
+                                            _.CurrentObject.PaymentVoucher_AutoDebits.push({
+                                                Name : s.CurrentObject.ReferenceNo,
+                                                Date : s.CurrentObject.UploadedDate
+                                            })
+                                             d.hide();
+                                        }
+                                    }
+                                });
+
+                        }
+
+            // start 08/25/2016
+
+            var fBrowseAPDebitMemo = function () {
+
+                if (VC.$scope.CurrentObject.ID_Supplier == 0 || VC.$scope.CurrentObject.ID_Supplier == null) {
+                    VC.MsgBox("Please Select Supplier", "AP Debit Memo");
+                    return;
+                }
+
+
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM vAPDebitMemo WHERE ID NOT IN ( @ID_APDebitMemos ) AND IsNull(ID_FilingStatus,0) IN (2) AND ID_BusinessPartner = @ID_Supplier")';
+                var filterParam = {
+                    'ID_APDebitMemos': Enumerable.From(_.CurrentObject['DebitMemos']).Select("$.ID_APDebitMemo").ToArray(),
+                    'ID_Supplier': VC.$scope.CurrentObject.ID_Supplier
+                };
+
+                var browseDataSetParam =
+                {
+                    title: 'Browse AP Debit Memo',
+                    ID_View: '7128DBE0-C4D0-475B-8A33-24336DB6DCAE',
+                    params: filterParam
+                };
+
+                var browseDataSetThen = function (selectedRecord) {
+
+                    if (VC.$scope.CurrentObject['DebitMemos'] == null) {
+                        VC.$scope.CurrentObject['DebitMemos'] = [];
+                    }
+
+                    $.each(selectedRecord, function (i, record) {
+
+                        var newDetail = {
+                            ID: _.rndID()
+                            , APDebitMemoNo: record.DocumentNo
+                            , APDebitMemoDate: record.Date
+                            , TotalCost: record.TotalAmount
+                            , ID_APDebitMemo: record.ID
+                            , ID_PaymentVoucher: VC.$scope.CurrentObject.ID
+
+                        }
+
+                        VC.$timeout(function () {
+
+                            var countBeforePush = VC.$scope.CurrentObject['DebitMemos'].length;
+
+                            VC.$scope.CurrentObject['DebitMemos'].push(newDetail);
+
+                            if (countBeforePush == 0) {
+
+                                VC.GetGridEditor('DebitMemos').refresh();
+                            }
+                        });
+
+                        _.Compute();
+
+                    });
+                }
+
+                VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+            }
+
+            var browseAPCrediMemo = function () {
+
+                var TotalVPAmt = _.CurrentObject.TotalVPAmt;
+                var TotalPayment = _.CurrentObject.TotalPayment;
+                var Balance = TotalVPAmt - TotalPayment;
+
+                if (_.CurrentObject.ID_Customer == null) {
+                    VC.MsgBox("Customer is required");
+                    return;
+                }
+
+
+
+                var SQL = '@Html.EncryptSQL(@"SELECT * FROM dbo.vAccRevCreditMemo WHERE ID_FilingStatus = 2  AND ID NOT IN ( @ID_APCreditMemos ) ")';
+                JsPopUpView.BrowseDataSet(SQL,
+                {
+                    ID_View: '11DB9ECA-5340-4736-B22D-BA1B68BC64DF',
+                    params: {
+                        ID_BusinessPartner: _.CurrentObject.ID_Supplier
+                    , 'ID_APCreditMemos': Enumerable.From(_.CurrentObject.CreditMemos).Select('$.ID_APCreditMemo').ToArray()
+                    },
+                    title: 'Browse Credit Memo'
+
+                }).then(function (selectedRecord) {
+
+                    if (VC.$scope.CurrentObject.CreditMemos == undefined || VC.$scope.CurrentObject.CreditMemos == null) {
+
+                        VC.$scope.CurrentObject.CreditMemos = [];
+                    }
+
+                    $.each(selectedRecord, function (i, record) {
+
+                        var newDetail = {
+                            ID: _.rndID()
+                            , APCreditMemoNo: record.DocumentNo
+                            , APCreditMemoDate: record.Date
+                            , TotalCost: record.TotalAmount
+                            , ID_APCreditMemo: record.ID
+
+                        }
+
+                        VC.$timeout(function () {
+
+                            VC.$scope.CurrentObject.CreditMemos.push(newDetail);
+                            _.Compute();
+                        });
+
+                    });
+
+                    VC.GetGridEditor('CreditMemos').refresh();
+
+                    _.Compute();
+                });
+            }
+
+
+            _.butAddPayment = {
+                text: 'Add Payment'
+            , icon: 'mdi mdi-note-plus-outline'
+            , IsDisabled: function () {
+                return _.CurrentObject.ID_FilingStatus == 8 || _.CurrentObject.ID_FilingStatus == 7;
+            }
+            , items: [
+                {
+                    text: 'Add Check',
+                    icon: 'fa fa-credit-card',
+                    onItemClick: function () {
+                        AddModeOfPayment(1, 'PaymentVoucher_CheckPayments');
+                    }
+                },
+                {
+                    text: 'Add Bank Transfer',
+                    icon: 'fa fa-bank',
+                    onItemClick: function () {
+                        AddModeOfPayment(2, 'BankTransfers');
+                    }
+                },
+         //- 08/25/2017 lagay ng comment sa DM
+         //      {
+         //          text: 'Add Debit Memos',
+         //          icon: 'fa fa-sticky-note-o',
+         //          onItemClick: fBrowseAPDebitMemo
+         //      },
+                //-- start 08-25-2017
+                {
+                    text: 'Add Uploading',
+                    icon: 'fa fa-sticky-note-o',
+                   onItemClick: function () {
+                        AddModeOfPayment(5, 'PaymentVoucher_Uploadings');
+                    }
+                },
+                {
+                    text: 'Add Auto-Debit',
+                    icon: 'fa fa-sticky-note-o',
+                   onItemClick: function () {
+                        AddModeOfPayment(6, 'PaymentVoucher_AutoDebits');
+                    }
+                }
+                //-- end 08-25-2017
+                /*,
+                {
+                    text: 'Add Credit Memos',
+                    icon: 'fa fa-sticky-note-o',
+                    onItemClick: function () {
+                        //AddModeOfPayment(4,'CreditMemos');
+
+                            //if (_.CurrentObject.ID_Supplier ==  0 || _.CurrentObject.ID_Supplier == null )
+                            // {
+                            //    VC.MsgBox("Please Select Supplier", "Browse Purchase Return");
+                            //    return true;
+                            //}
+
+                            browseAPCrediMemo();
+                    }
+                }*/
+            ]
+            };
+
+            VC.AddToolbarButton(_.butAddPayment);
+            VC.AddToolBarButtonOnGrid('CreditMemos', {
+                text: 'Add Credit Memo',
+                icon: 'mdi mdi-package-variant',
+                formatKey: 'B4A38ACD-A0E9-4D10-8C6B-E3A7BDA2DB3D',
+                onClick: function (option) {
+                    browseAPCrediMemo();
+                }
+            }, true);
+
+
+            _.Compute();
+        }
+
+        VC_PaymentVoucher.prototype.onDetailRowUpdated = function (VC) {
+
+        }
+
+        //
+        //
+        //
+        VC_PaymentVoucher.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+
+            VC.PaymentVoucherNonTrades_onColumnChanged = function (e) {
+
+
+
+                if (e.dataField == 'ID_COA') {
+
+                    if (e.data === undefined || e.data === null) return;
+                    if (e.data.Code !== undefined) {
+                        _.CurrentObject['PaymentVoucherNonTrades'][e.rowIndex].Code = e.data.Code;
+                        _.CurrentObject['PaymentVoucherNonTrades'][e.rowIndex].Name = e.data.Name;
+                        _.CurrentObject['PaymentVoucherNonTrades'][e.rowIndex].ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                    }
+
+                    e.key.CustomedParticular = e.key.Particulars;
+                }
+
+                if (e.dataField == 'Particulars') {
+
+                    e.key.CustomedParticular = e.key.Particulars;
+                }
+
+            }
+
+
+            VC.PaymentVoucherDetails_onColumnChanged = function (e) {
+
+                if (e.dataField == 'PVAmount') {
+
+                    _.Compute();
+                }
+            }
+            VC.PaymentVoucher_Detail_NonTrades_onColumnChanged = function (e) {
+
+                if (e.dataField == 'PVAmount') {
+
+                    _.Compute();
+                }
+            }
+
+            VC.PaymentVoucher_CheckPayments_onColumnChanged = function (e) {
+                _.Compute();
+            }
+            VC.onPaymentVoucher_CheckPayments_RowUpdated = function (e) {
+                _.Compute();
+            }
+            //- start 08/29/2017
+            VC.onPaymentVoucher_Uploadings_RowUpdated = function (e) { _.Compute();}
+            VC.onPaymentVoucher_AutoDebits_RowUpdated = function (e) { _.Compute();}
+            //- end 08/29/2017
+            VC.onPaymentVoucherNonTrades_RowUpdated = function (e) { _.Compute(); }
+            VC.onPaymentVoucherDetails_RowUpdated = function (e) {
+
+                VC.GetGridEditor('PaymentVoucherDetails').refresh();
+
+                _.Compute();
+
+            }
+            VC.onPaymentVoucher_Detail_NonTrades_RowUpdated = function (e) {
+
+                VC.GetGridEditor('PaymentVoucher_Detail_NonTrades').refresh();
+
+                _.Compute();
+
+            }
+            VC.onDebitMemos_RowUpdated = function (e) { _.Compute(); }
+            VC.onCreditMemos_RowUpdated = function (e) { _.Compute(); }
+            VC.onBankTransfers_RowUpdated = function (e) { _.Compute(); }
+
+
+
+
+
+
+
+        }
+        //
+        //
+        //
+        VC_PaymentVoucher.prototype.onLoad = function () {
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+            console.log(_.CurrentObject)
+            if (_.CurrentObject.ID_FilingStatus == 8 || _.CurrentObject.ID_FilingStatus == 7 || _.CurrentObject.ID_FilingStatus == 2) {
+                VC.setFormReadOnly(true);
+            } else {
+                VC.setFormReadOnly(false);
+            }
+            if (_.CurrentObject.ID_FilingStatus == 1) {
+                var dxPVType = VC.GetDxControl('ID_PaymentVoucherType');
+                if (dxPVType !== null) {
+                    dxPVType.option("disabled", false)
+                }
+            }
+            if (_.CurrentObject.PaymentVoucherDetails != null) {
+
+                if (_.CurrentObject.PaymentVoucherDetails.length > 0 && _.CurrentObject.ID_FilingStatus == 1) {
+                    var IsFromVp = false;
+                    $.each(_.CurrentObject.PaymentVoucherDetails, function (i, item) {
+                        if (item.ID_VouchersPayable > 0) {
+                            IsFromVp = true;
+                        }
+                    });
+
+                    if (IsFromVp) {
+
+                        var dxPVType = VC.GetDxControl('ID_PaymentVoucherType');
+                        if (dxPVType !== null) {
+                            dxPVType.option("disabled", true)
+                        }
+                    }
+
+                }
+            }
+            //---------------------
+             var JsDataService = app.$GetDataService();
+                                JsDataService.Query(
+                                            '@Html.EncryptSQL(@"SELECT TOP 1 SupplierInvNo FROM dbo.tVouchersPayable where ID IN (@ID_VPDEt) OR ID IN (@ID_VPNtrade)")',
+                                            {
+                                                params:{
+                                                    'ID_VPDEt' : Enumerable.From(_.CurrentObject.PaymentVoucherDetails).Select('$.ID_VouchersPayable').ToArray(),
+                                                    'ID_VPNtrade' : Enumerable.From(_.CurrentObject.PaymentVoucher_Detail_NonTrades).Select('$.ID_VouchersPayable').ToArray(),
+                                                }
+                                            }
+                                        ).then(function(data){
+
+                                           _.CurrentObject.SINO = data.collection[0].SupplierInvNo;
+                                           console.log(_.CurrentObject.SINO,'asd')
+                                        })
+        //------------------------------------
+        }
+
+        VC_PaymentVoucher.prototype.onCurrentObjectChanged = function (e) {
+
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = this.VC;
+
+            if (e.dataField == 'ExchangeRate') {
+                if(_.CurrentObject.ID_Currency == 1){
+                    _.CurrentObject.ExchangeRate = 1.00;
+                }
+            }
+
+            if (_.CurrentObject.CreditMemos == undefined) {
+
+                _.CurrentObject.CreditMemos = [];
+            }
+
+
+            if (_.CurrentObject.CreditMemos == null) {
+
+                _.CurrentObject.CreditMemos = [];
+            }
+
+            if (e.dataField == 'ID_Supplier') {
+                if (_.CurrentObject.ID_Customer != null && _.CurrentObject.ID_Supplier != null) {
+                    _.CurrentObject.ID_Customer = null;
+                    _.CurrentObject.Customer = null;
+                    if (VC._DeletedItems.CreditMemos == undefined) { VC._DeletedItems.CreditMemos = []; }
+                    VC._DeletedItems.CreditMemos = Enumerable.From(_.CurrentObject.CreditMemos).Where("$.ID > 0").ToArray();
+
+
+
+                }
+            }
+            if (e.dataField == 'ID_Customer') {
+                if (_.CurrentObject.ID_Customer != null && _.CurrentObject.ID_Supplier != null) {
+                    _.CurrentObject.ID_Supplier = null;
+                    _.CurrentObject.Supplier = null
+                    if (VC._DeletedItems.PaymentVoucherDetails == undefined) { VC._DeletedItems.PaymentVoucherDetails = []; }
+                    VC._DeletedItems.PaymentVoucherDetails = Enumerable.From(_.CurrentObject.PaymentVoucherDetails).Where("$.ID > 0").ToArray();
+                    if (VC._DeletedItems.PaymentVoucherNonTrades == undefined) { VC._DeletedItems.PaymentVoucherNonTrades = []; }
+                    VC._DeletedItems.PaymentVoucherNonTrades = Enumerable.From(_.CurrentObject.PaymentVoucherNonTrades).Where("$.ID > 0").ToArray();
+                }
+            }
+
+             _.Compute();
+        }
+
+        VC_PaymentVoucher.prototype.Compute = function () {
+            //return;
+            var _ = this;
+            var VC = _.VC;
+
+            var CurrentObject = VC.$scope.CurrentObject;
+
+
+            if (CurrentObject.CreditMemos == undefined) {
+
+                CurrentObject.CreditMemos = [];
+            }
+
+            var TotalPaymentVoucherAmt = 0.00;
+            var TotalCheckAmt = 0.00;
+            var TotalTransferAmt = 0.00;
+            var TotalPayment = 0.00;
+            var TotalCreditAmt = 0.00;
+            var TotalPVAmtDue = 0.00; //Amount Due
+            var TotalDebit = 0.00;
+            var TotalPVAmount = 0.00;
+            var TotalVPAmt = 0.00;
+            var TotalNonTrade = 0.00;
+            var TotalUploading = 0.00; // - 08/29/2017
+            var TotalAutoDebit = 0.00; // - 08/29/2017
+
+            if (CurrentObject.TotalCheckAmt == null) {
+
+                CurrentObject.TotalCheckAmt = 0;
+            }
+
+
+            if (CurrentObject.PaymentVoucherDetails != null) {
+                $.each(CurrentObject.PaymentVoucherDetails, function (i, pv) {
+                    TotalPVAmount += pv.PVAmount;
+                    TotalVPAmt += pv.NetPayable;
+                });
+            }
+
+            if (CurrentObject.PaymentVoucher_Detail_NonTrades != null) {
+                $.each(CurrentObject.PaymentVoucher_Detail_NonTrades, function (i, pv) {
+                    TotalPVAmount += pv.PVAmount;
+                    TotalVPAmt += pv.NetPayable;
+                });
+            }
+
+            if (CurrentObject.PaymentVoucherNonTrades != null) {
+                $.each(CurrentObject.PaymentVoucherNonTrades, function (i, pv) {
+                    TotalNonTrade += pv.TotalAmount;
+                });
+            }
+
+
+            if (CurrentObject.PaymentVoucher_CheckPayments != null) {
+                $.each(CurrentObject.PaymentVoucher_CheckPayments, function (i, o) {
+                    o.CheckAmt = o.PesoAmount / _.CurrentObject.ExchangeRate;
+                    TotalCheckAmt += o.CheckAmt;
+                });
+
+            }
+
+
+            if (CurrentObject.BankTransfers != null) {
+                $.each(CurrentObject.BankTransfers, function (i, o) {
+                    TotalTransferAmt += o.TransferAmt;
+                });
+            }
+
+            if (CurrentObject.CreditMemos != null) {
+                $.each(CurrentObject.CreditMemos, function (i, o) {
+
+                    TotalCreditAmt += o.TotalCost;
+                });
+            }
+
+            if (CurrentObject.DebitMemos != null) {
+                $.each(CurrentObject.DebitMemos, function (i, o) {
+
+                    TotalDebit += o.TotalCost;
+                });
+            }
+
+            //- start 08/29/2017
+            if (CurrentObject.PaymentVoucher_Uploadings != null) {
+                $.each(CurrentObject.PaymentVoucher_Uploadings, function (i, o) {
+
+                    TotalUploading += o.TotalAmount;
+                });
+            }
+
+            if (CurrentObject.PaymentVoucher_AutoDebits != null) {
+                $.each(CurrentObject.PaymentVoucher_AutoDebits, function (i, o) {
+
+                    TotalAutoDebit += o.TotalAmount;
+                });
+            }
+
+            //- end 08/29/2017
+            CurrentObject.TotalPVAmt = TotalPVAmount + (TotalNonTrade == null ? 0.00 : TotalNonTrade) + TotalCreditAmt;
+            CurrentObject.TotalCheckAmt = TotalCheckAmt;
+            CurrentObject.TotalTransferAmt = TotalTransferAmt;
+            CurrentObject.TotalCreditAmt = TotalCreditAmt;
+            CurrentObject.TotalDebit = TotalDebit;
+            //- start 08/29/2017
+            CurrentObject.TotalUploading = TotalUploading;
+            CurrentObject.TotalAutoDebit = TotalAutoDebit;
+             //- end 08/29/2017
+            CurrentObject.TotalPayment = CurrentObject.TotalCheckAmt + TotalTransferAmt + CurrentObject.CashPayment + TotalDebit + TotalUploading + TotalAutoDebit;
+            CurrentObject.TotalPVAmtDue = CurrentObject.TotalPVAmt - CurrentObject.TotalPayment;
+            CurrentObject.TotalVPAmt = TotalVPAmt
+            CurrentObject.PesoAmount = CurrentObject.TotalPayment * CurrentObject.ExchangeRate;
+        }
+
+
+        VC_PaymentVoucher.prototype.isApprovedValid = function () {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var brokenRules = [];
+
+            if (_.CurrentObject.TotalPVAmt.toFixed(2) !== _.CurrentObject.TotalPayment.toFixed(2)) {
+
+                VC.MsgBox('Total Payment must be equal to Total PV Amount');
+                return false;
+            }
+
+            return true;
+        }
+
+
+        VC_PaymentVoucher.prototype.Approve = function (Items) {
+            var VC = this.VC;
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            var _ = this;
+            var TotalVPAmt = _.CurrentObject.TotalVPAmt;
+            var TotalPayment = _.CurrentObject.TotalPayment;
+
+
+            if (_.CurrentObject.TotalPVAmt.toFixed(2) !== _.CurrentObject.TotalPayment.toFixed(2)) {
+                VC.MsgBox('Total Payment must be equal to Total PV Amount')
+                defer.reject();
+            }
+            else{
+                //Tanggalin daw eh
+                //if (TotalPayment !== TotalVPAmt)
+                //{
+                //    VC.MsgBox("Total payment and Total VP amount must be equal","Payment Voucher");
+                //}
+                //else
+                //{
+
+                JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPaymentVoucherApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                }
+
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+
+                //}
+            }
+
+            return defer.promise;
+        }
+
+        VC_PaymentVoucher.prototype.isColumnGridEditable = function (p, e) {
+
+
+            var _ = this;
+
+            if (e.component.PropertyName == "PaymentVoucherNonTrades") {
+
+                if (e.column.dataField === 'RPDate' || e.column.dataField === 'Particulars' || e.column.dataField === 'TotalAmount') {
+
+                    if (e.key.ID_Replenishment != undefined) {
+
+                        e.key.ID_Replenishment = 0;
+                    }
+
+                    var ID_Replenishment = 0
+
+                    if (e.key.ID_Replenishment != undefined && e.key.ID_Replenishment != null) {
+
+                        ID_Replenishment = e.key.ID_Replenishment;
+                    }
+
+
+                    console.log(ID_Replenishment);
+                    if (ID_Replenishment > 0) { return false; }
+
+                }
+            }
+
+        }
+
+        VC_PaymentVoucher.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            var _ = this;
+            var VC = _.VC;
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPaymentVoucherCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                //AcctHelper.ValidateAccountingPeriod(VC);
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+            return defer.promise;
+        }
+
+
+
+        return VC_PaymentVoucher;
+
+    });
+//</script>
+</text> , false);

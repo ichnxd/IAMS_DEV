@@ -1,0 +1,190 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_BankReceipt = function () {
+            this.DocDetailPropertyName = 'SalesReturn_Details';
+        }
+
+        VC_BankReceipt.prototype = Object.create(baseModelHelper.prototype);
+
+        
+        VC_BankReceipt.prototype.Init = function (VC) {
+            var _ = this;
+
+            baseModelHelper.prototype.Init.call(this, VC);   
+        }
+
+        VC_BankReceipt.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+        }
+        VC_BankReceipt.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+            var VC = this.VC;
+
+
+            VC.AddToolBarButtonOnGrid('BankReceipt_Details', {
+                text: 'Browse Sales Order',
+                icon: 'mdi mdi-package-variant',
+                onClick: function () {
+                    
+                    if(_.CurrentObject.ID_Customer == undefined || _.CurrentObject.ID_Customer == null){
+                        VC.MsgBox('Please select customer first','Bank Receipt');
+                        return;
+                    }
+
+                    VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,DocumentNo,Date,PaymentTerm,CustomerOrderType,TotalAmount,CreatedBy FROM dbo.vSalesOrderForBankReceipt WHERE ID_FilingStatus NOT IN(1,7) AND ID_BusinessPartner = @ID_Customer AND ID NOT IN( @ID_Details )")', {
+                        title: 'Select Sales Order (' + _.CurrentObject.Customer + ')',
+                        ID_View: '8F4452EA-FC9D-47BF-89E0-3BE9334E98A4',
+                        params: {
+                            'ID_Customer': _.CurrentObject.ID_Customer
+						  , 'ID_Details': Enumerable.From(_.CurrentObject.BankReceipt_Details).Select('$.ID_SalesOrder').ToArray()
+                        },
+                        onCustomizeColumns: function (columns) {
+                            $.each(columns, function (i, c) {
+                                if (c.dataField == "DocumentNo") {
+                                    c.caption = "SO No.";
+                                }
+                                if (c.dataField == "Date") {
+                                    c.caption = "SO Date";
+                                }
+                            });
+                        },
+                        validate: function (items) {
+                            
+                            return true;
+                        }
+
+                    }).then(function (Details) {
+                        if (_.CurrentObject.BankReceipt_Details == null) _.CurrentObject.BankReceipt_Details = [];
+                        $.each(Details, function (i, d) {
+                            var detail = {
+                                ID: -1,
+                                ID_SalesOrder : d.ID,
+                                SalesOrder: d.DocumentNo,
+                                Name: d.DocumentNo,
+                                TotalAmount: d.TotalAmount
+                            }
+                            _.CurrentObject.BankReceipt_Details.push(detail);
+                        });
+
+                        _.Compute();
+                    });
+                }
+            }, true);
+
+            //
+        };
+
+        VC_BankReceipt.prototype.Compute = function (dataField) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var TotalAmount = 0.00
+            var Balance = 0.00
+            var TotalPayment = 0.00
+
+            if (_.CurrentObject.BankReceipt_Details == null) _.CurrentObject.BankReceipt_Details = [];
+            if (_.CurrentObject.BankReceipt_Payments == null) _.CurrentObject.BankReceipt_Payments = [];
+            $.each(_.CurrentObject.BankReceipt_Details, function (i, d) {
+                TotalAmount += d.TotalAmount
+            });
+            $.each(_.CurrentObject.BankReceipt_Payments, function (i, d) {
+                TotalPayment += d.TotalAmount
+            });
+            
+
+            _.CurrentObject.TotalAmount = TotalAmount;
+            _.CurrentObject.Balance = TotalAmount - TotalPayment;
+            _.CurrentObject.TotalPayment = TotalPayment;
+        };//
+
+        VC_BankReceipt.prototype.onInitDetailView = function () {
+            baseModelHelper.prototype.onInitDetailView.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+
+        };
+
+
+        VC_BankReceipt.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            var Item = e.key;
+            
+
+        }
+
+        //VC_BankReceipt.prototype.onLoad = function () {
+        //    baseModelHelper.prototype.onLoad.call(this);
+        //    var VC = this.VC;   
+        //}
+
+        VC_BankReceipt.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBankReceiptApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_BankReceipt.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pBankReceiptCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_BankReceipt;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+

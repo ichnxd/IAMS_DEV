@@ -1,0 +1,822 @@
+﻿//@import "theme-variables.less";
+@import "variables.less";
+
+@HeaderHeight : 60px;
+@DefaultFontColor: #232323;
+
+#JSWebApp 
+{
+    .js-detailview-container {
+
+        background-color:#a0a0a0;
+
+        .dx-selectbox .dx-texteditor-input {
+            text-transform:uppercase!important;
+        }
+
+        .dx-fileuploader {
+            position:relative;
+        }
+        .dx-fileuploader.parent {
+            position:relative;
+            width:100%!important;
+            .clear-button {
+                position:absolute;
+                z-index:1000;
+                top:5px;
+                right:10px;
+                font-size:20px;
+                opacity:0.5;
+                &:hover {
+                   cursor:pointer;
+                   opacity:1;
+                }
+            }
+        }
+
+        .dx-multiview-wrapper {
+            margin-bottom:50px!important;
+        }
+        /*.detailview-scorllview {
+            .dx-scrollview-content:first-child {
+                margin-bottom:50px!important;
+            }
+        }*/
+
+        .dx-invalid-message > .dx-overlay-content {
+            display:none!important;
+        }
+
+        .dx-checkbox.dx-state-readonly .dx-checkbox-icon {
+            border-color:rgb(167, 167, 167)!important;
+            background-color:#fff;
+        }
+
+        .dx-checkbox:not(.dx-state-readonly):not(.dx-state-focused) .dx-checkbox-icon,
+        .dx-texteditor:not(.dx-state-readonly):not(.dx-state-focused) {
+            //.dx-texteditor-container {
+                border-radius:0px;
+                border:solid 1px!important;
+                border-color:rgb(167, 167, 167)!important;
+            //}
+        }
+
+        .dx-datagrid-rowsview.dx-datagrid-nowrap { 
+            .dx-scrollable-content {
+                background-color:lightgray;
+            }
+        }
+
+        .dx-scrollable-wrapper {
+            background-color:#fff!important;
+        }
+
+        .dx-tabpanel .dx-tab {
+            font-size:11px;
+        }
+
+        .dx-tabpanel .dx-tabs-wrapper { 
+           float:left;
+        }
+
+        .other-infos {
+            font-size:13px;
+        }
+
+        label {
+            font-weight:600;
+        }
+
+        .js-attachments {
+            li {
+                span {
+                   &.mdi-close-circle {
+                       opacity:0.3;
+                   }
+                   &:hover {
+                       cursor:pointer;
+                       font-weight:bold;
+                       opacity:1;
+                   }
+                   
+               }
+            }
+            .mdi.mdi-close-circle {
+                margin-left:5px;
+            }
+        }
+
+        .dx-widget { 
+            font-size:12px;
+        }
+
+        .grid-form {
+            background-color:#fff;
+            padding:5px 5px 15px 5px;
+
+            .dx-form-group-with-caption>.dx-form-group-content:first-child {
+                border:none;
+            }
+        }
+
+        //.generalform {
+            .dx-tabpanel .dx-multiview-wrapper:first-child {
+                border-left:none;
+                border-right:none;
+                border-bottom:none;
+                /*border-color:transparent;*/
+            }
+        //}
+
+        .js-header-container {
+            .header { 
+                width:100%;
+                font-size:18px;
+                border-bottom:dotted 1px;
+                .js-module-close {
+                    font-size:20px;
+                }
+                .ModelDisplayName {
+                    display:inline-block;
+                    &:hover { 
+                        cursor:pointer;
+                    }
+                }
+                .DisplayName {
+                    display:inline-block;
+                    font-size:12px;
+                    
+                }
+            }
+      
+        }
+        .dx-layout-manager .dx-label-h-align .dx-field-item-label {
+            white-space:normal;
+        }
+        .dx-layout-manager .dx-label-h-align .dx-field-item-label .dx-field-item-label-content {
+            max-width:120px!important;
+        }
+        
+        .dx-datagrid-content .dx-datagrid-table .dx-row .dx-command-select {
+            width:35px;
+            min-width:35px;
+
+            .dx-check-box {
+                height:20px;
+            }
+        }
+
+        .FormContextMenu {
+            .dx-menu-items-container {
+                width:100%;
+            }
+        }
+
+        .js-detail-scrollview-content {
+           padding-left:8px;
+           padding-right:8px;
+           padding-top:5px;
+           background-color:#a0a0a0;
+        }
+
+        .dx-placeholder {
+            font-size:13px;
+            margin-top:1px;
+        }
+
+        .dx-texteditor.dx-state-readonly .dx-texteditor-input {
+            color:@DefaultFontColor;
+            background-color:#ddd;
+        }
+
+        .GridItemSelectedContainer {
+            width:100%;
+            font-size:14px;
+            background-color:#fff;
+            font-weight:bold;
+            padding:3px;
+            color:#6d6d6d;
+            min-height:30px;
+        }
+
+        .status-bar-container {
+            /*background-color:#808080;*/
+            color:#fff;
+            display:table;
+            width:100%!important;
+            /*height:100%!important;*/
+            .inner-status {
+                vertical-align:middle;
+                text-align:left;
+                display:table-cell;
+                padding-left:5px;
+                /*height:100%;*/
+                padding-top:8px;
+                padding-bottom:8px;
+            }
+
+            .right-container {
+                float:right;
+            }
+        }
+        .JsCellFocus {
+            /*background-color:#808080!important;
+            color:#fff!important;*/
+        }
+        .dx-datagrid-rowsview {
+            
+            .dx-scrollable-content {
+                //padding-right:0px;
+            }
+            .dx-image-view {
+                width:55px!important;
+                display:inline-flex;
+            }
+        }
+        .dx-datagrid-total-footer { 
+            .dx-row {
+                /*border-top:solid 2px #6d6d6d;
+                border-bottom:solid 1px #ddd;*/
+                background-color:#fff;
+                td {
+                    //border-right:solid 2px rgba(221, 221, 221, 0.31);
+                }
+                /*background-color:#a0a0a0!important;
+                .dx-datagrid-summary-item {
+                    color:#fff!important;
+                }
+                */   
+            }
+        }
+        .dx-datagrid {
+            
+            //background-color:#d3d3d3;
+
+
+            .dx-datagrid-headers {
+                border-bottom: solid 1px #D3D3D3;
+                background:#808080;
+            }
+
+            .dx-datagrid-nodata {
+                z-index:2;
+            }
+            //.dx-scrollable-native.dx-scrollable-both .dx-scrollable-container {
+            //    overflow-y:hidden;
+            //}
+
+            .GridActionButton {
+                   
+                .dx-button { 
+                    height:20px!important;
+                    width:20px!important;
+
+                    .dx-button-content {
+                        padding:0!important;
+                        i {
+                            font-size:10px!important;
+                        }
+                    }
+                }
+            }
+
+            tr td:nth-child(1) ,
+            tr td:nth-child(2) ,
+            tr td:nth-child(3) {
+                white-space:nowrap;
+                
+                & div {
+                    //font-size:10px;
+                    overflow:visible;
+                }
+            }
+
+            .dx-data-row:not(.dx-selection) td {
+
+                background-color:#e0e1ff;
+
+                &.GridActionButton {
+                    background-color:#ddd;
+                }
+
+                &.editable-cell {
+                    background-color:#fff;
+                }
+
+                &.js-required {
+                    background-color:#ffdede;
+                }
+            }
+
+
+            &.disabled-edit {
+                .dx-data-row:not(.dx-selection) td {
+                    background-color:#fff!important;
+                }
+            }
+
+            .dx-datagrid-rowsview .dx-row>.dx-master-detail-cell {
+                padding:10px;
+            }
+
+            .dx-datagrid-rowsview {
+                background-color:lightgray;
+            }
+
+            .dx-datagrid-rowsview .dx-selection.dx-row>td, 
+            .dx-datagrid-rowsview .dx-selection.dx-row:hover>td {
+                background-color:rgb(167, 167, 167)!important;
+                color:#fff!important;
+            }
+        }
+
+        .dx-field-item-required {
+
+            .dx-texteditor .dx-texteditor-input {
+                background-color:#ffdede;
+            }
+
+        }
+
+        .dx-datagrid-headers .dx-row:first-child {
+            color:#fff;
+            border-color:transparent;
+            td {
+                background-color:#808080;
+            }
+        }
+
+        .form-details {
+
+            .dx-scrollable-content:first-child {
+                background-color:#fff!important;
+            }
+            
+            .dx-datagrid {
+                .dx-scrollable-content {
+                    background-color:#d3d3d3!important;
+                    //overflow-y:hidden;
+                }
+                .dx-scrollbar-vertical.dx-scrollbar-hoverable {
+                    //background-color:transparent!important;
+                }
+            }
+
+            margin-bottom:5px!important;
+
+            .js-grid-toolbar .dx-menu-horizontal .dx-menu-item-content {
+                 padding:0px 5px 0px 5px;
+            }
+
+            .dx-menu-horizontal {
+                background-color:#fff;
+            }
+
+            .dx-indent-wrapper {
+                background-color:#fff!important;
+            }
+
+            .row {
+                background-color:#fff;
+                display:table;
+                width:100%;
+                vertical-align:middle;
+                padding-top:1px;
+                padding-bottom:1px;
+            }
+
+            .record-count {
+                display:table-cell;
+                padding:5px 0px 0px 5px;
+                font-weight:bold;
+                color:#6d6d6d;
+            }
+
+            .batch-edit-container {
+                padding-right:0px;
+                .dx-menu-item-content {
+                    font-weight:bold;
+                    color:#6d6d6d;
+
+                    &:hover {
+                        text-decoration:underline;
+                    }
+                }
+                .dx-button {
+                    float:right;
+                }
+            }
+
+        }
+
+        .dx-multiview-item.dx-item-selected {
+
+            background-color:#c5c5c5;
+        }
+
+        .dx-form {
+            .dx-box-item {
+
+                margin-bottom:-3px;
+
+            
+           
+            }
+            .dx-widget {
+                    font-size:10px;
+                }
+        }
+
+        .dx-datagrid-rowsview .dx-row {
+            border-top: 1px solid transparent;
+            border-bottom: 1px solid transparent;
+            font-size: 8pt;
+            height: 30px;
+        }
+ 
+        .dx-tabpanel .dx-indent-wrapper {
+            background-color:#dedede;
+        }
+
+        .dx-layout-manager .dx-tabpanel .dx-multiview-item-content {
+            background-color:#fff;
+            padding:10px 10px 20px 10px;
+        }
+
+        .js-btn-group-bottom {
+
+            position:absolute;
+            bottom:2px;
+            right:2px;
+
+            .btn { 
+                width:100px;
+                height:30px;
+                font-size:12px;
+                padding:0px;
+                font-weight:bold;
+                border-radius:0;
+            }
+
+        }
+
+        .js-detailview-detail {
+            background-color:#878787;
+        }
+
+        .dx-field-item-label-text {
+            /*color:#000;*/
+            font-size:10.5px;
+            color:#232323;
+        }
+
+        .dx-datagrid-headers .dx-datagrid-table .dx-row>td {
+            font-size:10.5px;
+            color:#fff;
+        }
+
+        .dx-texteditor-input {
+            padding-top:7px;
+            padding-bottom:7px;
+            font-size:11px;
+        }
+
+        .dx-field-value:not(.dx-switch):not(.dx-checkbox):not(.dx-button), .dx-field-value-static {
+            width:100%;
+        }
+
+        .js-control-container { 
+
+            padding-top:5px;
+
+            table {
+                font-size:14px;
+                width : 100%!important;
+                margin-bottom:5px;
+         
+                .caption { 
+                    width:30%;
+                    text-align:right;
+                    padding-right:10px;
+                }
+
+                .value{
+                    padding-left:0;
+                }
+
+                tr {
+                    height:30px;                
+                }
+
+                td {
+                    border:dashed 1px #ddd;
+                }
+
+                tr:nth-child(even) {background: #edecec}
+
+                tr:nth-child(odd) {background: #FFF}
+            }
+        }
+
+        legend  {
+            padding:5px;
+            font-size:14px;
+            font-weight:bold;
+            margin-bottom:5px;
+            border-color:@themeColor; 
+            border-width:2px;
+            color:@themeColor;
+        }
+
+        .row, form, .js-navigation-tab, .js-navigation-content {
+             height:100%!important;
+        }
+
+        .dx-form-group-content { 
+            padding : 5px 0px 0px 0px;
+        }
+
+        .js-navigation-tab {
+        
+            font-size:12px;
+            border-left:solid 1px #ddd;
+            padding-left:0px;
+            padding-right:0px;
+            border-top:solid 1px #ddd;
+
+            ul {
+                border-left:none;
+            }
+            a {
+                color:@themeColor;
+                font-weight:bolder;
+            }
+
+            .tab-content {
+                overflow:auto;
+            }
+        }
+        .js-navigation-content {
+            padding:0;
+        
+        }
+
+        .tabs-left, 
+        .tabs-right {
+            border-bottom: none;
+            padding-top: 2px;
+        }
+        .tabs-left {
+            border-right: 1px solid #ddd;
+      
+            .active {
+                a {
+                    color:#fff;
+                    background-color:@themeColor;
+                    font-weight:bold;
+                }
+            }
+        
+            & > li {
+                float: none;
+                margin-bottom: 2px;
+                margin-right: -1px;
+           
+                & > a {
+                    border-radius:0;
+                    margin-right: 0;
+                    display:block;
+                }
+                .active {
+                
+                    & > a:focus,
+                    & > a:hover,
+                    & > a {
+                        border-bottom-color: #ddd;
+                        border-right-color: transparent;
+                    }
+                
+                }
+            }
+        }
+        .tabs-right {
+            border-left: 1px solid #ddd;
+            .active {
+                a {
+                    color:#fff;
+                    background-color:@themeColor;
+                }
+            }
+            & > li {
+                float: none;
+                margin-bottom: 2px;
+                margin-left: -1px;
+
+                & > a {
+                    border-radius: 0 0 0 0;
+                    margin-right: 0;
+                }
+
+                .active {
+
+                    & > a:focus,
+                    & > a:hover,
+                    & > a {
+                        border-bottom-color: #ddd;
+                        border-right-color: transparent;
+                    }
+                
+                }
+                > a {
+
+                }
+            }
+        }
+
+        .sideways {
+            margin-top:50px;
+            border: none;
+            position: relative;
+            & > li {
+                height: 20px;
+                width: 120px;
+                margin-bottom: 100px;
+                & > a {
+                    border-bottom: 1px solid #ddd;
+                    border-right-color: transparent;
+                    text-align: center;
+                    border-radius: 4px 4px 0px 0px;
+                }
+                .active {
+                    & > a:focus,
+                    & > a:hover,
+                    & > a {
+                        border-bottom-color: transparent;
+                        border-right-color: #ddd;
+                        border-left-color: #ddd;
+                    }
+                }
+            }
+            .tabs-left {
+                 left: -50px;
+                 & > li {
+                    -webkit-transform: rotate(-90deg);
+                    -moz-transform: rotate(-90deg);
+                    -ms-transform: rotate(-90deg);
+                    -o-transform: rotate(-90deg);
+                    transform: rotate(-90deg);
+                 }
+            }
+            .tabs-right {
+                right: -50px;
+                & > li {
+                    -webkit-transform: rotate(90deg);
+                    -moz-transform: rotate(90deg);
+                    -ms-transform: rotate(90deg);
+                    -o-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                }
+            }
+        }
+
+        .JsModalbtnContainer {
+
+            //background-color:#646464;
+            height:6%;
+            width:100%;
+            display:table;
+            position:absolute;
+            bottom:0;
+            z-index:100;
+            padding-top:5px;
+            padding-bottom:5px;
+
+            .inner-status {
+                color:#fff;
+                font-size:12px;
+                padding-left:10px;
+            }
+
+            .JsModalbtnContainerInner {
+                display:table-cell;
+                vertical-align:middle;
+                text-align:left;
+         
+
+                .ctn {
+                    float:right;
+
+                    .dx-button {
+                        font-size:14px;
+                        min-width:100px;
+                    }
+
+                    .dx-button-has-text .dx-button-content {
+                        padding:5px 25px 4px;
+                    }
+
+                }
+            }
+
+        }
+
+        .hasChildGrid {
+
+            vertical-align:top;
+            padding-bottom:10px;
+            background-color:#fff;
+        
+            .hasChildGrid-Parent {
+                /*width:59.8%;*/
+                display:inline-block;
+                max-width:100%!important;
+                padding:5px;
+                vertical-align:top;
+                background-color:#fff;
+            }
+
+            .child-grid {
+                /*width:39.8%;*/
+                /*max-width:100%!important;*/
+                display:inline-block;
+                padding:5px 5px 5px 5px;
+                vertical-align:top;
+                background-color:#fff;
+                width:100%!important;
+            }
+        }
+
+
+        &.horizontal {
+
+            .record-count {
+                padding-top:10px;
+            }
+
+            .dx-field-item-label-text {
+                font-size:10.5px;
+            }
+            .dx-texteditor-input {
+                font-size:10.5px;
+            }
+
+            .hasChildGrid-Parent,
+            .child-grid {
+                padding:5px;
+            }
+        }
+    }
+
+    .dx-master-detail-row {
+        .JsCellFocus  {
+            background-color:#fff!important;
+        }
+    }
+
+    .js-detailview-container.js-modal-detailview {
+        .js-detail-scrollview-content {
+            /*padding-top:0px!important;
+            padding-left:0px!important;*/
+        }
+    } 
+
+    .dx-fileuploader-input-wrapper {
+        border:3px dashed #ddd!important;
+    }
+
+    .jdx-fileuploader-textview {
+        padding:5px;
+        font-size:13px;
+        display:inline-block;
+        &::before {
+            display: inline-block;
+            font: normal normal normal 24px/1 "Material Design Icons";
+            font-size: 15px;
+            text-rendering: auto;
+            line-height: inherit;
+            padding-right:3px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transform: translate(0, 0);
+            content: "\F066";
+        }
+    }
+
+    .jdx-fileuploader-textview:hover {
+        cursor:pointer;
+        color:deepskyblue;
+        .file-delete { 
+            font-weight:normal; 
+        }
+    }
+
+    .file-delete {
+        display:inline-block;
+        &:hover {
+            color:red;
+            font-weight:bolder;
+            cursor:pointer;
+        }
+         
+    }
+}

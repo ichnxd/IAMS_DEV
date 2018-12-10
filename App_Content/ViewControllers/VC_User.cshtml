@@ -1,0 +1,89 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, BaseClass) {
+
+        var VC_User = function () { }
+        
+        VC_User.prototype = Object.create(BaseClass.prototype);
+
+        VC_User.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            //
+            //
+            //
+
+            if (_.ID_ViewType === 2) {
+                VC.onContextMenuPreparing_User_Roles = function (e) {
+                    e.items.unshift({
+                        text: 'Edit Use Role',
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            var data = e.row.data;
+                            VC.OpenOnNewTab({
+                                Caption: 'Edit ' + data.UserRole,
+                                ID_CurrentObject: data.ID_UserRole,
+                                ID_View: 4192
+                            });
+                        }
+                    });
+                }
+                //
+                //
+                //
+
+
+            }
+
+            VC.AddToolbarButton({
+                text: 'Reset Password',
+                icon: 'mdi mdi-lock',
+                IsDisabled: function () {
+                    if (_.ID_ViewType === 1) {
+                        var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                        if (ItemSelecteds.length != 1) return true;
+                    } else {
+                        var CurrentObject = _.CurrentObject;
+                        if (CurrentObject.ID == -1) return true;
+                    }
+                    return false;
+                },
+                isContextMenuOnly: false,
+                requireMultipleObject: true,
+                onItemClick: function () {
+                    var ItemSelected = _.ID_ViewType === 1 ? VC.Grid.getSelectedRowsData()[0] : _.CurrentObject;
+                    app.$changePasswordDialog(ItemSelected).then(function () {
+                        if (_.ID_ViewType === 1) {
+                            VC.Grid.refresh();
+                        } else {
+                            VC.Reload();
+                        }
+                    });
+                }
+            });
+
+        }
+
+        VC_User.prototype.onCurrentObjectChanged = function (e) {
+            var VC = this.VC;
+            if (e.dataField === "ID_Employee") {
+                if (e.value !== null) {
+                    VC.$scope.CurrentObject.Name = e.value.Name;
+                } else {
+                    VC.$scope.CurrentObject.Name = null;
+                }
+            }
+        }
+
+        return VC_User;
+    });
+//</script>
+</text> , false )

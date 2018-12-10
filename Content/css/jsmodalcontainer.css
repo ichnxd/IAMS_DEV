@@ -1,0 +1,117 @@
+﻿@font-face {
+  font-family: Roboto Black;
+  src: url("Styles/fonts/Roboto/Roboto-Black.ttf");
+}
+@font-face {
+  font-family: Roboto Black Italic;
+  src: url("Styles/fonts/Roboto/Roboto-BlackItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Bold;
+  src: url("Styles/fonts/Roboto/Roboto-Bold.ttf");
+}
+@font-face {
+  font-family: Roboto Bold Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-BoldItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-Italic.ttf");
+}
+@font-face {
+  font-family: Roboto Light;
+  src: url("/Styles/fonts/Roboto/Roboto-Light.ttf");
+}
+@font-face {
+  font-family: Roboto Light Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-LightItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Black;
+  src: url("/Styles/fonts/Roboto/Roboto-Medium.ttf");
+}
+@font-face {
+  font-family: Roboto Medium Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-MediumItalic.ttf");
+}
+@font-face {
+  font-family: Roboto;
+  src: url("/Styles/fonts/Roboto/Roboto-Regular.ttf");
+}
+@font-face {
+  font-family: Roboto Thin;
+  src: url("/Styles/fonts/Roboto/Roboto-Thin.ttf");
+}
+@font-face {
+  font-family: Roboto Thin Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-ThinItalic.ttf");
+}
+#JSWebApp {
+  /*.dx-tab { 
+       padding:3px;
+       min-height:10px!important;
+       height:10px;
+    }*/
+}
+#JSWebApp .js-listview-modal .modal-dialog {
+  width: 70%;
+  height: auto;
+}
+#JSWebApp .js-listview-modal .modal-content .js-detailview-container .js-detailview-detail {
+  background-color: #fff;
+}
+#JSWebApp .js-listview-modal .modal-content .js-bottom-container {
+  width: 100%;
+  text-align: right;
+}
+#JSWebApp .js-listview-modal .modal-content .js-btn-group {
+  display: inline-block;
+  padding: 5px;
+}
+#JSWebApp .js-detailview-modal .modal-dialog {
+  width: 70%;
+  height: auto;
+}
+#JSWebApp .js-detailview-modal .modal-content .js-detailview-container .js-detailview-detail {
+  background-color: #fff;
+}
+#JSWebApp .js-detailview-modal .modal-content .js-bottom-container {
+  width: 100%;
+  text-align: right;
+}
+#JSWebApp .js-detailview-modal .modal-content .js-btn-group {
+  display: inline-block;
+  padding: 5px;
+}
+#JSWebApp .modal-content {
+  height: auto;
+  width: auto;
+}
+#JSWebApp .modal-content .js-btn-group .btn {
+  background-color: #fff;
+  opacity: 1;
+  min-width: 150px;
+  margin-left: 5px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0px;
+}
+#JSWebApp .modal-content .dx-scrollview-content {
+  height: 100%!important;
+}
+#JSWebApp .modal-content .dx-scrollview-content,
+#JSWebApp .modal-content .js-dx-form-group {
+  background-color: #fff;
+}
+#JSWebApp .modal-content .close-button {
+  float: right;
+  margin-top: 4px;
+}
+#JSWebApp .modal-content .close-button:hover {
+  font-weight: bold;
+  cursor: pointer;
+}
+#JSWebApp .modal-content .header {
+  font-size: 15px;
+  font-weight: lighter;
+}

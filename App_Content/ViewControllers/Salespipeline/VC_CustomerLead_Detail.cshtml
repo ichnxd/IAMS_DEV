@@ -1,0 +1,213 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/AR/VC_BaseAR");
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    //define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+    define(['app','baseModelHelper','AcctHelper' ], function (app, baseModelHelper,AcctHelper) {
+
+        var VC_CustomerLead_Detail = function () {
+        }
+
+        VC_CustomerLead_Detail.prototype = Object.create(baseModelHelper.prototype);
+
+        var txtEmailAddress;
+
+        VC_CustomerLead_Detail.prototype.Init = function (VC) {
+            this.DefaultFilterValue = -3;
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            if(_.ID_ViewType == 2){
+
+
+                var formItem = VC.GetFormItem("EmailAddress");
+
+                    formItem.validationRules.push({
+                    type: "email" 
+                });
+       
+            }
+          
+        }
+
+        var fIsEmailValidate = function(){
+
+            var isvalid = true;
+
+            var brokenRules = NewOppformControl.validate().brokenRules;
+
+            brokenRules.forEach(function(brokenRule) {
+                                    
+                if(brokenRule.type == "email"){
+                    console.log(brokenRule);
+                    isvalid = false;
+                }
+            });
+
+            console.log(isvalid, brokenRules);
+
+            return isvalid;
+
+        };
+        
+
+        VC_CustomerLead_Detail.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this,VC);
+            var _ = this;
+
+            var ContactNo = VC.GetFormItem('ContactNo');
+            if(ContactNo !== null){
+                var _onFocusIn = ContactNo.editorOptions.onFocusIn;
+                ContactNo.editorOptions.onFocusIn = function(e){                                      
+                    $(e.element).find('.dx-texteditor-input')[0].selectionStart = 5;
+                    if(_onFocusIn !== undefined && _onFocusIn !== null){
+                        _onFocusIn(e);
+                    } 
+                }
+            }
+
+            var PhoneNo = VC.GetFormItem('PhoneNo');{
+                var _onFocusIn = PhoneNo.editorOptions.onFocusIn;
+                PhoneNo.editorOptions.onFocusIn = function(e){                                      
+                    $(e.element).find('.dx-texteditor-input')[0].selectionStart = 5;
+                    if(_onFocusIn !== undefined && _onFocusIn !== null){
+                        _onFocusIn(e);
+                    } 
+                }
+            }
+        }
+    
+
+    
+        VC_CustomerLead_Detail.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+            if(e.dataField == 'LastName'){
+                console.log('LastName')
+                if(e.value !== null && e.value !== undefined){
+                    if(e.value.length > 0){
+                        var n = _.CurrentObject.LastName.split(' ');
+                        var x = ''; 
+                        $.each(n,function(i,o){
+                            x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                        });
+                        _.CurrentObject.LastName = x;
+                        console.log(x)
+                    }
+
+                }
+            }
+
+            if(e.dataField == 'FirstName'){
+                console.log('FirstName')
+                if(e.value !== null && e.value !== undefined){
+                    if(e.value.length > 0){
+                        var n = _.CurrentObject.FirstName.split(' ');
+                        var x = ''; 
+                        $.each(n,function(i,o){
+                            x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                        });
+                        _.CurrentObject.FirstName = x;
+                        console.log(x)
+                    }
+
+                }
+            }
+
+            if(e.dataField == 'MiddleName'){
+                console.log('MiddleName')
+                if(e.value !== null && e.value !== undefined){
+                    if(e.value.length > 0){
+                        var n = _.CurrentObject.MiddleName.split(' ');
+                        var x = ''; 
+                        $.each(n,function(i,o){
+                            x += o[0].toUpperCase() + o.substring(1).toLowerCase() + ((n.length -1) == i ? '' : ' ');
+                        });
+                        _.CurrentObject.MiddleName = x;
+                        console.log(x)
+                    }
+
+                }
+            }
+
+        }
+
+
+        VC_CustomerLead_Detail.prototype.onLoad = function () {
+            
+            baseModelHelper.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+            VC.ValidationRules.push(function () {
+
+                var brokenRules = [];
+    
+                var formItem = VC.GetFormItem("EmailAddress");
+
+                formItem.validationRules.forEach(function(rule) {
+                    console.log('validationRules',rule)
+                    if(rule.isValid == false && brokenRules.length == 0 && rule.message !== 'Email Address is required'){
+
+                        brokenRules.push(rule.message);
+                    }
+                });
+
+                var IsContactValid = true;
+                
+                if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ContactNo,12,2) == false){
+                    IsContactValid = false;
+                    brokenRules.push('Mobile No should be 12 digits');
+                }   
+
+                if(AcctHelper.ValidatePhoneNo(_.CurrentObject.PhoneNo,10,3) == false){
+                    IsContactValid = false;
+                    brokenRules.push('Phone No should be 10 digits');
+                }
+                
+                if(IsContactValid == true){
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ContactNo,12) == false && AcctHelper.ValidatePhoneNo(_.CurrentObject.PhoneNo,10) == false){
+                        brokenRules.push('Either Phone No or Mobile No is required.');
+                    }
+                }
+
+
+                if(brokenRules.length > 0){
+                    return {
+                        isValid: false,
+                        brokenRules: brokenRules
+                    }
+                }
+
+                return { isValid : true }
+
+            });
+
+        }
+
+
+
+        return VC_CustomerLead_Detail;
+});
+      //</script>
+</text> , false);
+
+
+
+
+
+
+
+
+
+

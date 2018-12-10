@@ -1,0 +1,92 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+    
+}
+@Html.JsMinify(@<text>
+//<script>
+    //baseModelHelper
+    ///JsApp/GetScript?Url=@{@BaseVCUrl}
+    define(['app','baseModelHelper', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        "use strict"
+        var VC_BaseAccounting = function () { }
+
+        VC_BaseAccounting.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BaseAccounting.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            if (_.ID_ViewType === 1) {
+                VC.AddActionFilter({
+                    name: 'VC_AccountingStatus',
+                    caption: 'Status',
+                    width : '150px',
+                    dataSource: [
+                        { id: -1 , name: '(All)' },
+                        { id: 1 , name: 'Filed' },
+                        { id: 23 , name: 'Posted' }
+                    ],
+                    placeholder: 'Status',
+                    value: -1
+                });
+            }
+
+            if (_.ID_ViewType == 2) {
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    if(_.CurrentObject[_.DocDetailPropertyName] == undefined || _.CurrentObject[_.DocDetailPropertyName] == null) _.CurrentObject[_.DocDetailPropertyName] = [];
+                    if(_.CurrentObject[_.DocDetailPropertyName].length == 0 && _.IgnoreDetails !== true){
+
+                        brokenRules.push('Details is required');
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+
+
+
+                VC['on' + _.DocDetailPropertyName + '_RowUpdated'] = function (Grid, Detail) {
+                    _.onDetailRowUpdated(Detail);
+                    _.Compute();
+                }
+
+                VC[_.DocDetailPropertyName + '_onColumnChanged'] = function( e ) {      
+                    _.Compute();
+                }
+            }
+        }
+
+        VC_BaseAccounting.prototype.onDetailRowUpdated = function (Detail) { }
+        VC_BaseAccounting.prototype.Compute = function () {}
+
+        VC_BaseAccounting.prototype.onCollectionSource_Load = function (data) {
+            
+            var VC = this.VC;
+            var ID_Status = VC.ActionFilters.VC_AccountingStatus;
+            
+            if (ID_Status > 0 ){
+              data.WhereCriteria.push("ID_FilingStatus = " + String(ID_Status) );
+            }
+
+        }
+
+
+        return VC_BaseAccounting;
+
+    });
+//</script>
+</text> , false);

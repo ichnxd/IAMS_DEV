@@ -1,0 +1,2 @@
+11/9/2018 5:46:54 PM:  ---> Cannot insert the value NULL into column 'IsActive', table 'IAMS_20181015_9388_DEV.dbo.tWarehouse'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

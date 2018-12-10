@@ -1,0 +1,73 @@
+﻿@model DevExpress.XtraReports.UI.XtraReport
+@using System.Web.Mvc.Html;
+@using DevExpress.Web.Mvc.UI;
+@using DevExpress.Web.Mvc;
+@using System.Web.Optimization;
+@using System.Dynamic;
+@{
+    Layout = null;
+    bool IsShowHeader = ViewBag.IsShowHeader == null ? false : ViewBag.IsShowHeader;
+    string SQL = ViewBag.SQL;
+    string Name = ViewBag.Name;
+    string ReportFile = ViewBag.ReportFile;
+}
+<!DOCTYPE html>
+<html style="height:100%">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Report Designer</title>
+    @if (IsShowHeader)
+    {
+        @Styles.Render("~/Content/bootstrap")
+    }
+    @Html.DevExpress().GetScripts(
+        new Script { ExtensionSuite = ExtensionSuite.Report }
+    )
+    @Html.DevExpress().GetStyleSheets(
+        new StyleSheet { ExtensionSuite = ExtensionSuite.Report }
+    )
+    @if (IsShowHeader)
+    {
+        @Styles.Render("~/Content/appcss")
+        <style>
+          form {
+                height: 100%;
+          }
+        </style>
+    }
+    else
+    {
+        <style>
+            body {
+                height: 100% !important;
+            }
+
+            .container-fluid,
+            .row,
+            form {
+                height: 100%;
+            }
+        </style>
+    }
+</head>
+<body style="margin:0;height: 100% !important;" id="JSWebApp">
+
+    @using (Html.BeginForm()) {
+                @Html.DevExpress().ReportDesigner(settings => {
+               settings.Name = "designer";
+               settings.Height = Unit.Percentage(100);
+               settings.SaveCallbackRouteValues = new {
+                   Controller = "ReportDesigner",
+                   Action = "ReportDesignerSaveLayout",
+                   ID_Report = ViewBag.ID_Report,
+                   SQL = SQL,
+                   ReportName = Name,
+                   ReportFile = ReportFile,
+               };
+           }).Bind(Model).GetHtml()
+    }
+
+</body>
+</html>
+

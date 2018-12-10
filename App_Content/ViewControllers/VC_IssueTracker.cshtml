@@ -1,0 +1,540 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_IssueTracker = function () { }
+
+        VC_IssueTracker.prototype = Object.create(BaseClass.prototype);
+
+        VC_IssueTracker.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            //
+            //
+            //
+            var DoneTracker = function (ID_IssueTracker, Comment) {
+                var JsDataService = app.$GetDataService();
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pIssueTrackerDone")',
+                    {
+                        'ID_IssueTracker': ID_IssueTracker,
+                        'Comment': Comment
+                    }
+                ).then(function (response) {
+                    if (_.ID_ViewType == 1) {
+                        VC.Grid.refresh();
+                    } else {
+                        VC.Reload();
+                    }
+                    //
+                    VC.ToastSuccess('Issue Tracker Done');
+                }, function () {
+
+                });
+            };
+
+
+            var UnsolveIssueTracker = function (ID_IssueTracker, Comment) {
+                var JsDataService = app.$GetDataService();
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pIssueTrackerDone")',
+                    {
+                        'ID_IssueTracker': ID_IssueTracker,
+                        'Comment': Comment
+                    }
+                ).then(function (response) {
+                    if (_.ID_ViewType == 1) {
+                        VC.Grid.refresh();
+                    } else {
+                        VC.Reload();
+                    }
+                    //
+                    VC.ToastSuccess('Issue Tracker Done');
+                }, function () {
+
+                });
+            };
+
+            if (_.ID_ViewType === 1) {
+                VC.AddActionFilter({
+                    name: 'VC_IssueTrackerStatus',
+                    caption: 'Status',
+                    Width : '100px',
+                    dataSource: [
+                          { id: 1, name: '(All)' }
+                        , { id: -1, name: '(Not Done)' }
+                        , { id: 2, name: 'Pending' }
+                        , { id: 5, name: 'In Progress' }
+                        , { id: 4, name: 'For Checking' }
+                        , { id: 3, name: 'Done' }
+                        , { id: 6, name: 'Deny' }
+                        
+
+                    ],
+                    placeholder: 'Select Status',
+                    value: VC.CurrentUser.ID_UserGroup === 3 ? 4 : -1
+                });
+
+                VC.AddActionFilter({
+                    name: 'VC_IssueTrackerType',
+                    caption: 'Type',
+                    Width: '100px',
+                    dataSource: [
+                        { id: -1, name: '(All)' },
+                        { id: 1, name: 'Development' },
+                        { id: 2, name: 'Modification' },
+                        { id: 3, name: 'Bugs' }],
+                    value : -1
+                });
+
+            }
+
+            if (VC.CurrentUser.ID_UserGroup === 3 || VC.CurrentUser.ID_UserGroup === 8) { // FOR PROJECT MANAGERS ONLY
+                    VC.AddToolbarButton({
+                        text: 'Done',
+                        icon: 'green mdi mdi-check-circle',
+                        IsDisabled: function () {
+                            if (_.ID_ViewType === 1) {
+                                var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                if (ItemSelecteds.length != 1) return true;
+                                if (ItemSelecteds[0].ID_IssueTrackerStatus !== 3) return true;
+                            } else {
+                                var CurrentObject = _.CurrentObject;
+                                if (CurrentObject.ID == -1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus !== 3) return true;
+                                //if (CurrentObject.ID_IssueTrackerStatus === 3) return true;
+                            }
+                            return false;
+                        },
+                        isContextMenuOnly: false,
+                        requireMultipleObject: true,
+                        onItemClick: function () {
+
+                            VC.OpenOnNewWindowByID(4141, -1, {
+                                fullScreen: false,
+                                InitController: function (scope) {
+
+                                },
+                                IsEditingOnly: true,
+                                Width: $(window).width() * 0.50,
+                                shading: true
+                            }).then(function (Detail) {
+
+                                if (_.ID_ViewType == 1) {
+                                    var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                    DoneTracker(ItemSelecteds[0].ID, Detail.Comment);
+                                } else {
+
+                                    DoneTracker(_.CurrentObject.ID, Detail.Comment);
+
+                                }
+
+                            });
+
+                        }
+                    });
+
+                    //
+                    //
+                    //
+
+                    VC.AddToolbarButton({
+                        text: 'Deny',
+                        icon: 'red mdi mdi-close',
+                        IsDisabled: function () {
+                            if (_.ID_ViewType === 1) {
+                                var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                if (ItemSelecteds.length != 1) return true;
+                                if (ItemSelecteds[0].ID_IssueTrackerStatus === 1) return true;
+                            } else {
+                                var CurrentObject = _.CurrentObject;
+                                if (CurrentObject.ID == -1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus === 1) return true;
+                                //if (CurrentObject.ID_IssueTrackerStatus === 3) return true;
+                            }
+                            return false;
+                        },
+                        isContextMenuOnly: false,
+                        requireMultipleObject: true,
+                        onItemClick: function () {
+
+                            VC.OpenOnNewWindowByID(4141, -1, {
+                                fullScreen: false,
+                                InitController: function (scope) {
+
+                                },
+                                IsEditingOnly: true,
+                                Width: $(window).width() * 0.50,
+                                shading: true
+                            }).then(function (Detail) {
+                                 var SelectedID 
+                                if (_.ID_ViewType == 1) {
+                                    var SelectedItems
+                                    SelectedItems = VC.Grid.getSelectedRowsData();
+                                    SelectedID = SelectedItems[0].ID;
+
+                                } else {
+
+                                    SelectedID = _.CurrentObject.ID;
+                                }
+                                     var JsDataService = app.$GetDataService();
+                                    JsDataService.ExecSQLProc(
+                                        '@Html.EncryptSQL("pIssueTracker_Deny")',
+                                        {
+                                            'ID_IssueTracker': SelectedID,
+                                            'Comment': Detail.Comment
+                                        }
+                                    ).then(function (response) {
+                                        if (_.ID_ViewType == 1) {
+                                            VC.Grid.refresh();
+                                        } else {
+                                            VC.Reload();
+                                        }
+                                        VC.ToastSuccess('Issue Tracker is for checking');
+                                    }, function () {
+
+                                    });                               
+
+                            });
+
+                        }
+                    });
+                
+            }
+
+            if (VC.CurrentUser.IsSystemUser === true) { // FOR DEVELOPERS ONLY
+
+                if (_.ID_ViewType === 2) {
+
+                    VC.AddToolbarButton({
+                        text: 'Solve This Issue',
+                        icon: 'green mdi mdi-check-circle',
+                        IsDisabled: function () {
+
+                            if (_.ID_ViewType === 1) {
+                                var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                if (ItemSelecteds.length != 0) return true;
+                            } else {
+                                var CurrentObject = _.CurrentObject;
+                                if (CurrentObject.ID == -1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus == 5) return false;
+                                if (CurrentObject.ID_IssueTrackerStatus != 1) return true;
+
+                            }
+                            return false;
+                        },
+                        isContextMenuOnly: false,
+                        requireMultipleObject: true,
+                        onItemClick: function () {
+                            //
+                            //
+                            //
+                            //
+                            //
+                            var JsDataService = app.$GetDataService();
+                            JsDataService.ExecSQLProc(
+                                '@Html.EncryptSQL("pIssueTracker_SolveIssueByCurrentUser")',
+                                {
+                                    'ID_IssueTracker': _.CurrentObject.ID
+                                }
+                            ).then(function (response) {
+                                if (_.ID_ViewType == 1) {
+                                    VC.Grid.refresh();
+                                } else {
+                                    VC.Reload();
+                                }
+                                VC.ToastSuccess('Issue Tracker is now in progress.');
+                            }, function () {
+
+                            });
+
+
+                        }
+                    });
+
+
+                    VC.AddToolbarButton({
+                        text: 'Unsolve Issue',
+                        icon: 'green mdi mdi-check-circle',
+                        IsDisabled: function () {
+
+                            if (_.ID_ViewType === 1) {
+                                var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                if (ItemSelecteds.length != 0) return true;
+                            } else {
+                                var CurrentObject = _.CurrentObject;
+                                if (CurrentObject.ID == -1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus !== 4) return true;
+                            }
+                            return false;
+                        },
+                        isContextMenuOnly: false,
+                        requireMultipleObject: true,
+                        onItemClick: function () {
+                            //
+                            //
+                            //
+                            //
+                            //
+
+                            VC.OpenOnNewWindowByID(4141, -1, {
+                                fullScreen: false,
+                                InitController: function (scope) {
+
+                                },
+                                IsEditingOnly: true,
+                                Width: $(window).width() * 0.50,
+                                shading: true
+                            }).then(function (Detail) {
+
+                                if (_.ID_ViewType == 1) {
+
+                                } else {
+
+                                    //
+                                    //
+                                    //
+                                    //
+                                    var JsDataService = app.$GetDataService();
+                                    JsDataService.ExecSQLProc(
+                                        '@Html.EncryptSQL("pIssueTracker_UnsolveIssue")',
+                                        {
+                                            'ID_IssueTracker': _.CurrentObject.ID,
+                                            'Comment': Detail.Comment
+                                        }
+                                    ).then(function (response) {
+                                        if (_.ID_ViewType == 1) {
+                                            VC.Grid.refresh();
+                                        } else {
+                                            VC.Reload();
+                                        }
+                                        VC.ToastSuccess('Issue Tracker is now pending.');
+                                    }, function () {
+
+                                    });
+
+
+                                }
+
+                            });
+
+
+
+
+
+
+
+                            
+
+
+                        }
+                    });
+
+
+                    VC.AddToolbarButton({
+                        text: 'For Checking',
+                        icon: 'green mdi mdi-check-circle',
+                        IsDisabled: function () {
+                            if (_.ID_ViewType === 1) {
+                                var ItemSelecteds = VC.Grid.getSelectedRowsData();
+                                if (ItemSelecteds.length != 0) return true;
+                            } else {
+                                var CurrentObject = _.CurrentObject;
+                                if (CurrentObject.ID == -1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus === 1) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus === 2) return true;
+                                if (CurrentObject.ID_IssueTrackerStatus === 3) return true;
+                            }
+                            return false;
+                        },
+                        isContextMenuOnly: false,
+                        requireMultipleObject: true,
+                        onItemClick: function () {
+
+                            VC.OpenOnNewWindowByID(4141, -1, {
+                                fullScreen: false,
+                                InitController: function (scope) {
+
+                                },
+                                IsEditingOnly: true,
+                                width: $(window).width() * 0.50,
+                                shading: true
+                            }).then(function (Detail) {
+
+                                if (_.ID_ViewType == 1) {
+
+                                } else {
+
+                                    //
+                                    //
+                                    //
+                                    //
+
+                                    var JsDataService = app.$GetDataService();
+                                    JsDataService.ExecSQLProc(
+                                        '@Html.EncryptSQL("pIssueTracker_ForChecking")',
+                                        {
+                                            'ID_IssueTracker': _.CurrentObject.ID,
+                                            'Comment': Detail.Comment
+                                        }
+                                    ).then(function (response) {
+                                        if (_.ID_ViewType == 1) {
+                                            VC.Grid.refresh();
+                                        } else {
+                                            VC.Reload();
+                                        }
+                                        VC.ToastSuccess('Issue Tracker is for checking');
+                                    }, function () {
+
+                                    });
+
+                                }
+
+                            });
+
+                        }
+                    });
+
+
+                }
+
+
+            }
+
+
+
+            if (this.ID_ViewType == 2) {
+                VC.AddToolBarButtonOnGrid('IssueTracker_Details', {
+                    text: 'Add Comment',
+                    icon: 'mdi mdi-plus',
+                    onItemClick: function () {
+                        //
+                        //
+                        //
+
+                        VC.OpenOnNewWindowByID( 4141, -1, {
+                            fullScreen: false,
+                            InitController: function (scope) {
+
+                            },
+                            IsEditingOnly: true,
+                            width: $(window).width() * 0.50,
+                            shading: true
+                        }).then(function (Detail) {
+
+                            if (_.CurrentObject['IssueTracker_Details'] == undefined || _.CurrentObject['IssueTracker_Details'] == null) {
+                                _.CurrentObject['IssueTracker_Details'] = [];
+                            }
+
+                            Detail.User = VC.CurrentUser.Name;
+
+                            Detail.ID_User = VC.CurrentUser.ID;
+
+                            _.CurrentObject['IssueTracker_Details'].push(Detail);
+
+                        });
+                    }
+
+                });
+            }
+        }
+
+        VC_IssueTracker.prototype.onCollectionSource_Load = function (data) {
+            BaseClass.prototype.onCollectionSource_Load.call(this, data);
+
+            var VC = this.VC;
+            var fStatusValue = VC.ActionFilters.VC_IssueTrackerStatus;
+            var fTrackerType = VC.ActionFilters.VC_IssueTrackerType
+
+            switch (fTrackerType) {
+                case 1:
+                    data.WhereCriteria.push("ID_IssueTrackerType = 1");
+                    break;
+                case 2:
+                    data.WhereCriteria.push("ID_IssueTrackerType = 2");
+                    break;
+                case 3:
+                    data.WhereCriteria.push("ID_IssueTrackerType = 3");
+                    break;
+
+            }
+
+            switch (fStatusValue) {
+                case 2:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus = 1");
+                    break;
+                case 3:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus = 2");
+                    break;
+                case 4:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus = 3");
+                    break;
+                case 5:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus = 4");
+                    break;
+                case 6:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus = 5");
+                    break;
+                case -1:
+                    data.WhereCriteria.push("ID_IssueTrackerStatus IN (1, 4, 5)");
+                    break;
+                
+            }
+
+        }
+        
+
+        VC_IssueTracker.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pIssueTrackerApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_IssueTracker.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pIssueTrackerCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_IssueTracker;
+    });
+//</script>
+</text> , false )

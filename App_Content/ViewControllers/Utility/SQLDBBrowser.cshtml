@@ -1,0 +1,269 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var SQLDBBrowser = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            BaseClass.prototype.Init.call(this, $scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var _ = this;
+            
+
+            //
+            //
+            //
+
+            //console.log(CurrentObject);
+
+            var Grid = null;
+            
+            $scope.dxSelectBoxOption = {
+                dataSource: CurrentObject.TableList,
+                displayExpr: 'Name',
+                displayValue: 'ID',
+                searchEnabled: true,
+                onSelectionChanged: function ( e ) {
+                    if (e.selectedItem != null) {
+
+                        $scope.Data.TableName = e.selectedItem.Name;
+                        $scope.Data.SQLQuery = 'SELECT ID, * FROM ' + e.selectedItem.Name;
+                        _.$timeout(function () {
+                            Refresh();
+                        }, 500);
+                    }
+
+                }
+            };
+
+            $scope.DataSet = [];
+            $scope.Data = {
+                TableName: CurrentObject.TableName,
+                SQLQuery: CurrentObject.SQL
+            };
+
+            $scope.dxTextBoxOption_TableName = {
+                placeholder: 'Type Table name here...',
+                showClearButton: true,
+                bindingOptions: {
+                    value: 'Data.TableName'
+                }
+            }
+
+            $scope.dxTextBoxOption = {
+                placeholder: 'Type SQL here...',
+                showClearButton: true,
+                bindingOptions: {
+                    value: 'Data.SQLQuery'
+                },
+                onEnterKey: function (e) {
+                    Refresh();
+                  
+                }
+            }
+
+            var Refresh = function (SQL) {
+                app.$GetDataService().pGetCurrentObject(
+                     '@Html.EncryptSQL("_pGetDataSet")',
+                     {
+                         'SQL': $scope.Data.SQLQuery
+                     }
+                  ).then(function (data) {
+
+                      $scope.DataSet = data.DataSets;
+
+                  });
+
+            }
+
+            $scope.DataGridOption = {
+                bindingOptions: {
+                    dataSource: 'DataSet'
+                },
+                onInitialized: function (e) {
+
+                    Grid = e.component;
+
+                    if (CurrentObject.SQL != null) {
+
+                        _.$timeout(function () {
+
+                            Refresh();
+
+                        }, 1000 );
+                        
+
+                    }
+                },
+                height: function () {
+                    return 480;
+                },
+                searchPanel: {
+                    visible: true,
+                },
+                wordWrapEnabled: true,
+                onRowUpdated: function ( e ) {
+                    
+                    //console.log(e);
+                    
+                    for (var name in e.data) {
+                        
+                        if (name != "_IsNew") {
+
+                            var myVar = e.data[name];
+
+                            var Value = null;
+
+                            if (e.data[name] != null) {
+                                if (typeof myVar === 'string' || myVar instanceof String) {
+                                    Value = "'" + e.data[name].toString().replace("'", "''") + "'"
+                                    if (e.data[name].toString().trim().length === 0) {
+                                        Value = 'NULL';
+                                    }
+
+                                } else if (typeof myVar === 'boolean' || myVar instanceof Boolean) {
+                                    Value = e.data[name] === true ? "1" : "0"
+                                } else {
+                                    Value = e.data[name].toString();
+
+                                }
+                            } else {
+                                Value = 'NULL';
+                            }
+
+                            var SQL = 'UPDATE ' + $scope.Data.TableName + ' SET ' + name + ' = ' + Value + ' WHERE ID = ' + e.key.ID;
+
+                            app.$GetDataService().ExecSQLProc(
+                            '@Html.EncryptSQL("_pGetDataSet")',
+                                {
+                                    'SQL': SQL
+                                }
+                            ).then(function (data) {
+
+                                DevExpress.ui.notify('Data succesfully Updated.', 'success', 1000);
+
+                            });
+                        }
+
+                    }
+
+                },
+                onRowRemoved: function (e) {
+
+                    //console.log('ON ROW DELETED', e.data);
+
+                    var SQL = 'DELETE FROM ' + $scope.Data.TableName + ' WHERE ID  = '+ e.data.ID;
+
+                    app.$GetDataService().ExecSQLProc(
+                      '@Html.EncryptSQL("_pGetDataSet")',
+                          {
+                              'SQL': SQL
+                          }
+                      ).then(function (data) {
+
+                          DevExpress.ui.notify('Data succesfully deleted.', 'success', 1000);
+
+                      });
+
+
+                },
+                groupPanel: {
+                    visible:true
+                },
+                headerFilter: {
+                    visible:true
+                },
+                filterRow: {
+                    visible: true
+                },
+                editing: {
+                    allowUpdating: true,
+                    allowDeleting: true,
+                    allowAdding: true,
+                    mode: 'cell',
+                    text: {
+                        deleteRow:'Delete'
+                    }
+                }
+                , columnChooser: {
+                    height: 400,
+                    width: 250,
+                    enabled : true
+                }
+                , onRowInserted: function (e) {
+
+                    if ($scope.Data.TableName == null) {
+                        alert('Please Specify Table Name')
+                        return;
+                    }
+
+                    var Columns = [];
+                    var Values = [];
+
+                    for (var name in e.data) {
+
+                        if (name != "_IsNew") {
+
+                            if (name == '__KEY__') continue;
+
+                            Columns.push(name);
+
+                            var myVar = e.data[name];
+
+                            var Value = null;
+
+                            if (typeof myVar === 'string' || myVar instanceof String) {
+                                Value = "'" + e.data[name].toString().replace("'", "''") + "'"
+                            } else if (typeof myVar === 'boolean' || myVar instanceof Boolean) {
+                                Value = e.data[name] === true ? "1" : "0"
+                            } else {
+                                Value = e.data[name] === null ? 'NULL' : e.data[name].toString();
+                            }
+
+                            Values.push(Value);
+                        }
+
+                        app.$GetDataService().ExecSQLProc(
+                        '@Html.EncryptSQL("_pGetDataSet")',
+                            {
+                                'SQL': 'INSERT INTO ' + $scope.Data.TableName + " (  " + Columns.join(",") + " ) VALUES (" + Values.join(",") + ")"
+                            }
+                        ).then(function (data) {
+
+                            DevExpress.ui.notify('Data succesfully Updated.', 'success', 1000);
+
+                        });
+                    }
+
+
+                },
+                allowColumnReordering : true,
+                allowColumnResizing: true,
+                columnResizingMode: 'widget',
+                customizeColumns: function (columns) {
+
+                    $.each(columns, function (i, c) {
+
+                        if (c.dataField == 'ID') {
+
+                            c.allowEditing = false;
+                            c.width = 50;
+                        }
+                        
+                        c.allowResizing = true;
+
+                    });
+                }
+            
+
+            };
+
+        }
+
+        return SQLDBBrowser;
+    });
+//</script>
+</text> , false )

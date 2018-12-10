@@ -1,0 +1,5 @@
+5/30/2018 1:48:58 PM: pProposalCancel ---> Proposal has alreaady reference to an opportunity..
+5/30/2018 1:49:09 PM: pProposalCancel ---> Proposal has alreaady reference to an opportunity..
+5/30/2018 3:26:11 PM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) 16-Channel 1080N XVR (Support AHD/CVI/TVI/IP/CVBS),1P 16AX 1-way switch 2M grey - 20001.2.
+5/30/2018 3:27:32 PM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) 16-Channel 1080N XVR (Support AHD/CVI/TVI/IP/CVBS),1P 16AX 1-way switch 2M grey - 20001.2.
+5/30/2018 3:33:59 PM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) 16-Channel 1080N XVR (Support AHD/CVI/TVI/IP/CVBS),1P 16AX 1-way switch 2M grey - 20001.2.

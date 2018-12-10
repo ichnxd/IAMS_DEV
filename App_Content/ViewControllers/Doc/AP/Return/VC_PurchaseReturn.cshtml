@@ -1,0 +1,468 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseModelHelper,AcctHelper) {
+
+        var VC_PurchaseReturn = function () {
+            this.DocDetailPropertyName = 'PurchaseReturnDetails';
+            this.DocSerialPropertyName = 'PurchaseReturn_Detail_Serials'
+            //this.SerialsEnabled = true;
+            this.BrandRequired = true;
+            this.DocModuleParent = 'AccountsPayable';
+            //this.SerialReference = { Column: 'ID_DocDetail', ID_Model: AcctHelper.PurchaseReturn  }
+        }
+
+        VC_PurchaseReturn.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_PurchaseReturn.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            var VC = _.VC;
+            VC.ValidationRules.push(function () {
+                var brokenRules = [];
+                $.each(VC.$scope.CurrentObject.PurchaseReturnDetails, function (i, item) {
+
+                    if (item.RefQuantity !== null) {
+                        if (item.Quantity > item.RefQuantity) {
+                            brokenRules.push('Cannot accept excess Quantity for item (' + item.Item + ')');
+                        }
+                    }
+                });
+
+                if (brokenRules.length > 0) return { isValid: false, brokenRules: brokenRules };
+                return { isValid: true };
+            });
+            VC.onContextMenuPreparing_PurchaseReturnDetails = function (e) {
+                e.items.unshift({
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+
+                        var Item = _.CurrentObject.PurchaseReturnDetails[e.rowIndex];
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+                            VC.MsgBox('Please specify Quantity', 'Purchase Return');
+                            return;
+                        }
+                            _.BrowseSerials(e.component, Item);
+                    }
+                });
+
+            }
+        }
+
+        VC_PurchaseReturn.prototype.Init = function (VC) {
+            var _ = this;
+            _.IsAddItemDisabled = true;
+            baseModelHelper.prototype.Init.call(this, VC);   
+			
+			VC.AddButtonReport({
+                Name: 'Purchase Return Form',
+                ID_Report: 19,
+                requireSingleObject: true
+            });
+
+
+             if (this.ID_ViewType == 2) {
+                      VC.ValidationRules.push(function () {
+                                 var brokenRules = [];
+                                console.log('xxx',_.CurrentObject.PurchaseReturn_Detail_Serials)
+
+                          var IsExcess = false;
+
+                          $.each(_.CurrentObject.PurchaseReturnDetails, function (index, item) {
+
+                              if (item.ID_DocDetail > 0) {
+                                  if (item.RefQuantity < item.Quantity) {
+                                      IsExcess = true;
+                                  }
+                              }
+                          });
+
+                          if (IsExcess) {
+                              brokenRules.push('Cannot accept excess Quantity');
+                          }
+                        //---- 08/31/2018 ----//
+                           $.each(_.CurrentObject.PurchaseReturnDetails, function (i, d) {
+                               console.log('B',d)
+                            if (d.IsSerialized === true) {
+                                console.log('X',d)
+                                if (Enumerable.From(d.PurchaseReturn_Detail_Serials).Where('$.Name == null').ToArray().length > 0) {
+                                    brokenRules.push('Serial(s) is required for Item (' + d.Item + ')');
+                                } else {
+
+                                    if (d.PurchaseReturn_Detail_Serials== undefined) {d.PurchaseReturn_Detail_Serials = [] }
+                                    if (d.PurchaseReturn_Detail_Serials== null) { d.PurchaseReturn_Detail_Serials = [] }
+                                }
+    
+                                if (d.Quantity !== d.PurchaseReturn_Detail_Serials.length) {
+                                    brokenRules.push('Serial(s) count must be same with Quantity for Item (' + d.Item + ')');
+                                }
+                                //
+                                //
+                            }
+                            });
+                   
+
+                       if (brokenRules.length > 0) {
+                          return {
+                              isValid: false,
+                              brokenRules: brokenRules
+                          }
+                      }
+                return { isValid: true };
+                      });
+             }
+
+              _.BrowseSerials = function (grid, Item) {
+
+                grid.deselectAll();
+                //var Item = _.CurrentObject.InventoryAssembly_Details[e.rowIndex];
+                if(Item.IsSerialized !== true){
+                    return;
+                }
+                var SQL = '@Html.EncryptSQL("SELECT ID,SerialNo  FROM vReceivingReportSerialsWithQty WHERE ID_Item = @ID_Item and ID_ReceivingReport_Detail = @ID_ReceivingReport_Detail")';
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_ReceivingReport_Detail: Item.ID_DocDetail
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: 'AB8B4149-AB26-48A6-B8F9-DE6BBF4FD352',
+                    title: 'Select Item Serial (' + Item.Quantity + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+                    console.log('x', Item["PurchaseReturn_Detail_Serials"])
+                    var DeleteDetails = Enumerable.From(Item["PurchaseReturn_Detail_Serials"]).Where('$.ID > 0 ').ToArray();
+                            //	console.log(DeleteDetails,'delete')
+                                if( VC._DeletedItems['PurchaseReturn_Detail_Serials'] == null ||  VC._DeletedItems['PurchaseReturn_Detail_Serials'] == undefined ) VC._DeletedItems['ItemIssuance_Detail_Serials'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['PurchaseReturn_Detail_Serials'].push(o);
+                               });
+                    Item["PurchaseReturn_Detail_Serials"] = [];
+
+                    $.each(Serials, function (i, d) {
+                        Item["PurchaseReturn_Detail_Serials"].push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Item
+                        });
+                    });
+                    //
+                    //
+                    //
+
+                    _.VC.$timeout(function () {
+                        for (i = 0; i < _.CurrentObject.ItemIssuance_Detail_Serials.length; i++) {
+                            grid.deselectAll();
+                            grid.selectRowsByIndexes([i]);
+                        }
+
+                    }, 500);
+                });
+            }
+        }
+        
+        VC_PurchaseReturn.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            var Item = e.key;
+
+           
+            
+            if (e.dataField === 'Quantity') {
+
+                e.grid.deselectAll();
+                if(Item.Quantity == 0 || Item.Quantity == null){
+                    return;
+                }
+                if(Item.Quantity > Item.OnHand){
+                    VC.MsgBox("Must not exceed current Quantity OnHand","Purchase Return");
+                    return;
+                }
+
+                if (Item.IsSerialized === true) {
+
+                    var NewSerials = [];
+                    
+                    if (Item.PurchaseReturn_Detail_Serials !== null && Item.PurchaseReturn_Detail_Serials !== undefined) {
+                        if (VC._DeletedItems["PurchaseReturn_Detail_Serials"] === undefined) VC._DeletedItems["PurchaseReturn_Detail_Serials"] = [];
+                        $.each(Item.PurchaseReturn_Detail_Serials, function (i, s) {
+                            if (s.ID > 0) {
+                                VC._DeletedItems["PurchaseReturn_Detail_Serials"].push(s);
+                            }
+                        });
+                    }
+  
+                    var SQL = '@Html.EncryptSQL("SELECT ID,SerialNo FROM vReceivingReportSerialsWithQty WHERE ID_Item = @ID_Item AND ID_ReceivingReport_Detail = @ID_ReceivingReport_Detail")';
+                    var params = {
+                        ID_Item: Item.ID_Item,
+                        ID_ReceivingReport_Detail: Item.ID_DocDetail
+                    }
+
+                    _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                        ID_View: 'AB8B4149-AB26-48A6-B8F9-DE6BBF4FD352',
+                        title: 'Select Item Serial (' + Item.Quantity + ')',
+                        params: params,
+                        validate: function (SelectedRows) {
+                            if (SelectedRows.length !== Item.Quantity) {
+                                _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                                return false;
+                            }
+                            return true;
+                        }
+                    }).then(function (Serials) {
+                                 
+                        Item.PurchaseReturn_Detail_Serials = [];
+
+                        $.each(Serials, function (i, d) {
+                            Item.PurchaseReturn_Detail_Serials.push({
+                                ID: -1,
+                                Name: d.SerialNo,
+                                Code: Item.Item
+                            });
+                        });
+                        //
+                        //
+                        //
+
+                        _.VC.$timeout(function () {
+                            e.grid.selectRowsByIndexes([e.rowIndex]);
+                        }, 500);
+                    });
+
+
+                }
+            }
+        }
+
+        VC_PurchaseReturn.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+    
+  
+        if (typeof VC.butBrowseRR != 'undefined'){
+               
+                      
+            
+            VC.butBrowseRR.option('onClick', function () {
+                if (_.CurrentObject.ID_Supplier == null) {
+                    VC.MsgBox('Please select a supplier', 'Purchase Return');
+                    return;
+                }
+                //
+                //
+                //
+
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vReceivingReport_DetailWithOnHand WHERE ID_FilingStatus NOT IN ( 1 , 7 )
+                                                    AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @ID_Details )")', {
+                    title: 'Select Receiving Report (' + _.CurrentObject.Supplier + ')',
+                    ID_View: '0ECB95D8-D2A0-4057-A86D-4C6015BBF141',
+                    params : {
+                         'ID_BusinessPartner' : _.CurrentObject.ID_Supplier
+                       , 'ID_Details': Enumerable.From(_.CurrentObject.PurchaseReturnDetails).Select('$.ID_DocDetail').ToArray()
+                    },
+                    onCustomizeColumns : function( columns ) { 
+                        $.each( columns, function(i,c)  { 
+                            if ( c.dataField == "DocumentNo") { 
+                                c.caption = "RR No.";
+                            }
+                            if ( c.dataField == "Date") { 
+                                c.caption = "RR Date";
+                            }
+                        });
+                    }
+                }).then( function(Details)  { 
+                    if (_.CurrentObject.PurchaseReturnDetails == null) _.CurrentObject.PurchaseReturnDetails = [];
+                    $.each(Details,function( i , d ) { 
+                        var detail = { 
+                            ID : -1,
+                            RefID : d.ID,
+                            Code : d.ItemCode,
+                            ItemCode : d.ItemCode,
+                            Quantity : 0.00,
+                            RefQuantity : d.Quantity,
+                            UnitPrice : d.UnitPrice,
+                            TotalAmount : d.TotalAmount,
+                            ID_UOM : d.ID_UOM,
+                            ID_Item : d.ID_Item,
+                            Description : d.Description,
+                            Notes : d.Notes,
+                            ID_TaxScheme : d.ID_TaxScheme,
+                            VatAmt : d.VatAmt,
+                            Item : d.Item,
+                            UOM : d.UOM,
+                            TaxScheme : d.TaxScheme,
+                            ID_DocDetail : d.ID,
+                            Reference : d.DocumentNo + ':' + d.ID,
+                            ID_DocModel: 2142,
+                            DocStatus : '',
+                            IsSerialized: d.IsSerialized,
+                            Conversion : d.Conversion,
+                            OnHand: d.OnHand,
+                            ID_DocDetailParentModel: 2142
+                        }
+                        
+                        _.CurrentObject.PurchaseReturnDetails.push(detail);
+                        _.CurrentObject.ID_TransactionType = d.ID_TransactionType;
+                        //console.log(Details,'asdasdasd')
+                        
+                    });
+                   
+                });
+         
+        });
+		}
+
+        //
+        //
+        var _ = this;
+        VC.AddToolBarButtonOnGrid('PurchaseReturnDetails', {
+            text: 'Browse Reference RR',
+            icon: 'mdi mdi-package-variant',
+            onClick: function () {
+                if (_.CurrentObject.ID_Supplier == null) {
+                    VC.MsgBox('Please select a supplier', 'Purchase Return');
+                    return;
+                }
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,DocumentNo,FilingStatus,ItemCode,Item,Description,UOM,TaxScheme,Quantity,UnitPrice,VatAmt,TotalAmount,Notes,ID_UOM,ID_Item,ID_TaxScheme, ReturnQty, PartNo,IsSerialized,ID_Brand, Conversion,OnHand,ID_Warehouse,Warehouse,ID_Currency,Currency,ExchangeRate FROM dbo.vReceivingReport_DetailWithOnHand WHERE ID_FilingStatus NOT IN ( 1 , 7, 12 )
+                and (isnull(Quantity,0) - isnull(ReturnQty,0)) <> 0
+                                                    AND ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @ID_Details )")', {
+                title: 'Select Receiving Report (' + _.CurrentObject.Supplier + ')',
+                ID_View: '0ECB95D8-D2A0-4057-A86D-4C6015BBF141',
+                params : {
+                    'ID_BusinessPartner' : _.CurrentObject.ID_Supplier
+                  , 'ID_Details': Enumerable.From(_.CurrentObject.PurchaseReturnDetails).Select('$.ID_DocDetail').ToArray()
+                },
+                onCustomizeColumns : function( columns ) { 
+                    $.each( columns, function(i,c)  { 
+                        if ( c.dataField == "DocumentNo") { 
+                            c.caption = "RR No.";
+                        }
+                        if ( c.dataField == "Date") { 
+                            c.caption = "RR Date";
+                        }
+                    });
+                }
+            }).then( function(Details)  { 
+                if (_.CurrentObject.PurchaseReturnDetails == null) _.CurrentObject.PurchaseReturnDetails = [];
+                $.each(Details,function( i , d ) { 
+                    var detail = { 
+                        ID : -1,
+                        RefID : d.ID,
+                        Code : d.ItemCode,
+                        ItemCode : d.ItemCode,
+                        Quantity : 0.00,
+                        RefQuantity : d.Quantity - d.ReturnQty,
+                        UnitPrice : d.UnitPrice,
+                        TotalAmount : d.TotalAmount,
+                        ID_UOM : d.ID_UOM,
+                        ID_Item : d.ID_Item,
+                        Description : d.Description,
+                        Notes : d.Notes,
+                        ID_TaxScheme : d.ID_TaxScheme,
+                        VatAmt : d.VatAmt,
+                        Item : d.Item,
+                        UOM : d.UOM,
+                        TaxScheme : d.TaxScheme,
+                        ID_DocDetail : d.ID,
+                        Reference : d.DocumentNo + ':' + d.ID,
+                        ID_DocModel: 2142,
+                        DocStatus : '',
+                        IsFree: d.IsFree,
+                        IsSerialized: d.IsSerialized,
+                        PartNo: d.PartNo,
+                        SupplierCode: d.SupplierCode,
+                        ID_Brand: d.ID_Brand,
+                        Conversion: d.Conversion,
+                        OnHand: d.OnHand,
+                        ID_DocDetailParentModel: 2142
+
+                    }
+                    _.CurrentObject.PurchaseReturnDetails.push(detail);
+                    _.CurrentObject.ID_Warehouse = d.ID_Warehouse;
+                    _.CurrentObject.Warehouse = d.Warehouse;
+                    _.CurrentObject.ID_Currency = d.ID_Currency;
+                    _.CurrentObject.ExchangeRate = d.ExchangeRate;
+                    _.CurrentObject.Currency = d.Currency;
+                    _.CurrentObject.IsImported = d.IsImported;
+                    _.CurrentObject.ID_TransactionType = d.ID_TransactionType;
+
+                });
+            });
+    }
+    }, true);
+
+
+
+//
+        }
+
+        VC_PurchaseReturn.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPurchaseReturnApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_PurchaseReturn.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPurchaseReturnCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_PurchaseReturn;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+

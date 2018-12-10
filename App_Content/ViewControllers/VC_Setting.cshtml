@@ -1,0 +1,72 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, BaseClass, AcctHelper) {
+
+        var VC_Setting = function () { }
+        
+        VC_Setting.prototype = Object.create(BaseClass.prototype);
+
+        VC_Setting.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+            var VC = _.VC;
+            if (_.ID_ViewType === 2) {
+                VC.onValueTab_TabFormInitialized = function () {
+
+                };
+            }
+        }
+
+        VC_Setting.prototype.OnFormInitialized = function () {
+            var _ = this;
+            var VC = _.VC;
+            
+            _.ctPropertyModel = VC.GetDxControl('ID_PropertyModel');
+            _.ctString = VC.GetDxControl('StringValue');
+            _.ctInt = VC.GetDxControl('IntValue');
+            _.ctDouble = VC.GetDxControl('DoubleValue');
+            _.ctDecimal = VC.GetDxControl('DecimalValue');
+            _.ctDateTime = VC.GetDxControl('DateTimeValue');
+            _.ctDate = VC.GetDxControl('DateValue');
+            _.ctTime = VC.GetDxControl('TimeValue');
+
+            _.SettingsControl = [_.ctPropertyModel, _.ctString, _.ctInt, _.ctDouble, _.ctDecimal, _.ctDateTime, _.ctDate, _.ctTime];
+
+            $.each(_.SettingsControl, function (i, c) {
+                if (c === undefined) return;
+                c.option('visible', false);
+                alert(c);
+            });
+        }
+
+        VC_Setting.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            if (e.dataField === "ID_PropertyType") {
+                switch (e.value.ID) {
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 5:
+                        break;
+                    case 6:
+                        break;
+                    case 7:
+                        break;
+                }
+            }
+        }
+
+        return VC_Setting;
+    });
+//</script>
+</text> , false )

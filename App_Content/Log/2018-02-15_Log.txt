@@ -1,0 +1,6 @@
+2/15/2018 11:40:40 AM: pPaymentVoucherCancel ---> Cannot roll back transactionName. No transaction or savepoint of that name was found.
+The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtReceivingReport_ID_FilingStatus". The conflict occurred in database "IAMS_20180130_DEV", table "dbo.tFilingStatus", column 'ID'.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2..
+2/15/2018 11:41:06 AM: pPaymentVoucherCancel ---> Cannot roll back transactionName. No transaction or savepoint of that name was found.
+The UPDATE statement conflicted with the FOREIGN KEY constraint "FKtReceivingReport_ID_FilingStatus". The conflict occurred in database "IAMS_20180130_DEV", table "dbo.tFilingStatus", column 'ID'.
+Transaction count after EXECUTE indicates a mismatching number of BEGIN and COMMIT statements. Previous count = 1, current count = 2..

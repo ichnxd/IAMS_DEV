@@ -1,0 +1,122 @@
+﻿@using JSLibrary;
+@using Newtonsoft.Json;
+@using System.Web.Optimization
+@{
+    //ViewBag.Title = "IAMS Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var CurrentUser = ViewBag.CurrentUser as dynamic;
+    var SPL_USERGROUP = new int[] { 1, 2, 3, 4, 5 };
+    int ID_UserGroup = ViewBag.CurrentUser.ID_UserGroup;
+}
+<script src="JsApp/GetScript?Url=VC_HomeController"></script>
+@*<script src="~/Content/js/Base/DevHansOnTable.js"></script>*@
+<div id="iams" ng-controller="HomeController as HomeCtrl">
+    <div class="app-header">
+        <div class="app-title" style="height:60%;display:table">
+            <div dx-button="butNavigationOption" style="display:inline-block;margin-right:5px;background:transparent"></div>
+            <div style="display:table-cell;vertical-align:middle;border-bottom: solid 3px #ff7800;">
+                <span class="AppIcon FontInSys"></span>
+                @ViewBag.ApplicationName
+            </div>
+        </div>
+        <div dx-menu="dxHomeMenu" style="height:40%"></div>
+        
+        <div class="notification-container">
+
+            <js-notif icon="mdi mdi-account" background="#fd0107" option="AccountNotifOption"></js-notif>
+            <js-notif icon="mdi mdi-view-list"  background="#607d8b" option="FavoritesNotifOption"></js-notif>
+            @if (ViewBag.CurrentUser.ID == 1) {
+                @:<js-notif icon="mdi mdi-earth" background="#31961b" option="NotifGlobalOption"></js-notif>
+            }
+
+            @if (SPL_USERGROUP.Contains(ID_UserGroup) == true) {
+                @:<js-notif icon="mdi mdi-lead-pencil" background="#026466" option="ToDoNotifOption"></js-notif>
+            }
+
+            @if (CurrentUser.IsApprover == true) {
+                @:<js-notif icon="mdi mdi-thumb-up" background="#ff3535" option="ApproverNotifOption"></js-notif>
+            }
+            <js-notif icon="mdi mdi-clock-alert" background="#f48342" option="ReminderNotifOption"></js-notif>
+			
+			
+			<js-notif icon="mdi mdi-comment-alert-outline" background="#3c763d" option="WorkderOrderNotifOption"></js-notif>
+
+            <div class="fullTextSearch"  dx-autocomplete="FullTextSearchOption" id="FullSearchTextControl" style="display:none">
+                <div data-options="dxTemplate: {name: 'ItemTemplate'}">
+                    <div style="text-align: left;" class="full-search-template">
+                        <span class="model-key">{{ID == -1 ? '(New)' : (ID !== undefined ? '(' + ID + ')' : '')}}</span>
+                        <span class="model-user">{{User === null || User === undefined ? '' : '(' + User + ')'}}</span>
+                        <div class="div-middle">
+                            <div class="div-middle-content">
+                                <span class="icon {{ImageName}}" style="color:{{ThemeColor}}"/>
+                            </div>
+                            <div class="div-middle-content" style="padding-left:8px">
+                                <span class="model-name">{{ModelName}}</span>     
+                                <div class="description">
+                                    {{Description}}
+                                </div>
+                                <div class="other-info">{{InfoA}}</div>
+                                <div class="other-info">{{InfoB}}</div>
+                                <div class="other-info">{{InfoC}}</div>
+                            </div>
+                        </div>         
+                    </div>
+                </div>    
+            </div>
+
+        </div>
+        @* USER CONTAINER *@
+        
+    </div>
+    <div class="content toggled" id="JsContainerApp">
+       
+        <div id="sidebar-wrapper" class="side-menu">
+            <div class="side-menu-container">
+                <div class="user-container">
+                    <div class="image-container" ng-click="onEmpPictureClick()">
+                        <img class="image-user" src="@CurrentUser.ImageFile" onerror="this.onerror = null; this.src='App_Content/Image/default-user.png';">
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">@CurrentUser.Name</div>
+                        <div class="usergroup-container">
+                            @CurrentUser.Position
+                        </div>
+                    </div>
+                </div>
+
+                <div class="searchtextbox-container">
+                    <div dx-text-box="SearchTextBox" data-ng-model="SearchValue"></div>
+                </div>
+
+                <div dx-scroll-view="{
+                    showScrollbar : 'always',
+                    height : '75%'
+                }">
+                    <div dx-tree-view="treeViewOptions"></div>
+                </div>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+
+            <div id="JsBackWrapContent" ng-hide="navigationTabs.length > 0" class="outer-div"
+                 style="z-index:1;padding:0px;background-color:#fff">
+                <div class="jsbackwrap">
+                    <img src="~/App_Content/Image/logo.png" />
+                </div>
+            </div>
+
+            <jstab class="js-navigation-tabs"
+                tabs="navigationTabs"
+                currentTabIndex="currentTabIndex"
+                currentTab="currentTab"
+                onTabsClear="onTabClear()"
+                style="width:100%!important;position:relative"
+                register="registerTab(TabControl)"/>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/signalR/jquery.signalR-2.2.1.min.js"></script>
+<script src="~/signalr/hubs"></script>

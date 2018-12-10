@@ -1,0 +1,250 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+        "use strict"
+        function VC_PCFRequest() { };
+
+        VC_PCFRequest.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_PCFRequest.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+            //console.log(_)
+
+            _.butCancel.text = 'Disapprove';
+            _.butCancel.IsDisabled = function(){
+                var IsDisabled = false;
+                var Selected = [];
+                if(_.ID_ViewType == 1){
+                    Selected = VC.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    if(VC.IsNew() == true){
+                        return true;
+                    }
+                    Selected = [_.CurrentObject];
+                }
+                
+                if(Selected.length > 0){
+                    if(Selected[0].ID_FilingStatus !== 1){
+                        return true;
+                    }
+                }
+
+                return _.IsCanCancel();
+            }
+            _.butApproved.IsDisabled = function(){
+                var IsDisabled = false;
+                var Selected = [];
+                if(_.ID_ViewType == 1){
+                    Selected = VC.Grid.getSelectedRowsData();
+                }
+                if(_.ID_ViewType == 2){
+                    if(VC.IsNew() == true){
+                        return true;
+                    }
+                    Selected = [_.CurrentObject];
+                }
+                
+                if(Selected.length > 0){
+                    if(Selected[0].ID_FilingStatus !== 1){
+                        return true;
+                    }
+                }
+
+                return _.IsCanApprove();
+            }
+
+            VC.AddToolbarButton({
+                text: 'Create VP',
+                IsDisabled: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    if(Selecteds.length !== 1){
+                        return true;
+                    }
+
+                    if(Selecteds[0].ID_FilingStatus !== 2){
+                        return true;
+                    }
+
+                    if(Selecteds[0].ID_PCFRequestType !== 1){
+                        return true;
+                    }
+
+
+                    return false;
+                },
+                isContextMenuOnly: true,
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+    
+
+                    app.$rootScope().$emit("CallNewTabMethod", {
+                        ID: app.getRandomInt(),
+                        Caption: 'Vouchers Payable (New)',
+                        ID_ViewType: 2,
+                        ViewID: 3118,
+                        ImageName: '',
+                        ID_CurrentObject: -1,
+                        params: {
+                            'IDs_Ref': [Selecteds[0].ID],
+                            'ID_MODEL': 2157
+                        }
+                    });
+                }
+            });
+
+
+            VC.AddToolbarButton({
+                text: 'Create Collection',
+                IsDisabled: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+    
+                    if(Selecteds.length !== 1){
+                        return true;
+                    }
+    
+                    if(Selecteds[0].ID_FilingStatus !== 2){
+                        return true;
+                    }
+    
+                    if(Selecteds[0].ID_PCFRequestType !== 2){
+                        return true;
+                    }
+    
+    
+                    return false;
+                },
+                isContextMenuOnly: true,
+                onItemClick: function () {
+
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+    
+
+                    app.$rootScope().$emit("CallNewTabMethod", {
+                        ID: app.getRandomInt(),
+                        Caption: 'Collection (New)',
+                        ID_ViewType: 2,
+                        ViewID: 4173,
+                        ImageName: '',
+                        ID_CurrentObject: -1,
+                        params: {
+                            'IDs_Ref': [Selecteds[0].ID],
+                            'ID_MODEL': 3212
+                        }
+                    });
+                }
+            });
+
+            //---------------
+        }
+    
+
+
+        VC_PCFRequest.prototype.Compute = function () {
+            var _ = this;
+            var VC = _.VC;
+
+            _.CurrentObject.TotalAmount = 0.00;
+
+            if(_.CurrentObject.ID_PCFRequestType == 1){
+                _.CurrentObject.TotalAmount = _.CurrentObject.PCFAmount + _.CurrentObject.Amount
+            }
+            if(_.CurrentObject.ID_PCFRequestType == 2){
+                _.CurrentObject.TotalAmount = _.CurrentObject.PCFAmount - _.CurrentObject.Amount;                
+            }
+            
+            console.log('computing')
+        }
+
+        VC_PCFRequest.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = _.VC;
+
+            if(e.dataField == 'ID_Custodian'){
+                if(e.value !== null){
+                    if(e.value.InitialFund !== null && e.value.InitialFund !== undefined){
+                        _.CurrentObject.PCFAmount = e.value.InitialFund;
+                    }
+                }else{
+                    _.CurrentObject.PCFAmount = 0.00;
+                }
+            }
+
+            _.Compute();
+        }
+
+        VC_PCFRequest.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPCFRequestApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_PCFRequest.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPCFRequestDisapproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+       
+        return VC_PCFRequest;
+    });
+//</script>
+</text> , false);

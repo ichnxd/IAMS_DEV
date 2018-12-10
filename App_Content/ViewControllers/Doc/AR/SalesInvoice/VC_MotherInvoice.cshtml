@@ -1,0 +1,74 @@
+    @inherits System.Web.Mvc.WebViewPage
+    @using InsysWebAccounting.Utility;
+
+    @using System.Web.Mvc;
+    @{
+        Layout = null;
+        var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+    }
+    @Html.JsMinify(@<text>
+    //<script>
+        define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+            var VC_MotherInvoice = function () {
+                this.DocDetailPropertyName = 'MotherInvoice_details';
+                //this.ShowBillOfMaterials = true;
+
+            }
+            
+
+            VC_MotherInvoice.prototype = Object.create(baseModelHelper.prototype);
+
+            VC_MotherInvoice.prototype.Init = function (VC) {
+                baseModelHelper.prototype.Init.call(this, VC);
+            }
+
+
+            VC_MotherInvoice.prototype.Approve = function (Items) {
+
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pMotherInvoiceApprove")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser'
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+
+            VC_MotherInvoice.prototype.Cancel = function (Items, Reason) {
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pSalesInvoiceCancel")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser',
+                        'Reason' : Reason
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+        return VC_MotherInvoice;
+});
+//</script></text> , false);
+
+

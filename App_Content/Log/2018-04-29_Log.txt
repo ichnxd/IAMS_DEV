@@ -1,0 +1,8 @@
+4/29/2018 10:02:35 AM: pGetSalesInvoice ---> All queries combined using a UNION, INTERSECT or EXCEPT operator must have an equal number of expressions in their target lists..
+4/29/2018 10:09:33 AM: pGetSalesInvoice ---> All queries combined using a UNION, INTERSECT or EXCEPT operator must have an equal number of expressions in their target lists..
+4/29/2018 10:10:40 AM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'I000016224' to data type int..
+4/29/2018 10:11:03 AM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'I000016224' to data type int..
+4/29/2018 10:13:42 AM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'I000016224' to data type int..
+4/29/2018 10:14:46 AM: pGetSalesInvoice ---> Conversion failed when converting the varchar value 'I000016224' to data type int..
+4/29/2018 5:53:40 PM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+4/29/2018 5:53:49 PM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.

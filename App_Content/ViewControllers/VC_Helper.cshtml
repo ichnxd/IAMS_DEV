@@ -1,0 +1,47 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom'], function (app, BaseClass) {
+
+        var VC_Helper = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            _.Params = $scope.$Tab.params;
+            _.CurrentObject = _.Params.CurrentObject;
+
+            $scope.HelpData = _.CurrentObject;
+
+            _.JSDataService.Query('@Html.EncryptSQL("Select * From vHelp_Detail WHERE ID_Help = @ID_Help AND IsActive = 1")', { 
+                params: {
+                    'ID_Help': _.CurrentObject.ID
+                } 
+            }).then(function(response){
+                if (response.collection.length == 0) return;
+                var collection = response.collection;
+
+                 _.CurrentObject.items = collection;
+            });
+
+        };
+
+        VC_Helper.prototype = Object.create(BaseClass.prototype);
+
+        VC_Helper.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+
+
+        };
+
+
+        return VC_Helper;
+    });
+//</script>
+</text> , false )

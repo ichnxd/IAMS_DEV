@@ -1,0 +1,117 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom'], function (app, BaseClass) {
+
+        var SalesPipeLineDashboard = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_Employee',
+                caption: 'Account Manager',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vEmployee WHERE isActive = 1")',
+                width: 150,
+                isActionFilter: true,
+                value: -1
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_BusinessUnit',
+                caption: 'Business Unit',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM tBusinessUnit WHERE isActive = 1")',
+                width: 150,
+                isActionFilter: true,
+                value: -1
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_DateFilter',
+                caption: 'Date',
+                width: 120,
+                isActionDateRange: true
+            });
+
+            var dataSource = [{
+                company: "ExxonMobil",
+                y2005: 362.53,
+                y2004: 277.02
+            }, {
+                company: "GeneralElectric",
+                y2005: 348.45,
+                y2004: 328.54
+            }, {
+                company: "Microsoft",
+                y2005: 279.02,
+                y2004: 297.02
+            }, {
+                company: "Citigroup",
+                y2005: 230.93,
+                y2004: 255.3
+            }, {
+                company: "Royal Dutch Shell plc",
+                y2005: 203.52,
+                y2004: 173.54
+            }, {
+                company: "Procted & Gamble",
+                y2005: 197.12,
+                y2004: 131.89
+            }];
+
+            var types = ["splineArea", "stackedSplineArea", "fullStackedSplineArea"];
+
+            $scope.currentType = types[2];
+
+            $scope.chartOptions = {
+                palette: "Harmony Light",
+                title: "Corporations with Highest Market Value",
+                dataSource: dataSource,
+                commonSeriesSettings: {
+                    argumentField: "company"
+                },
+                bindingOptions: {
+                    "commonSeriesSettings.type": "currentType"
+                },
+                argumentAxis: {
+                    valueMarginsEnabled: false
+                },
+                margin: {
+                    bottom: 20
+                },
+                series: [
+                    { valueField: "y2005", name: "2005" },
+                    { valueField: "y2004", name: "2004" }
+                ],
+                "export": {
+                    enabled: true
+                },
+                legend: {
+                    verticalAlignment: "bottom",
+                    horizontalAlignment: "center"
+                }
+            };
+
+            $scope.typesOptions = {
+                dataSource: types,
+                bindingOptions: {
+                    value: "currentType"
+                }
+            };
+
+            $scope.OpportunityGridOption = {
+                SQL : "@Html.EncryptSQL("SELECT * FROM tOpportunity")",
+            }
+
+        }
+
+        SalesPipeLineDashboard.prototype = Object.create(BaseClass.prototype);
+
+        return SalesPipeLineDashboard;
+
+    });
+//</script>
+</text> , false )

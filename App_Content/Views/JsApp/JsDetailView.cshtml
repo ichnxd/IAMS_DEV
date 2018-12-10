@@ -1,0 +1,153 @@
+﻿@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    string ViewName = ModelObject.ModelName + "_DetailView";
+    //string JsScriptFile = null;
+    //var ControllerName = ModelObject.ViewControllerName;
+
+    bool IsBase = ViewBag.IsBase;
+    //if (IsBase) {
+    //    ControllerName = "JsBase" + ControllerName;
+    //}
+    //ControllerName = "DetailViewController";
+    string ModelHelperController = null;
+    if (ModelObject.ModelViewController != null)
+    {
+        ModelHelperController = "'/JsApp/GetScript?Url=" + Url.Encode(ModelObject.ModelViewController.ToString()) + "'";
+    }
+
+    string ViewController = null;
+    if (ModelObject.ViewController != null)
+    {
+        ViewController = "'/JsApp/GetScript?Url=" + Url.Encode(ModelObject.ViewController.ToString()) + "'";
+    }
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseDetailViewController'
+        @{
+            if (ModelHelperController != null)
+            {
+               @:,@Html.Raw(ModelHelperController)
+            }
+            if (ViewController != null)
+            {
+               @:,@Html.Raw(ViewController)
+            }
+        } ], function (app, BaseClass
+        @{
+
+            if (ModelHelperController != null)
+            {
+                @:,ModelViewHelper
+            }
+            if (ViewController != null)
+            {
+                @:,ViewHelper
+            }
+        }) {
+
+    @if (IsBase == false)
+        {
+
+            @:var DetailViewController = function() {
+                                @:var _ = this;
+                                @:var Args = arguments;
+
+                    if (ModelHelperController != null) {
+                        @:_.ModelHelper = new ModelViewHelper();
+                        //@:console.log(_.ModelHelper);
+                        @:_.ModelHelper.ID_ViewType = 2;
+                    };
+
+                    if (ViewController != null) {
+                        @:_.ViewHelper = new ViewHelper();
+                        //@:console.log(_.ModelHelper);
+                        @:_.ViewHelper.ID_ViewType = 2;
+                    };
+                @:_.Init(Args[0], Args[1], Args[2], Args[3], Args[4], Args[5],Args[6]);
+            @:}
+
+    }
+        else
+        {
+
+             @:var DetailViewController = function() {  };
+        }
+
+    DetailViewController.prototype = Object.create( BaseClass.prototype );
+
+    DetailViewController.prototype.Init =  function(a,b,c,d,e,f,g) {
+
+        var _ = this;
+        
+        _.IsEmptyString = function (s) {
+            if (s === undefined || s === null) return true;
+            if (s.replace(' ', '').length === 0) return true;
+            return false;
+        }
+
+        @{
+            if (IsBase != false)
+            {
+                if (ModelHelperController != null)
+                {
+                    @:_.ModelHelper = new ModelViewHelper();
+                            @:_.ModelHelper.ID_ViewType = 2;
+                        };
+
+                 if (ViewController != null) {
+                    @:_.ViewHelper = new ViewHelper();
+                            @:_.ViewHelper.ID_ViewType = 2;
+                                };
+            }
+        }
+
+        a.DisplayName = '@ModelObject.DisplayName';
+        a.DisplayPropertyName = b.ID == -1 ? '(New)' :  ( _.IsEmptyString(b['@ModelObject.DisplayProperty']) == true ? '' :  b['@ModelObject.DisplayProperty']);
+
+        _.DisplayProperty = '@ModelObject.DisplayProperty';
+        _.ID_ModelObject = @ModelObject.ID;
+        _.ID_View = @ModelObject.ID_ModelView;
+        _.ID_Model = @ModelObject.ID_Model;
+        _.ModelViewName = '@ModelObject.Name';
+        _.ModelName = '@ModelObject.ModelName';
+        _.DisplayName = '@ModelObject.DisplayName'
+        _.IsEditingOnly = @ModelObject.IsEditingOnly.ToString().ToLower();
+        _.IsDeveloperMode = @ModelObject.IsDeveloperMode.ToString().ToLower();
+        _.$isAllowAdd =  @ModelObject.IsAllowAdd.ToString().ToLower();
+        _.$isAllowEdit =  @ModelObject.IsAllowEdit.ToString().ToLower();
+
+        _.CRUDTablesIds = {
+            @ViewBag.CRUDTableIds
+        };
+
+        //
+        //
+        //
+
+
+        BaseClass.prototype.Init.call( this, a ,b, c, d ,e, f, g );
+        var CurrentObject = b;
+
+        @{
+           @Html.Raw(ViewBag.LookUpScripts);
+           @Html.Raw(ViewBag.FormControls);
+        }
+
+        if (_.ModelHelper != null) {
+            _.ModelHelper.Init(this);
+            _.ModelHelper.onInitDetailView(this);
+        }
+
+        if (_.ViewHelper != null) {
+            _.ViewHelper.Init(this);
+            _.ViewHelper.onInitDetailView(this);
+        }
+    }
+    return DetailViewController;
+});
+    //</script>
+</text>, false)
+    

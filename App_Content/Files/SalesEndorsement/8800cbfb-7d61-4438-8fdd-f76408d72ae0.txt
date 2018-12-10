@@ -1,0 +1,31 @@
+1. Leads:
+	- last & first name should be capital
+	- mobile number - place cursor after ng (63)
+	- Add Salutation: Mr or Ms dropdown
+
+2. Customer Modal:
+	- once nagtype na sa Parent Company magfofollow yung registered and Trade name.
+3. Opportunity modal:
+	- yung uneditable fields, hindi na dapat dinadaanan ng cursor tabbing
+	- SRP: dapat editable once tumapat na
+	- discount computation:
+		- unit price - less discount if item discount * qty = total amount
+			example: 100 - 10 pesos discount * 2pcs = 180
+		- more on "amount" sila nagdidiscount
+		- editable yung Unit price then compute it back sa discount
+		- bakit walang discount sa Equipment? - same lang with materials and services.
+	- remove amount on Payment Terms
+
+3. Proposal:
+	- discount - if zero ang value no need to display
+		- twice nagdisplay
+	- Prepared By - should be aligned with left side
+	- Name, Position, Company Name, Company Address
+
+4. SEF:
+	- hindi na required lahat ng attachments (kasi yung isa either proposal or PO lang)
+
+5. Keyboard shortcuts
+
+
+

@@ -1,0 +1,2 @@
+1/24/2018 10:13:41 AM: pPaymentTransactionApprove ---> Bank Chart of Account not set (Philippine Trust Company
+).

@@ -1,0 +1,221 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+		//'/JsApp/GetScript?Url=@{@BaseVCUrl}'
+		
+        var VC_APCreditMemo = function () {
+            this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'APCreditMemo_details';
+        }
+
+        VC_APCreditMemo.prototype = Object.create(baseModelHelper.prototype);
+        
+        VC_APCreditMemo.prototype.Init = function (VC) {
+            
+            baseModelHelper.prototype.Init.call(this, VC);
+
+           var _ = this;
+ VC.AddButtonReport({
+                    Name: 'Credit Memo Form',
+                    ID_Report: 2052,
+                    requireSingleObject: true
+                });
+           var btnAddSupplier = {
+                  text: 'Browse Purchase Return',
+                  IsDisabled: function () {
+ 
+                    if (_.ID_ViewType == 2) {
+
+                        if (VC.$scope.CurrentObject.ID_FilingStatus == 2 || VC.$scope.CurrentObject.ID_FilingStatus == 7)
+                        {
+                            return false;
+                        }
+
+                        if (VC.IsNew() == true)
+                        {
+                            return false;
+
+                        }
+                    } 
+                       return true;
+
+                  },
+                  isContextMenuOnly : true,
+                  onItemClick: function () {
+
+                    if (_.CurrentObject.ID_BusinessPartner ==  0 || _.CurrentObject.ID_BusinessPartner == null )
+                    {
+                        VC.MsgBox("Please Select Supplier", "Browse Purchase Return");
+                        return true;
+                    }
+ 
+                    var SQL = '@Html.EncryptSQL(@"
+                        SELECT * FROM dbo.vPurchaseReturn_Detail 
+                        WHERE 
+                            IsNull(ID_FilingStatus,0) <> 18 AND 
+                            ID_Supplier = @ID_BusinessPartner AND 
+                            ID NOT IN (@ID_Details)
+                    ")';
+                    
+                    var JsPopUpView = app.$GetPopupView();
+
+                    JsPopUpView.BrowseDataSet(SQL, 
+                    {
+                        ID_View: '13F28791-73AB-4DA7-A06A-F23C24BF2055',
+                        params: {
+                           ID_BusinessPartner: _.CurrentObject.ID_BusinessPartner
+                        , 'ID_Details' : Enumerable.From( _.CurrentObject.APCreditMemo_details).Select('$.ID_DocDetail').ToArray()
+                    },
+                    title: 'Browse Purchase Return'
+
+                    }).then(function (selectedRecord) {
+
+                        if (_.CurrentObject.APCreditMemo_details == undefined){
+
+                            _.CurrentObject.APCreditMemo_details = [];
+                        } 
+
+                        $.each(selectedRecord, function (i, record) {
+
+                            var newDetail  = {
+                                    ID: _.rndID()
+                                ,   ID_Item: record.ID_Item
+                                ,   Item: record.Item
+                                ,   UOM: record.UOM
+                                ,   ID_UOM: record.ID_UOM
+                                ,   Quantity: record.Quantity
+                                ,   UnitPrice: record.UnitPrice
+                                ,   VatAmt: record.VatAmt
+                                ,   GrossAmount: record.GrossAmount
+                                ,   TotalAmount: record.TotalAmount
+                                ,   IsFree: record.IsFree
+                                ,   ID_DocDetail: record.ID
+                                ,   ID_DocDetailParentModel: 0
+                                ,   ReferenceNo: record.DocumentNo
+                                ,   ID_APCreditMemo : _.CurrentObject.ID
+                                
+                            }
+                            
+                            VC.$timeout(function(){
+                                console.log(newDetail);
+                                _.CurrentObject.APCreditMemo_details.push(newDetail);
+                            });
+
+                        });
+
+       
+                    });
+                  }
+              }
+
+                if (this.ID_ViewType == 2) {
+
+                    VC.AddToolbarButton(btnAddSupplier);
+                            
+                    if (_.CurrentObject.APCreditMemo_details == undefined ){
+                            
+                        _.CurrentObject.APCreditMemo_details = [];
+                    }
+
+                }
+
+
+        }
+
+        VC_APCreditMemo.prototype.Compute = function () {
+
+            baseModelHelper.prototype.Compute.call(this);
+
+            var _ = this;
+            var VC = this.VC;
+
+            if (_.CurrentObject.APCreditMemo_details == undefined) {
+                _.CurrentObject.APCreditMemo_details = []
+            }
+
+            if (this.ID_ViewType == 2) {
+
+                var EWTAmt = 0.00;
+                var TotalVat = 0.00;
+                var TotalAmt = 0.00;
+                var Subtotal = 0.00;
+
+
+                if (_.CurrentObject.APCreditMemo_details !== null) {
+
+                    $.each(_.CurrentObject.APCreditMemo_details, function (i, detail) {
+
+                        Subtotal += parseFloat(detail.GrossAmount);
+                        TotalAmt += parseFloat(detail.TotalAmount);
+                        TotalVat += parseFloat(detail.VatAmt);
+
+
+                    });
+
+                    
+                    _.CurrentObject.TotalVat = TotalVat;
+                    _.CurrentObject.Subtotal = Subtotal;
+                    _.CurrentObject.TotalAmount = TotalAmt;
+                }
+
+ 
+
+
+            }
+
+        }
+
+        VC_APCreditMemo.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPCreditMemoApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_APCreditMemo.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAPCreditMemoCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_APCreditMemo;
+    });
+//</script>
+</text> , false);

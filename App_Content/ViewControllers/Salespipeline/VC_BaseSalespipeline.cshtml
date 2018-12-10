@@ -1,0 +1,64 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_Salespipeline = function () { }
+
+        VC_Salespipeline.BUSINESSUNIT_HEAD = 4;
+        VC_Salespipeline.ACCOUNT_EXECUTIVES = 5;
+        
+        VC_Salespipeline.prototype = Object.create(baseDoc.prototype);
+
+        VC_Salespipeline.prototype.Init = function (VC) {
+          
+              baseDoc.prototype.Init.call(this, VC);
+
+              var _ = this;
+
+               VC[_.DocDetailPropertyName + '_onColumnChanged'] = function (e) {
+                    _.OnDetail_ColumnChanged(e);                    
+                    _.Compute();
+               }
+        }
+
+        VC_Salespipeline.prototype.onInitDetailView = function (VC) {
+            
+            baseDoc.prototype.onInitDetailView.call(this, VC);
+
+            //
+            //
+            //
+        
+        }
+
+        VC_Salespipeline.prototype.onLoad = function () {
+         
+        }
+
+        VC_Salespipeline.prototype.onCurrentObjectChanged = function(e){
+
+              //console.log('base')
+            
+        }
+         
+        VC_Salespipeline.prototype.Compute = function () {
+            var _ = this;
+        }
+        VC_Salespipeline.prototype.onDetailRowUpdated = function (Detail) { 
+            
+            var _ = this;
+            _.Compute()
+        }
+
+        return VC_Salespipeline;
+    });
+//</script>
+</text> , false )

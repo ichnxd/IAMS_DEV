@@ -1,0 +1,217 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    int ID_View = ModelObject.ID;
+    string ViewName = ModelObject.Name;
+    var ControllerName = ModelObject.ViewControllerName;
+    var PaymentVoucherLink = Url.Encode("Doc/AP/PaymentVoucher/PaymentVoucher");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/DetailView?ID=@{@ID_View}&ViewName=@{@ViewName}&IsBase=1','AcctHelper', '/JsApp/GetScript?Url=@{@PaymentVoucherLink}'], function (BaseClass,AcctHelper,PaymentVoucherLink) {
+
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            this.Init( $scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var _ = this;
+
+            _.ComputeTotals = function() {
+
+                var TotalPaymentVoucherAmt = 0.00;
+                var TotalCheckAmt = 0.00;
+                var TotalTransferAmt = 0.00;
+                var TotalPayment = 0.00;
+                var TotalCreditAmt = 0.00;
+                var TotalPVAmtDue = 0.00; //Amount Due
+                var TotalDebit = 0.00;
+                var TotalPVAmount = 0.00;
+
+                //
+                //
+                //
+                //alert( 'Compute Totals' );
+                if (  _.$scope.CurrentObject.PaymentVoucherDetails != null ) {
+                    $.each( _.$scope.CurrentObject.PaymentVoucherDetails, function(i, pv) {
+
+                        TotalPVAmount += pv.PVAmount;
+
+                        TotalPayment += pv.Balance;
+
+
+                    });
+                }
+
+
+                _.$scope.CurrentObject.TotalPVAmt = TotalPVAmount;
+
+                _.$scope.CurrentObject.TotalCheckAmt = TotalCheckAmt;
+
+                _.$scope.CurrentObject.TotalTransferAmt = TotalTransferAmt;
+
+                _.$scope.CurrentObject.TotalPayment = TotalCheckAmt + TotalTransferAmt;
+
+                _.$scope.CurrentObject.TotalCreditAmt = TotalCreditAmt;
+
+                _.$scope.CurrentObject.TotalPVAmtDue = TotalPVAmount
+
+                _.$scope.CurrentObject.TotalDebit = TotalDebit;
+
+                _.$scope.CurrentObject.TotalPaymentVoucherAmt = _.$scope.CurrentObject.TotalPVAmtDue + TotalCreditAmt - TotalDebit;
+
+
+            };
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                IsDisabled: function() {
+
+                    if ( _.$scope.CurrentObject.ID === -1 ) return true;
+
+                    if ( _.$scope.CurrentObject.ID_FilingStatus === 8 || _.$scope.CurrentObject.ID_FilingStatus === 7 )  {
+
+                        return true;
+                    }
+
+                    return false;
+                },
+                onItemClick: function () {
+
+                    _.PerformApproved();
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                IsDisabled: function() {
+
+                    if ( _.$scope.CurrentObject.ID === -1 ) return true;
+
+                    if ( _.$scope.CurrentObject.ID_FilingStatus === 7 || _.$scope.CurrentObject.ID_FilingStatus === 8 ) return true;
+
+                    return false;
+                },
+                onItemClick: function () {
+
+                    _.PerformCancel();
+
+                }
+            }
+
+            _.ButReport = {
+                text: 'Report',
+                icon: 'jspp-icon js-file-2',
+                color: '#000',
+                disabled: false,
+                onItemClick: function () {
+
+
+                }
+            }
+
+            _.AddToolbarButton(_.ButReport);
+
+            _.AddToolbarButton(_.butApproved);
+
+            _.AddToolbarButton(_.butCancel);
+
+            _.DetailColumnChanged = function(e) {
+
+                _.ComputeTotals();
+
+            }
+
+            _.BankTransfers_onColumnChanged = _.DetailColumnChanged;
+            _.CheckPayments_onColumnChanged = _.DetailColumnChanged;
+            _.CreditMemos_onColumnChanged = _.DetailColumnChanged;
+            _.DebitMemos_onColumnChanged = _.DetailColumnChanged;
+            _.PaymentVoucherDetails_onColumnChanged = _.DetailColumnChanged;
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.onLoad = function () {
+            
+            BaseClass.prototype.onLoad.call( this );
+
+            var _ = this;
+
+            _.ComputeTotals();
+
+            if ( _.$scope.CurrentObject.ID_FilingStatus === 8 || _.$scope.CurrentObject.ID_FilingStatus === 7 )  {
+
+                _.setFormReadOnly( true );
+                
+            }
+            
+        }
+
+        @{@ControllerName}.prototype.OnFormInitialized = function() {
+            BaseClass.prototype.OnFormInitialized.call(this);
+            var _ = this;
+            _.ButBrowseVP.option('onClick',function() { 
+                if( _.$scope.CurrentObject.ID_Supplier === null) { 
+                    _.MsgBox('Please select a supplier','Payment Voucher');
+                    return;
+                }
+                //
+                //
+                //
+                _.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vzPendingVoucherPayable 
+                                                    WHERE ID_Supplier = @ID_Supplier AND ID NOT IN ( @ID_Details )")', {
+                    title: 'Select Voucher Payable (' + _.$scope.CurrentObject.Supplier + ')',
+                    ID_View: 'A0B92C10-17B8-4B29-B833-DD0F2E1C1DFB',
+                    params : {
+                        'ID_Supplier' : _.$scope.CurrentObject.ID_Supplier
+                      , 'ID_Details' : Enumerable.From(_.$scope.CurrentObject.PaymentVoucherDetails).Select('$.ID_VouchersPayable').ToArray()
+                    },
+                    onCustomizeColumns : function( columns ) { 
+                        $.each( columns, function(i,c)  { 
+                            if ( c.dataField == "DocumentNo") { 
+                                c.caption = "VP No.";
+                            }
+                            if ( c.dataField == "Date") { 
+                                c.caption = "VP Date";
+                            }
+                        });
+                    }
+                }).then( function(Details)  { 
+                    //
+                    //
+                    //
+                    if ( _.$scope.CurrentObject.PaymentVoucherDetails == null ) _.$scope.CurrentObject.PaymentVoucherDetails = [];
+
+                    $.each(Details,function(i,o) { 
+                    
+                        _.$scope.CurrentObject.PaymentVoucherDetails.push({
+                            ID_VouchersPayable : o.ID,
+                            Balance : o.TotalAmount,
+                            NetPayable : o.TotalAmount,
+                            PVAmount : o.TotalAmount ,
+                            VouchersPayable  : o.Name,
+                            VPDate : o.Date
+                        });
+                    
+                    });
+                });
+            });
+            _.ButBrowseVP.option('visible',!(_.$scope.CurrentObject.IsRef === 1));
+        }
+           
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

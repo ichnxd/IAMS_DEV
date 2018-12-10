@@ -1,0 +1,228 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Styles/dx/dx.common.css" rel="stylesheet" />
+    <link rel="dx-theme" data-theme="generic.light" href="~/Styles/dx/dx.light.css" data-active="true"/>
+    <script src="~/Scripts/jquery/jquery-2.2.1.js"></script>
+    <script src="~/Scripts/angular/angular.js"></script>
+    @*<link href="~/Styles/bootstrap/bootstrap.min.css" rel="stylesheet" />*@
+    <script src="~/Scripts/angular/angular-sanitize.js"></script>
+    <script src="~/Scripts/knockout/knockout-3.4.0.js"></script>
+    <script src="~/Scripts/dx/globalize.min.js"></script>
+    <script src="~/Scripts/dx/dx.all.js"></script>
+    <script src="~/Scripts/linq/linq.min.js"></script>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <div ng-controller="myController">
+        <div dx-lookup="simpleLookupOptions"></div>
+
+        <button type="button" ng-click="OnAddClick()">Add Row</button>
+        <div id="#Grid" dx-data-grid="gridOptions"></div>
+
+    </div>
+    <script>
+        (function () {
+
+            var myApp = angular.module('myApp', ['dx']);
+
+            myApp.controller('myController', ['$scope', '$http', function ($scope, $http) {
+
+                var GetColectionArray = function (JsonArray) {
+                    var mList = [];
+                    var Columns = JsonArray[0];
+                    var fKeyProperties = [];
+                    var fKeyColumns = Enumerable.From(Columns).Where(function (s) {
+                        if (s.indexOf('^') > -1) {
+                            var index = s.indexOf('_');
+                            if (fKeyProperties.indexOf(s.substring(1, index)) == -1) {
+                                fKeyProperties.push(s.substring(1, index));
+                            }
+                            return s;
+                        }
+                    }).ToArray();
+                    var Properties = Enumerable.From(Columns).Where(function (s) {
+                        if (s.indexOf('^') == -1) {
+                            return s;
+                        }
+                    }).ToArray();
+                    for (var i = 1; i < JsonArray.length; i++) {
+                        var jarray = JsonArray[i];
+                        var newObject = {};
+                        $.each(Columns, function (index, column) {
+                            if (column.indexOf('^') == -1) {
+                                newObject[column] = jarray[index];
+                            } else if (column.indexOf('^') == 0) {
+                                $.each(fKeyProperties, function (i, property) {
+                                    var characterIndex = column.indexOf('_');
+                                    if (column.substring(1, characterIndex) == property) {
+                                        var columnName = column.substring(characterIndex + 1, column.length);
+                                        if (newObject[property] == undefined) {
+                                            newObject[property] = {};
+                                        }
+                                        newObject[property][columnName] = jarray[index];
+                                    }
+                                });
+                            }
+                        })
+                        mList.push(newObject);
+                    };
+                    return mList;
+                }
+
+                var gridDataSource = {
+                    load: function (loadOptions) {
+                        var d = new $.Deferred();
+                        //console.log('SKIP -->', loadOptions.skip);
+ 
+                        $http({
+                            url: '/api/DataService/GetEmployees',
+                            method: 'POST',
+                            data: { Data: JSON.stringify({ skip: loadOptions.skip}) }
+                        }).then(function (response) {
+                            //console.log(response.data);
+                            if (response.data == null) {
+                                d.resolve(null);
+                                return;
+                            }
+                            var JsonArray = JSON.parse(response.data);
+                            var mList = GetColectionArray(JsonArray);
+                            d.resolve(mList);
+                        }, function (response) {
+
+                        });
+                        //JSDataService.GetCollection('/api/DataService/GetEmployees', { skip: loadOptions.skip == null ? 0 : loadOptions.skip }).then(function (collection) {
+                        //    console.log(collection);
+                        //    d.resolve(collection, { totalCount: 500 });
+                        //}, function () {
+                        //    d.reject();
+                        //});
+                        return d.promise();
+                    }
+                }
+
+                $scope.OnAddClick = function () {
+                    $('#Grid').dxDataGrid('instance').insertRow();
+                }
+
+                $scope.gridOptions = {
+                    dataSource: gridDataSource,
+                    scrolling: {
+                        mode: "infinite",
+                    },
+                    loadPanel: {
+                        enabled: true
+                    },
+                    filterRow: {
+                        visible: false
+                    },
+                    sorting: {
+                        mode: "none"
+                    },
+                    paging: {
+                        pageSize: 15,
+                    },
+                    height: 500,
+                    groupPanel: {
+                        visible: true
+                    },
+                    editing: {
+                        mode: 'cell',
+                        allowUpdating: true,
+                        allowAdding: true,
+                        allowDeleting: false,
+                    },
+                    rowAlternationEnabled: true,
+                    remoteOperations: {
+                        //grouping: true,
+                        //sorting: true,
+                        paging: true,
+                        summary: true
+                    },
+                    summary: {
+                        totalItems: [{
+                            name: "SelectedRowsSummary",
+                            showInColumn: "Name",
+                            summaryType: "custom",
+                            customizeText: function () {
+                                return "Customize";
+                            }
+                        }],
+                    }
+                };
+
+    //            var employeesList = ["John Heart", "Samantha Bright", "Arthur Miller", "Robert Reagan", "Greta Sims", "Brett Wade",
+    //"Sandra Johnson", "Ed Holmes", "Barb Banks", "Kevin Carter", "Cindy Stanwick", "Sammy Hill", "Davey Jones", "Victor Norris",
+    //"Mary Stern", "Robin Cosworth", "Kelly Rodriguez", "James Anderson", "Antony Remmen", "Olivia Peyton", "Taylor Riley",
+    //"Amelia Harper", "Wally Hobbs", "Brad Jameson", "Karen Goodson", "Marcus Orbison", "Sandy Bright", "Morgan Kennedy",
+    //"Violet Bailey", "Ken Samuelson", "Nat Maguiree", "Bart Arnaz", "Leah Simpson", "Arnie Schwartz", "Billy Zimmer", "Samantha Piper",
+    //"Maggie Boxter", "Terry Bradley", "Gabe Jones", "Lucy Ball", "Jim Packard", "Hannah Brookly", "Harv Mudd", "Clark Morgan",
+    //"Todd Hoffman", "Jackie Garmin", "Lincoln Bartlett", "Brad Farkus", "Jenny Hobbs", "Dallas Lou", "Stu Pizaro"];
+    //            $scope.simpleLookupOptions = {
+    //                items: employeesList,
+    //                value: employeesList[0],
+    //                showPopupTitle: false
+    //            };
+
+    //            $scope.people = [
+    //                {
+    //                    "FirstName": "Kramer",
+    //                    "LastName": "Smith",
+    //                    "Registered": "Thu Feb 06 2014 01:17:46 GMT+0000 (UTC)",
+    //                },
+    //                {
+    //                    "FirstName": "Frye",
+    //                    "LastName": "Fisher",
+    //                    "Registered": "Sun Sep 14 2014 10:26:15 GMT+0000 (UTC)"
+    //                },
+    //                {
+    //                    "FirstName": "Cabrera",
+    //                    "LastName": "Howell",
+    //                    "Registered": "Wed Jul 09 2014 06:30:29 GMT+0000 (UTC)"
+    //                }
+    //            ];
+
+    //            $scope.gridOptions = {
+    //                bindingOptions: {
+    //                    dataSource: 'people'
+    //                },
+    //                paging: {
+    //                    enabled: false
+    //                },
+    //                editing: {
+    //                    editMode: 'row',
+    //                    editEnabled: true,
+    //                    removeEnabled: true,
+    //                    insertEnabled: true,
+    //                    removeConfirmMessage: 'Are you sure you want to delete this record?'
+    //                },
+    //                selection: {
+    //                    mode: 'multiple'
+    //                },
+    //                columns: [
+    //                    {
+    //                        dataField: 'FirstName',
+    //                        caption: 'First name'
+    //                    },
+    //                    {
+    //                        dataField: 'LastName',
+    //                        caption: 'Last name'
+    //                    },
+    //                    {
+    //                        dataField: 'Registered',
+    //                        dataType: 'date',
+    //                        width: 90
+    //                    }
+    //                ]
+    //            }
+            }]);
+        })();
+    </script>
+</body>
+</html>

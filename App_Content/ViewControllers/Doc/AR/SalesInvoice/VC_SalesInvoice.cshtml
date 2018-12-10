@@ -1,0 +1,1264 @@
+    @inherits System.Web.Mvc.WebViewPage
+    @using InsysWebAccounting.Utility;
+
+    @using System.Web.Mvc;
+    @{
+        Layout = null;
+        var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+    }
+    @Html.JsMinify(@<text>
+    //<script>
+        define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+            var VC_SalesInvoice = function () {
+                this.DocDetailPropertyName = 'SalesInvoice_Details';
+                this.ShowBillOfMaterials = true;
+
+            }
+            
+
+            VC_SalesInvoice.prototype = Object.create(baseModelHelper.prototype);
+
+            VC_SalesInvoice.prototype.onLoad = function(){
+                baseModelHelper.prototype.onLoad.call(this);
+                var _ = this;
+                var VC = this.VC;
+                var currentObject = VC.$scope.CurrentObject;
+                
+                if(currentObject.ID == -1)
+                {
+                currentObject.TotalAmount = currentObject.RefTotalAmount - (currentObject.TotalDownPayment);
+				_.CurrentObject.DPpercent = (_.CurrentObject.DPAmount / _.CurrentObject.RefTotalAmount) * 100 ;
+                }
+                
+                app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM DBO.fGetPaymentReceiptBreakDownBySalesInvoice(@ID_SalesInvoice)")', {
+                    params: {
+
+                        'ID_SalesInvoice': VC.$scope.CurrentObject.ID,
+                    }
+                }).then(function (data) {
+                    if ( VC.$scope.CurrentObject.TotalAmount > 0 ){
+                        var Balance = VC.$scope.CurrentObject.TotalAmount;
+                    }
+                    else{
+                        var Balance = VC.$scope.CurrentObject.GrandTotal;
+                    }
+                    
+                    var PaidAmount = 0;
+
+
+                    VC.$scope.CurrentObject.SalesInvoice_PaymentBreakdowns = [];
+                
+
+                    $.each(data.collection, function (i, record) {
+
+
+                        PaidAmount = record.PaidAmount;
+
+                        record.TotalAmount = Balance - PaidAmount;
+                        record.PaidAmount = PaidAmount + 0;
+
+                        Balance = record.TotalAmount;
+
+                        VC.$scope.CurrentObject.SalesInvoice_PaymentBreakdowns.push(record);
+
+                    });
+
+
+                });
+            }
+
+            VC_SalesInvoice.prototype.onInitDetailView = function (VC) {
+                baseModelHelper.prototype.onInitDetailView.call(this, VC);
+                var _ = this;
+                if(_.ID_ViewType == 2){
+                  VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+
+                    if(_.CurrentObject.TotalAmount < 1)
+                    {
+                        brokenRules.push('Total Amount is required.');
+                    } 
+
+                    if(_.CurrentObject.isLot == true)
+                    {
+                        if(_.CurrentObject.ProjectName == '' || _.CurrentObject.ProjectName == null){
+                             brokenRules.push('Project Name is Required if Lot is check');
+                        }
+                       
+                    }     
+
+                    if(_.CurrentObject.DPpercent > 99){
+                         brokenRules.push('Down Payment % must not exceeds on 99%');
+                    }
+
+                    if(_.CurrentObject.GrandTotal > 0)
+                    {
+                    //TotalPriceVatInc
+                   
+                     var  ID_SO  = Enumerable.From(_.CurrentObject.SalesInvoice_Details).Select('$.ID_SalesOrder').Distinct().ToArray();
+       
+                    if(ID_SO.length > 1)
+                    {
+                        brokenRules.push('Cannot accept items with different SO number for Down Payments.');
+                    }
+                   
+                    } 
+
+                    //
+                    var  IsExcess = false;
+                    $.each(_.CurrentObject.SalesInvoice_Details, function (index, item) {
+
+                        if (item.ID_DocDetail > 0 && item.ID_DocDetailParentModel == 3224) {
+                            if (item.RefQuantity < item.Quantity) {
+                                IsExcess = true;
+                            }
+                        }
+                    });
+
+                  if (IsExcess) {
+                        brokenRules.push('Cannot accept excess Quantity');
+                    }
+
+                    //
+
+                     if(brokenRules.length > 0){
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid : true }
+                 })
+
+                 }
+
+
+                var DownPaymentGrid = VC.GetFormItem('DownPayment');
+
+                DownPaymentGrid.editorOptions.SQL = '@Html.EncryptSQL(@"SELECT   ID,   Date, Name,  ReferenceNo as RefNo, Particulars,Totalamount as DownPayment, Status  FROM dbo.vSalesinvoiceDownPayment where ID_FilingStatus IN (2) AND ID_SalesOrder IN (@ID_SalesOrder)")';
+                DownPaymentGrid.editorOptions.onGridViewInitialized = function(Grid){
+                    _.DPGrid = Grid;
+                }
+                DownPaymentGrid.editorOptions.onLoad = function(data) {
+
+                if (data.params == undefined) data.params = {  };
+                    var ID_SalesOrder = Enumerable.From(VC.$scope.CurrentObject.SalesInvoice_Details).Where("$.ID_SalesOrder !== null").Select("$.ID_SalesOrder").ToArray();
+                    data.params.ID_SalesOrder = ID_SalesOrder.length == 0 ? [-1] :ID_SalesOrder ;
+                //  data.params.ReferenceNo = Enumerable.From(VC.$scope.CurrentObject.SalesInvoice_Details).Select("$.ReferenceNo").Distinct().ToArray();
+                }
+
+                var btnBrowseItemTransfer = {
+                        text : 'Item Transfer',
+                        ID_View : 'BED7C84E-BBB1-41F2-B80F-05732B9DCCACIT',
+                        params :{
+                            ID_BusinessPartner : VC.$scope.CurrentObject.ID_BusinessPartner
+                        },
+                        onItemClick: function () {
+
+                           if(_.CurrentObject.ID_BusinessPartner == null || _.CurrentObject.ID_BusinessPartner == undefined){
+
+                               VC.MsgBox("Please Select Customer","Sales Invoice");
+                               return;
+                           }
+                           if(_.CurrentObject.ID_Branch == null || _.CurrentObject.ID_Branch == undefined){
+
+                               VC.MsgBox("Please Select Branch","Sales Invoice");
+                               return;
+                           }
+                           if(_.CurrentObject.ID_InvoiceType !== 3){
+                               VC.MsgBox("Item Transfer is for Consignment type only","Sales Invoice");
+                               return;
+                           }
+                            var JsPopUpView = app.$GetPopupView();
+                            var SQL = '@Html.EncryptSQL(@"Select * From vItemTransferForSI where ID_BusinessPartner = @ID_BusinessPartner and ID_Branch = @ID_Branch ")';
+                            JsPopUpView.BrowseDataSet(SQL, {
+                                text : 'Item Transfer',
+                                ID_View : 'BED7C84E-BBB1-41F2-B80F-05732B9DCCACIT',
+                                params:{
+                                   'ID_BusinessPartner' : _.CurrentObject.ID_BusinessPartner,
+                                   'ID_Branch' : _.CurrentObject.ID_Branch
+                                }
+                            }).then(function(data){
+                                $.each(data,function(i,record){
+                               if (_.CurrentObject.SalesInvoice_Details == undefined) _.CurrentObject.SalesInvoice_Details = [];
+                               var Detail = Enumerable.From(_.CurrentObject.SalesInvoice_Details).Where('$.ID_Item ==' + record.ID_Item).ToArray();
+                               if(Detail.length == 0){
+                                    VC.$scope.CurrentObject.SalesInvoice_Details.push({
+                                        ID: _.rndID(),
+                                        ID_Item: record.ID_Item,
+                                        Name : record.Item,
+                                        Code : record.Code,
+                                        ItemCode: record.Code,
+                                        Item: record.Item,
+                                        Description: record.Description,
+                                        Quantity: record.Balance ,
+                                        Balance: null,
+                                        UnitPrice: record.UnitPrice,
+                                        ID_UOM: record.ID_UOM,
+                                        UOM: record.UOM,
+                                       // VatAmt: record.VatAmt,
+                                        TaxScheme: record.TaxScheme,
+                                        ID_TaxScheme: 2,
+                                        TotalAmount: record.TotalAmount,
+                                        DocStatus: '',
+                                        ID_DocStatus: null,
+                                        ReferenceNo: record.DocumentNo,
+                                        IsFree: 0,                                          
+                                        Comment: null,
+                                        ID_DocDetail: record.ID,
+                                        ID_DocDetailParentModel: 3224,
+                                        ID_SalesOrder: null,
+                                     //   SerialNo : record.Serial,
+                                        RefQuantity : record.Balance
+                                      //  ID_Brand: record.ID_Brand,
+                                      //  InDays: record.InDays,
+                                      //  ID_PaymentTerm: record.ID_PaymentTerm
+                                    })
+
+                              }
+                              else{
+                                   var detail = Detail[0];
+                                   detail.Quantity++;
+                              }
+
+                               var Serial = {
+                                   Code : null,
+                                   Name : record.Serial,
+                                   ID_Item : record.ID_Item,
+                                   Item : record.Item,
+                                   ID_DocDetail :  record.ID,
+                                   ID_ITSerial : record.SerialID
+                               }
+                               
+                               if (_.CurrentObject.SalesInvoice_Detail_Serials == undefined || _.CurrentObject.SalesInvoice_Detail_Serials == null)  _.CurrentObject.SalesInvoice_Detail_Serials = [];
+                                if(record.IsSerialized == 1){
+                                     _.CurrentObject.SalesInvoice_Detail_Serials.push(Serial);
+                                }
+                              
+                               _.CurrentObject.ID_Warehouse = record.ID_Warehouse_To;
+                               _.CurrentObject.ID_Branch = record.ID_Branch;
+                               _.CurrentObject.Branch = record.Branch;
+                               _.CurrentObject.Address = record.BranchAdress;
+                               _.Compute();
+                                });
+
+                            })
+                        }
+
+                        
+                }
+              
+                
+                var btnBrowseDeliveryReceipt = {
+                    text : 'Delivery Receipt',
+                    ID_View : 'DBBAC769-6790-4FDA-9A0F-A63D4805F86E',
+                    params: {
+                    'ID_BusinessPartner': VC.$scope.CurrentObject.ID_BusinessPartner
+                        //   , 'ID_Details': Enumerable.From(_.CurrentObject.ReceivingReportDetail).Select('$.ID_DocDetail').ToArray()
+                    },
+                    IsDisabled: function () {
+                        if (_.ID_ViewType == 2) {
+
+                            if (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3)
+                            {
+                                return false;
+                            }
+
+                            if (VC.IsNew() == true)
+                            {
+                                return false;
+
+                            }
+
+                            return true ;
+                        } else {
+                            var itemsSelected = VC.Grid.getSelectedRowsData();
+                            var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+                            var selected_ID_BusinessPartners = Enumerable
+                            .From(itemsSelected)
+                            .Select("$.ID_BusinessPartner")
+                            .Distinct()
+                            .ToArray();
+                            if (selected_ID_BusinessPartners.length !== 1) return true;
+                            if (itemsSelected.length === 0) return true;
+                            if (NotApprovedDocs.length > 0) return true;
+                            return false;
+                        }
+                            return false;
+                    },
+                    onItemClick: function () {
+                        if (_.ID_ViewType === 2) {
+
+                            if (VC.$scope.CurrentObject.ID_BusinessPartner ==  0 || VC.$scope.CurrentObject.ID_BusinessPartner == null )
+                            {
+                                VC.MsgBox("Please Select Customer", "Delivery Report");
+                            }
+                        else
+                        {
+
+                            var drIDs = Enumerable.From(_.CurrentObject['SalesInvoice_Details']).Where("$.ID_DocDetailParentModel = " + AcctHelper.Model_ID_DeliveryReceipt.toString()).Select("$.ID_DocDetail").ToArray();
+                            if (drIDs.length == 0){
+
+                                drIDs.push(0);
+                            }
+
+
+                            var SQL = '@Html.EncryptSQL(@"SELECT * FROM dbo.vDeliveryReceipt_Detail WHERE NOT ( isnull(ID_SOType,0) = 6 AND ISNULL(IsDelivered,0) = 0) AND  ID NOT IN (@ExistingDRDetails_IDs) AND ID_BusinessPartner = @ID_BusinessPartner and Balance <> 0 and ID_FilingStatus not in (1,7) ")';
+                            var JsPopUpView = app.$GetPopupView();
+                            JsPopUpView.BrowseDataSet(SQL, {
+                                ID_View: 'C024B25D-D8A2-4E9E-8D8D-A21EDE24A507',
+                                params: {
+                                    ID_BusinessPartner: VC.$scope.CurrentObject.ID_BusinessPartner,
+                                    ExistingDRDetails_IDs:drIDs
+                                },
+                                title: 'Select Delivery Receipt'
+                            }).then(function (SelectedItems) {
+                                var ID_DeliveryReceipt= 0;
+                                $.each(SelectedItems, function (i, record) {
+
+                                    if (VC.$scope.CurrentObject.SalesInvoice_Details == null) VC.$scope.CurrentObject.SalesInvoice_Details = [];
+
+                                    var NewDetail = {
+                                        ID: _.rndID(),
+                                        ID_Item: record.ID_Item,
+                                        ItemCode: record.ItemCode,
+                                        Item: record.item,
+                                        Description: record.Description,
+                                        Quantity: record.Quantity,
+                                        Balance: null,
+                                        UnitPrice: record.UnitPrice,
+                                        ID_UOM: record.ID_UOM,
+                                        UOM: record.UOM,
+                                        VatAmt: record.VatAmt,
+                                        TaxScheme: record.TaxScheme,
+                                        ID_TaxScheme: record.ID_TaxScheme,
+                                        TotalAmount: record.TotalAmount,
+                                        DocStatus: '',
+                                        ID_DocStatus: null,
+                                        ReferenceNo: record.DocumentNo,
+                                        IsFree: record.IsFree,                                          
+                                        Comment: null,
+                                        ID_DocDetail: record.ID,
+                                        ID_DocDetailParentModel: 2168,
+                                        ID_SalesOrder: record.ID_SalesOrder,
+                                        $isFromDR : true,
+                                        ID_Brand: record.ID_Brand,
+                                        InDays: record.InDays,
+                                        ID_PaymentTerm: record.ID_PaymentTerm
+                                    };
+                                    VC.$scope.CurrentObject.ID_AccountExecutive = record.ID_AccountExecutive;
+                                    VC.$scope.CurrentObject.AccountExecutive = record.AccountExecutive;
+                                    
+                                    console.log(record.DiscountAmount,record.TotalSOAmount )
+                                    ID_DeliveryReceipt = record.ID_DeliveryReceipt;
+                                    VC.$scope.CurrentObject.SalesInvoice_Details.push(NewDetail);
+                                    VC.$scope.CurrentObject.ID_Salesman = record.ID_Salesman;
+                                    VC.$scope.CurrentObject.ID_PaymentTerm = record.ID_PaymentTerm;
+                                    VC.$scope.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                    VC.$scope.CurrentObject.ID_TaxScheme = record.HedTaxScheme;
+                                    VC.$scope.CurrentObject.TotalDownPayment = record.SIDownPayment;
+                                    VC.$scope.CurrentObject.PONo = record.PONo;
+                                    VC.$scope.CurrentObject.DiscountAmount = record.DiscountAmount;
+                                    VC.$scope.CurrentObject.GrossAmount = record.TotalSOAmount;  
+                                    VC.$scope.CurrentObject.PaymentTransactionNo = record.PaymentTransactionNo
+                                    VC.$scope.CurrentObject.Employee = record.CustomerEmployee
+
+
+                                    
+                                });
+                                if(_.CurrentObject.SalesInvoice_PaymentSchemes == undefined || _.CurrentObject.SalesInvoice_PaymentSchemes == null) _.CurrentObject.SalesInvoice_PaymentSchemes = [];
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query('@Html.EncryptSQL("Select * From vDeliveryReceipt_PaymentScheme WHERE ID_DeliveryReceipt = @ID_DeliveryReceipt AND ID NOT IN(@ID_DocDetail)")', {
+                                    params:{
+                                        'ID_DeliveryReceipt': ID_DeliveryReceipt,
+                                        'ID_DocDetail': Enumerable.From(_.CurrentObject.SalesInvoice_PaymentSchemes).Select('$.ID_DocDetail').ToArray()
+                                    }
+                                }).then(function (Data) {
+                                    
+                                    $.each(Data.collection, function (i, item) {
+
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_DocDetail: item.ID,
+                                            ID_PaymentScheme: item.ID_PaymentScheme,
+                                            PaymentScheme: item.PaymentScheme,
+                                            DueDate: item.DueDate,
+                                            Amount: item.Amount,
+                                            Comment: item.Comment,
+                                            Rate: item.Rate
+                                        };
+
+                                        _.CurrentObject.SalesInvoice_PaymentSchemes.push(NewDetail);
+                                
+                                    });
+
+                                });
+
+                                //
+                                //
+                                    VC.GetGridEditor('SalesInvoice_Details').refresh();
+
+                                _.Compute();
+                                var totalamount  = 0.00
+                                totalamount = parseFloat( _.CurrentObject.RefTotalAmount ) -  parseFloat(_.CurrentObject.TotalDownPayment)
+                                VC.$scope.CurrentObject.TotalAmount = parseFloat(totalamount).toFixed(2);
+								VC.$scope.CurrentObject.TotalVat = VC.$scope.CurrentObject.RefTotalVat;
+                                VC.$scope.CurrentObject.Subtotal = VC.$scope.CurrentObject.RefSubtotal;
+                            });
+                            } 
+                        }
+                    }
+                     
+                };
+
+                var btnBrowseSalesOrder =  {
+                    text: 'Sales Order',
+                    ID_View : 'DBBAC769-6790-4FDA-9A0F-A63D4805F86E',
+                    params: {
+                        'ID_BusinessPartner': VC.$scope.CurrentObject.ID_BusinessPartner
+                                    //   , 'ID_Details': Enumerable.From(_.CurrentObject.ReceivingReportDetail).Select('$.ID_DocDetail').ToArray()
+                    },
+                    IsDisabled: function () {
+                        if (_.ID_ViewType == 2) {
+
+        
+                                if (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3)
+                                {
+                                    return false;
+                                }
+
+                                if (VC.IsNew() == true)
+                                {
+                                    return false;
+
+                                }
+
+                            return true ;
+                        } else {
+                            var itemsSelected = VC.Grid.getSelectedRowsData();
+                            var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+                            var selected_ID_BusinessPartners = Enumerable
+                                .From(itemsSelected)
+                                .Select("$.ID_BusinessPartner")
+                                .Distinct()
+                                .ToArray();
+                            if (selected_ID_BusinessPartners.length !== 1) return true;
+                            if (itemsSelected.length === 0) return true;
+                            if (NotApprovedDocs.length > 0) return true;
+                            return false;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+                            if (_.ID_ViewType === 2) {
+
+                                if (VC.$scope.CurrentObject.ID_BusinessPartner ==  0 || VC.$scope.CurrentObject.ID_BusinessPartner == null )
+                                {
+                                    VC.MsgBox("Please Select Customer", "Delivery Report");
+                                }
+                                else
+                                {
+
+                                    var soIDs = Enumerable.From(_.CurrentObject['SalesInvoice_Details']).Where("$.ID_DocDetailParentModel = " + AcctHelper.Model_ID_SalesOrder.toString()).Select("$.ID_DocDetail").ToArray();
+                                    if (soIDs.length == 0){
+
+                                        soIDs.push(0);
+                                    }
+
+                                    var SQL = '@Html.EncryptSQL(@"SELECT * FROM vSalesOrder_Detail WHERE  ID NOT IN (@ExistingsoDetails_IDs) AND ID_BusinessPartner = @ID_BusinessPartner
+                                    and ID_FilingStatus not in (1,7) and SODocStatus = 1 and dbo.fzGetTotalDownpayment(ID_SalesOrder) < SOTotalAmount")';
+                                    var JsPopUpView = app.$GetPopupView();
+                                    JsPopUpView.BrowseDataSet(SQL, {
+                                        ID_View: 'C024B25D-D8A2-4E9E-8D8D-A21EDE24A507',
+                                        params: {
+                                            ID_BusinessPartner: VC.$scope.CurrentObject.ID_BusinessPartner,
+                                            ExistingsoDetails_IDs:soIDs
+                                        },
+                                        title: 'Select Sales Order'
+                                    }).then(function (SelectedItems) {
+                                        var ID_SalesOrder = 0;
+                                        $.each(SelectedItems, function (i, record) {
+
+                                            if (VC.$scope.CurrentObject.SalesInvoice_Details == null) VC.$scope.CurrentObject.SalesInvoice_Details = [];
+
+                                            var NewDetail = {
+                                                ID: _.rndID(),
+                                                ID_Item: record.ID_Item,
+                                                ItemCode: record.ItemCode,
+                                                Item: record.item,
+                                                Description: record.Description,
+                                                Quantity: record.Quantity,
+                                                Balance: null,
+                                                UnitPrice: record.UnitPrice,
+                                                ID_UOM: record.ID_UOM,
+                                                UOM: record.UOM,
+                                                VatAmt: record.VatAmt,
+                                                TaxScheme: record.TaxScheme,
+                                                ID_TaxScheme: record.ID_TaxScheme,
+                                                TotalAmount: record.TotalAmount,
+                                                DocStatus: '',
+                                                ID_DocStatus: null,
+                                                ReferenceNo: record.DocumentNo,
+                                                IsFree: record.IsFree,                                          
+                                                Comment: null,
+                                                ID_DocDetail: record.ID,
+                                                ID_DocDetailParentModel: 2165,
+                                                ID_SalesOrder: record.ID_SalesOrder,
+                                                $isFromDR : true,
+                                                ID_Brand: record.ID_Brand,
+                                                InDays: record.InDays,
+                                                ID_PaymentTerm: record.ID_PaymentTerm
+                                            };
+                                            
+                                            ID_SalesOrder = record.ID_SalesOrder
+
+                                            VC.$scope.CurrentObject.ID_AccountExecutive = record.ID_Employee;
+                                            VC.$scope.CurrentObject.AccountExecutive = record.AccountExecutive;
+
+                                            VC.$scope.CurrentObject.SalesInvoice_Details.push(NewDetail);
+                                            VC.$scope.CurrentObject.ID_Salesman = record.ID_Salesman;
+                                            VC.$scope.CurrentObject.ID_PaymentTerm = record.ID_PaymentTerm;
+                                            VC.$scope.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                            VC.$scope.CurrentObject.TotalDownPayment = record.SIDownPayment;
+                                            VC.$scope.CurrentObject.ID_TaxScheme = record.HedTaxScheme;
+                                            VC.$scope.CurrentObject.PONo = record.PurchaseOrderNo;
+                                            VC.$scope.CurrentObject.DiscountAmount = record.DiscountAmount;
+                                            VC.$scope.CurrentObject.GrossAmount = record.TotalSOAmount;
+                                            VC.$scope.CurrentObject.PaymentTransactionNo = record.PaymentTransactionNo
+                                            VC.$scope.CurrentObject.Employee = record.CustomerEmployee
+                                        });
+                                        //
+                                        //
+                                        if(_.CurrentObject.SalesInvoice_PaymentSchemes == undefined || _.CurrentObject.SalesInvoice_PaymentSchemes == null) _.CurrentObject.SalesInvoice_PaymentSchemes = [];
+                                        var JsDataService = app.$GetDataService();
+                                        JsDataService.Query('@Html.EncryptSQL("Select * From vSalesOrder_PaymentTerms WHERE ID_SalesOrder = @ID_SalesOrder AND ID NOT IN(@ID_DocDetail)")', {
+                                            params:{
+                                                'ID_SalesOrder': ID_SalesOrder,
+                                                'ID_DocDetail': Enumerable.From(_.CurrentObject.SalesInvoice_PaymentSchemes).Select('$.ID_DocDetail').ToArray()
+                                            }
+                                        }).then(function (Data) {
+                                            
+                                            $.each(Data.collection, function (i, item) {
+                                    
+                                                var NewDetail = {
+                                                    ID: _.rndID(),
+                                                    ID_DocDetail: item.ID,
+                                                    ID_PaymentTerm: item.ID_PaymentTerm,
+                                                    ID_PaymentScheme: item.ID_PaymentScheme,
+                                                    PaymentScheme: item.PaymentScheme,
+                                                    PaymentTerm: item.PaymentTerm,
+                                                    DueDate: item.DueDate,
+                                                    Amount: item.Amount,
+                                                    Comment: item.Comment,
+                                                    Rate: item.Rate
+                                                };
+                                    
+                                                _.CurrentObject.SalesInvoice_PaymentSchemes.push(NewDetail);
+                                        
+                                            });
+                                    
+                                        });
+
+                                        //
+                                        //
+                                            VC.GetGridEditor('SalesInvoice_Details').refresh();
+
+                                        _.Compute();
+                                        var totalamount  = 0.00
+                                        totalamount = parseFloat( _.CurrentObject.RefTotalAmount ) -  parseFloat(_.CurrentObject.TotalDownPayment)
+                                        VC.$scope.CurrentObject.TotalAmount = parseFloat(totalamount).toFixed(2);
+                                    });
+                                } 
+                            }
+                        }
+                };
+
+                var btnBrowseSalesReturn =  {
+                    text: 'Sales Return',
+                    ID_View : 'CDC11643-6065-46D5-9F50-5BD199787023',
+                    params: {
+                        'ID_BusinessPartner': VC.$scope.CurrentObject.ID_BusinessPartner
+                                    //   , 'ID_Details': Enumerable.From(_.CurrentObject.ReceivingReportDetail).Select('$.ID_DocDetail').ToArray()
+                    },
+                    IsDisabled: function () {
+                        if (_.ID_ViewType == 2) {
+
+        
+                                if (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3)
+                                {
+                                    return false;
+                                }
+
+                                if (VC.IsNew() == true)
+                                {
+                                    return false;
+
+                                }
+
+                            return true ;
+                        } else {
+                            var itemsSelected = VC.Grid.getSelectedRowsData();
+                            var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+                            var selected_ID_BusinessPartners = Enumerable
+                                .From(itemsSelected)
+                                .Select("$.ID_BusinessPartner")
+                                .Distinct()
+                                .ToArray();
+                            if (selected_ID_BusinessPartners.length !== 1) return true;
+                            if (itemsSelected.length === 0) return true;
+                            if (NotApprovedDocs.length > 0) return true;
+                            return false;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+                            if (_.ID_ViewType === 2) {
+
+                                if (VC.$scope.CurrentObject.ID_BusinessPartner ==  0 || VC.$scope.CurrentObject.ID_BusinessPartner == null )
+                                {
+                                    VC.MsgBox("Please Select Customer", "Sales Return");
+                                }
+                                else
+                                {
+
+                                    var srIDs = Enumerable.From(_.CurrentObject['SalesInvoice_Details']).Where("$.ID_DocDetailParentModel = " + AcctHelper.Model_ID_SalesReturn.toString()).Select("$.ID_DocDetail").ToArray();
+                                    if (srIDs.length == 0){
+
+                                        srIDs.push(0);
+                                    }
+
+                                    var SQL = '@Html.EncryptSQL(@"SELECT * FROM vPendingSalesReturnDetailsForSalesInvoice where ID NOT IN (@ExistingsrDetails_IDs) ")';
+                                    var JsPopUpView = app.$GetPopupView();
+                                    JsPopUpView.BrowseDataSet(SQL, {
+                                        ID_View: '17645C41-3B54-47C3-83C4-140705D3CCF2',
+                                        params: {
+                                            ID_BusinessPartner: VC.$scope.CurrentObject.ID_BusinessPartner,
+                                            ExistingsrDetails_IDs:srIDs
+                                        },
+                                        title: 'Select Sales Return'
+                                    }).then(function (SelectedItems) {
+                                        var ID_SalesReturn = 0;
+                                        $.each(SelectedItems, function (i, record) {
+
+                                            if (VC.$scope.CurrentObject.SalesInvoice_Details == null) VC.$scope.CurrentObject.SalesInvoice_Details = [];
+
+                                            var NewDetail = {
+                                                ID: _.rndID(),
+                                                ID_Item: record.ID_Item,
+                                                ItemCode: record.ItemCode,
+                                                Item: record.item,
+                                                Description: record.Description,
+                                                Quantity: record.Quantity,
+                                                Balance: null,
+                                                UnitPrice: record.UnitPrice,
+                                                ID_UOM: record.ID_UOM,
+                                                UOM: record.UOM,
+                                                VatAmt: record.VatAmt,
+                                                TaxScheme: record.TaxScheme,
+                                                ID_TaxScheme: record.ID_TaxScheme,
+                                                TotalAmount: record.TotalAmount,
+                                                DocStatus: '',
+                                                ID_DocStatus: null,
+                                                ReferenceNo: record.DocumentNo,
+                                                IsFree: record.IsFree,                                          
+                                                Comment: null,
+                                                ID_DocDetail: record.ID,
+                                                ID_DocDetailParentModel: 2165,
+                                                ID_SalesReturn: record.ID_SalesReturn,
+                                                isFromDR : false,
+                                                ID_Brand: record.ID_Brand,
+                                                InDays: record.InDays,
+                                                ID_PaymentTerm: record.ID_PaymentTerm
+                                            };
+                                            
+                                            ID_SalesReturn = record.ID_SalesReturn
+
+                                            VC.$scope.CurrentObject.SalesInvoice_Details.push(NewDetail);
+                                        });
+                                       
+                                        _.Compute();
+                                        var totalamount  = 0.00
+                                        totalamount = parseFloat( _.CurrentObject.RefTotalAmount ) -  parseFloat(_.CurrentObject.TotalDownPayment)
+                                        VC.$scope.CurrentObject.TotalAmount = parseFloat(totalamount).toFixed(2);
+                                    });
+                                } 
+                            }
+                        }
+                };
+
+                VC.AddToolbarButton({
+                    text: 'Browse',
+                    items: [ btnBrowseDeliveryReceipt, btnBrowseSalesOrder,btnBrowseItemTransfer]
+                });
+
+                VC.AddToolbarButton({
+                text: 'Create Payment',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 2) {
+                        if (_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 17) {
+                            return false;
+                        }
+                        return true;
+                    } 
+                },
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    AcctHelper.CreatePaymentVoucherFromSI(Selecteds);
+
+                }
+
+                })
+            }
+
+            VC_SalesInvoice.prototype.isColumnGridEditable = function (p,e) {
+                if (p == "SalesInvoice_Details") {
+                    if (e.column.dataField === 'Quantity') {
+                        var data = e.data;
+                        if (data.$isFromDR !== undefined) {
+                            if (data.$isFromDR == true) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            };
+            
+       
+
+            VC_SalesInvoice.prototype.Init = function (VC) {
+                baseModelHelper.prototype.Init.call(this, VC);
+
+
+                var _ = this;
+                _.IsCanUpdateDoc = function () {
+                    var VC = _.VC;
+                    var isDisabled = true;
+                    if (_.ID_ViewType == 1) {
+                      
+                        if (VC.Grid === undefined) return false;
+                        var SelectedRows = VC.Grid.getSelectedRowsData();
+                          console.log('gg',SelectedRows);
+                        if (SelectedRows.length != 1) return true;
+                        return  !(SelectedRows[0].ID_FilingStatus !== 1 &&  SelectedRows[0].ID_FilingStatus !== 7 && SelectedRows[0].IsReceived !== true );
+                
+                    } else {
+                        if (_.CurrentObject.ID == -1) {
+                            return true;
+                        }
+                        if ((_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 17 || _.CurrentObject.ID_FilingStatus == 10) && _.CurrentObject.IsReceived == false) {
+                            isDisabled = false;
+                        }
+                    }
+                    return isDisabled;
+                }
+        
+             
+                 VC.AddToolbarButton({
+                  text: 'Doc Received',
+                  icon: 'mdi mdi-thumb-up',
+                  color: '#009688',
+                  isContextMenu: true,
+                  IsDisabled: _.IsCanUpdateDoc,
+                  onItemClick: function () {
+                    var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+                      var CurrentObjects = null;
+
+
+                     if (_.ID_ViewType == 1) { //ListView
+                           CurrentObjects = _.Grid.getSelectedRowsData();
+                      } else if (_.ID_ViewType == 2) { //DetailView
+                            CurrentObjects = [_.CurrentObject];
+                      }
+
+                      
+                          
+                        app.$modal().Show({
+                                    Template: '<div style="padding:10px"><div>Received By</div><div dx-text-box="dxTextBoxOption"></div>'
+                                   ,
+                                    title: 'Doc Received',
+                                    width: 300,
+                                    height: 250,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        s.CurrentObject = {
+                                            ReceivedByManual: null
+                                        };
+
+                                        s.dxTextBoxOption = {
+                                            bindingOptions: {
+                                                'value': 'CurrentObject.ReceivedByManual'
+                                            }
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+
+                                            if (s.CurrentObject.ReceivedByManual == null) {
+                                                VC.MsgBox("Receiving Person is required.")
+                                                return;
+                                            };
+
+                                            app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pUpdateSIStatus")', {
+                                                'IDs': Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                                                'ReceivedByManual': s.CurrentObject.ReceivedByManual
+                                            }).then(function () {
+
+                                                if (_.ID_ViewType == 1) {
+
+                                                  
+                                                    _.Grid.refresh();
+                                                }else{
+
+                                                    VC.Reload();
+                                                 
+                                                   
+                                                }
+                                                 
+                                                 VC.ToastSuccess('Update Successfully');
+                                                 d.hide();
+                                            });
+                                        }
+                                    }
+                             });
+
+
+
+                  
+                        // var Documents = Enumerable.From(CurrentObjects).Select('$.DocumentNo').ToArray().join();
+                        // VC.ConfirmBox("Do you want to Receive the following Document: <br>" + Documents + "").then(function () {
+                        //    
+                        //    VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pUpdateSIStatus")', {
+                        //            IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray()
+                        //    }).then(function (response) {
+                        //            defer.resolve();
+                        //    }, function () {
+                        //            defer.reject();
+                        //    });
+                        //    VC.ToastSuccess(Documents + ' Successfully Approved');
+                        //    if (_.ID_ViewType == 2) {
+                        //        _.VC.Reload();
+                        //    } else {
+                        //        VC.Grid.refresh();
+                        //    }
+                        //        return defer.promise;
+                        //
+                        //});
+    
+                  }
+                  
+
+                });
+                if (_.ID_ViewType === 2) {
+                    //*** Remove Add Item Button
+
+                        var SI_Details_MenuOption  = VC.$scope.SalesInvoice_Details_MenuOptions;
+                        SI_Details_MenuOption.splice(0,1);
+                
+                    //**//
+
+                   
+                    VC['onSalesInvoice_PaymentSchemes_RowUpdated'] = function (Grid, Detail) {
+                        $.each(Detail,function (i,d) {
+                            d.Amount = d.Rate * _.CurrentObject.TotalAmount;
+                        });
+                    }
+                 }
+                VC.AddButtonReport({
+                    Name: 'Sales Invoice Form',
+                    ID_Report: 1021,
+                    requireSingleObject: true
+                });
+
+				VC.AddButtonReport({
+                    Name: 'Sales Invoice STP',
+                    ID_Report: 3098,
+                    requireSingleObject: true
+                });
+                
+				VC.AddButtonReport({
+                    Name: 'Billing Invoice Form',
+                    ID_Report: 2050,
+                    requireSingleObject: true
+                });
+
+                VC.AddButtonReport({
+                    Name: 'Billing Statement',
+                    ID_Report: 3175,
+                    requireSingleObject: true
+                });
+            }
+
+            VC_SalesInvoice.prototype.onDetailRowUpdated = function () {
+                var VC = this.VC;
+                if ( this.DPGrid !== undefined ){
+                    this.DPGrid.refresh();
+                }
+            }
+
+            VC_SalesInvoice.prototype.onCurrentObjectChanged = function (e) {
+                baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+                var VC = this.VC;
+                var _ = this;
+
+
+              if (e.dataField === 'ID_PaymentTerm') {                  
+                  if (e.value != null) {
+                      _.CurrentObject.InDays = e.value.InDays;
+                      if(e.value.InDays > 0){
+                          var d = new Date( _.CurrentObject.Date == null ? new Date().toLocaleDateString() : _.CurrentObject.Date )            
+                          
+                          d.setDate(d.getDate() +  (_.CurrentObject.InDays == 0? 0: _.CurrentObject.InDays -1) )                           
+                          _.CurrentObject.DateDue = d
+                      }
+                      else{
+                          _.CurrentObject.DateDue = null;
+                      }
+                  }
+              }
+              if (e.dataField === 'Date') {                  
+                  if (e.value != null) {
+                      if(_.CurrentObject.InDays > 0 && _.CurrentObject.ID_PaymentTerm > 0){
+                          var d = new Date( _.CurrentObject.Date == null ? new Date().toLocaleDateString() : _.CurrentObject.Date )            
+                          d.setDate(d.getDate() +  (_.CurrentObject.InDays == 0? 0: _.CurrentObject.InDays -1) )                                   
+                          _.CurrentObject.DateDue = d
+                      }
+                  }
+              }
+
+                var currentObject = VC.$scope.CurrentObject;
+
+                var GrandTotal = 0.00
+                var sumDPTA = (parseFloat(currentObject.TotalDownPayment) + parseFloat(currentObject.TotalAmount) );
+                var refTotalAmount = parseFloat(currentObject.RefTotalAmount).toFixed(2);
+                if(currentObject.ID !== -1)
+                {
+                    
+                }
+                
+                GrandTotal =  parseFloat(currentObject.RefTotalAmount).toFixed(2) - (parseFloat(currentObject.TotalDownPayment).toFixed(2) + parseFloat(currentObject.TotalAmount).toFixed(2) )
+                currentObject.GrandTotal = (refTotalAmount - sumDPTA).toFixed(2);
+                            var VatAmt = 0.00;
+                            var VatRate = currentObject.RefVatRate;
+                            var VAT = 0.00;
+                       
+               if(currentObject.TotalAmount < currentObject.RefTotalAmount && currentObject.TotalAmount !== 0 && currentObject.TotalAmount !== null)
+               {
+                
+                   switch (currentObject.ID_TaxScheme) {
+                   case 1: //VAT Exclusive
+                       var Net = (currentObject.TotalAmount / (1 + (VatRate / 100)));
+                       var VatEx = Net * (VatRate / 100);
+                       VatAmt = VatEx;
+                     
+                       break;
+                   case 2: //VAT Inclusive
+                       var Net = (currentObject.TotalAmount / (1 + (VatRate / 100)));
+                       var VatEx = Net * (VatRate / 100);
+                       VatAmt = VatEx;
+                      
+                       break;
+                   case 3: //ZERO Rated
+                       VatAmt = 0.00;
+                       var Net = currentObject.TotalAmount;
+                       break;
+                  case 4: //Billing
+                       VatAmt = 0.00;
+                       var Net = currentObject.TotalAmount;
+                       break;
+               }
+                           currentObject.TotalVat = parseFloat(VatAmt).toFixed(2);
+                           currentObject.Subtotal = parseFloat(Net).toFixed(2);
+
+               }
+               else
+               {
+                   currentObject.TotalAmount = currentObject.RefTotalAmount;
+                   currentObject.TotalVat = currentObject.RefTotalVat;
+                   currentObject.Subtotal = currentObject.RefSubtotal;
+
+               }
+            
+
+
+             if(e.dataField ==='DPpercent'){
+                 console.log('XB')
+                 if(_.CurrentObject.DPpercent !== 0 && _.CurrentObject.DPpercent !== null)
+                 {
+                        if(_.CurrentObject.DPpercent % 1 > 0){
+                             return;
+                          }
+                 
+                    var DpAmount
+                    DpAmount = parseFloat(_.CurrentObject.DPpercent) / 100;
+                   _.CurrentObject.DPAmount = _.CurrentObject.RefTotalAmount * DpAmount
+                   _.CurrentObject.TotalAmount = _.CurrentObject.RefTotalAmount * DpAmount.toFixed(2)
+                   
+                }
+                else
+                {
+                //    _.CurrentObject.VatAmt = _.CurrentObject.RefTotalVat 
+                //    _.CurrentObject.Subtotal = _.CurrentObject.RefSubtotal
+                   _.CurrentObject.TotalAmount = _.CurrentObject.RefTotalAmount - (parseFloat(currentObject.TotalDownPayment))
+                   _.CurrentObject.DPAmount = 0.00;
+                }
+
+
+             }
+
+
+                // 09/07/2017
+            if(e.dataField ==='DPAmount'){
+                 console.log('XY')
+                 if(_.CurrentObject.DPAmount !== 0 && _.CurrentObject.DPAmount !== null)
+                 {
+
+                    var DpPercent = _.CurrentObject.DPAmount
+                    DpPercent = _.CurrentObject.DPAmount
+                   _.CurrentObject.DPpercent = (_.CurrentObject.DPAmount / _.CurrentObject.RefTotalAmount) * 100 ;
+                  // console.log( _.CurrentObject.DPpercent,(_.CurrentObject.DPAmount / _.CurrentObject.RefTotalAmount) * 100 ,'xxx')
+                   _.CurrentObject.TotalAmount = _.CurrentObject.DPAmount 
+                   
+                   
+                }
+                else
+                {
+                //    _.CurrentObject.VatAmt = _.CurrentObject.RefTotalVat 
+                //    _.CurrentObject.Subtotal = _.CurrentObject.RefSubtotal
+                   _.CurrentObject.TotalAmount = _.CurrentObject.RefTotalAmount - (parseFloat(currentObject.TotalDownPayment))
+                   _.CurrentObject.DPpercent = 0.00
+                }
+
+            }
+               currentObject.Balance = currentObject.TotalAmount;
+                
+                if ( currentObject.Quotation_Details !== undefined ) {
+
+                currentObject.Quotation_Details.forEach(function(detail) {
+    
+                 
+    
+                    var VatAmountPerSRP = detail.VatAmt /  detail.Quantity ;
+                    detail.VatAmountPerSRP = VatAmountPerSRP.format(2, 3, '.', ',');
+                    /*
+                        VatAmountPerSRP is just added only in detail view ng Quotation_Details. 
+                        Hindi sya added sa database.
+                    */
+                });
+    
+                }
+
+                var _ = this;
+                var CurrentObject = _.VC.$scope.CurrentObject;
+                var VatRate = CurrentObject.RefVatRate;
+
+        }
+
+
+            VC_SalesInvoice.prototype.Approve = function (Items) {
+
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pSalesInvoiceApprove")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser'
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+
+            VC_SalesInvoice.prototype.Cancel = function (Items, Reason) {
+
+                console.log(Reason,'Reason');
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                JsDataService.ExecSQLProc(
+                    '@Html.EncryptSQL("pSalesInvoiceCancel")',
+                    {
+                        'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                        'ID_CurrentUser': '#ID_CurrentUser',
+                        'Reason' : Reason
+                    }
+                ).then(function (response) {
+                    defer.resolve();
+                }, function () {
+                    defer.reject();
+                });
+
+                return defer.promise;
+            }
+
+            //OVERRIDE KO YUNG COMPUTE SA SI.. NAG SSTOCK OVER FLOW EH 
+
+        VC_SalesInvoice.prototype.Compute = function () {
+
+            var _ = this;
+
+            if (_.VC.IsFormReadOnly === true) return;
+
+            if( _.CurrentObject.ID_PaymentTerm > 0){
+                var d = new Date( _.CurrentObject.Date == null || _.CurrentObject.Date == undefined ? new Date().toLocaleDateString() : _.CurrentObject.Date )            
+                d.setDate(d.getDate() + (_.CurrentObject.InDays == 0? 0: _.CurrentObject.InDays -1) )           
+                               
+                _.CurrentObject.DateDue = d
+            }else{
+                _.CurrentObject.DateDue = null;
+            }
+
+            if (_.DocDetailPropertyName === undefined) throw new Error("DocDetailPropertyName must be define");
+            
+            var CurrentObject = _.VC.$scope.CurrentObject;
+            var DetailPropertyName = _.DocDetailPropertyName;
+
+            var RefSubTotal = 0.00;
+            var RefTaxAmount = 0.00;
+            var RefGrandTotal = 0.00;
+            var RefVatRate = CurrentObject.RefVatRate;
+
+            var VC = this.VC;
+
+            if (CurrentObject[DetailPropertyName] != null) {
+
+                var RefTotalAmount = 0.00;
+                var RefTotalVat = 0.00;
+                var RefTotalQty = 0.00;
+                var RefGrossTotal = 0.00;
+
+                var CurrentObject = _.VC.$scope.CurrentObject;
+
+                var VatRate = CurrentObject.RefVatRate;
+
+                if (CurrentObject[DetailPropertyName] != null) {
+                    $.each(CurrentObject[DetailPropertyName], function (i, item) {
+                        
+                        if (item.IsFree !== true) {
+
+                            item.GrossAmount = item.Quantity * item.UnitPrice;
+
+                            item.TotalAmount = item.GrossAmount; // - (item.Discount == undefined ? 0 : item.Discount);;
+
+                            switch (item.ID_TaxScheme) {
+                                
+                                case 1: //VAT Exclusive
+                                    var VatEx = (item.TotalAmount * (VatRate / 100));
+                                    item.VatAmt = VatEx;
+                                    item.TotalAmount = item.TotalAmount + VatEx;
+                                    break;
+                                case 2: //VAT Inclusive
+                                    item.VatAmt = (item.TotalAmount / (1 + (VatRate / 100))) * (VatRate / 100);
+                                    //TotalVat += item.VatAmt;
+                                    break;
+                                case 3: //ZERO Rated 
+                                    item.VatAmt = 0;
+                                    break;
+                                case 4: //BillingStatement
+                                    item.VatAmt = 0;
+                                    break;
+                            }
+                        } else {
+                            item.VatAmt = 0.00;
+                            item.TotalAmount = 0.00;
+                            item.GrossAmount = 0.00;
+                        }
+                        RefTotalQty += item.Quantity;
+                        RefTotalVat += item.VatAmt;
+                        RefTotalAmount += item.TotalAmount;
+                        RefGrossTotal += item.GrossAmount;
+                    });
+                } else {
+                    CurrentObject[DetailPropertyName] = [];
+                }
+
+                CurrentObject.DetailCount = CurrentObject[DetailPropertyName].length;
+                CurrentObject.TotalQty = RefTotalQty.toFixed(2);
+                CurrentObject.RefTotalVat = parseFloat(RefTotalVat).toFixed(2);
+                CurrentObject.RefSubtotal = parseFloat( CurrentObject.ID_TaxScheme === 1 ? RefGrossTotal.toFixed(2) : RefGrossTotal.toFixed(2) - CurrentObject.RefTotalVat ).toFixed(2);
+                CurrentObject.RefTotalAmount = RefTotalAmount.toFixed(2);
+
+
+                ///
+
+                var Discount = CurrentObject.DiscountAmount !== null && CurrentObject.DiscountAmount !== undefined ?  CurrentObject.DiscountAmount : 0.00;
+
+                CurrentObject.TotalSOAmount = RefTotalAmount;
+                CurrentObject.RefTotalAmount = CurrentObject.RefTotalAmount - Discount ;
+
+                 if(Discount > 0){
+                     
+                    switch (CurrentObject.ID_TaxScheme) {
+
+                                case 1: //VAT Exclusive
+                                    var VatEx = (CurrentObject.RefTotalAmount * (CurrentObject.RefVatRate / 100));
+                                    CurrentObject.RefTotalVat = VatEx;
+                                     CurrentObject.RefSubtotal = CurrentObject.RefTotalAmount;
+                                    CurrentObject.RefTotalAmount = CurrentObject.RefTotalAmount + VatEx;
+                                    break;
+                                case 2: //VAT Inclusive
+                                    CurrentObject.RefTotalVat = (CurrentObject.RefTotalAmount / (1 + (CurrentObject.RefVatRate / 100))) * (CurrentObject.RefVatRate / 100);
+                                    CurrentObject.RefSubtotal = CurrentObject.RefTotalAmount - CurrentObject.RefTotalVat;
+                                    //TotalVat += item.VatAmt;
+                                    break;
+                                case 3: //ZERO Rated 
+                                    CurrentObject.RefTotalVat = 0;
+                                     CurrentObject.RefSubtotal = CurrentObject.RefTotalAmount - CurrentObject.RefTotalVat;
+                                    break;
+                                case 4: //BillingStatement
+                                     CurrentObject.RefTotalVat = 0;
+                                     CurrentObject.RefSubtotal = CurrentObject.RefTotalAmount - CurrentObject.RefTotalVat;
+                                    break;
+                   }
+                 }
+                ///
+            }
+
+            ///-------------------------- Lester 05/26/2018
+
+            // _.CurrentObject.TotalAmount = CurrentObject.RefTotalamount;
+            // _.CurrentObject.Subtotal = CurrentObject.RefSubtotal;
+            // _.CurrentObject.TotalVat = CurrentObject.RefTotalVat;
+            // _.CurrentObject.DPpercent = 0.00;
+            // _.CurrentObject.DPAmount = 0.00;
+            ///------------------
+
+        };
+
+		VC_SalesInvoice.prototype.onCollectionSource_Load = function (data) {
+            baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+			var WhereCriteria = data.WhereCriteria;
+			if ( VC.CurrentUser.ID_UserGroup === 5 ) {
+				 WhereCriteria.push("ID_AccountExecutive = " + VC.CurrentUser.ID_Employee);
+			} else if (VC.CurrentUser.ID_UserGroup === 4) { 
+			    VC.OwnerRightsField = 'ID_AccountExecutive';
+			    VC.OwnerRightsValueField = 'ID_Employee';
+			}
+        }
+
+        return VC_SalesInvoice;
+});
+//</script></text> , false);
+
+

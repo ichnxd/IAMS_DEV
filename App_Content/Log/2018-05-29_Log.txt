@@ -1,0 +1,13 @@
+5/29/2018 11:14:06 AM: pInventoryUpdate ---> String or binary data would be truncated.
+The statement has been terminated.
+Warning: Null value is eliminated by an aggregate or other SET operation..
+5/29/2018 11:20:32 AM: pInventoryUpdate ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding..
+5/29/2018 11:21:13 AM: pInventoryUpdate ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding..
+5/29/2018 11:21:55 AM: pInventoryUpdate ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding..
+5/29/2018 11:34:50 AM: pInventoryUpdate ---> Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding..
+5/29/2018 6:04:32 PM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Western Digital Purple Surveillance Hard Drive 4TB, 64MB cache SATA 6gb/s 5400rpm 3.5 inch,HIKVISION H.265+ 1080P/3MP 32CH 4SATA 1U DVR [Audio I/O=4/1, 100M x 2, HDMI x 1, 4K],HIKVISION 1080P 2MP FF3.6mm IR20m IP66 Bullet HDTVI Camera [12VDC],DELL OPTIPLEX 3050 SFF (i3 -7100/4gb memory/1tb hardisk/8x DVD+/- RW Drive/Ubuntu/3yrs Prosupport: NBD Onsite Service,HIKVISION H.264+ 1080P Lite 8CH 1SATA 1U DVR [Audio I/O=1/1, 100M x 1, HDMI x 1],USB A TO B Printer Cable 1.5 meters,Category 6, 8 wire universal module. (IO for patch panels)
+,2-Gang UTP Outlet (Cat5e) with Cover
+,Back-up Battery, 12V-28AH,Ice Blade DC Fan,Hikvision H.265+1080P/3MP 16CH 2SATA 1U DVR [Audio I/O-1/1, 1000M x 1, HDMI x 1,4K],Self Ordering Kiosk Enclosure.
+5/29/2018 6:04:54 PM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Western Digital Purple Surveillance Hard Drive 4TB, 64MB cache SATA 6gb/s 5400rpm 3.5 inch,HIKVISION H.265+ 1080P/3MP 32CH 4SATA 1U DVR [Audio I/O=4/1, 100M x 2, HDMI x 1, 4K],HIKVISION 1080P 2MP FF3.6mm IR20m IP66 Bullet HDTVI Camera [12VDC],DELL OPTIPLEX 3050 SFF (i3 -7100/4gb memory/1tb hardisk/8x DVD+/- RW Drive/Ubuntu/3yrs Prosupport: NBD Onsite Service,HIKVISION H.264+ 1080P Lite 8CH 1SATA 1U DVR [Audio I/O=1/1, 100M x 1, HDMI x 1],USB A TO B Printer Cable 1.5 meters,Category 6, 8 wire universal module. (IO for patch panels)
+,2-Gang UTP Outlet (Cat5e) with Cover
+,Back-up Battery, 12V-28AH,Ice Blade DC Fan,Hikvision H.265+1080P/3MP 16CH 2SATA 1U DVR [Audio I/O-1/1, 1000M x 1, HDMI x 1,4K],Self Ordering Kiosk Enclosure.

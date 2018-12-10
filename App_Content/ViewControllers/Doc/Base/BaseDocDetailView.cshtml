@@ -1,0 +1,361 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    int ID_View = ViewBag.ID;
+    string ViewName = ViewBag.ViewName;
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/DetailView?ID=@{@ID_View}&ViewName=@{@ViewName}&IsBase=1'], function (BaseClass) {
+
+
+        var BaseDocDetailView = {};
+
+        BaseDocDetailView.prototype = Object.create(BaseClass.prototype);
+
+        BaseDocDetailView.prototype.onLoad = function () {
+            var _ = this;
+
+            //
+            // DOC STATUS FULLY SERVED
+            //
+
+
+            if (_.$scope.CurrentObject.ID > -1 && _.$scope.CurrentObject.ID_FilingStatus == 2) {
+
+                _.butApproved.disabled = _.$scope.CurrentObject.ID_DocStatus == 3;
+                _.butCancel.disabled = _.$scope.CurrentObject.ID_DocStatus == 3;
+
+            }
+
+            _.butApproved.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 2 && _.$scope.CurrentObject.ID > -1);
+
+            _.butCancel.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 7 && _.$scope.CurrentObject.ID > -1 && _.$scope.CurrentObject.ID_DocStatus != 3);
+
+            _.butSave.disabled = !(_.$scope.CurrentObject.ID_FilingStatus != 2);
+
+
+            if (_.$scope.CurrentObject.ID_FilingStatus == 2) {
+                _.setFormReadOnly(true);
+            }
+
+           
+           
+          
+            if (_.$scope.CurrentObject.ID == -1) {
+                if (_.IsFormReadOnly != undefined) {
+                    if (_.IsFormReadOnly == true) {
+                        _.setFormReadOnly(false);
+                    }
+                }
+                _.Compute();
+            }
+
+         
+
+            _.RefreshToolBar();
+
+        }
+
+        BaseDocDetailView.prototype.IsValid = function () {
+            var IsValid = BaseClass.prototype.IsValid.call(this);
+            var brokenRules = IsValid.brokenRules;
+            //
+            //
+            //
+
+
+
+
+            return IsValid;
+        }
+
+        BaseDocDetailView.prototype.PerformApproved = function () {
+            var _ = this;
+         
+            var Documents = _.$scope.CurrentObject.DocumentNo;
+
+            _.ConfirmBox("Are you sure you want to approve the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Approve !== undefined) {
+                    _.Approve().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Approved');
+                        _.setFormReadOnly(true);
+                        _.Reload();
+                    });
+                }
+            });
+        }
+
+        BaseDocDetailView.prototype.PerformCancel = function () {
+            var _ = this;
+            var Documents = _.$scope.CurrentObject.DocumentNo;
+            _.ConfirmBox("Are you sure you want to cancel the following Document: <br>" + Documents + "", _.ModelName).then(function () {
+                if (_.Cancel !== undefined) {
+                    _.Cancel().then(function () {
+                        _.ToastSuccess(Documents + ' Successfully Cancelled');
+                        _.Reload();
+                    });
+                }
+            });
+        }
+
+        BaseDocDetailView.prototype.Init = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            BaseClass.prototype.Init.call(this,$scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            var _ = this;
+
+            _.butApproved = {
+                text: 'Approve',
+                icon: 'mdi mdi-thumb-up',
+                color: '#009688',
+                disabled: true,
+                onItemClick: function () {
+
+                    _.PerformApproved();
+                }
+            }
+
+            _.butCancel = {
+                text: 'Cancel',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                disabled: true,
+                onItemClick: function () {
+
+                    _.PerformCancel();
+
+                }
+            }
+
+            _.AddToolbarButton(_.butApproved);
+
+            _.AddToolbarButton(_.butCancel);
+
+            //
+            //
+            //
+            
+            if (_.DocDetailPropertyName === undefined) throw new Error("DocDetailPropertyName must be define");
+
+            _.AddToolBarButtonOnGrid(_.DocDetailPropertyName, {
+                text: 'Add Item',
+                icon: 'mdi mdi-package-variant',
+                onClick: function () {
+
+                    console.log('nagload');
+                    _.BrowseDataSet('@Html.EncryptSQL(@"SELECT Code, SupplierCode, Name, Description, ID,
+                                                    SRP, ID_UOM, PrimaryUOM FROM vItem WHERE IsActive = 1 AND IsSold = 1")', {
+                        title: 'Select Items',
+                        ID_View: 'EA822ECF-6044-40B7-9B8E-B983A8E447C4',
+                    }).then(function (Items) {
+                        $.each(Items, function (i, item) {
+                            
+                            var NewDetail = {
+                                ID: -1,
+                                ID_Item: item.ID,
+                                Item: item.Name,
+                                Description: item.Description,
+                                Quantity: 0,
+                                UnitPrice: item.SRP,
+                                ID_UOM: item.ID_UOM,
+                                UOM: item.PrimaryUOM,
+                                VatAmt:0.00,
+                                TaxScheme: 'VAT Inclusive',
+                                ID_TaxScheme: 2,
+                                TotalAmount: 0.00,
+                                DocStatus: '',
+                                ID_DocStatus: null,
+                                Reference: '',
+                                Comment:null
+                            };
+
+                            if (_.$scope.CurrentObject[_.DocDetailPropertyName] == null) _.$scope.CurrentObject[_.DocDetailPropertyName] = [];
+
+                            _.$scope.CurrentObject[_.DocDetailPropertyName].push(NewDetail);
+
+                        });
+                        if (Items.length > 0) {
+
+                        }
+                    });
+                }
+            },true);
+
+            _["onGridInitialized_" + _.DocDetailPropertyName] = function (grid) {
+
+                //
+                //
+                //
+
+                grid.option('masterDetail', {
+                    enabled: true,
+                    template: function (container, option) {
+                        $('<div></div>').dxForm({
+                            formData: option.data,
+                            labelLocation: 'top',
+                            showColonAfterLabel: false,
+                            onFieldDataChanged: function (e) {
+                                if (e.dataField == 'Comment') {
+                                    option.data.Comment = e.value;
+                                }
+                            },
+                            items: [
+                                {
+                                    name : 'Comment',
+                                    dataField: 'Comment',
+                                    editorType: 'dxTextArea'
+                                }]
+                        }).appendTo(container);
+
+                    }
+                });
+
+                _.AddGridColumnValidationRule(_.DocDetailPropertyName, 'Quantity', {
+                    id: 2,
+                    type: 'custom',
+                    message: "Maximum Qauntity Reach",
+                    validationCallback: function (options) {
+
+                        var rowIndex = options.validator.element().parent().data('options').rowIndex;
+                        
+                        var RefQty = $scope.CurrentObject[_.DocDetailPropertyName][rowIndex].RefQuantity;
+
+                        if (RefQty !== undefined) {
+
+                            if (options.value > RefQty) {
+                                options.validator.message = 'Maximum Quanity is ' + RefQty;
+                                return false;
+
+                            }
+
+                        }
+
+                        return true;
+                    }
+                });
+
+            }
+
+            _[_.DocDetailPropertyName + '_onColumnChanged'] = function (e) {
+
+                console.log('OnColumnChanged', e);
+
+                if (e.dataField == "ID_Item") {
+
+                    var Item = e.data;
+
+                    var CurrentDetail = _.$scope.CurrentObject[_.DocDetailPropertyName][e.rowIndex];
+                    if (Item !== null) {
+                        CurrentDetail.Description = Item.Description;
+                        CurrentDetail.Quantity = 0;
+                        CurrentDetail.Cost = Item.Cost;
+                    } else {
+                        CurrentDetail.ID_Item = null;
+                        CurrentDetail.Description = null;
+                        CurrentDetail.Quantity = 0;
+                        CurrentDetail.Cost = 0.00;
+                    }
+
+                    e.grid.refresh();
+
+                }
+
+                _.Compute();
+            };
+
+        }
+
+        //
+        //
+        //
+
+        BaseDocDetailView.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+
+            var VC = _.VC;
+
+            if (e.value === undefined) return;
+
+            if (e.dataField === 'ID_BusinessPartner') {
+
+                if (e.value != null) {
+                    if (e.value.Address !== undefined) {
+                        VC.$scope.CurrentObject.Address = e.value.Address;
+                    }
+                } else {
+                    VC.$scope.CurrentObject.Address = null;
+                }
+            }
+            _.Compute();
+        }
+
+        var roundToTwo = function (num) {
+            return +(Math.round(num + "e+2") + "e-2");
+        }
+
+        BaseDocDetailView.prototype.Compute = function () {
+
+            alert('Compute');
+
+            var _ = this;
+
+            if (_.DocDetailPropertyName === undefined) throw new Error("DocDetailPropertyName must be define");
+
+            var DetailPropertyName = _.DocDetailPropertyName;
+            var CurrentObject = _.$scope.CurrentObject;
+            var VatRate = CurrentObject.VatRate;
+
+            var TotalAmount = 0.00;
+            var SubTotal = 0.00;
+            var VatAmount = 0.00;
+            var TotalVat = 0.00;
+            var TotalQty = 0.00;
+
+            if (CurrentObject[DetailPropertyName] != null) {
+                $.each(CurrentObject[DetailPropertyName], function (i, item) {
+
+                    item.TotalAmount = item.Quantity * item.UnitPrice
+
+                    switch (item.ID_TaxScheme) {
+                        case 1: //VAT Exclusive
+                            var VatEx = (item.TotalAmount / (1 + (VatRate / 100))) * (VatRate / 100);
+                            item.VatAmt = VatEx;
+                            item.TotalAmount = item.TotalAmount + roundToTwo(VatEx);
+                            break;
+                        case 2: //VAT Inclusive
+                            item.VatAmt = (item.TotalAmount / (1 + (VatRate / 100))) * (VatRate / 100);
+                            TotalVat += item.VatAmt;
+                            break;
+                        case 3: //ZERO Rated
+                            item.VatAmt = 0;
+                            break;
+                    }
+
+                    TotalQty += item.Quantity;
+                    TotalAmount += item.TotalAmount;
+
+                });
+            } else {
+                CurrentObject[DetailPropertyName] = [];
+            }
+
+            CurrentObject.DetailCount = CurrentObject[DetailPropertyName].length;
+
+            CurrentObject.TotalQty = TotalQty;
+
+            CurrentObject.TotalVat = TotalVat.toFixed( 2 );
+
+            CurrentObject.Subtotal = TotalAmount;
+
+            CurrentObject.TotalAmount = TotalAmount;
+
+        }
+
+        return BaseDocDetailView;
+
+    });
+//</script>
+</text> , false);

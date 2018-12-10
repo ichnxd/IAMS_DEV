@@ -1,0 +1,802 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, VC_BaseDoc,AcctHelper) {
+
+        var VC_ItemIssuance = function () {
+            this.DocDetailPropertyName = 'ItemIssuance_Details';
+            //this.SerialsEnabled = true;
+            this.DocSerialPropertyName = 'ItemIssuance_Detail_Serials';
+            this.AllowOnHandChecking = { WarehouseName:'ID_Warehouse' }
+            this.UserSerialExemption = [137,138];
+        }
+        var UserSerialExemption = [];
+
+        VC_ItemIssuance.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_ItemIssuance.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+			VC.AddToolbarButton({
+                text: 'Create Item Return',
+                IsDisabled : function(){
+                    
+                    if (_.ID_ViewType == 2) {
+                        if(_.CurrentObject.ID_FilingStatus == 2){
+                           return false; 
+                        }
+                    } else {
+                        return false;
+                    }
+                    return true;
+                },
+                onClick: function(){
+                    if (_.ID_ViewType === 1) {
+                    var itemsSelected = _.Grid.getSelectedRowsData();
+                    AcctHelper.Create_ItemReturn_From_ISS(itemsSelected);
+                    }
+                    else{
+                    AcctHelper.Create_ItemReturn_From_ISS([_.CurrentObject]);
+                    }
+                }
+                
+            });
+            VC.AddButtonReport({
+                Name: 'Item Issuance Form',
+                ID_Report: 3123,
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'Accountabilty Form',
+                ID_Report: 3164, //-- 3164 sa live
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'Item Issuance STP',
+                ID_Report: 3166, 
+                requireSingleObject: true
+            });
+
+            VC.$ID_Warehouse_IsDisabled = function () {
+                if(_.CurrentObject.ItemIssuance_Details == undefined || _.CurrentObject.ItemIssuance_Details == null)  _.CurrentObject.ItemIssuance_Details = []
+                if(_.CurrentObject.ItemIssuance_Details.length > 0){
+                    return false;
+                }
+                return true;
+            }
+
+            if(_.ID_ViewType == 2){
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    $.each(_.CurrentObject.ItemIssuance_Details,function(i,o){
+                        if(o.ID_DocDetailParentModel == 8412){
+                            if(o.Quantity > (o.RefQuantity == undefined ? 0: o.RefQuantity)){
+                                brokenRules.push('Quantity must not exceed Reference Quantity for Item (' + o.Item + ')');
+                            }
+                        }
+                    });
+                    //--------- 2017-08-04 ---------------
+                    if(_.CurrentObject.ID_Customer == undefined || _.CurrentObject.ID_Customer == null){
+                        if(_.CurrentObject.ID_IssuedTo == undefined || _.CurrentObject.ID_IssuedTo == null){
+                            brokenRules.push('Issued To is Required');
+                        }
+                    }
+                    //------------------------
+                    // -------- 2018-07-18----------------
+                    $.each(_.CurrentObject.ItemIssuance_Details, function (i, d) {
+                            if (d.IsSerialized === true) {
+                                console.log('X',d)
+                                if (Enumerable.From(d.ItemIssuance_Detail_Serials).Where('$.Name == null').ToArray().length > 0) {
+                                    brokenRules.push('Serial(s) is required for Item (' + d.Item + ')');
+                                } else {
+
+                                    if (d.ItemIssuance_Detail_Serials== undefined) {d.ItemIssuance_Detail_Serials = [] }
+                                    if (d.ItemIssuance_Detail_Serials== null) { d.ItemIssuance_Detail_Serials = [] }
+                                }
+    
+                                if (d.Quantity !== d.ItemIssuance_Detail_Serials.length) {
+                                    brokenRules.push('Serial(s) count must be same with Quantity for Item (' + d.Item + ')');
+                                }
+                                //
+                                //
+                            }
+                            });
+                    //-------------------------------------
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid: true };
+                })
+
+    
+                // VC.AddToolBarButtonOnGrid('ItemIssuance_Details',
+                // {
+                //     text: 'Browse Item Request',
+                //     icon: 'mdi mdi-package-variant',
+                //     onClick: function(){
+
+                //         if(_.CurrentObject.ID_IssuedTo == null || _.CurrentObject.ID_IssuedTo == undefined){
+                //             VC.MsgBox('Please select Issued To');
+                //             return;
+                //         }
+
+
+                //         if(_.CurrentObject.ItemIssuance_Details == undefined || _.CurrentObject.ItemIssuance_Details == null) _.CurrentObject.ItemIssuance_Details = [];
+
+                //         _.CurrentObject['ItemIssuance_Details'].forEach(function(detail) {
+
+                //              if( detail.ID_DocDetail == null || detail.ID_DocDetail == undefined) detail.ID_DocDetail = 0;
+                //         });
+
+                //         var arrID_IReq_Details = Enumerable.From(_.CurrentObject['ItemIssuance_Details']).Select("$.ID_DocDetail").ToArray();
+                //         if(arrID_IReq_Details.length == null ) arrID_IReq_Details = [0];
+
+                //         var sql = '@Html.EncryptSQL(@"SELECT * FROM vItemRequest_Detail2 WHERE ID_FilingStatus = 2 AND Balance > 0 AND ID NOT IN(@IDs) AND ID_Employee = @ID_Employee ")';
+                //         VC.BrowseDataSet(sql, {
+                //             title: 'Browse Item Request',
+                //             ID_View: 'F7848AE9-0D57-4F7B-A0DB-1197A238023D',
+                //             params: {
+                //                 'IDs': arrID_IReq_Details,
+                //                 'ID_Employee': _.CurrentObject.ID_IssuedTo
+                //             }
+                //         }).then(function(data){
+                //             $.each(data,function(i,record){
+                //                 newItem = {
+                //                         ID: _.rndID()
+                //                     ,   ID_Item: record.ID_Item
+                //                     ,   Item: record.Item
+                //                     ,   UOM: record.UOM
+                //                     ,   ID_UOM: record.ID_UOM
+                //                     ,   Quantity: record.Balance
+                //                     ,   RefQuantity: record.Balance
+                //                     ,   UnitPrice: record.UnitPrice
+                //                     ,   VatAmt: record.VatAmt
+                //                     ,   VATAmount: record.VatAmt
+                //                     ,   GrossAmount: record.GrossAmount
+                //                     ,   TotalAmount: record.TotalAmount
+                //                     ,   IsFree: record.IsFree
+                //                     ,   ID_DocDetail: record.ID
+                //                     ,   ID_DocDetailParentModel: 8412 // ID_Model ni Item Request
+                //                     ,   ReferenceNo: record.DocumentNo
+                //                     ,   Code: record.ItemCode
+                //                     ,   ItemCode: record.ItemCode
+                //                     ,   Name: record.Item
+                //                     ,   ID_ItemRequest: record.ID_ItemRequest
+                //                     ,   ID_ItemRequest_Detail: record.ID //  ID ItemRequest Detail
+                //                     ,   DocDetail: record.DocumentNo
+                //                     ,   IsSerialized: _.UserSerialExemption.includes(VC.CurrentUser.ID) ? false : record.IsSerialized
+                //                     ,   LifeSpan: record.LifeSpan
+                //                     ,   NonInventoriable: record.NonInventoriable
+                //                 }
+
+                //                 if(record.IsSerialized == true){
+                //                     var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vItemIssuance_ItemRequest_Serial WHERE ID_ItemRequest_Detail = @ID_DocDetail ")';
+                //                     var JsDataService = app.$GetDataService();
+                //                     JsDataService.Query(sql,{
+                //                         params : {
+                //                         'ID_DocDetail' : record.ID
+                //                         }
+                //                     }).then(function(data){
+                //                         var serials = data.collection;
+                //                         if(serials.length > 0){
+
+                //                             newItem.ItemIssuance_Detail_Serials = [];
+                //                             $.each(serials, function(x,s){
+                //                                 newItem.ItemIssuance_Detail_Serials.push({
+                //                                     ID : -1,
+                //                                     Name : s.SerialNo,
+                //                                     Code : s.Item
+                //                                 });
+                //                             });
+                //                         }
+                //                     });
+                //                 }
+
+
+                //                 _.CurrentObject.ItemIssuance_Details.push(newItem);
+                //             })
+
+
+                //         });
+
+                //     }
+                // }, true);
+            // start -- 2018-08-18
+
+            //  VC.AddToolBarButtonOnGrid('ItemIssuance_Details',
+            //     {
+            //         text: 'Browse Delivery Receipt',
+            //         icon: 'mdi mdi-package-variant',
+            //         onClick: function(){
+
+            //             if(_.CurrentObject.ID_Customer == null || _.CurrentObject.ID_Customer == undefined){
+            //                 VC.MsgBox('Please Customer');
+            //                 return;
+            //             }
+
+
+            //             if(_.CurrentObject.ItemIssuance_Details == undefined || _.CurrentObject.ItemIssuance_Details == null) _.CurrentObject.ItemIssuance_Details = [];
+
+            //             _.CurrentObject['ItemIssuance_Details'].forEach(function(detail) {
+
+            //                  if( detail.ID_DocDetail == null || detail.ID_DocDetail == undefined) detail.ID_DocDetail = 0;
+            //             });
+
+            //             var arrID_IReq_Details = Enumerable.From(_.CurrentObject['ItemIssuance_Details']).Select("$.ID_DocDetail").ToArray();
+            //             if(arrID_IReq_Details.length == null ) arrID_IReq_Details = [0];
+            //             var sql = '@Html.EncryptSQL(@"SELECT * FROM vDeliveryReceipt_Detail WHERE ID_FilingStatus = 2 and ID_BusinessPartner = @ID_Customer and ISSBalance > 0 and ID NOT IN(@IDs)")';
+            //             VC.BrowseDataSet(sql, {
+            //                 title: 'Browse Item Request',
+            //                 ID_View: '3469EC96-10E2-4590-811B-C6221BCF6872',
+            //                 params: {
+            //                     'IDs': arrID_IReq_Details,
+            //                     'ID_Customer':_.CurrentObject.ID_Customer
+            //                 }
+            //             }).then(function(data){
+            //                 $.each(data,function(i,record){
+            //                     newItem = {
+            //                             ID: _.rndID()
+            //                         ,   ID_Item: record.ID_Item
+            //                         ,   Item: record.Item
+            //                         ,   UOM: record.UOM
+            //                         ,   ID_UOM: record.ID_UOM
+            //                         ,   Quantity: record.ISSBalance
+            //                         ,   RefQuantity: record.ISSBalance
+            //                         ,   UnitPrice: record.UnitPrice
+            //                         ,   VatAmt: record.VatAmt
+            //                         ,   VATAmount: record.VatAmt
+            //                         ,   GrossAmount: record.GrossAmount
+            //                         ,   TotalAmount: record.TotalAmount
+            //                         ,   IsFree: record.IsFree
+            //                         ,   ID_DocDetail: record.ID
+            //                         ,   ID_DocParentModel: 2168 // ID_Model ni DR
+            //                         ,   ReferenceNo: record.DocumentNo
+            //                         ,   Code: record.ItemCode
+            //                         ,   ItemCode: record.ItemCode
+            //                         ,   Name: record.Item
+            //                         ,   DocDetail: record.DocumentNo
+            //                         ,   IsSerialized: _.UserSerialExemption.includes(VC.CurrentUser.ID) ? false : record.IsSerialized
+            //                         ,   LifeSpan: record.LifeSpan
+            //                         ,   NonInventoriable: record.NonInventoriable
+            //                     }
+
+            //                     if(record.IsSerialized == true){
+            //                         var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vItemIssuance_ItemRequest_Serial WHERE ID_ItemRequest_Detail = @ID_DocDetail ")';
+            //                         var JsDataService = app.$GetDataService();
+            //                         JsDataService.Query(sql,{
+            //                             params : {
+            //                             'ID_DocDetail' : record.ID
+            //                             }
+            //                         }).then(function(data){
+            //                             var serials = data.collection;
+            //                             if(serials.length > 0){
+
+            //                                 newItem.ItemIssuance_Detail_Serials = [];
+            //                                 $.each(serials, function(x,s){
+            //                                     newItem.ItemIssuance_Detail_Serials.push({
+            //                                         ID : -1,
+            //                                         Name : s.SerialNo,
+            //                                         Code : s.Item
+            //                                     });
+            //                                 });
+            //                             }
+            //                         });
+            //                     }
+
+            //                     _.CurrentObject.ItemIssuance_Details.push(newItem);
+            //                 })
+
+
+            //             });
+
+            //         }
+            //     }, true);
+
+                // end -- 2018-08-18
+
+            }
+
+            _.BrowseSerials = function (grid, Item) {
+
+                grid.deselectAll();
+                //var Item = _.CurrentObject.InventoryAssembly_Details[e.rowIndex];
+                if(Item.IsSerialized !== true){
+                    return;
+                }
+                var SQL = '@Html.EncryptSQL("SELECT * FROM vItemIssuance_InventoryHistory_Serials WHERE ID_Item = @ID_Item and ID_Warehouse = @ID_Warehouse")';
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_Warehouse: _.CurrentObject.ID_Warehouse
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: '1FB05E10-B7E2-4F36-9ECD-9C7C21FCF462',
+                    title: 'Select Item Serial (' + Item.Quantity + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+                    console.log('x', Item["ItemIssuance_Detail_Serials"])
+                    var DeleteDetails = Enumerable.From(Item["ItemIssuance_Detail_Serials"]).Where('$.ID > 0 ').ToArray();
+                            //	console.log(DeleteDetails,'delete')
+                                if( VC._DeletedItems['ItemIssuance_Detail_Serials'] == null ||  VC._DeletedItems['ItemIssuance_Detail_Serials'] == undefined ) VC._DeletedItems['ItemIssuance_Detail_Serials'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['ItemIssuance_Detail_Serials'].push(o);
+                               });
+                               console.log( 'XX',VC._DeletedItems['ItemIssuance_Detail_Serials'])
+                    Item["ItemIssuance_Detail_Serials"] = [];
+
+                    $.each(Serials, function (i, d) {
+                        Item["ItemIssuance_Detail_Serials"].push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Item
+                        });
+                    });
+                    //
+                    //
+                    //
+
+                    _.VC.$timeout(function () {
+                        for (i = 0; i < _.CurrentObject.ItemIssuance_Detail_Serials.length; i++) {
+                            grid.deselectAll();
+                            grid.selectRowsByIndexes([i]);
+                        }
+
+                    }, 500);
+                });
+            }
+            //-- 2017-08-09 -------
+
+        //------------------
+
+        }
+
+
+
+
+        VC_ItemIssuance.prototype.onLoad = function () {
+          VC_BaseDoc.prototype.onLoad.call(this);
+
+          var VC = this.VC;
+          if (VC.IsNew() == true){
+              var _ = this;
+
+
+            var ID_DocDetail = Enumerable.From(_.CurrentObject['ItemIssuance_Details']).Select("$.ID_DocDetail").ToArray();
+
+            if(ID_DocDetail.length > 0){
+                var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vItemIssuance_ItemRequest_Serial WHERE ID_ItemRequest_Detail IN ( @ID_DocDetail )")';
+                var JsDataService = app.$GetDataService();
+                JsDataService.Query(sql,{
+                    params : {
+                    'ID_DocDetail' : ID_DocDetail
+                    }
+                }).then(function(data){
+                    var serials = data.collection;
+                    if(serials.length > 0){
+                        $.each(_.CurrentObject.ItemIssuance_Details,function(i,d){
+                         var SerialNo = Enumerable.From(serials).Where('$.ID_ItemRequest_Detail === ' + d.ID_DocDetail).ToArray();
+
+                         d.ItemIssuance_Detail_Serials =[];
+                         $.each(SerialNo, function(x,s){
+                             d.ItemIssuance_Detail_Serials.push({
+                                 ID : -1,
+                                 Name : s.SerialNo,
+                               //  ID_DocParent: s.ID_ItemRequest,
+                               //  ID_Model: 8412, // Item Request,
+                                 Code : s.Item
+                             })
+                         })
+                        })
+                    }
+                });
+            }
+          }
+        }
+
+
+   
+        VC_ItemIssuance.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+            //
+            VC.btnSelectIR.option('onClick', function () {
+
+                if(VC.$scope.CurrentObject.ID_ItemRequest == null) {
+
+                    VC.$scope.CurrentObject.IRNumber = '';
+                    VC.$scope.CurrentObject.ID_ItemRequest = 0;
+                }
+
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,Code as Name, Date FROM tItemRequest WHERE DateApproved IS NOT NULL AND ID NOT IN (@ID_ItemRequest) ")',
+                {
+                    title: 'Select Item Request',
+                    ID_View: 'F7848AE9-0D57-4F7B-A0DB-1197A238023D',
+                    params: {
+
+                        'ID_ItemRequest': VC.$scope.CurrentObject.ID_ItemRequest,
+                    },
+                    validate: function (SelectedRows) {
+
+                        if (SelectedRows.length > 1) {
+
+                            _.VC.MsgBox("Please select IR record atleast one.");
+                            return false;
+                        }
+                        return true;
+                    }
+
+
+                }).then(function (data) {
+
+                    var results = data;
+
+                    if(VC.$scope.CurrentObject.ItemIssuance_Details == null) VC.$scope.CurrentObject.ItemIssuance_Details = [];
+
+                    VC.$scope.CurrentObject.ItemIssuance_Details.forEach(function(result) {
+                            
+                        if(result.ID > 0){
+
+                            if(VC._DeletedItems['ItemIssuance_Details'] == null )  VC._DeletedItems['ItemIssuance_Details'] = [];
+
+                            var newDetail = {
+                                ID : result.ID
+                            };
+
+                            VC._DeletedItems['ItemIssuance_Details'].push(newDetail);
+
+                        }
+
+                    });
+
+                    VC.$scope.CurrentObject.ItemIssuance_Details = [];
+
+                    results.forEach(function(result) {
+
+                        console.log(result);
+
+                    
+                        VC.$scope.CurrentObject.ID_ItemRequest = result.ID;
+                        VC.$scope.CurrentObject.IRNumber = result.Name;
+
+                        var options = {
+
+                            VC: VC,
+                        }
+                        floadIRDetail(options);
+
+                        return;
+                    });
+                       
+                });
+
+            });
+        }
+
+
+        VC_ItemIssuance.prototype.onInitDetailView = function (VC) {
+
+            VC_BaseDoc.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+            VC.onContextMenuPreparing_ItemIssuance_Details = function (e) {
+
+                e.items.unshift({
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+
+                        var Item = _.CurrentObject.ItemIssuance_Details[e.rowIndex];
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+                            VC.MsgBox('Please specify Quantity', 'Item Issuance ');
+                            return;
+                        }
+                        
+                        if(Item.ID_DocDetailParentModel == 8412){
+                            BrowseSerialsFromDocDetail(Item,e.component,_)
+                        }else{
+                            _.BrowseSerials(e.component, Item);
+                        }
+                    }
+                });
+
+            }
+
+
+        }
+
+
+        var BrowseSerialsFromDocDetail = function(Item, grid , _){
+
+            var VC = _.VC;
+
+            grid.deselectAll();
+
+
+            VC._DeletedItems = AcctHelper.InitArrayedObj(VC._DeletedItems);
+            VC._DeletedItems["ItemIssuance_Detail_Serials"] = AcctHelper.InitArrayedObj(VC._DeletedItems["ItemIssuance_Detail_Serials"]);
+
+            if(Item.Quantity == 0 || Item.Quantity == null){
+                return;
+            }
+
+            if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                var NewSerials = [];
+
+
+                var SQL = '';
+                //Item request
+                SQL = '@Html.EncryptSQL("SELECT ID,Name As SerialNo FROM vItemIssuance_ItemRequest_Serial WHERE ID_ItemRequest_Detail = @ID_DocDetail")';
+
+
+
+
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_DocDetail: Item.ID_DocDetail
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: 'BE6469C7-60C9-447B-AB35-FF762933D65C',
+                    title: 'Select Item Serial (' + Item.Quantity + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+
+                    if (Item.ItemIssuance_Detail_Serials !== null && Item.ItemIssuance_Detail_Serials !== undefined) {
+
+                        $.each(Item.ItemIssuance_Detail_Serials, function (i, s) {
+                            if (s.ID > 0) {
+                                VC._DeletedItems["ItemIssuance_Detail_Serials"].push(s);
+                            }
+                        });
+                    }
+
+                    Item.ItemIssuance_Detail_Serials = [];
+
+                    $.each(Serials, function (i, d) {
+                        Item.ItemIssuance_Detail_Serials.push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Item
+                        });
+                    });
+                    //
+                    //
+                    //
+
+                    _.VC.$timeout(function () {
+
+                        for (i = 0; i < _.CurrentObject.ItemIssuance_Detail_Serials.length; i++) {
+
+                            grid.selectRowsByIndexes([i]);
+                        }
+                    }, 500);
+                });
+
+
+            }
+
+
+        };
+
+
+
+        VC_ItemIssuance.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            var Item = e.key;
+            if (e.dataField === 'Quantity') {
+				console.log(Item.ID_Item)
+				if(Item.ID_Item == 1103 || Item.ID_Item == 1015 || Item.ID_Item == 1013 || Item.ID_Item == 1035 ||
+                   Item.ID_Item == 1054 || Item.ID_Item == 1864 || Item.ID_Item == 4608 || Item.ID_Item == 17328 ||
+                   Item.ID_Item == 1994 || Item.ID_Item == 17329 || Item.ID_Item == 1048 || Item.ID_Item == 17330 ||
+                   Item.ID_Item == 17331 || Item.ID_Item == 1015 || Item.ID_Item == 1013 || Item.ID_Item == 1035 ||
+                   Item.ID_Item == 1103 || Item.ID_Item == 1062 || Item.ID_Item == 4573 || Item.ID_Item == 2298 ||
+                   Item.ID_Item == 2302 || Item.ID_Item == 17332 || Item.ID_Item == 17333 || Item.ID_Item == 17334 ||
+                   Item.ID_Item == 17335 || Item.ID_Item == 1030)
+                   {
+
+                   }
+				 else{
+					if(Item.ID_DocDetailParentModel == 8412){
+						BrowseSerialsFromDocDetail(Item, e.grid, _);
+					}else{
+						_.BrowseSerials(e.grid, Item);
+					}
+				 }
+
+            }
+
+
+        }
+
+        var floadIRDetail = function(options){
+
+            var VC = options.VC;
+
+
+            var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vItemRequestDetailList WHERE ID_ItemRequest = @ID ")';
+
+            var JsDataService = app.$GetDataService();
+            JsDataService.Query(sql,{
+                params : {
+                    'ID' :  VC.$scope.CurrentObject.ID_ItemRequest
+                }
+            }).then(function(data){
+
+          
+
+                var results = data.collection;
+
+                results.forEach(function(result) {
+
+                    var newDetail = {
+
+                        Code : result.Code,
+                        Name : result.Name,
+                        Description : result.Description,
+                        Quantity : result.Quantity,
+                        ID_Item : result.ID_Item,
+                        Item : result.Name,
+                        ID_UOM : result.ID_UOM,
+                        UOM : result.UOM,
+                        UnitPrice : result.UnitPrice,
+                        ModelCode : result.ModelNo,
+                        SupplierCode : result.SupplierCode,
+                    }
+
+                    VC.$scope.CurrentObject.IRDate = result.Date
+                    VC.$scope.CurrentObject.ID_Warehouse = result.ID_Warehouse
+
+                    VC.$scope.CurrentObject.Customer = result.Customer
+                    VC.$scope.CurrentObject.ID_Customer = result.ID_Client
+
+                    VC.$scope.CurrentObject.Contact = result.ContactPerson
+                    VC.$scope.CurrentObject.ID_Contact = result.ID_Contact
+
+
+                    VC.$scope.CurrentObject.IssuedTo = result.IssuedTo
+                    VC.$scope.CurrentObject.ID_IssuedTo = result.ID_Employee
+
+                    VC.$scope.CurrentObject.IssuanceType = result.ID_Employee
+                    VC.$scope.CurrentObject.ID_IssuanceType = result.ID_IssuanceType
+
+
+                    VC.$scope.CurrentObject.ItemIssuance_Details.push(newDetail);
+                });
+
+         
+            });
+
+        };
+
+        VC_ItemIssuance.prototype.onCurrentObjectChanged = function (e) {
+
+			VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+			var VC = this.VC;
+
+
+			if (e.dataField == 'ID_ItemRequest') {
+
+				if (VC.$scope.CurrentObject.$dirty == undefined || VC.$scope.CurrentObject.$dirty == false) {
+
+					return;
+                }
+
+                if(VC.$scope.CurrentObject.ItemIssuance_Details == null) VC.$scope.CurrentObject.ItemIssuance_Details = [];
+
+                VC.$scope.CurrentObject.ItemIssuance_Details.forEach(function(result) {
+                        
+                    if(result.ID > 0){
+
+                        if(VC._DeletedItems['ItemIssuance_Details'] == null )  VC._DeletedItems['ItemIssuance_Details'] = [];
+
+                        var newDetail = {
+                            ID : result.ID
+                        };
+
+                        VC._DeletedItems['ItemIssuance_Details'].push(newDetail);
+                    }
+                });
+
+                VC.$scope.CurrentObject.ItemIssuance_Details = [];
+
+                var options = {
+
+                    VC: VC,
+                }
+
+                floadIRDetail(options);
+
+				if (e.value !== null && VC.$scope.CurrentObject.$dirty != undefined) {
+           
+					if(e.value.IRDate !== undefined){
+                        VC.$scope.CurrentObject.IRDate = e.value.IRDate;
+                    }
+				} else {
+                    
+					if(VC.$scope.CurrentObject.ID_ItemRequest == null){
+
+                        VC.$scope.CurrentObject.IRDate = null;
+                        VC.$scope.CurrentObject.ItemIssuance_Details = [];
+					}
+				}
+            }
+
+		}
+
+
+        VC_ItemIssuance.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemIssuanceApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_ItemIssuance.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemIssuanceCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_ItemIssuance;
+    });
+//</script>
+</text> , false);

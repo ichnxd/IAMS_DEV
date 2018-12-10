@@ -1,0 +1,6 @@
+7/19/2018 2:42:52 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Model', table 'IAMS_20180710_10396_DEV.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+7/19/2018 2:42:53 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table 'IAMS_20180710_10396_DEV.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+7/19/2018 2:42:54 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table 'IAMS_20180710_10396_DEV.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

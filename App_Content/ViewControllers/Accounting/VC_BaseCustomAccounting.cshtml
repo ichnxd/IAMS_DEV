@@ -1,0 +1,151 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom'], function (app, BaseClass) {
+
+        var VC_CustomAccounting = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+
+
+        };
+
+        VC_CustomAccounting.prototype = Object.create(BaseClass.prototype);
+
+        VC_CustomAccounting.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            _.ViewReport = function(Caption,ID_Report,Params){
+                
+                var $rootScope = app.$rootScope();
+
+                $rootScope.$emit("CallNewTabMethod", {
+
+                    ID: app.getRandomInt(),
+                    Caption: Caption,
+                    ID_ViewType: 3,
+                    ID_Report: ID_Report,
+                    params: Params
+
+                });
+            }
+
+            _.getCollection = new DevExpress.data.CustomStore({
+                load: function(loadOptions){
+                    var deferred = _.$q.defer();
+                    var data = {};
+                    
+                    data.skip = loadOptions.skip || 0;
+                    data.take = loadOptions.take || 10;
+
+                    //if (loadOptions.sort) {
+                    //    data.orderby = loadOptions.sort[0].selector;
+                    //    if (loadOptions.sort[0].desc)
+                    //        data.orderby += " desc";
+                    //} 
+//
+                    //if (loadOptions.filter) {
+                    //    if(loadOptions.filter[0] instanceof Array){
+//
+                    //    }else{
+                    //        data.filter
+                    //    }
+                    //}
+
+
+                    var params = _.loadParams();
+
+                    params.params['Skip'] = data.skip;
+                    params.params['Take'] = data.take;
+
+
+                    _.JSDataService.pGetCurrentObject(params.SQL, params.params).then(function(d){
+                        var summary = [];
+                        var others = { totalCount: d.TotalCount, summaries:[200,200] };
+                        if(loadOptions.totalSummary !== undefined && loadOptions.totalSummary !== null){
+                            $.each(loadOptions.totalSummary,function(i,o){
+                                summary.push(d[o.selector])
+                            });                            
+                        }
+
+                        if(summary.length > 0){
+                            //others.summary = summary;
+                        }
+                        deferred.resolve(d.Data, others);    
+                        _.loadData(d);
+                    });
+
+                    return deferred.promise;
+                }
+
+            });
+
+            _.doubleClick = function(triggerFunction, e){
+                var component = e.component;
+
+                if (!component.clickCount)
+                    component.clickCount = 1;
+                else
+                    component.clickCount = component.clickCount + 1;
+
+                /* Would be nice to check if you are double clicking the same row */
+
+                if (component.clickCount == 1)
+                {
+                    // Capture clicktime on first click
+                    component.lastClickTime = new Date();
+
+                    /* Set a timer to clear the click info if no second click occurs within the interval... 
+                    should be just longer than your double click interval test */
+                    setTimeout(function () { component.lastClickTime = 0; component.clickCount = 0; }, 350);
+                }
+                else if (component.clickCount == 2)
+                {
+                    // Check your click interval.
+                    if (((new Date()) - component.lastClickTime) < 300)
+                    {
+                        //Double click code                        
+                        triggerFunction(e);
+                    }
+
+                    // Reset your click info
+                    component.clickCount = 0;
+                    component.lastClickTime = 0;
+                }
+            }
+
+        }
+
+        VC_CustomAccounting.prototype.OnFilterValueChanged = function (FilterName,e) {
+            this.RefreshData(FilterName);
+        };
+        
+
+        VC_CustomAccounting.prototype.onMenuItemClick = function (e) {
+            var _ = this;
+            if(e.itemData.isReport == true){
+                var data = e.itemData.reportData;
+                if(data.ParamsFunction !== undefined){
+                    data.Params = data.ParamsFunction();
+                }
+                _.ViewReport(data.Caption,data.ID_Report,data.Params);
+            }
+
+            if(e.itemData.isEmail == true){
+                var data = e.itemData.Email;
+                window.open('mailto:julius_gumasing007@yahoo.com');
+            }
+        }
+
+        return VC_CustomAccounting;
+
+    });
+//</script>
+</text> , false )

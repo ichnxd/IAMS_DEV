@@ -1,0 +1,4 @@
+6/1/2018 4:58:15 PM: _pGetDataSet ---> The DELETE statement conflicted with the REFERENCE constraint "FK_tModelListView_Detail_ID_ModelProperty". The conflict occurred in database "IAMS_20180529_9810", table "dbo._tModelListView_Detail", column 'ID_ModelProperty'.
+The statement has been terminated..
+6/1/2018 4:58:36 PM: _pGetDataSet ---> The DELETE statement conflicted with the REFERENCE constraint "FK_tModelListView_Detail_ID_ModelProperty". The conflict occurred in database "IAMS_20180529_9810", table "dbo._tModelListView_Detail", column 'ID_ModelProperty'.
+The statement has been terminated..

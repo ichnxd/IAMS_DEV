@@ -1,0 +1,88 @@
+﻿@import "variables.less";
+
+#Login { 
+
+    font-family: 'Helvetica Neue','Segoe UI',Helvetica,Verdana,sans-serif;
+    color:#808080;
+    background: rgba(77, 77, 77, 0.91) url('../img/login-vector.png') no-repeat fixed center; 
+    
+    .dx-texteditor.dx-state-hover,
+    .dx-texteditor.dx-state-focused {
+     
+            border-color:@themePrimaryColorA;
+    }
+
+    .upper-section { 
+        position:absolute;
+        top:0;
+        right:5px;
+        font-size:10px;
+    }
+
+    .bottom-section {
+        background-color:@themePrimaryColorA;
+        position:absolute;
+        bottom:0;
+        z-index:100;
+        width:100%;
+        text-align:center;
+        color:#fff;
+    }
+
+    .applogo { 
+        width:25%;
+        padding-top:20px
+    }
+
+    h2 {
+        font-size:30px
+    }
+
+    .form-container {
+        width:35%;
+        display:inline-block;
+        padding-top:10px;
+
+        .dx-show-clear-button .dx-clear-button-area {
+            width:50px!important;
+        }
+
+        .dx-texteditor {
+            border-width:3px;
+        }
+    }
+
+
+    ._container .dx-button-content {
+        font-size:25px;
+    }
+
+    .dx-button { 
+        width:50%;
+    }
+
+    .outer {
+
+        height:100%;
+        width:100%;
+        display:table;
+
+        .inner {
+
+            text-align:center;
+            display:table-cell;
+            vertical-align:middle;
+
+            .container { 
+                   /*height:60%!important;*/
+                   padding:10px 0 10px 0;
+                   background-color:rgba(255, 255, 255, 1);
+                   border-top:@themePrimaryColorB 5px solid;
+                   border-bottom:@themePrimaryColorB 5px solid;
+            }
+        }
+
+    }
+    
+      
+}

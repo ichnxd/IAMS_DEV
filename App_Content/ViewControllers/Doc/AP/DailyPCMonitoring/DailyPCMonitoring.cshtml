@@ -1,0 +1,120 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+      var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        
+        function VC_DailyPCMonitoring() {
+            this.DocDetailPropertyName = 'ReplenishmentDetails';
+        }
+        VC_DailyPCMonitoring.prototype = Object.create(baseModelHelper.prototype);
+
+         VC_DailyPCMonitoring.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            VC.DailyPCMonitoring_Breakdowns_onColumnChanged = function(e){
+                if(e.dataField == 'Quantity'){
+                    e.key.Total = e.key.Quantity * e.key.Value;
+                    _.Compute();
+                }
+            }
+
+            if (VC.ButNew !== undefined) VC.ButNew.visible = false
+
+            VC.AddButtonReport({
+                Name: 'PCF Movement Report',
+                ID_Report: 5267,
+                requireSingleObject: true
+             });   
+
+            VC.AddButtonReport({
+                Name: 'Daily Petty Cash Form',
+                ID_Report: 5268,
+                requireSingleObject: true
+             });       
+    
+
+         }
+        
+         VC_DailyPCMonitoring.prototype.onLoad = function () {
+             baseModelHelper.prototype.onLoad.call(this);
+             var VC = this.VC;
+             VC.butNew.visible = false
+             VC.RefreshToolBar();
+             //alert('xxx');
+         }
+
+     VC_DailyPCMonitoring.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            if(_.ID_ViewType == 2){
+                     if(e.dataField == 'ActualCashCount')
+                     {
+                         _.CurrentObject.ShortOver =parseFloat(_.CurrentObject.ActualCashCount) - parseFloat(_.CurrentObject.PCFEndingBalance) 
+                     }
+            }
+            _.Compute();
+     }
+     
+
+    VC_DailyPCMonitoring.prototype.Compute = function(){
+        var _ = this;
+        var VC = _.VC;
+        baseModelHelper.prototype.Compute.call(this);
+        _.CurrentObject.ActualCashCount = _.CurrentObject.DailyPCMonitoring_Breakdowns.SUM('Total');
+
+    }
+
+     VC_DailyPCMonitoring.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("ptDailyPCMonitoringApproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+         }
+
+        VC_DailyPCMonitoring.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pReplenishmentCancelled")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_DailyPCMonitoring;
+    });
+//</script>
+</text> , false);
+

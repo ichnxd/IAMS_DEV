@@ -1,0 +1,18 @@
+5/8/2018 10:33:28 AM: pDeliveryReceiptApprove ---> This document is already approved. Please click the refresh button. .
+5/8/2018 10:34:52 AM: pDeliveryReceiptApprove ---> This document is already approved. Please click the refresh button. .
+5/8/2018 11:10:31 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 11:10:36 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 11:11:36 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 11:11:42 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 11:58:31 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 11:59:01 AM: pProjectSolutionCancel ---> BOM is currently refered to a Opportunity.
+5/8/2018 5:18:45 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '__IAMS_20180504_13841.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/8/2018 5:18:46 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '__IAMS_20180504_13841.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/8/2018 5:21:22 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Model', table '__IAMS_20180504_13841.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/8/2018 5:21:23 PM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelProperty' with unique index 'AK_tModelProperty_Name_ID_Model'. The duplicate key value is (ModelCode, 3182).
+The statement has been terminated..
+5/8/2018 5:21:23 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table '__IAMS_20180504_13841.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

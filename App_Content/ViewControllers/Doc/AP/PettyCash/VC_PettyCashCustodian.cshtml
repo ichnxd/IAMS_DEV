@@ -1,0 +1,220 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseAP, AcctHelper) {
+
+        var VC_PettyCashCustodian = function () { }
+
+        VC_PettyCashCustodian.prototype = Object.create(baseAP.prototype);
+
+        VC_PettyCashCustodian.prototype.Init = function (VC) {
+
+            baseAP.prototype.Init.call(this, VC);
+
+
+            var _ = this;
+
+            if(VC.CurrentUser.IsPettyCashCustodian == true){
+
+               VC.OwnerRightsField = 'ID_Employee';
+               VC.OwnerRightsValueField = 'ID_Employee';
+			    //criteria += " ISNULL(ID_Employee,0) = " + VC.CurrentUser.ID_Employee.toString(); 
+			}
+
+            if(_.ID_ViewType == 2){
+
+                
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    if(_.CurrentObject.CAFund == 0 || _.CurrentObject.CAFund == null || _.CurrentObject.CAFund == undefined){
+                        brokenRules.push('Initial Fund is required.');
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+                
+                VC.AddToolbarButton({
+                    text: 'Close',
+                    icon: 'mdi mdi-delete-forever',
+                    IsDisabled: function () {
+                        if(_.CurrentObject.ID_FilingStatus !== 2){
+                            return true;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+
+                        if(_.CurrentObject.ID_BankAccount == undefined || _.CurrentObject.ID_BankAccount == null){
+                            VC.MsgBox('Bank Account is required','Closing');
+                            return;
+                        }
+                        if(_.CurrentObject.DepositAmount == undefined || _.CurrentObject.DepositAmount == null){
+                            VC.MsgBox('Amount Deposited is required','Closing');
+                            return;
+                        }
+                        if(!(_.CurrentObject.DepositAmount > 0)){
+                            VC.MsgBox('Amount Deposited is required','Closing');
+                            return;
+                        }
+                        if(_.CurrentObject.ReasonForClosing == undefined || _.CurrentObject.ReasonForClosing == null){
+                            VC.MsgBox('Reason for Closing is required','Closing');
+                            return;
+                        }
+                        if(_.CurrentObject.ReasonForClosing.trim().length == 0){
+                            VC.MsgBox('Reason for Closing is required','Closing');
+                            return;
+                        }
+
+                        var JsDataService = app.$GetDataService();
+
+                        JsDataService.ExecSQLProc(
+                            '@Html.EncryptSQL("pPettyCashCustodianClose")',
+                            {
+                                'IDs': [_.CurrentObject.ID],
+                                'ID_CurrentUser': '#ID_CurrentUser'
+                            }
+                        ).then(function (response) {
+                            VC.ToastSuccess('Close Successfully.');
+                            VC.Reload();
+                        },function(response){
+                            VC.ToastError(response);
+                        });
+                    },
+
+                });
+            }
+
+
+
+        }
+		
+			
+		         VC_PettyCashCustodian.prototype.onCollectionSource_Load = function (data) {
+						baseAP.prototype.onCollectionSource_Load.call(this, data);
+							var _ = this 
+							var VC = _.VC
+
+
+
+						   var filterValue = VC.ActionFilters.VC_StatusFilter;
+							if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+							var WhereCriteria = data.WhereCriteria;
+							var criteria = '';  
+
+						if(VC.CurrentUser.IsPettyCashCustodian == true){
+
+                            VC.OwnerRightsField = 'ID_Employee';
+                            VC.OwnerRightsValueField = 'ID_Employee';
+						    //criteria += " ISNULL(ID_Employee,0) = " + VC.CurrentUser.ID_Employee.toString(); 
+						}
+						if(criteria.length > 0){
+						WhereCriteria.push(criteria);
+            }
+
+						
+						
+			}
+        VC_PettyCashCustodian.prototype.onCurrentObjectChanged = function (e) {
+            baseAP.prototype.onCurrentObjectChanged.call(this, e);
+              var _ = this;
+              var VC = _.VC;
+
+              if (e.dataField === 'ID_Employee') {                  
+                  if (e.value != null) {
+
+                        if(e.value.ID_Warehouse !== undefined) {
+                            console.log(e.value.ID_Warehouse,'xx')
+                            _.CurrentObject.ID_Warehouse = e.value.ID_Warehouse;
+                            _.CurrentObject.Warehouse = e.value.Warehouse;
+                            
+                           /* var y = VC.GetDxControl('ID_Warehouse');
+                            y.option('selectedItem', {
+                                ID: _.CurrentObject.ID_Warehouse,
+                                Name: _.CurrentObject.Warehouse
+                            });*/
+                        }       
+                  }
+              }
+
+              if (e.dataField === 'ID_BankAccount') {                  
+                  if (e.value != null) {
+
+                        if(e.value.ID_Bank !== undefined) {
+                            _.CurrentObject.ID_Bank = e.value.ID_Bank;
+                            _.CurrentObject.Bank = e.value.Bank; 
+
+                            var y = VC.GetDxControl('ID_Bank');
+                            if(y !== undefined){
+                                y.option('selectedItem', {
+                                    ID: _.CurrentObject.ID_Bank,
+                                    Name: _.CurrentObject.Bank
+                                });
+                            }
+
+                        }       
+                  }
+              }
+
+        }
+        VC_PettyCashCustodian.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPettyCashCustodianApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+  
+
+        VC_PettyCashCustodian.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPettyCashCustodianCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_PettyCashCustodian;
+    });
+//</script>
+</text> , false);

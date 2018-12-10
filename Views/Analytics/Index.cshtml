@@ -1,0 +1,83 @@
+﻿
+@model DevExpress.DashboardWeb.Mvc.DashboardSourceModel
+@{
+    Layout = null;
+    string DashboardFilePath = ViewBag.DashboardFilePath;
+}
+<!DOCTYPE html>
+<html style="height:100%">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>IAMS Dashboard</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="@Url.Content("~/Content/img/AppIcon.ico")" />
+    @Html.DevExpress().GetStyleSheets("dark.compact",
+        new StyleSheet { ExtensionSuite = ExtensionSuite.DashboardViewer }
+    )
+    @Html.DevExpress().GetScripts(
+        new Script { ExtensionSuite = ExtensionSuite.DashboardViewer }
+    )
+    <style>
+        .dx-widget {
+            font-family: Segoe UI,Helvetica Neue,Helvetica,Arial,Verdana!important;
+            font-size:14px!important;
+        }
+        .dx-widgets-viewer-style_id0 .dx-cardItem .dx-card-title {
+            font-size:18px!important;
+        }
+        .dx-widgets-viewer-style_id0 .dx-cardItem .dx-card-mainValue {
+                font-size:25px!important;
+        }
+        .dx-pivotgrid table {
+            min-width:200px!important;
+        }
+        .dx-datagrid-headers .dx-row:first-child {
+            color:#fff;
+            border-color:transparent;
+        }
+        .dx-datagrid-headers .dx-row:first-child td {
+            background-color:#808080;
+        }
+        .dx-widgets-viewer-style_id0 .dx-cardItem .dx-card-mainValue {
+            font-family: "Arial", "Arial", Gadget, sans-serif;
+        }
+        .dx-pivotgrid table {
+            min-width:320px!important;
+        }
+        /*.dx-pivotgrid .dx-grandtotal {
+            background-color:#fff!important;
+        }*/
+    </style>
+    <script type="text/javascript">
+        function OnItemWidgetCreated(s, args) {
+            var widget = args.GetWidget();
+            if (widget.NAME != undefined) {
+                if (widget.NAME === 'dxDataGrid') {
+                    //widget.option("headerFilter", { visible: true });
+                    //widget.option("filterRow", { visible: true });
+                } else if (widget.NAME === 'dxPivotGrid') {
+                    widget.option("rowHeaderLayout", "tree");
+                    widget.option("wordWrapEnabled", false);
+                    widget.option("allowFiltering", true);
+                    
+                }
+            }
+        };
+    </script>
+</head>
+<body>
+    <div> 
+        @using (Html.BeginForm()) {
+            @Html.DevExpress().DashboardViewer(settings => {
+           settings.Name = "DashboardViewer";
+           settings.CallbackRouteValues = new { Controller = "Analytics", Action = "DashboardViewerPartial", DashboardFileName = DashboardFilePath };
+           settings.ExportRouteValues = new { Controller = "Analytics", Action = "DashboardViewerPartialExport", DashboardFileName = DashboardFilePath };
+           settings.ClientSideEvents.ItemWidgetCreated = "OnItemWidgetCreated";
+           settings.FullscreenMode = true;
+       }).BindToSource(Model).GetHtml()
+        }
+    </div>
+</body>
+</html>

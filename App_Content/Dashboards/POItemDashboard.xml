@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Visible="false" Text="Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+  </DataSources>
+  <Items>
+    <TreeView ComponentName="treeViewDashboardItem1" Name="Tree View 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Qty]" UniqueName="DataItem2" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimDateTime].[Year].[Year]" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" UniqueName="DataItem1" />
+      </DataItems>
+      <HiddenMeasures>
+        <Measure UniqueName="DataItem2" />
+        <Measure UniqueName="DataItem3" />
+      </HiddenMeasures>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem0" />
+        <Dimension UniqueName="DataItem1" />
+      </FilterDimensions>
+    </TreeView>
+    <Grid ComponentName="gridDashboardItem2" Name="Grid 2" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimItem].[ItemName].[ItemName]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Quantity]" UniqueName="DataItem1" />
+        <Dimension DataMember="[DimItem].[Brand].[Brand]" UniqueName="DataItem7" />
+        <Measure DataMember="[Measures].[Unit Price]" UniqueName="DataItem8" />
+        <Measure DataMember="[Measures].[Line Total]" UniqueName="DataItem2" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem7" />
+        </GridDimensionColumn>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem8" />
+        </GridMeasureColumn>
+        <GridMeasureColumn>
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem3" Name="Grid 3" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions MasterFilterMode="Multiple" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="None" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem3">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[Total Qty]" UniqueName="DataItem5" />
+        <Measure DataMember="[Measures].[PurchaseOrderDetail Count]" UniqueName="DataItem6" />
+        <Dimension DataMember="[DimPurchaseOrder].[PONumber].[PONumber]" SortOrder="Descending" SortByMeasure="DataItem3" UniqueName="DataItem7" />
+        <Dimension DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" SortOrder="None" UniqueName="DataItem8" />
+        <Dimension DataMember="[DimPurchaseOrder].[PO Date].[PO Date]" UniqueName="DataItem1" />
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn Name="Supplier" Weight="60.138919126558356">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="PO No" Weight="60.138919126558356">
+          <Dimension UniqueName="DataItem7" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Weight="56.148219246246619">
+          <Dimension UniqueName="DataItem1" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Detail Count" Weight="46.774714876212059">
+          <Measure UniqueName="DataItem6" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Weight="47.442925088729368">
+          <Measure UniqueName="DataItem5" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Weight="62.143549764110311">
+          <Measure UniqueName="DataItem3" />
+        </GridMeasureColumn>
+        <GridDimensionColumn Name="Status" Weight="60.250287495311255">
+          <Dimension UniqueName="DataItem8" />
+        </GridDimensionColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <Pie ComponentName="pieDashboardItem1" Name="Top 5 Suppliers" ShowCaption="false" DataSource="dashboardOlapDataSource1" PieType="Donut" LabelContentType="ArgumentValueAndPercent" ContentArrangementMode="FixedColumnCount" ContentLineCount="4">
+      <ColoringOptions MeasuresColoringMode="Hue" UseGlobalColors="false" />
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" SortOrder="None" TopNEnabled="true" TopNMeasure="DataItem4" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Total Amount]" Name="TOP 5 Suppliers" UniqueName="DataItem4" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Values>
+        <Value UniqueName="DataItem4" />
+      </Values>
+    </Pie>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1">
+      <ColoringOptions MeasuresColoringMode="Hue" />
+      <DataItems>
+        <Dimension DataMember="[DimItem].[Brand].[Brand]" Name="Brand" SortOrder="None" ColoringMode="Hue" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[Line Total]" UniqueName="DataItem1" />
+      </DataItems>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY Logarithmic="true" LogarithmicBase="Base5" />
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <ChartLegend Visible="false" />
+      <AxisX Visible="false" TitleVisible="true" EnableZooming="true" />
+    </Chart>
+  </Items>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="treeViewDashboardItem1" Weight="15.015974440894569" />
+      <LayoutGroup Orientation="Vertical" Weight="51.011714589989353">
+        <LayoutItem DashboardItem="gridDashboardItem3" Weight="50" />
+        <LayoutItem DashboardItem="gridDashboardItem2" Weight="50" />
+      </LayoutGroup>
+      <LayoutGroup Orientation="Vertical" Weight="33.97231096911608">
+        <LayoutItem DashboardItem="pieDashboardItem1" Weight="50" />
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="50" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

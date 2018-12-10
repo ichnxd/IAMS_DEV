@@ -1,0 +1,17 @@
+10/30/2018 9:03:35 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181015_9388_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/30/2018 9:03:36 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181015_9388_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/30/2018 9:04:57 AM: _pGetDataSet ---> Incorrect syntax near ','..
+10/30/2018 9:07:33 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table 'IAMS_20181015_9388_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/30/2018 9:07:34 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ChangeRequestHistoryTab, 6245).
+The statement has been terminated..
+10/30/2018 9:07:34 AM: _pGetDataSet ---> Cannot insert duplicate key row in object 'dbo._tModelDetailView_Detail' with unique index 'AK_tModelDetailView_Name_ID_DetailView'. The duplicate key value is (ChangeRequestHistoryTab, 6245).
+The statement has been terminated..
+10/30/2018 9:07:34 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ControlType', table 'IAMS_20181015_9388_DEV.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+10/30/2018 10:25:48 AM:  ---> Cannot insert duplicate key row in object 'dbo.tApproverMatrix' with unique index 'IX_ApproverMatrix_ID_Model'. The duplicate key value is (Work Order).
+The statement has been terminated..
+10/30/2018 10:25:54 AM:  ---> Cannot insert duplicate key row in object 'dbo.tApproverMatrix' with unique index 'IX_ApproverMatrix_ID_Model'. The duplicate key value is (Work Order).
+The statement has been terminated..

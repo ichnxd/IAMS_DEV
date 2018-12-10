@@ -1,0 +1,56 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Accounting/VC_BaseAccounting");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+
+        var VC_AcctPeriod = function () {
+            this.IgnoreDetails = true;
+        }
+        
+        VC_AcctPeriod.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_AcctPeriod.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+              if(_.ID_ViewType == 2){
+                if( _.CurrentObject.Year == null ||  _.CurrentObject.Year == undefined) return { isValid: true };
+                if( _.CurrentObject.ID_Month == null ||  _.CurrentObject.ID_Month == undefined) return { isValid: true };
+                VC.ValidationRules.push(function () {
+                    var JsDataService =  app.$GetDataService();
+
+                    return JsDataService.Validate( '@Html.EncryptSQL("pValidatePeriod")',
+                        {
+                            'ID': _.CurrentObject.ID,
+                            'Year': _.CurrentObject.Year,
+                            'Month': _.CurrentObject.ID_Month
+                        }
+                    );
+                });
+
+              }
+	
+        
+
+           
+        }
+
+
+        VC_AcctPeriod.prototype.onCurrentObjectChanged = function (e) {
+            VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+            
+        }
+
+        return VC_AcctPeriod;
+    });
+//</script>
+</text> , false);
+

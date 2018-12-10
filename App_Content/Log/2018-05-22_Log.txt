@@ -1,0 +1,18 @@
+5/22/2018 10:24:21 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:24:22 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:24:22 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:24:23 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:30:13 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:30:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:30:14 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 10:30:15 AM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_ModelDetailView', table '___IAMS_20180511_9001.dbo._tModelDetailView_Detail'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+5/22/2018 11:50:41 AM:  ---> Cannot insert the value NULL into column 'Code', table '___IAMS_20180511_9001.dbo.tItemColor'; column does not allow nulls. INSERT fails.
+The statement has been terminated..

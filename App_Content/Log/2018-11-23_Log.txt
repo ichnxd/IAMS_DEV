@@ -1,0 +1,21 @@
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:32:35 PM: _pSQLBrowserDataSource ---> A severe error occurred on the current command.  The results, if any, should be discarded.
+A severe error occurred on the current command.  The results, if any, should be discarded..
+11/23/2018 2:40:55 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20181120_91625_DEV.dbo.tPickList'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+11/23/2018 4:14:40 PM: pReceivingReportApprove ---> Conversion failed when converting the varchar value '1.00' to data type int..
+11/23/2018 4:16:04 PM: pReceivingReportApprove ---> Conversion failed when converting the varchar value '1.00' to data type int..
+11/23/2018 4:18:51 PM: pReceivingReportApprove ---> Error converting data type varchar to numeric..

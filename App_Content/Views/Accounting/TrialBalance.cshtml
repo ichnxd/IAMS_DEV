@@ -1,0 +1,32 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = "~/Views/BaseView/BaseDashboardView.cshtml";
+}
+
+<style>
+	.tb-header {
+		background:#7093DB;
+		color:white;	
+	}
+	.tb-header h3{
+		margin-top: 10px;
+		margin-bottom: 10px;
+	}
+	.tb-content .dx-datagrid-headers{
+		background-color: #808080;
+		color: white;		
+	}
+	.tb-content .col-md-12{
+		padding:0;
+	}
+</style>
+<div class="row tb-header" >
+	<div class="col-md-12"><h3>{{TrialBalanceGridOption.title}} {{TrialBalanceGridOption.dateCaption}}</h3></div>
+</div>
+<div class="row tb-content" >
+    <div class="col-md-12">
+		<div id="TrialBalanceGrid" dx-data-grid="TrialBalanceGridOption" style="margin-bottom:10px"></div>
+    </div>
+
+</div>

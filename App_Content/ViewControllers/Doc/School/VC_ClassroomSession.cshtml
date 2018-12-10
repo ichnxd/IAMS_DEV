@@ -1,0 +1,96 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        var VC_ClassroomSession = function () { }
+
+        VC_ClassroomSession.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_ClassroomSession.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+        
+
+        VC_ClassroomSession.prototype.onInitDetailView = function (VC) {
+        
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+        }
+
+
+        VC_ClassroomSession.prototype.Approve = function (Items) {
+
+			var $q = app.$GetAsync();
+			var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            
+            var ID = Items[0].ID;
+
+            alert(ID);
+
+			var _ = this;
+			var VC = this.VC;
+
+			var approveJs = function () {
+
+				JsDataService.ExecSQLProc(
+				'@Html.EncryptSQL("pClassroomSessionApprove")',
+				{
+					'ID': ID,
+					'ID_CurrentUser': '#ID_CurrentUser'
+				}
+				).then(function (response) {
+					defer.resolve();
+				}, function () {
+					defer.reject();
+				});
+
+			};
+
+			JsDataService.Validate(
+				'@Html.EncryptSQL("pValidateClassroomSession")',
+				{
+					'ID': ID,
+				}
+			).then(function (response) {
+
+				if (response.isValid == 0) {
+
+					var brokenRules = [];
+
+					brokenRules.push({
+						message: response.message
+					})
+					VC.ShowValidation(brokenRules);
+
+					return false;
+
+				} else {
+
+					//approveJs();
+				}
+
+			}, function () {
+				defer.reject();
+			});
+
+
+			return defer.promise;
+		}
+
+
+
+
+        return VC_ClassroomSession;
+    });
+//</script>
+</text> , false)
+

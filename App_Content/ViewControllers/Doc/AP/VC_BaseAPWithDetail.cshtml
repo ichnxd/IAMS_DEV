@@ -1,0 +1,262 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseAP) {
+        "use strict"
+        function VC_BaseAPWithDetail() { }
+
+        VC_BaseAPWithDetail.prototype = Object.create(VC_BaseAP.prototype);
+
+        VC_BaseAPWithDetail.prototype.Init = function (VC) {
+            VC_BaseAP.prototype.Init.call(this, VC);
+            var _ = this;
+
+            if (this.ID_ViewType == 2) {
+                    
+                VC.ValidationRules.push(function () {
+                    if (_.CurrentObject[_.DocDetailPropertyName].length == 0) {
+                        return {
+                            isValid: false,
+                            message: 'Please insert detail'
+                        };
+                    }
+                    return {IsValid : true};
+                });
+
+                if (_.DocDetailPropertyName === undefined) throw new Error("DocDetailPropertyName must be define");
+
+                if (_.IsAddItemDisabled === undefined) {
+                    VC.AddToolBarButtonOnGrid(_.DocDetailPropertyName, {
+                        text: 'Add Item',
+                        icon: 'mdi mdi-package-variant',
+                        onClick: function () {
+                            VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT Code, SupplierCode, Name, Description, ID, PartNo,
+                                                    SRP, ID_UOM, PrimaryUOM FROM vItem WHERE IsActive = 1 AND IsSold = 1 AND ID NOT IN ( @ID_Item )")', {
+                                title: 'Select Items',
+                                ID_View: 'EA822ECF-6044-40B7-9B8E-B983A8E447C4',
+                                params: {
+                                    'ID_Item': Enumerable.From(_.CurrentObject[_.DocDetailPropertyName]).Select("$.ID_Item").ToArray()
+                                }
+                            }).then(function (Items) {
+                                $.each(Items, function (i, item) {
+
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Item: item.Name,
+                                        ItemCode: item.Code,
+                                        SupplierCode: item.SupplierCode,
+                                        PartNo : item.PartNo,
+                                        Description: item.Description,
+                                        Quantity: null,
+                                        UnitPrice: item.SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.PrimaryUOM,
+                                        VatAmt: 0.00,
+                                        TaxScheme: 'VAT Inclusive',
+                                        ID_TaxScheme: 2,
+                                        TotalAmount: 0.00,
+                                        DocStatus: '',
+                                        ID_DocStatus: null,
+                                        Reference: '',
+                                        Comment: null
+                                    };
+
+                                    if (VC.$scope.CurrentObject[_.DocDetailPropertyName] == null) VC.$scope.CurrentObject[_.DocDetailPropertyName] = [];
+
+                                    VC.$scope.CurrentObject[_.DocDetailPropertyName].push(NewDetail);
+
+                                });
+                            });
+                        }
+                    }, true);
+                }
+            }
+
+            VC[_.DocDetailPropertyName + '_onColumnChanged'] = function( e ) {
+                if (e.dataField == "ID_Item") {
+                    var Item = e.data;
+                    var CurrentDetail = VC.$scope.CurrentObject[_.DocDetailPropertyName][e.rowIndex];
+                    if (Item !== null) {
+                        CurrentDetail.Description = Item.Description;
+                        CurrentDetail.Quantity = 0;
+                        CurrentDetail.Cost = Item.Cost;
+                    } else {
+                        CurrentDetail.ID_Item = null;
+                        CurrentDetail.Description = null;
+                        CurrentDetail.Quantity = 0;
+                        CurrentDetail.Cost = 0.00;
+                    }
+                    e.grid.refresh();
+                }
+                _.Compute();
+            }
+
+
+            if (this.ID_ViewType === 1) {
+
+                VC.$scope.dataGridOptions.masterDetail = {
+
+                    enabled: true,
+
+                    template: function (container, options) {
+
+                        var ContainerDetails = $('<div></div>').addClass('inner-details');
+
+                        if (options.data.Comment != null) {
+
+                            $("<div>").text("Comment : " + options.data.Comment).appendTo(ContainerDetails);
+
+                        }
+
+                        ContainerDetails.appendTo(container);
+
+                        _.InnerCustomizeText =  function (e) {
+                            if (e.value != null) {
+                                if (typeof e.value == 'number') {
+                                    return Globalize.format(e.value, "n2")
+                                }
+                            }
+                            return e.valueText;
+                        };
+
+                        $("<div>").addClass("internal-grid").dxDataGrid({
+                            columnAutoWidth: true,
+                            dataSource: {
+                                load: function (loadOptions) {
+                                    var deferred = VC.$q.defer();
+
+                                    var data = {
+                                        params: _.GetDetailSQLDataSourceParameters(options.data)
+                                    };
+
+                                    VC.JSDataService.Query(_.DetailSQLDataSource, data).then(function (data) {
+
+                                        deferred.resolve(data.collection);
+
+                                    });
+
+                                    return deferred.promise;
+                                }, totalCount: function () {
+                                    return 0;
+                                }
+                            },
+                            showBorders : true,
+                            customizeColumns: function (columns) {
+
+                                $.each(columns, function (c, o) {
+
+                                    o.customizeText = _.InnerCustomizeText;
+
+                                    if (o.dataField == 'Description') {
+                                        o.width = 250;
+                                    }
+
+
+                                });
+
+                            }
+                        }).appendTo(container);
+
+                    }
+                }
+            }
+        };
+
+        //
+        //  COMPUTE
+        //
+
+        var roundToTwo = function (num) {
+            return +(Math.round(num + "e+2") + "e-2");
+        }
+
+        VC_BaseAPWithDetail.prototype.Compute = function () {
+
+            var _ = this;
+
+            if (_.DocDetailPropertyName === undefined) throw new Error("DocDetailPropertyName must be define");
+            
+            var CurrentObject = _.VC.$scope.CurrentObject;
+            var DetailPropertyName = _.DocDetailPropertyName;
+
+            var SubTotal = 0.00;
+            var TaxAmount = 0.00;
+            var GrandTotal = 0.00;
+            var VatRate = CurrentObject.VatRate;
+            //
+            //
+            //
+            if (CurrentObject[DetailPropertyName] != null) {
+
+                $.each(CurrentObject[DetailPropertyName], function (i, item) {
+
+                    var CurrentObject = _.VC.$scope.CurrentObject;
+
+                    var VatRate = CurrentObject.VatRate;
+
+                    var TotalAmount = 0.00;
+                    var TotalVat = 0.00;
+                    var TotalQty = 0.00;
+
+                    if (CurrentObject[DetailPropertyName] != null) {
+
+                        $.each(CurrentObject[DetailPropertyName], function (i, item) {
+
+                            item.TotalAmount = item.Quantity * item.UnitPrice
+
+                            switch (item.ID_TaxScheme) {
+                                case 1: //VAT Exclusive
+                                    var VatEx = (item.TotalAmount / (1 + (VatRate / 100))) * (VatRate / 100);
+                                    item.VatAmt = VatEx;
+                                    item.TotalAmount = item.TotalAmount + roundToTwo(VatEx);
+                                    break;
+                                case 2: //VAT Inclusive
+                                    item.VatAmt = (item.TotalAmount / (1 + (VatRate / 100))) * (VatRate / 100);
+                                    TotalVat += item.VatAmt;
+                                    break;
+                                case 3: //ZERO Rated // BillingStatement
+                                    console.log('zero')
+                                    item.VatAmt = 0;
+                                case 4: //ZERO Rated // BillingStatement
+                                    console.log('zero')
+                                    item.VatAmt = 0;
+                                    break;
+                            }
+
+                            TotalQty += item.Quantity;
+                            TotalVat += item.VatAmt;
+                            TotalAmount += item.TotalAmount;
+
+                        });
+                    } else {
+                        CurrentObject[DetailPropertyName] = [];
+                    }
+
+                    CurrentObject.DetailCount = CurrentObject[DetailPropertyName].length;
+
+                    CurrentObject.TotalQty = TotalQty;
+
+                    CurrentObject.TotalVat = TotalVat.toFixed(2);
+
+                    CurrentObject.Subtotal = TotalAmount;
+
+                    CurrentObject.TotalAmount = TotalAmount;
+
+                });
+            }
+
+        };
+
+
+        return VC_BaseAPWithDetail;
+    });
+//</script>
+</text> , false);

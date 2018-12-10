@@ -1,0 +1,132 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','@BaseVCUrl'], function (app, Base) {
+
+        var VC_SalesTarget = function () { }
+
+        VC_SalesTarget.prototype = Object.create(Base.prototype);
+
+        VC_SalesTarget.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+  
+
+        }
+        VC_SalesTarget.prototype.onLoad = function () {
+            var _ = this;
+            var VC = _.VC
+            //_.butCancel.text ='Can';
+
+            
+ 
+            //_.butCancel.IsDisabled = function(){
+            //    if(_.CurrentObject.ID_FilingStatus !== 1){
+            //        return true;
+            //    } 
+            //    return false;
+            //}
+            //_.butApproved.IsDisabled = function(){
+            //    if(_.CurrentObject.ID_FilingStatus !== 1){
+            //        return true;
+            //    } 
+            //    return false;
+            //}
+
+            //if(_.ID_ViewType == 2){
+            //    VC.butNew.visible = true;
+            //    if(_.CurrentObject.ID_FilingStatus !== 1){
+            //        VC.setFormReadOnly(true)
+            //    }else{
+            //        VC.setFormReadOnly(false)
+            //    }
+            //}
+
+        }
+
+        VC_SalesTarget.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var _ = this;
+           
+
+ 
+         
+        }
+
+        VC_SalesTarget.prototype.Approve = function (Items) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesTargetApproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                VC.ToastSuccess('Successfully Approved.');
+
+                if (_.ID_ViewType == 2) {
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+        VC_SalesTarget.prototype.Cancel = function (Items,Reason) {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+ 
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pSalesTargetCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'Reason': Reason,
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                VC.ToastSuccess('Successfully Cancelled');
+
+                if (_.ID_ViewType == 2) {
+                    VC.Reload();
+                } else {
+                    VC.Grid.refresh();
+                }
+                defer.resolve();
+            }, function () {
+                VC.ToastError('An error occured!');
+                defer.reject();
+            });          
+            
+
+            return defer.promise;
+
+        }
+
+        return VC_SalesTarget;
+    });
+//</script>
+</text> , false )

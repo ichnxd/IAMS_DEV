@@ -1,0 +1,6 @@
+7/2/2018 9:42:25 AM: pItemReturnApprove ---> Serial(s) 1 already exists.
+7/2/2018 9:42:34 AM: pItemReturnApprove ---> Serial(s) 1 already exists.
+7/2/2018 9:42:52 AM: pItemReturnApprove ---> Serial(s) 1 already exists.
+7/2/2018 9:43:22 AM: pItemReturnApprove ---> Serial(s) 1 already exists.
+7/2/2018 10:24:30 AM: pItemReturnApprove ---> Serial(s) 1 already exists.
+7/2/2018 1:27:41 PM: pCheckedPOStatus ---> Please add warehouse then save it first before checking..

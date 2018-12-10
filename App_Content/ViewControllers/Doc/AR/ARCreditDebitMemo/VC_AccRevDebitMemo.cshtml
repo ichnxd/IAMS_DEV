@@ -1,0 +1,326 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+          "use strict"
+
+        var VC_AccRevDebitMemo = function () {
+            this.DocDetailPropertyName = 'AccRevDebitMemo_Details';
+        }
+
+        VC_AccRevDebitMemo.prototype = Object.create(baseModelHelper.prototype);
+
+        //Initialization Start
+        VC_AccRevDebitMemo.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+            
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+
+                VC_AccRevDebitMemo_ViewDetail_Init(_,VC);
+
+                VC_AccRevDebitMemo_ViewDetail_Init_Validation(_,VC);
+            }
+
+            _.IsAddItemDisabled = true;
+            
+        }
+
+        var VC_AccRevDebitMemo_ViewDetail_Init = function(_,VC)
+        {
+
+            /**Temporary remove Add Item**/
+            var AccRevDebitMemo_Details_MenuOption  = VC.$scope.AccRevDebitMemo_Details_MenuOptions;
+            AccRevDebitMemo_Details_MenuOption.splice(0,1);
+            /**              END           **/
+
+            VC.AddToolBarButtonOnGrid('AccRevDebitMemo_Particulars', 
+            {
+                text: 'Add Particular Entry',
+                icon: 'mdi mdi-package-variant',
+                onClick: function(){
+
+                    var newDetail  =
+                        {
+                                ID: _.rndID()
+                            ,   Particular: ''
+                            ,   Amount: 0.00
+         
+                        };
+
+                        VC.$timeout(function(){
+                            
+                            VC.$scope.CurrentObject['AccRevDebitMemo_Particulars'].push(newDetail);
+
+                            VC.GetGridEditor('AccRevDebitMemo_Particulars').refresh();
+                                
+                        });
+                }          
+            }, true);
+
+        }
+        //Initialization End
+
+        var VC_AccRevDebitMemo_ViewDetail_Init_Validation = function(_,VC)
+        {
+            
+            VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+                    if(_.CurrentObject.AccRevDebitMemo_Particulars.length == 0){
+
+                        brokenRules.push('Insert a particular atleast one.')
+                    }
+
+                    $.each(_.CurrentObject.AccRevDebitMemo_Particulars, function(i,particular){
+
+                        var ErrorMsg = 'The ';
+                        var ErrorMsgAmount = 'Particular';
+                        var ErrorMsgParticular = 'Amount';
+                        var isValidParticular = true;
+                        var isValidAmount = true;
+
+                        if(particular.Particular == ''){
+                            
+                            isValidParticular = false;
+                        }
+
+                        if(particular.Amount == 0  ){
+                            
+                            isValidAmount = false;
+                        }
+
+                        if(isValidAmount == false && isValidParticular ==false ){
+
+                            ErrorMsg += ' Particular and Amount are';
+                        }else if(isValidAmount == true && isValidParticular ==false){
+
+                            ErrorMsg += ' Particular is';
+                        }else{
+                            ErrorMsg += ' Amount is';
+                        }
+
+                        if(isValidAmount == false || isValidParticular ==false ){
+                            
+                            ErrorMsg += ' required at row ' + (i + 1).toString() + '.';
+
+                            brokenRules.push(ErrorMsg)
+                        }
+
+                    });
+
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+            });
+        }
+
+
+        VC_AccRevDebitMemo.prototype.onLoad = function(){
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var _ = this;
+            var VC = _.VC;
+            
+            if (_.ID_ViewType == 2) {
+
+                if (_.CurrentObject.AccRevDebitMemo_details == undefined) {
+                    _.CurrentObject.AccRevDebitMemo_details = []
+                }
+
+                if (_.CurrentObject.AccRevDebitMemo_details == null) {
+                    _.CurrentObject.AccRevDebitMemo_details = []
+                }
+
+                if (_.CurrentObject.AccRevDebitMemo_Particulars == undefined) {
+                    _.CurrentObject.AccRevDebitMemo_Particulars = []
+                }
+
+                if (_.CurrentObject.AccRevDebitMemo_Particulars == null) {
+                    _.CurrentObject.AccRevDebitMemo_Particulars = []
+                }
+          
+            }
+
+            _.butCancel.IsDisabled = function () {
+            
+                var _isCanCancel = _.IsCanCancel();
+
+                if (_.ID_ViewType == 2) {
+
+                    if(_isCanCancel == false) {
+
+                        if(_.CurrentObject.ID_FilingStatus == 21){
+
+                            _isCanCancel = true;
+                        }
+                    }
+
+                }else{
+                        
+
+                
+                }
+
+                return _isCanCancel;
+            }
+           
+        }
+
+        //
+        VC_AccRevDebitMemo.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+             this.Compute();
+        }
+        //
+
+
+        //Computation Start
+        VC_AccRevDebitMemo.prototype.Compute = function () {
+
+            baseModelHelper.prototype.Compute.call(this);
+
+            var _ = this;
+            var VC = this.VC;
+
+            var EWTAmt = 0.00;
+            var TotalVat = 0.00;
+            var TotalAmt = 0.00;
+            var Subtotal = 0.00;
+
+            if (_.CurrentObject.AccRevDebitMemo_Details == undefined) {
+                _.CurrentObject.AccRevDebitMemo_Details = []
+            }
+
+            if (_.CurrentObject.AccRevDebitMemo_Particulars == undefined) {
+                _.CurrentObject.AccRevDebitMemo_Particulars = []
+            }
+
+            if (_.CurrentObject.AccRevDebitMemo_Particulars == null) {
+                _.CurrentObject.AccRevDebitMemo_Particulars = []
+            }
+
+            if (this.ID_ViewType == 2) {
+
+                if (_.CurrentObject.AccRevDebitMemo_Details !== null) {
+
+                    $.each(_.CurrentObject.AccRevDebitMemo_Details, function (i, detail) {
+
+                        Subtotal += parseFloat(detail.GrossAmount);
+                        TotalAmt += parseFloat(detail.TotalAmount);
+                        TotalVat += parseFloat(detail.VATAmount);
+                    });
+                }
+
+                if (_.CurrentObject.AccRevDebitMemo_Particulars !== null) {
+
+                    $.each(_.CurrentObject.AccRevDebitMemo_Particulars, function (i, detail) {
+
+                        Subtotal += parseFloat(detail.Amount);
+                        TotalAmt += parseFloat(detail.Amount);
+
+                    });
+                }
+
+
+                _.CurrentObject.TotalVat = TotalVat;
+                _.CurrentObject.Subtotal = Subtotal;
+                _.CurrentObject.TotalAmount = TotalAmt;
+            }
+ 
+    
+        }
+        //Computation End
+
+        //
+        VC_AccRevDebitMemo.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            VC.AccRevDebitMemo_Details_onColumnChanged = function (e) {
+                _.Compute();
+            };
+
+            VC.AccRevDebitMemo_Particulars_onColumnChanged = function (e) {
+                _.Compute();
+            };
+        }
+        //
+
+
+        VC_AccRevDebitMemo.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_AccRevDebitMemo.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAccRevDebitMemoApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_AccRevDebitMemo.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pAccRevDebitMemoCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_AccRevDebitMemo;
+
+    });
+//</script>
+</text> , false);
+
+
+

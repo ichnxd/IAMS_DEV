@@ -1,0 +1,56 @@
+﻿@using JSWebProject.Controllers;
+@{
+    Layout = null;
+    int ReportID = ViewBag.ReportID;
+    string ID_CurrentObject = ViewBag.ID_CurrentObject.ToString();
+    string ReportViewerName = ReportID + "_" + ID_CurrentObject;
+    string FormId = HtmlHelperExtensions.RandomString();
+}
+<div class="js-themes js-report-view" style="height:100%;background-color:#ddd!important;position:relative" id="@FormId">
+    <div class="report-title" style="display:table;height:5%">
+        <div style="display:table-cell;vertical-align:middle;text-align:left;padding-left:5px">
+           <div class="row">
+               <div class="col-md-6" style="padding:4px">
+                    <div dx-text-box="SearchTextBox" style="display:inline-block"></div>
+                   @if (ViewBag.IsHasReportDateFilter == true) {
+                    @:<div j-dx-date-range-box="DateRangeBoxOption" style="display:inline-block"></div>
+                   }
+               </div>
+               <div class="col-md-6">
+                    <div class="toolbar">
+                        <div class="toolbar-item" ng-click="sendEmail()">
+                            <span class="mdi mdi-email"></span>
+                        </div>
+                         @if (ViewBag.IsDeveloerMode == true) {
+                            <div class="toolbar-item" ng-click="ReportDesigner()">
+                                <span class="mdi mdi-table-edit"></span>
+                            </div>
+                        }
+                        <div class="toolbar-item" ng-click="FullScreen()">
+                            <span class="mdi mdi-tab"></span>
+                        </div>
+                        <div class="toolbar-item" ng-click="ToggleFilter()">
+                            <span class="mdi mdi-filter"></span>
+                        </div>
+                        <div class="toolbar-item">
+                            <span class="mdi mdi-refresh" ng-click="ReloadView()"></span>
+                        </div>
+                        <div class="toolbar-item" ng-click="CloseModule()">
+                            <span class="mdi mdi-close"></span>
+                        </div>
+                    </div>
+               </div>
+           </div>
+        </div>
+    </div>
+    <div ng-show="IsFilterOpen" style="padding:3px;position:absolute;width:35%;padding:10px 10px 0 10px;left:0;height:100%;background:rgb(158, 158, 158)">
+        <div dx-scroll-view="{
+                height : '86%'
+             }" js-data-grid="dxGridFilterOption" />
+        <div style="height:5%;text-align:right;margin-top:5px">
+            <div dx-button="butRequeryOption"/>
+            <div dx-button="butClearFilterOption"/>
+        </div>
+    </div>
+    <iframe name="@ReportViewerName" ng-src="" class="report-frame" iframe-onload="onLoadDone()" style="height:93%;width:100%;"></iframe>
+</div>

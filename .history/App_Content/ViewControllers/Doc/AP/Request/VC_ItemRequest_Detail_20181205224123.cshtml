@@ -1,0 +1,32 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_BPContact = function () {
+          //  this.DocDetailPropertyName = "Contacts";
+        }
+        
+        VC_BPContact.prototype = Object.create(baseDoc.prototype);
+          
+        VC_BPContact.prototype.Init = function (VC) {
+
+            baseDoc.prototype.Init.call(this, VC);
+
+            var _ = this;
+        }
+                    
+        VC_BPContact.prototype.onLoad = function (VC) {
+
+            baseDoc.prototype.onLoad(this, VC);
+        }
+
+        return VC_BPContact;
+    });
+//</script>
+</text> , false )

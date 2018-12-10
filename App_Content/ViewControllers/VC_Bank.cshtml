@@ -1,0 +1,52 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_Bank = function () {
+            //this.DocDetailPropertyName = "Contacts";
+        }
+        
+        VC_Bank.prototype = Object.create(baseDoc.prototype);
+          
+        VC_Bank.prototype.Init = function (VC) {
+            baseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+            if(_.ID_ViewType == 2){
+                VC.AddToolBarButtonOnGrid('BankAccounts', {
+                    text: 'Add Account',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        var detail = {
+                            ID: -1,
+                            IsActive: true,
+                            Name: null,
+                            AccountNumber: null,
+                            ID_CostCenter:null,
+                            CostCenter: '-',
+                            Comment: null
+                        };
+                        if(_.CurrentObject.BankAccounts == undefined) _.CurrentObject.BankAccounts = [];
+                        _.CurrentObject.BankAccounts.push(detail);
+                    }
+                });
+            }
+       
+
+               
+        }
+
+
+
+
+        return VC_Bank;
+    });
+//</script>
+</text> , false )

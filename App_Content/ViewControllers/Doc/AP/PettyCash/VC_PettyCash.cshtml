@@ -1,0 +1,938 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseAP, AcctHelper) {
+
+    
+        var VC_PettyCash = function () {
+
+            this.DocDetailPropertyName = 'PettyCash_Details';
+        }
+
+        VC_PettyCash.prototype = Object.create(baseAP.prototype);
+
+        var Allowed_ID_UserGroups = [
+
+            VC_PettyCash.ID_UserGroup_ADMINISTRATOR,
+            VC_PettyCash.ID_UserGroup_DEVELOPER ,
+            VC_PettyCash.ID_UserGroup_PROGJECTMANAGER ,
+            VC_PettyCash.ID_UserGroup_ACCOUNTEXECUTIVE ,
+            VC_PettyCash.ID_UserGroup_PROJECTMANAGERSPECIALIST ,
+            VC_PettyCash.ID_UserGroup_ACCOUNTINGADMIN ,
+            VC_PettyCash.ID_UserGroup_PETTYCASHCUSTODIAN
+                    
+        ];
+
+
+        VC_PettyCash.prototype.Init = function (VC) {
+
+            baseAP.prototype.Init.call(this, VC);
+
+            var _ = this;
+  
+
+            if (_.ID_ViewType === 2) {
+   //     VC.ValidationRules.push(function(){
+   //              var defer
+   //
+   //              var hasDPC = 0
+   //              var JsDataService = app.$GetDataService();
+   //              JsDataService.Validate('@Html.EncryptSQL("pValidateDailyPCMonitoring")').then(function (data) {
+   //                      if (data.IsExists == true) {
+   //                          brokenRules.push('Daily Petty Cash Monitoring is already approved in this day ');
+   //                      }
+
+   //                  })  
+
+
+   //     })
+
+                   VC.ValidationRules.push(function () {
+                    var JsDataService = app.$GetDataService();
+                    return JsDataService.Validate( '@Html.EncryptSQL("pValidateDailyPCMonitoring")',
+                        {
+                            'ID_USER': VC.CurrentUser.ID
+                        }
+                    );
+                });
+
+
+
+                VC_PettyCash_ViewDetail_Init(_,VC);
+                VC_PettyCash_ViewDetail_Init_Validation(_,VC);
+
+               _.Compute();
+
+
+
+            }
+
+
+            
+        }
+
+
+
+        var VC_PettyCash_ViewDetail_Init = function(_,VC){
+            
+            var fPurchaseOrder = function(){
+
+                    var ID_Supplier = _.CurrentObject.ID_Supplier;
+
+                    if (_.CurrentObject.ID_PettyCashType != 3){
+
+                        VC.MsgBox('Browsing Purchase Order is allowed only for "Advance Payment" type.', 'Purchase Order');
+                        return;
+                    }
+
+                    if (ID_Supplier == null || ID_Supplier == 0 || ID_Supplier == undefined ) {
+                        VC.MsgBox('Please specify Supplier', 'Petty Cash');
+                        return;
+                    }
+
+                    var selected_ID_PurchaseOrder = Enumerable.From(_.CurrentObject['PettyCash_Details'])
+                                                              .Where("$.ID_ReferenceParentModel = " + AcctHelper.Model_ID_PurchaseOrder.toString())
+                                                              .Select("$.ID_Reference").ToArray();
+                    
+                    if (selected_ID_PurchaseOrder.length == 0 ){
+
+                        selected_ID_PurchaseOrder =  [0];
+                    }
+
+
+                    var sql = '@Html.EncryptSQL(@"SELECT * FROM vPurchaseOrderAdvancedPayment WHERE ID_Supplier = @ID_Supplier AND ID NOT IN (@selected_ID_PurchaseOrder)") AND';
+                    var filterParam = {
+                        'ID_Supplier': _.CurrentObject.ID_Supplier,
+                        'selected_ID_PurchaseOrder': selected_ID_PurchaseOrder,
+                    };
+
+                    var browseDataSetParam = 
+                    {
+                        title: 'Browse Purchase Order',
+                        ID_View: '8D343767-ED05-4BD9-8C57-BA6711167E0C',
+                        params: filterParam
+                    };
+
+                    var browseDataSetThen = function(selectedRecord){
+                        
+                        if (_.CurrentObject.PettyCash_Details == undefined) {
+                            _.CurrentObject.PettyCash_Details = []
+                        }
+
+                        $.each(selectedRecord, function (i, record)
+                        {
+                           
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                ID_Reference: record.ID,
+                                Reference: record.DocumentNo,
+                                ReferenceDate: record.Date,
+                                AdvancedPaymentAmount: record.CashAdvance,
+                                TotalAmount: record.TotalAmount,
+                                ID_ReferenceParentModel: AcctHelper.Model_ID_PurchaseOrder ,
+                                VatAmount: record.CATotalVat,
+                                ID_PaymentCustodian : null,
+                                PaymentCustodian : '',
+                                PaymentAmount:0,
+                                AdvancePaymentSubtotalAmount : record.CASubtotal,
+                                RRTotalAmount :0,
+                                RRVatAmount: 0
+                            };
+
+                            _.CurrentObject.PettyCash_Details.push(NewDetail);
+
+                        });
+
+                        _.Compute();
+
+                    }
+
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+    
+                }
+
+                 var fLiquidation = function(){
+     
+                     if(_.CurrentObject.ID_PettyCashType == 0 || _.CurrentObject.ID_PettyCashType == null){
+                         VC.MsgBox('Please Select PC Type')
+                         return;
+                     }
+
+                     if(_.CurrentObject.ID_PettyCashType !== 2 && _.CurrentObject.ID_PettyCashType !== 4){
+                         VC.MsgBox('Liquidation is allowed only for Reimbursement and Change Type')
+                         return;
+                     }
+
+                      var IDs = Enumerable.From(_.CurrentObject.PettyCash_Payments).Where("$.ID_Model = 8351" ).Select("$.ID_DocParentModel").ToArray();
+                       
+                       if (IDs.length == 0 ){
+
+                        IDs = [0];
+                       }
+
+                      var sql = '@Html.EncryptSQL(@"SELECT * FROM vLiquidation where ID not in (@IDs) and ID_FilingStatus = 2")'
+                      var filterParam = {
+                        'IDs': IDs
+                      };
+                      var browseDataSetParam = {
+                                title: 'Browse Liquidation',
+                                ID_View: 'EB54451C-CF9F-4A38-A438-76D09904DFF2',
+                                params: filterParam
+                      };
+
+                      var browseDataSetThen = function(selectedRecord){
+                        
+                        if (_.CurrentObject.PettyCash_Payments == undefined) {
+                            _.CurrentObject.PettyCash_Payments = []
+                        }
+
+                        $.each(selectedRecord, function (i, record)
+                        {
+                           var Amount;
+                           switch(_.CurrentObject.ID_PettyCashType){
+                               case 4: Amount = record.ChangeAmount
+                               break;
+
+                               case 2: Amount = record.Reimbursement
+                               break;
+
+                               default: Amount = 0
+                           
+                        }
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                Name: record.DocumentNo,
+                                ID_Employee: record.ID_Employee,
+                                Employee: record.Employee,
+                                ID_Client: record.ID_Client,
+                                Client: record.Client,
+                                PaymentAmount:   Amount,
+                                ID_Model: 8351, // Liquidation ID_Model
+                                ID_DocParentModel: record.ID
+                            
+                            };
+                          
+                            _.CurrentObject.PettyCash_Payments.push(NewDetail);
+                            _.Compute();
+
+                        });
+
+                    //   _.Compute();
+
+                    }
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+                 }
+
+                  
+                 
+                var fCashAdvance = function(){
+
+                     if(_.CurrentObject.ID_PettyCashType == 0 || _.CurrentObject.ID_PettyCashType == null){
+                         VC.MsgBox('Please Select PC Type')
+                         return;
+                     }
+
+                     if(_.CurrentObject.ID_PettyCashType !== 1){
+                         VC.MsgBox('Cash Advance is allowed only for Cash Advance Type')
+                         return;
+                     }
+
+                      var IDs = Enumerable.From(_.CurrentObject.PettyCash_Payments).Where("$.ID_Model = 8342" ).Select("$.ID_DocParentModel").ToArray();
+                       
+                       if (IDs.length == 0 ){
+                        IDs = [0];
+                       }
+                        var sql = '@Html.EncryptSQL(@"SELECT * FROM vCashAdvanceRequest where ID_FilingStatus = 2 and isnull(HasPettyCash,0) = 0 And ID NOT IN (@IDs)")';
+                        
+                        var filterParam = {
+                        'IDs': IDs
+                       };
+                        
+                        var browseDataSetParam = 
+                            {
+                                title: 'Browse Cash Advance',
+                                ID_View: 'A16C71EB-30BC-4D19-96F4-79B3AB9936CD',
+                                params: filterParam
+                            };
+                         
+                 var browseDataSetThen = function(selectedRecord){
+                        
+                        if (_.CurrentObject.PettyCash_Payments == undefined) {
+                            _.CurrentObject.PettyCash_Payments = []
+                        }
+
+                        $.each(selectedRecord, function (i, record)
+                        {
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                Name: record.DocumentNo,
+                                ID_Employee: record.ID_Employee,
+                                Employee: record.Employee,
+                                ID_Client: record.ID_Client,
+                                Client: record.Client,
+                                PaymentAmount:   record.TotalCashAdvance,
+                                ID_Model: 8342, // Cash Advance ID_Model
+                                ID_DocParentModel: record.ID
+                            };
+                            _.CurrentObject.PettyCash_Payments.push(NewDetail);
+                            _.Compute();
+                        });
+
+                    }
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);  
+         }    
+                var fReceivingReport = function(){
+
+                    var ID_Supplier = _.CurrentObject.ID_Supplier;
+
+                     if (_.CurrentObject.ID_PettyCashType != 5){
+
+                        VC.MsgBox('Browsing Receiving Report is allowed only for "Payment to Supplier" type.', 'Receiving Report');
+                        return;
+                    }
+
+                    if (ID_Supplier == null || ID_Supplier == 0 || ID_Supplier == undefined ) {
+                        VC.MsgBox('Please specify Supplier', 'Petty Cash');
+                        return;
+                    }
+
+                    var selected_ID_ReceivingReport = Enumerable.From(_.CurrentObject['PettyCash_Details'])
+                                                              .Where("$.ID_ReferenceParentModel = " + AcctHelper.Model_ID_ReceivingReport.toString())
+                                                              .Select("$.ID_Reference").ToArray();
+                    
+                    if (selected_ID_ReceivingReport.length == 0 ){
+
+                        selected_ID_ReceivingReport = [0];
+                    }
+
+
+                    var sql = '@Html.EncryptSQL(@"SELECT * FROM vReceivingReportPaidUnPaid WHERE ID_Supplier = @ID_Supplier AND ID NOT IN (@selected_ID_ReceivingReport) ")';
+                    var filterParam = {
+                        'ID_Supplier': _.CurrentObject.ID_Supplier,
+                        'selected_ID_ReceivingReport': selected_ID_ReceivingReport,
+                    };
+
+                    var browseDataSetParam = 
+                    {
+                        title: 'Browse Receiving Report',
+                        ID_View: '27E7EB71-B3D3-4561-B311-B75804D7BC54',
+                        params: filterParam
+                    };
+
+                    var browseDataSetThen = function(selectedRecord){
+                        
+                        if (_.CurrentObject.PettyCash_Details == undefined) {
+                            _.CurrentObject.PettyCash_Details = []
+                        }
+
+                        $.each(selectedRecord, function (i, record)
+                        {
+                           
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                ID_Reference: record.ID,
+                                Reference: record.DocumentNo,
+                                ReferenceDate: record.Date,
+                                AdvancedPaymentAmount:0,
+                                ID_ReferenceParentModel:  AcctHelper.Model_ID_ReceivingReport ,
+                                ID_PaymentCustodian :null,
+                                PaymentCustodian : '',
+                                PaymentAmount:0,
+                                AdvancePaymentSubtotalAmount : 0,
+                                RRTotalAmount :0,
+                                RRVatAmount: 0
+                            };
+
+                             NewDetail.TotalAmount = (record.ID_TaxScheme == 1 ? record.Subtotal : record.TotalAmount);
+                             NewDetail.VatAmount=  (record.ID_TaxScheme == 1 ?  record.TotalVat : 0);
+                            
+                             if(record.RRPayable > 0){
+
+                                NewDetail.TotalAmount = record.RRPayable ;
+                                NewDetail.RRTotalAmount =  record.RRPayable / 1.12;
+                                NewDetail.RRVatAmount=   NewDetail.RRTotalAmount * 0.12;
+                             }
+
+
+                            _.CurrentObject.PettyCash_Details.push(NewDetail);
+
+                        });
+
+                        _.Compute();
+
+                    }
+
+                    VC.BrowseDataSet(sql, browseDataSetParam).then(browseDataSetThen);
+    
+                };
+
+                
+                
+                VC.AddToolbarButton({
+                    text: 'Browse',
+                    items:[
+                        { 
+                            text: 'Purchase Order',
+                            icon: 'mdi mdi-package-variant',
+                            onClick: fPurchaseOrder
+                        },
+                        { 
+                            text: 'Receiving Report',
+                            icon: 'mdi mdi-package-variant',
+                            onClick: fReceivingReport
+                        },
+
+                        { 
+                            text: 'Liquidation',
+                            icon: 'mdi mdi-package-variant',
+                            onClick: fLiquidation
+                        },
+
+                       { 
+                            text: 'Cash Advance',
+                            icon: 'mdi mdi-package-variant',
+                            onClick: fCashAdvance
+                        }
+
+                    ]
+                });
+
+                 VC.AddToolbarButton({
+                 text: 'Create Replenishment',
+                 IsDisabled: function () {
+
+                    if (_.ID_ViewType == 2) {
+
+                        var isDisabled = true;
+
+                        if (_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 17) {
+                            isDisabled= false;
+                        }
+
+                        if(_.CurrentObject.ID_PettyCashType == 4 && isDisabled == false){
+
+                            isDisabled = true;
+                        }
+
+                         return isDisabled;
+                      
+                    } 
+
+                    return true;
+                },
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    AcctHelper.CreateReplenishmentFromPC(Selecteds);
+
+                }
+
+                 });
+
+      
+       // var fAddPettyCash_Payments = function(){
+
+       //     if (_.CurrentObject.PettyCash_Payments == undefined) {
+       //         _.CurrentObject.PettyCash_Payments = [];
+       //     }
+
+       //     var NewDetail = {
+       //         ID: _.rndID(),
+       //         ID_PaymentCustodian : null,
+       //         PaymentCustodian : '',
+       //         PaymentAmount:0,
+       //     };
+
+       //     _.CurrentObject.PettyCash_Payments.push(NewDetail);
+
+       //     _.Compute();
+
+       // };
+
+    /*
+                VC.AddToolBarButtonOnGrid('PettyCash_Payments', {
+                    text: 'Add Entry',
+                    icon: 'mdi mdi-account-plus',
+                    onItemClick: fAddPettyCash_Payments
+                });
+    */        
+
+                _.Compute();
+
+        }
+
+        var VC_PettyCash_ViewDetail_Init_Validation = function(_,VC)
+        {
+
+            
+            var NotAllowIDStatus = [1,7];
+
+            _.butApproved.IsDisabled = function () {
+
+                var _isCanApproved = _.IsCanApprove();
+           
+                if (_.ID_ViewType == 2) {
+
+                    if ( NotAllowIDStatus.includes(_.CurrentObject.ID_FilingStatus) == false){
+
+                        return true;
+                    }
+                }
+
+                return _isCanApproved;
+            }
+
+            _.butCancel.IsDisabled = function () {
+                
+                var _isCanCancel = _.IsCanCancel();
+  
+                if (_.ID_ViewType == 2) {
+
+                    if ( _.CurrentObject.ID_FilingStatus == 2 ){
+
+                        return false;
+                    }
+                }
+
+                return _isCanCancel;
+            }
+            
+
+            var fValidationFromScript = function(){
+
+                var brokenRules = [];
+         
+                //Validatin in ID_PettyCashType
+                if ( ( _.CurrentObject.ID_PettyCashType == 5 || _.CurrentObject.ID_PettyCashType == 3  ) &&
+                        (_.CurrentObject.ID_Supplier == null || _.CurrentObject.ID_Supplier == 0) ){
+
+                        brokenRules.push('Supplier is required.');
+                }
+
+                if(( _.CurrentObject.ID_PettyCashType == 5 || _.CurrentObject.ID_PettyCashType == 3 ) && (_.CurrentObject.ID_PettyCashType == null||  _.CurrentObject.PettyCash_Details == 0 ) ){ // Transportation
+
+                    brokenRules.push('Input Petty Cash Detail must have record atleast one.');
+                }
+
+                if( _.CurrentObject.BalanceAmount < 0  ){ // Transportation
+
+                    brokenRules.push('Invalid Balance amount.');
+                }
+
+     
+                
+                var $q = app.$GetAsync();
+                var JsDataService = app.$GetDataService();
+                var defer = $q.defer();
+
+                var getRetval = function(){
+                        if (brokenRules.length > 0) {
+                            return {
+                                isValid: false,
+                                brokenRules: brokenRules
+                            }
+                        }
+
+                        return { isValid: true };
+                    }
+
+        
+
+                JsDataService.Query('@Html.EncryptSQL("exec pValidatePettyCash2 @IDs, @ID_PettyCashType, @PettyCashAmountFromClientScript, @ID_CreatedBy ")',
+                {
+                    params: {
+                        'IDs':  [_.CurrentObject.ID],
+                        'PettyCashAmountFromClientScript': _.CurrentObject.PettyCashAmount,
+                        'ID_CreatedBy': VC.CurrentUser.ID,
+                        'ID_PettyCashType': _.CurrentObject.ID_PettyCashType
+                    }
+                }
+                ).then(function (data) {
+    
+                    responseFromServer = data.collection[0];
+                    
+                    if( responseFromServer.isValid == false ){ // Transportation
+
+                        brokenRules.push(responseFromServer.message);
+                    }
+
+                    defer.resolve(getRetval());  
+
+                });
+
+                return defer.promise;
+               
+
+            };
+
+
+            var responseFromServer;
+
+
+            VC.ValidationRules.push(fValidationFromScript);   
+
+        }
+
+ 
+
+        VC_PettyCash.prototype.onCurrentObjectSaved = function (CurrentObject) {
+
+            baseAP.prototype.onCurrentObjectSaved.call(CurrentObject, this);
+
+            var _ = this;
+            var VC = _.VC;
+
+        }
+
+        VC_PettyCash.prototype.onLoad = function () {
+            baseAP.prototype.onLoad.call(this);
+            var _ = this;
+  
+       //     var hasDPC = 0
+       //     var JsDataService = app.$GetDataService();
+       //     JsDataService.Validate('@Html.EncryptSQL("pValidateDailyPCMonitoring")').then(function (data) {
+       //             if (data.IsExists == true) {
+       //                console.log('yyy')
+       //                 hasDPC = 1;
+       //             }
+//
+       //         })  
+            _.Compute();
+            
+        }
+
+        VC_PettyCash.prototype.onDetailRowUpdated = function (VC) {
+
+        }
+
+        VC_PettyCash.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+            VC.PettyCash_Details_onColumnChanged = function (e) {
+
+                if (e.dataField == 'PaymentAmount'){
+                    
+                    _.Compute();
+                }
+            }
+
+            VC.PettyCash_Payments_onColumnChanged = function (e) {
+
+                if (e.dataField == 'PaymentAmount'){
+                    
+                    _.Compute();
+                }
+
+            }
+
+            
+            this.Compute();
+        }
+
+        VC_PettyCash.prototype.onCurrentObjectChanged = function (e) {
+
+            var _ = this;
+            var VC = this.VC;
+            
+
+            if (VC.$scope.CurrentObject.PettyCash_Details == null){
+
+                VC.$scope.CurrentObject.PettyCash_Details = [];
+            }
+  
+            if(e.dataField == 'ID_PettyCashType' ){
+
+                var disableBrowseButton = function(){
+
+                        var IsDisabled = true;
+
+                        if(_.CurrentObject.ID_FilingStatus == 1 && IsDisabled == true){
+
+                                IsDisabled = false;
+                        }
+
+                        if(_.CurrentObject.ID_PettyCashType != 3 && _.CurrentObject.ID_PettyCashType != 5 && IsDisabled == true){
+
+                                IsDisabled = false;
+                        }
+
+                        return IsDisabled;     
+                };
+
+                VC.$ID_Supplier_IsDisabled = function () {
+
+                    var IsDisabled = true;
+
+                    if( VC.$scope.CurrentObject.ID_PettyCashType == 1 || VC.$scope.CurrentObject.ID_PettyCashType == 2 || VC.$scope.CurrentObject.ID_PettyCashType == 4 ) {
+
+                        IsDisabled = false
+                        VC.$scope.CurrentObject.ID_Supplier = 0 ;
+
+                         _.Compute();
+                    }
+                    
+                    return IsDisabled ;
+                }
+
+                if(VC.$scope.CurrentObject.$dirty != undefined){
+
+                    if(_.CurrentObject.PettyCash_Payments.length == 1 ) {
+
+                        _.CurrentObject.PettyCash_Payments[0].PaymentAmount = 0;
+                    }
+                    
+                    var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.PettyCash_Details).Where('$.ID > 0 ').ToArray();
+                    $.each(DeleteDetails, function (i, o) {
+
+                        if ( VC._DeletedItems.PettyCash_Details == undefined){  VC._DeletedItems.PettyCash_Details  = []; }
+                    
+                        VC._DeletedItems.PettyCash_Details.push(o);
+                    });
+
+
+                    VC.$scope.CurrentObject.PettyCash_Details = [];
+
+                    _.Compute();
+                }
+
+
+               //lester
+               if(_.CurrentObject.PettyCash_Payments == undefined) _.CurrentObject.PettyCash_Payments = [];
+              
+
+             }
+
+
+        }
+
+        VC_PettyCash.prototype.Compute = function () {
+            
+            baseAP.prototype.Compute.call(this);
+
+            var _ = this;
+            var VC = this.VC;
+
+            var subTotal = 0.00;
+            var totalVatAmount = 0.00;
+            var totalAdvancePaymentAmt = 0.00;
+            var totalPaymentAmount = 0.00;
+            var pcAmount = 0.00;
+            var balance = 0.00;
+
+            var pettyCashAmount = 0.00;
+
+            if (_.CurrentObject.PettyCash_Details == undefined) {
+                _.CurrentObject.PettyCash_Details = []
+            }
+
+            if (_.CurrentObject.PettyCash_Details == null) { 
+                _.CurrentObject.PettyCash_Details = []
+            }
+
+            if (_.CurrentObject.PettyCash_Payments == undefined) {
+                _.CurrentObject.PettyCash_Payments = []
+            }
+
+            if (_.CurrentObject.PettyCash_Payments == null) { 
+                _.CurrentObject.PettyCash_Payments = []
+            }
+
+            $.each(_.CurrentObject.PettyCash_Details, function (index, detail) {
+
+                if (detail.ID_ReferenceParentModel == AcctHelper.Model_ID_ReceivingReport ){
+
+                    if(detail.RRTotalAmount == 0){
+                       subTotal = subTotal + detail.TotalAmount;
+
+                    }else{
+
+                      subTotal = subTotal + detail.RRTotalAmount;
+                    }
+  
+
+                }else if(detail.ID_ReferenceParentModel == AcctHelper.Model_ID_PurchaseOrder ){
+    
+                    subTotal += detail.AdvancePaymentSubtotalAmount;
+         
+                }
+  
+                totalVatAmount += detail.VatAmount;
+                //totalVatAmount += detail.RRVatAmount;
+
+                totalAdvancePaymentAmt += detail.AdvancedPaymentAmount ;
+         
+            });
+
+           
+            if( _.CurrentObject.ID_PettyCashType == 3 || _.CurrentObject.ID_PettyCashType == 5){
+
+                pettyCashAmount =   parseFloat( subTotal + totalVatAmount).toFixed(2);
+
+            }
+
+            if(_.CurrentObject.PettyCash_Payments.length == 1  && ( _.CurrentObject.ID_PettyCashType == 3 || _.CurrentObject.ID_PettyCashType == 5) ) {
+
+                totalPaymentAmount = _.CurrentObject.ID_PettyCashType == 3 ? parseFloat(totalAdvancePaymentAmt).toFixed(2) : pettyCashAmount;
+           
+            }else{
+
+                $.each(_.CurrentObject.PettyCash_Payments, function (index, payments) {
+            
+                    totalPaymentAmount += payments.PaymentAmount;
+                });
+            }
+
+
+            if(_.CurrentObject.ID_PettyCashType == 1 || _.CurrentObject.ID_PettyCashType == 2|| _.CurrentObject.ID_PettyCashType == 4){ pettyCashAmount = totalPaymentAmount; }
+          
+
+
+            balance =  parseFloat(pettyCashAmount).toFixed(2) - parseFloat(totalPaymentAmount).toFixed(2);
+
+
+             if(_.CurrentObject.PettyCash_Payments.length == 1  && ( _.CurrentObject.ID_PettyCashType == 3 || _.CurrentObject.ID_PettyCashType == 5) ) {
+         
+                _.CurrentObject.PettyCash_Payments[0].PaymentAmount = _.CurrentObject.ID_PettyCashType == 3 ? parseFloat(totalAdvancePaymentAmt).toFixed(2) : pettyCashAmount;
+            }
+
+
+
+            _.CurrentObject.SubTotal = parseFloat(subTotal).toFixed(2);
+            _.CurrentObject.VATAmount = parseFloat(totalVatAmount).toFixed(2);
+            _.CurrentObject.AdvancePaymentAmount = parseFloat(totalAdvancePaymentAmt).toFixed(2);
+
+            _.CurrentObject.PettyCashAmount = parseFloat(pettyCashAmount).toFixed(2);
+            _.CurrentObject.BalanceAmount = parseFloat(balance).toFixed(2);
+            
+      
+        }
+
+        
+        VC_PettyCash.prototype.onDetailRowUpdated = function () {
+            
+            var _ = this;    
+            var VC = this.VC;
+
+            _.Compute();
+        }
+
+        VC_PettyCash.prototype.onCollectionSource_Load = function (data) {
+
+            baseAP.prototype.onCollectionSource_Load.call(this, data);
+            var VC = this.VC;
+
+            var filterValue = VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+          if(Allowed_ID_UserGroups.includes(VC.CurrentUser.ID_UserGroup) == false ){
+
+                WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID.toString() ); 
+            }
+            
+        }   
+
+
+        VC_PettyCash.prototype.Approve = function (Items) {
+
+            var _ = this;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+ 
+            var fApprovedPettyCash = function(){
+
+                    JsDataService.ExecSQLProc('@Html.EncryptSQL("pPettyCashApprove")',
+                        {
+                            'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                            'ID_CurrentUser': '#ID_CurrentUser'
+                        }
+                            ).then(function (response) {
+                                defer.resolve();
+                            }, function () {
+                                defer.reject();
+                    });
+
+                 return defer.promise;
+            };
+
+            JsDataService.Validate('@Html.EncryptSQL("pValidatePettyCash")',
+            {
+                'IDs':  Enumerable.From(Items).Select('$.ID').ToArray(),
+            }
+            ).then(function (response) {
+                    
+                    if(response.isValid == 1){
+
+                       deferPromise = fApprovedPettyCash();
+                    }else{
+
+                       _.VC.ShowValidation([response]);
+
+                    
+                       defer.reject();
+                    }
+   
+            }, function () {
+                defer.reject();
+            });
+          
+
+            return defer.promise;
+        }
+
+        VC_PettyCash.prototype.isApprovedValid = function () {
+
+            var _ = this;
+            var VC = this.VC;
+
+            var CurrentObject = VC.$scope.CurrentObject;
+            var isValid = true;
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            return isValid;
+
+        }
+
+        VC_PettyCash.prototype.Cancel = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPettyCashCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+  
+        return VC_PettyCash;
+    });
+//</script>
+</text> , false);

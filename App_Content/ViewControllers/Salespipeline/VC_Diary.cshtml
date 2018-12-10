@@ -1,0 +1,285 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '@BaseVCUrl'], function (app, Base) {
+
+        var VC_Diary = function () { }
+
+        VC_Diary.prototype = Object.create(Base.prototype);
+        console.log('xxx');
+        VC_Diary.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+            var SQL = '';
+            switch (VC.CurrentUser.ID_UserGroup) {
+                case 4:
+                    SQL = '@Html.EncryptSQL("SELECT ID, Name FROM vEmployeeSales WHERE ID_BusinessUnit = @ID_BusinessUnit AND ID NOT IN (#ID_CurrentUser)")';
+                    break;
+                default:
+                    SQL = '@Html.EncryptSQL("SELECT ID, Name FROM vEmployeeSales")';
+                    break;
+            }
+
+            if (VC.CurrentUser.ID_UserGroup !== 5) {
+
+                VC.AddActionFilter({
+                    name: 'VC_Employee',
+                    caption: 'Account Executive',
+                    SQL: SQL,
+                    params: {
+                        ID_BusinessUnit: VC.CurrentUser.ID_BusinessUnit
+                    },
+                    width: 250,
+                    defaultItems: [
+                        {
+                            ID: -2,
+                            Name: '(All)'
+                        },
+                        {
+                            ID: -1,
+                            Name: '(My Diary)'
+                        }
+                    ],
+                    value: ( VC.CurrentUser.ID_UserGroup  === 4 ? -2 : - 1 )
+                });
+            }
+        }
+
+        VC_Diary.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+
+            var _ = this;
+            if (this.ID_ViewType === 2) {
+
+                VC.CustomSave = VC.Save;
+
+                VC.Save = function () {
+                    if (VC.$scope.CurrentObject.ID_Opportunity !== null) {
+                        if (VC.$scope.CurrentObject.ID_Stage !== 5 && VC.$scope.CurrentObject.ID_Stage !== 6) {
+                            VC.JSDataService.Query('@Html.EncryptSQL("SELECT ID, Name FROM tDiaryType WHERE isActive = 1")').then(function (data) {
+                                var DiaryTypes = data.collection;
+                                app.$modal().Show({
+                                    Template: '<div dx-form="FormOptions" style="padding:10px"></div>',
+                                    title: 'To Do',
+                                    width: 350,
+                                    //height: '100%',
+                                    closeOnConfirm: false,
+                                    InitController: function (s) {
+
+                                        var Form = null;
+
+                                        s.CurrentObject = {
+                                            Date: new Date(),
+                                            ID_Type: null,
+                                            Note: null
+                                        }
+
+                                        s.FormOptions = {
+                                            bindingOptions: {
+                                                'formData.Date': 'CurrentObject.Date',
+                                                'formData.ID_Type': 'CurrentObject.ID_Type',
+                                                'formData.Note': 'CurrentObject.Note',
+
+                                            },
+                                            formData: s.CurrentObject,
+                                            showColonAfterLabel: false,
+                                            onInitialized: function (e) {
+                                                Form = e.component;
+                                            },
+                                            items: [
+                                                {
+                                                    dataField: 'Date',
+                                                    editorType: 'dxDateBox',
+                                                    validationRules: [{
+                                                        type: 'required',
+                                                        message: 'Date is required'
+                                                    }],
+                                                    editorOptions: {
+
+                                                    }
+                                                }, {
+                                                    dataField: 'ID_Type',
+                                                    editorType: 'dxSelectBox',
+                                                    validationRules: [{
+                                                        type: 'required',
+                                                        message: 'Type is required'
+                                                    }],
+                                                    editorOptions: {
+                                                        items: DiaryTypes,
+                                                        valueExpr: 'ID',
+                                                        displayExpr: 'Name',
+
+                                                    },
+                                                    label: {
+                                                        text: 'Type',
+                                                    }
+                                                }, {
+                                                    dataField: 'Note',
+                                                    editorType: 'dxTextArea',
+                                                    validationRules: [{
+                                                        type: 'required',
+                                                        message: 'Note is required'
+                                                    }],
+                                                    editorOptions: {
+                                                        maxLength: 300,
+                                                        height: 160,
+                                                    }
+                                                }
+                                            ]
+                                        }
+
+                                        s.onPositiveClick = function (d) {
+                                            var result = DevExpress.validationEngine.validateGroup(Form);
+                                            if (result.isValid == true) {
+                                                VC.$scope.CurrentObject.ID_FollowUpType = s.CurrentObject.ID_Type;
+                                                VC.$scope.CurrentObject.FollowUpDate = s.CurrentObject.Date;
+                                                VC.$scope.CurrentObject.FollowUpNote = s.CurrentObject.Note;
+                                                VC.$scope.CurrentObject.IsActive = false;
+
+                                                //
+                                                //
+                                                //
+
+                                                VC.CustomSave().then(function () {
+                                                    VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pCreateDiary")', {
+                                                        'ID_Type': s.CurrentObject.ID_Type,
+                                                        'ID_Opportunity': VC.$scope.CurrentObject.ID_Opportunity,
+                                                        'Date': s.CurrentObject.Date,
+                                                        'Note': s.CurrentObject.Note
+                                                    }).then(function () {
+                                                        d.hide();
+                                                    });
+                                                });
+
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+                            return;
+                        }
+                    }
+                    VC.CustomSave();
+                }
+            }
+        }
+
+        VC_Diary.prototype.onCollectionSource_Load = function (data) {
+            var _ = this;
+            var VC = this.VC;
+
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+            if (ID_UserGroup != 5) {
+                var VC_Employee = VC.ActionFilters.VC_Employee;
+                if (VC_Employee !== -2) {
+                    if (VC_Employee == -1) {
+                        WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID) //Approved
+                    } else {
+                        WhereCriteria.push("ID_CreatedBy = " + VC_Employee) //Approved
+                    }
+                } else {
+                    if (ID_UserGroup == 4) { //BusinessUnitHead
+                        WhereCriteria.push("ID_BusinessUnit = " + VC.CurrentUser.ID_BusinessUnit) //Approved
+                    }
+                }
+            } else {
+                WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID)
+            }
+        }
+
+        VC_Diary.prototype.OnFormInitialized = function (VC) {
+            //Base.prototype.OnFormInitialized.call(this, VC);
+        }
+
+        //
+        //
+        VC_Diary.prototype.onCurrentObjectChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            if (e.dataField == 'ID_Contact') {
+                if (e.value.Email == undefined && e.value.Phone == undefined) {
+                    //console.log(e.value, 'fuck');
+                    return;
+                }
+
+                else {
+                    //console.log(e.value, 'you');
+                    switch (_.CurrentObject.ID_DiaryType) {
+                        case 1: _.CurrentObject.ContactDetails = e.value.Email
+                            break;
+                        case 6: _.CurrentObject.ContactDetails = e.value.Phone
+                            break;
+                        default: _.CurrentObject.ContactDetails = null
+                    }
+
+                }
+            } else if (e.dataField === 'ID_Opportunity') {
+                if (e.value.ID_Stage !== undefined && e.value.ID_Stage !== null) {
+                    VC.$scope.CurrentObject.ID_Stage = e.value.ID_OpportunityStage;
+                } else {
+                    VC.$scope.CurrentObject.ID_Stage = null;
+                }
+            }
+
+        }
+        //
+        VC_Diary.prototype.onLoad = function () {
+            Base.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+            if(_.CurrentObject.ID > -1){
+                if (_.CurrentObject.ID_DiaryType != null) {
+                    VC.setFormReadOnly(true);
+                } else {
+                    _.CurrentObject.ActualDate = new Date();
+                    VC.setFormReadOnly(false);
+                }
+            }else{
+                VC.setFormReadOnly(false);
+            }
+        }
+
+        //
+        //
+        VC_Diary.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            //
+            //
+            //
+            VC.$ID_Customer_OnValueChanged = function (e) {
+                _.CurrentObject.ID_Contact = null;
+
+                var ID_Contact = VC.GetDxControl('ID_Contact');
+                ID_Contact._options.SQL = '@Html.EncryptSQL("select ID, Name from tCustomer_Detail where ID_Customer  = @ID_Customer")'
+                ID_Contact._options.onLoad = function (data) {
+
+                    if (data.params == undefined) data.params = {};
+                    data.params.ID_Customer = _.CurrentObject.ID_Customer > 0 ? _.CurrentObject.ID_Customer : [-1];
+                    //  data.params.ReferenceNo = Enumerable.From(VC.$scope.CurrentObject.SalesInvoice_Details).Select("$.ReferenceNo").Distinct().ToArray();
+                }
+            }
+            VC.$ID_Opportunity_IsDisabled = function () {
+                if (_.CurrentObject.ID_Customer === null) {
+                    //
+                    //
+                    //
+                    _.CurrentObject.ID_Opportunity = null;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        return VC_Diary;
+    });
+//</script>
+</text> , false )

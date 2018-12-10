@@ -1,0 +1,361 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+	
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper' ], function (app, baseModelHelper) {
+
+		//'/JsApp/GetScript?Url=@{@BaseVCUrl}'
+		
+        var VC_DisbursedCheck = function () {
+			this.DocModuleParent = 'AccountsPayable';
+            this.DocDetailPropertyName = 'DisbursedCheck_Details';
+        }
+
+        VC_DisbursedCheck.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_DisbursedCheck.prototype.onInitListView = function (VC) {
+            var _ = this;
+            if(_.ID_ViewType == 2){
+                
+            }
+			
+			 VC.AddActionFilter({
+				name: 'VC_StatusFilter',
+				caption: 'Filing Status',
+				width: '150px',
+				SQL: '@Html.EncryptSQL("SELECT * FROM vFilingStatusFilter WHERE ID IN (-1,-3,-2,1,14,7) ORDER BY ID")',
+				placeholder: 'Select Status',
+				value: -3
+			});
+			
+            _.OnOpenDetailView = function (data, CurrentObject) {
+				//console.log(data,'data',CurrentObject)
+				//return;
+                data.ID = VC.LvModel.ID_ModelObject * data.ID_CurrentObject;           
+                if (data.params == undefined) data.params = {};
+                data.params.ID_Model = CurrentObject.ID_Model;
+				data.params.ID_Ref = CurrentObject.ID_Ref;
+            }
+        }
+
+        VC_DisbursedCheck.prototype.Init = function (VC) {
+            var _ = this;
+			VC.IsFormReadOnly = true;
+
+            baseModelHelper.prototype.Init.call(this, VC);   
+			
+			var toastr = angular.element(document).injector().get('toastr');
+
+			var showDateClearedBox = function(title,items){
+                var $q = app.$GetAsync();
+                var defer = $q.defer();
+                app.$modal().Show({
+                    ViewSrc: 'App_Content/ViewControllers/Templates/EditSerial.tpl.html',
+                    title: title,
+                    width: 550,
+                    height: 300,
+                    closeOnConfirm: true,
+                    showCloseButton: false,
+                    InitController: function ($scope) {
+                        $scope.Data = items;
+
+                        $scope.GridOption = {
+							height: 230,
+                            columnAutoWidth: true,
+                            rowAlternationEnabled: true,
+                            columns: [
+                                { dataField: 'ID_Ref', dataType: 'number', caption: 'Ref No.' ,allowEditing: false},
+                                { dataField: 'CheckNo', dataType: 'string', caption: 'Check Number',allowEditing: false },
+                                { dataField: 'DCMDate', dataType: 'date', caption: 'Date Clear/Bounce', allowEditing: true },
+                            ],
+                            bindingOptions : {
+                                'dataSource' : 'Data'
+                            },
+                            editing: {
+                                editEnabled: true,
+                                editMode: 'cell',
+                                insertEnabled: false,
+                                removeEnabled: false
+                            },
+                            onRowUpdated: function(e){
+                                //console.log(e)
+                            }
+
+                        }
+
+                        $scope.onPositiveClick = function () {
+                            VC.$timeout(function () {
+                                defer.resolve($scope.Data);
+                            },500);
+                        };
+
+
+                        $scope.onNegativeClick = function () {
+                            //console.log('reject')
+                            defer.reject();
+                        };
+                    }
+                });
+
+
+
+                return defer.promise;
+            }
+			
+			var UpdateStatus = function(ID_FilingStatus,Caption){
+
+					var Selected = [];
+					if(_.ID_ViewType == 1){
+						Selected = VC.Grid.getSelectedRowsData();
+					}
+					if(_.ID_ViewType == 2){
+						Selected = [_.CurrentObject]
+					}
+
+
+					var isAllowed = true;
+					var noCheckDate = false;
+					$.each(Selected,function(i,item){
+							if (item.ID_FilingStatus != 14 && item.ID_FilingStatus != 15 && item.ID > 0) {
+								//isAllowed = true;
+							}else{
+								isAllowed = false;
+							}
+
+							if(item.FilingStatus  == 'Cancelled'){
+								isAllowed = false;
+							}
+							if(item.CheckDate == null || item.CheckDate == undefined){
+								noCheckDate = true;
+							}
+					});
+
+					if(isAllowed == false){
+
+						VC.MsgBox('Selected item(s) has a invalid status');
+						return;
+					}
+
+					if(noCheckDate == true){
+						VC.MsgBox('Please indicate check date on Payment Voucher.');
+						return;
+					}
+
+
+					VC.ConfirmBox('Update Status ' + Caption, 'Disbursed Check Monitoring').then(function () {
+
+							var JsDataService = app.$GetDataService();
+
+							showDateClearedBox(Caption,angular.copy(Selected)).then(function(data){
+                            	
+								var hasNullDate = false;
+								$.each(data,function(i,item){
+                            	    console.log(item)
+                            	    if(item.DCMDate == null){
+                            	        hasNullDate = true
+                            	    }else{
+                            	        item.DCMDate = new Date(item.DCMDate).toLocaleDateString("en-US");
+                            	    }
+                            	});
+                            	if(hasNullDate == true){
+                            	    VC.MsgBox("Date Clear/Bounce is required.");
+                            	    return;
+                            	}
+						
+								var Dates = [];
+                                $.each(data,function(i,item){
+                                    Dates.push({ ID: item.ID_Ref , Date: item.DCMDate })
+                                });
+
+								console.log(Dates)
+								//return;
+								JsDataService.ExecSQLProc(
+									'@Html.EncryptSQL("pDisbursedCheckUpdateStatus")',
+									{
+										'IDs': Dates,
+										'ID_CurrentUser': '#ID_CurrentUser',
+										'ID_FilingStatus' : ID_FilingStatus
+									}
+								).then(function (response) {
+									if(_.ID_ViewType == 2){
+										VC.Reload();	
+									}else{
+										VC.Grid.refresh();
+									}
+																	
+									toastr.success( Caption + ' Successfully', _.ModelName, {
+										closeButton: true
+									});
+															
+								}, function (response) {
+									VC.MsgBox('An error occured', 'Disbursed Check Monitoring');
+								});
+							});
+
+					})
+			}
+				
+		
+			
+				//if (_.ID_ViewType === 2) {
+					  VC.AddToolbarButton({
+						  text: 'Cleared',
+						  IsDisabled: function () {
+
+							var IsDisabled = true;
+
+							var Selected = [];
+							if(_.ID_ViewType == 1){
+								Selected = VC.Grid.getSelectedRowsData();
+							}
+							if(_.ID_ViewType == 2){
+								Selected = [_.CurrentObject]
+							}
+							if(Selected.length == 0 ){
+								return true;
+							}
+ 
+							var isAllowed = true;
+							$.each(Selected,function(i,item){
+									if (item.ID_FilingStatus != 14 && item.ID_FilingStatus != 15 && item.ID > 0) {
+										//isAllowed = true;
+									}else{
+										isAllowed = false;
+									}
+
+									if(item.FilingStatus  == 'Cancelled'){
+										isAllowed = false;
+									}
+							});
+
+							if(isAllowed == true){
+								IsDisabled = false;
+							}
+
+							return IsDisabled;				
+						  },
+						  onItemClick: function () {
+								UpdateStatus(14,'Cleared');
+						  }
+					  });
+					  
+					  
+					  VC.AddToolbarButton({
+						  text: 'Bounced',
+						  IsDisabled: function () {
+
+							var IsDisabled = true;
+
+							var Selected = [];
+							if(_.ID_ViewType == 1){
+								Selected = VC.Grid.getSelectedRowsData();
+							}
+							if(_.ID_ViewType == 2){
+								Selected = [_.CurrentObject]
+							}
+							if(Selected.length == 0 ){
+								return true;
+							}
+
+							var isAllowed = true;
+							$.each(Selected,function(i,item){
+									if (item.ID_FilingStatus != 14 && item.ID_FilingStatus != 15 && item.ID > 0) {
+										//isAllowed = true;
+									}else{
+										isAllowed = false;
+									}
+
+									if(item.FilingStatus  == 'Cancelled'){
+										isAllowed = false;
+									}
+							});
+
+							if(isAllowed == true){
+								IsDisabled = false;
+							}
+							return IsDisabled;
+						  },
+						  onItemClick: function () {
+								UpdateStatus(15,'Bounced');
+						  }
+					  });
+					  
+					  
+					  // VC.AddToolbarButton({
+						  // text: 'Re Deposit',
+						  // IsDisabled: function () {
+							     // if (_.CurrentObject.ID_FilingStatus !== 14 && _.CurrentObject.ID_FilingStatus !== 15 && _.CurrentObject.ID_FilingStatus !== 16 &&  _.CurrentObject.ID > 0) {
+									// return false;
+								// }else{
+									// return true;
+								// }
+						  // },
+						  // onItemClick: function () {
+								// UpdateStatus(16,'Re Deposit');
+						  // }
+					  // });
+				//}
+				
+				
+				
+        }
+		
+		VC_DisbursedCheck.prototype.onCollectionSource_Load = function (data) {
+            var VC = this.VC;
+            var filterValue = VC.ActionFilters.VC_StatusFilter;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+
+            if (filterValue < 0) {
+                switch ( filterValue) {
+                    case -2:
+                        WhereCriteria.push("FilingStatus NOT IN ('Cancelled')");
+                        break;
+                    case -3:
+                        WhereCriteria.push("FilingStatus NOT IN ('Cleared','Cancelled')");
+                        break;
+                }
+            } else {
+				if ( filterValue === 7 ) { 
+					WhereCriteria.push("FilingStatus IN ('Cancelled')");
+				} else {
+					WhereCriteria.push("ID_FilingStatus = " + filterValue) //Cancelled
+				}
+            }
+        };
+        
+		VC_DisbursedCheck.prototype.onInitDetailView = function(VC){
+			baseModelHelper.prototype.onInitDetailView.call(this,VC);
+			var _ = this;
+			
+
+				if (_.CurrentObject.Name === null ){ _.CurrentObject.Name = 'DCM' ; } 
+			
+		}//onInitDetailView
+
+        VC_DisbursedCheck.prototype.OnFormInitialized = function (VC) {
+            var _ = this; 
+	
+
+        }//
+
+        return VC_DisbursedCheck;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+

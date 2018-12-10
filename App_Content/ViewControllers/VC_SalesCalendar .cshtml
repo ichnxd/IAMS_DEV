@@ -1,0 +1,283 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var SalesScheduleUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_SalesSchedule");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseCustom', '@SalesScheduleUrl'], function (app, BaseClass,SalesSchedule) {
+
+        var CalendarViewController = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            //
+            //
+            //
+
+            _.ActionFilters.VC_Employee = _.CurrentUser.ID_Employee;
+            _.ActionFilters.VC_Status = -1;
+            _.ActionFilters.VC_Department = _.CurrentUser.ID_Department;
+
+            var CurrentCellData = null;
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_Employee',
+                caption: 'Account Manager',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM vEmployee WHERE  isActive = 1")',
+                width: 150,
+                icon: 'mdi mdi-account-multiple',
+                isActionFilter: true,
+                value: _.ActionFilters.VC_Employee,
+                defaultItems: [
+                    {
+                        ID: -1,
+                        Name: '(All)'
+                    }
+                ]
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_Department',
+                caption: 'Department',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM dbo.tDepartment WHERE IsActive = 1 ORDER BY Name")',
+                width: 150,
+                isActionFilter: true,
+                value: _.ActionFilters.VC_Department,
+                defaultItems: [
+                     {
+                        ID: -1,
+                        Name : '(All)'
+                     },
+                ]
+            });
+
+
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_Status',
+                caption: 'Status',
+                SQL: '@Html.EncryptSQL("SELECT ID, Name FROM dbo.tSalesScheduleStatus")',
+                width: 150,
+                isActionFilter: true,
+                value: _.ActionFilters.VC_Status,
+                defaultItems: [
+                     {
+                        ID: -2,
+                        Name : '(Not Cancelled)'
+                     },
+                     {
+                         ID: -1,
+                         Name: '(All)'
+                     },
+                ]
+            });
+
+            $scope.BaseMenuOptionItems.push({
+                text: 'Refresh',
+                icon: 'green mdi mdi-refresh',
+                id: 2
+            });
+
+            $scope.onSchedulerContextMenu = function (e) {
+                var data = null;
+                data = $(e.target).parents(".dx-item").data("dxItemData");
+                if (data == null || data == undefined) {
+                    data = $(e.target).data("dxCellData");
+                }
+                CurrentCellData = data;
+            };
+
+            $scope.dxSchedulerOption = {
+                height: '95%',
+                views: ['week', 'month'],
+                currentView: "month",
+                editing: false,
+                onAppointmentClick: function (e) {
+                    e.cancel = true;
+                    _.JsPopUpView.OpenDetailView(9258, {
+                        ID_CurrentObject: e.appointmentData.ID
+                    });
+                },
+                onAppointmentDblClick: function (e) {
+                    e.cancel = true;
+                },
+                onCellClick: function (e) {
+                    e.cancel = true;
+                },
+                dataSource: new DevExpress.data.DataSource({
+                    load: function (loadOptions) {
+                        var defer = _.$q.defer();
+                        _.JSDataService.pGetCurrentObject('@Html.EncryptSQL("pGetSalesSchedules")', {
+                            StartDate: loadOptions.dxScheduler.startDate,
+                            EndDate: loadOptions.dxScheduler.endDate,
+                            ID_Employee: _.ActionFilters.VC_Employee,
+                            ID_Status: _.ActionFilters.VC_Status,
+                            ID_Department: _.ActionFilters.VC_Department
+                        }).then(function (CurrentObject) {
+                            if (CurrentObject.SalesSchedules == null) {
+                                defer.resolve([]);
+                                return;
+                            }
+                            
+                            $.each(CurrentObject.SalesSchedules, function (i, sched) {
+                                sched.startDate = new Date(sched.StartDate);
+                                sched.endDate = new Date(sched.EndDate);
+                                sched.startTime = sched.startDate.toString('hh:mm tt');
+                                //console.log(sched.startTime);
+                            });
+                            defer.resolve(CurrentObject.SalesSchedules);
+                        });
+                        return defer.promise;
+                    }
+                }),
+                //dateCellTemplate: function (cellData, index, container) {
+                //    console.log(container);
+                //    var html = '<div>Jefrey</div>';
+                //    return $(html);
+                //},
+                appointmentTemplate: function (cellData, index, container) {
+
+                    var backgroundColor = '';
+
+                    switch (cellData.ID_SalesScheduleStatus) {
+                        case 1:	//For Confirmation
+                            backgroundColor = '#00c6c6';
+                            break;
+                        case 2:	//Confirmed
+                            backgroundColor = '#008111';
+                            break;
+                        case 3:	//Visited(Done)
+                            backgroundColor = '#001b9d';
+                            break;
+                        case 4:	//Cancelled
+                            backgroundColor = '#ff0000';
+                            break;
+                        case 5:	//Rescheduled
+                            backgroundColor = '#c6a800';
+                            break;
+                    }
+
+                    $(container).css({ 'background-color': backgroundColor });
+
+                    var html = '';
+                    html += '<div class="customer">' + cellData.Customer + '</div>';
+                    html += '<div class="event">' + cellData.Event + '</div>';
+                    html = '<div class="schedule-item">' + html + '</div>';
+                    return $(html)
+                },
+                appointmentTooltipTemplate: 'tooltip-template',
+                onInitialized: function (e) {
+                    _.dxScheduler = e.component;
+                    //_createDropDownAppointmentTemplate
+                    _.dxScheduler._dropDownAppointments._createDropDownAppointmentTemplate = function (appointmentData, appointmentElement, color) {
+                        var container = $('<div class="js-dropdown-appointment"></div>');
+                        var html = '';
+                        html += '<div class="customer">' + appointmentData.Customer + '</div>';
+                        html += '<div class="event">' + appointmentData.Event + '</div>';
+                        html += '<div class="date">' + appointmentData.StartDate + '</div>';
+                        html += '<div class="sales-person">' + appointmentData.SalesPerson + '</div>';
+
+                        var ColorStatus = null;
+                        switch ( appointmentData.ID_SalesScheduleStatus) { 
+                            case 1:
+                                ColorStatus = SalesSchedule.FOR_CONFIRMATION;
+                                break;
+                            case 2:
+                                ColorStatus  = SalesSchedule.CONFIRMED ;
+                                break;
+                            case 3:
+                                ColorStatus = SalesSchedule.VISITED 
+                                break;
+                            case 4:
+                                ColorStatus = SalesSchedule.CANCELLED;
+                                break;
+                            case 5:
+                                ColorStatus = SalesSchedule.RESCHEDULED;
+                                break;
+                        }
+                        html += '<div class="status" style="color:' + ColorStatus + '">' + appointmentData.Status + '</div>';
+                        container.html(html);
+                        appointmentElement.append(container);
+                    }
+                }
+            };
+
+            var menuItemsEmpty = [
+              { text: "Create a Schedule", icon : 'mdi mdi-calendar-plus' },
+              //{ text: "Toggle view" }
+            ];
+
+            var menuItemsAppointment = [
+                { id: 1, text: "For Confirmation" },
+                { id: 2, text: "Confirmed" },
+                { id: 3, text: "Visited(Done)" },
+                { id: 4, text: "Cancelled" },
+                { id: 5, text: "Rescheduled" }
+            ];
+
+            $scope.contextMenuEmptyCellOption = {
+                items: menuItemsEmpty,
+                target: '.dx-scheduler-date-table-cell',
+                onItemClick: function (e) {
+                    if (CurrentCellData == null) return;
+                    _.JsPopUpView.OpenDetailView(9258, {
+                        ID_CurrentObject: -1,
+                        fullScreen: false,
+                        OnSaved: function () {
+                            _.dxScheduler.repaint();
+                        },
+                        params: {
+                            StartDate: CurrentCellData.endDate,
+                            EndDate: CurrentCellData.endDate,
+                        },
+                        OnEditingDone: function () {
+                            _.dxScheduler.repaint();
+                        }
+                    });
+                }
+            };
+
+            $scope.contextMenuAppointmentOption = {
+                items: menuItemsAppointment,
+                target: '.dx-scheduler-appointment',
+                onShowing: function (e) {
+                    this._currentTarget = e.jQEvent.target;
+                },
+                onItemClick: function (e) {
+                    if (this._currentTarget == null || this._currentTarget == undefined) return;
+                    var data = $(this._currentTarget).parents(".dx-item").data("dxItemData");
+                    SalesSchedule.UpdateStatus(data, e.itemData.id).then(function () {
+                        _.dxScheduler.repaint();
+                    });
+                }
+            };
+        }
+        
+        CalendarViewController.prototype = Object.create(BaseClass.prototype);
+
+        CalendarViewController.prototype.OnFilterValueChanged = function (name, e) {
+            this.dxScheduler.repaint();
+        }
+
+        CalendarViewController.prototype.onMenuItemClick = function (e) {
+            var _ = this;
+            switch (e.itemData.id) {
+                case 1:
+                    this.JsPopUpView.OpenDetailView(9258, {
+                        ID_CurrentObject: -1
+                    }).then(function () {
+                        _.dxScheduler.repaint();
+                    });
+                    //
+                    break;
+                case 2:
+                    _.dxScheduler.repaint();
+                    break;
+            }
+        }
+
+        return CalendarViewController;
+    });
+//</script>
+</text> , false )
+

@@ -1,0 +1,64 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, VC_BaseDoc) {
+
+        var VC_JournalVoucher_Detail = function () { }
+        
+        VC_JournalVoucher_Detail.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_JournalVoucher_Detail.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+                
+              
+            };
+
+            //
+            //
+            //
+            //
+
+
+           
+        }
+
+        VC_JournalVoucher_Detail.prototype.onCurrentObjectChanged = function (e) {
+            VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+              var _ = this;
+              var VC = _.VC;
+
+              if (e.dataField === 'ID_Account') {                  
+                  if (e.value != null) {
+                      
+                      if(e.value.Code !== undefined){     
+                            if(e.value.Code !== undefined) _.CurrentObject.Code = e.value.Code;
+                      }
+                      if(e.value.Name !== undefined){
+                            if(e.value.Name !== undefined)  _.CurrentObject.Name = e.value.Name;
+                      }
+
+                      if(e.value.ID_SubsidiaryType !== undefined){                          
+                            _.CurrentObject.ID_SubsidiaryType = e.value.ID_SubsidiaryType;
+                      }
+                      
+                      if(e.value.Description !== undefined) _.CurrentObject.ID_Subsidiary = null;
+                      
+                  }
+              }
+        }
+
+        return VC_JournalVoucher_Detail;
+    });
+//</script>
+</text> , false);
+

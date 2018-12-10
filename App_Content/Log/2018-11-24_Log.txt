@@ -1,0 +1,11 @@
+24/11/2018 9:57:44 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180706_19147_LIVE.dbo.tStudent_Subject'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+24/11/2018 11:21:59 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180706_19147_LIVE.dbo.tTeacher_Student'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+24/11/2018 11:22:30 AM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180706_19147_LIVE.dbo.tTeacher_Student'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+24/11/2018 1:00:12 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180706_19147_LIVE.dbo.tTeacher_Subject'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+24/11/2018 2:26:26 PM:  ---> Cannot insert the value NULL into column 'Name', table 'IAMS_20180706_19147_LIVE.dbo.tClassroomSession'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+24/11/2018 2:57:26 PM: pGetModelFilingStatusAvailable ---> Invalid column name 'ID_FilingStatus'..

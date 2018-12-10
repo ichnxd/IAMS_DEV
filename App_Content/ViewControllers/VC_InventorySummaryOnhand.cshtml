@@ -1,0 +1,151 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl =  Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+
+        var VC_InventorySummaryOnhand = function () { }
+
+        VC_InventorySummaryOnhand.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_InventorySummaryOnhand.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+          
+            if(_.ID_ViewType == 1) {
+
+                var grid = VC.$scope.dataGridOptions; 
+
+                var fGrid_OnContextMenuPreparing =  grid.onContextMenuPreparing;
+
+                grid.onContextMenuPreparing = function(e){
+    
+                    fGrid_OnContextMenuPreparing(e);
+                    var index = -1;
+                    console.log("EEEEEEEE",e.items);
+                    e.items.forEach(function(detail,i) {
+                        // if(detail.text == "Open in new tab"){
+                        //     index = i;
+                        // }
+                        // if(detail.text == "Open in new window"){
+                        //     index = i;
+                        // }
+                        if(detail.text == "Refresh"){
+                            index = i;
+                        }
+                        if(detail.text == "Export to xls"){
+                            index = i;
+                        }
+                    });
+                    if(index > -1){
+                         e.items.splice( index, 1 );
+                    }
+                }
+
+            }
+        }
+
+        VC_InventorySummaryOnhand.prototype.onLoad = function () {
+
+            baseModelHelper.prototype.onLoad.call(this);
+
+            var VC = this.VC;
+
+            if(_.ID_ViewType == 1) {
+
+                var grid = VC.Grid; 
+
+                console.log(grid);
+            }
+        }
+
+        VC_InventorySummaryOnhand.prototype.onInitDetailView = function (VC) {
+            
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+
+            var _onContextMenuPreparing_InventorySummaryPerWarehouses = VC.onContextMenuPreparing_InventorySummaryPerWarehouses;
+            
+            var fRemoveExtraMenuItem = function (e) {
+                for (i = -4; i < 0; i++) {
+                    e.items.shift({
+                        ID: i,
+                        Name: '(All)'
+                    });
+                }
+            }
+            
+            VC.onContextMenuPreparing_InventorySummaryPerWarehouses = function (e) {
+                if(e.rowIndex > -1 ){
+                    
+                    fRemoveExtraMenuItem(e);
+
+                    e.items.unshift({
+                        text: "Transactions",
+                        icon: "fa fa-th-list",
+                    
+                        onItemClick: function () {
+
+                            var rowIndex = e.rowIndex;
+                            var record = VC.$scope.CurrentObject.InventorySummaryPerWarehouses[rowIndex];
+                            
+                            var options =  {
+
+                                params: {
+                                    ID_InventorySummaryPerWarehouse: record.ID
+                                }
+                            };
+
+                            var fLoadInvtSumPerWarehouse = function (options) {
+
+                                var JsDataService = app.$GetDataService();
+
+                                return JsDataService.pGetCurrentObject(
+                                    '@Html.EncryptSQL("pGetInventorySummaryPerWarehouse")',
+                                    {
+                                        'ID': options.params.ID_InventorySummaryPerWarehouse,
+                                        'ID_Session': 0,
+                                    }
+                                );
+                            }
+
+                            fLoadInvtSumPerWarehouse(options).then(function (currentObject) {
+
+                                var $rootScope = app.$rootScope();
+
+                                $rootScope.$emit("CallNewTabMethod", {
+
+                                    ID: app.getRandomInt(),
+                                    Caption: currentObject.ItemName + ' Transaction',
+                                    ID_ViewType: 2,
+                                    ViewID: 10484,
+                                    CurrentObject: currentObject,
+                                    ImageName: '',
+                                });
+                            });
+                        }
+                    });
+                }
+
+            }
+        }
+
+        VC_InventorySummaryOnhand.prototype.onLoad = function (VC) {
+
+        }
+
+
+        return VC_InventorySummaryOnhand;
+    });
+//</script>
+</text> , false)
+

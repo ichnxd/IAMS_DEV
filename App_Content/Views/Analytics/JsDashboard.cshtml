@@ -1,0 +1,27 @@
+﻿
+@{
+    Layout = null;
+}
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        function DashboardController($scope, DashboardSettings) {
+            BaseClass.prototype.Init.call(this, $scope);
+            var _ = this;
+            $scope.InitView = function () {    
+                var form = $("<form/>").attr({
+                    method: "post",
+                    action: '/Analytics',
+                    target: DashboardSettings.ViewId
+                })
+                .append($("<input type='hidden' name='DashboardFileName'/>").attr('value', DashboardSettings.Path))
+                .appendTo('body').submit().remove();
+            };
+        }
+
+        DashboardController.prototype = Object.create(BaseClass.prototype);;
+
+        return DashboardController;
+
+    });
+//</script>

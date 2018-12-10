@@ -1,0 +1,193 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    int ID_View = ModelObject.ID;
+    string ViewName = ModelObject.Name;
+    var ControllerName = ModelObject.ViewControllerName;
+    var VouchersPayableLink = Url.Encode("Doc/AP/VoucherPayable/VouchersPayable");
+
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/DetailView?ID=@{@ID_View}&ViewName=@{@ViewName}&IsBase=1','AcctHelper', '/JsApp/GetScript?Url=@{@VouchersPayableLink}'], function (BaseClass,AcctHelper,VouchersPayable) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+
+            var _ = this;
+
+            _.ComputeTotals = function() {
+
+                var EWTAmt = 0.00;
+                var TaxAmt = 0.00;
+                var GrandTotal = 0.00;
+                var TotalAmt = 0.00;
+                var SubTotal = 0.00;
+
+                if ( $scope.CurrentObject.VouchersPayableDetails != null ) {
+                    $.each($scope.CurrentObject.VouchersPayableDetails, function( i ,detail) {
+
+                        var TaxAmount = 0.00;
+
+                        var VatRate = detail.VatRate;
+
+                        if ( detail.ID_EWT !== null) {
+
+                            detail.EWTAmt = detail.EWTRate * detail.GrandTotal;
+
+                        } else {
+                            detail.EWTAmt = 0.00;
+                        }
+
+
+                        if ( detail.ID_TaxScheme != null ) {
+
+                            TaxAmount = AcctHelper.GetTaxAmt( detail.ID_TaxScheme,detail.VatRate, detail.SubTotal);
+
+                            detail.TaxAmt = TaxAmount;
+
+                            if ( detail.ID_TaxScheme == 1) {
+
+                                detail.GrandTotal = detail.SubTotal + detail.TaxAmt;
+
+                            } else {
+
+                                detail.GrandTotal = detail.SubTotal;
+                            }
+
+                        } else {
+
+                            detail.GrandTotal = detail.SubTotal;
+
+                        }
+
+                        detail.GrandTotal += detail.EWTAmt;
+
+                        TotalAmt += detail.GrandTotal;
+
+                        EWTAmt += detail.EWTAmt;
+                        SubTotal += detail.SubTotal;
+                        TaxAmt += TaxAmount;
+                        GrandTotal += detail.GrandTotal;
+                    });
+                }
+
+                if ( $scope.CurrentObject.VouchersPayableNonTrades != null ) {
+                    $.each($scope.CurrentObject.VouchersPayableNonTrades, function( i ,detail) {
+
+                        SubTotal += ( detail.DebitAmt == null ? 0.00 : detail.DebitAmt );
+
+                        SubTotal += ( detail.CreditAmt == null ? 0.00 : detail.CreditAmt );
+
+                    });
+                }
+
+
+                _.$scope.CurrentObject.TotalAmount = TotalAmt
+                _.$scope.CurrentObject.SubTotal = SubTotal
+                _.$scope.CurrentObject.TaxAmount = TaxAmt;
+                _.$scope.CurrentObject.EWTAmount = EWTAmt;
+                _.$scope.CurrentObject.GrandTotal = GrandTotal;
+
+
+            };
+
+            BaseClass.prototype.Init.call(this,$scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+
+            _.VouchersPayableDetails_onColumnChanged = function(e) {
+
+                if ( e.dataField === 'ID_EWT') {
+
+                    if ( e.data !== null) {
+
+                        e.key.EWTRate = e.data.Rate;
+
+                    } else {
+                        e.EWTRate = 0.00;
+                    }
+
+                }
+
+                _.ComputeTotals();
+
+            }
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.OnFormInitialized = function() {
+            BaseClass.prototype.OnFormInitialized.call( this );
+            var _ = this;
+            _.butBrowseRR.option('onClick',function() { 
+                
+                console.log(_.$scope.CurrentObject.ID_Supplier );
+                if ( !(_.$scope.CurrentObject.ID_Supplier > 0) ) { 
+                    _.MsgBox('Please select a supplier','Vouchers Payable');
+                    return;
+                }
+
+                _.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM dbo.vUnservedReceivingReports WHERE ID_BusinessPartner = @ID_BusinessPartner AND ID NOT IN ( @IDS )")', {
+                    title: 'Select Receiving Report (' + _.$scope.CurrentObject.Supplier + ')',
+                    ID_View: 'C8B507AF-8532-4D32-BEFF-8BC14AC8710F',
+                    params : {
+                        'ID_BusinessPartner' : _.$scope.CurrentObject.ID_Supplier
+                      , 'IDS' : Enumerable.From(_.$scope.CurrentObject.VouchersPayableDetails).Select('$.ID_ReceivingReport').ToArray()
+                    },
+                    onCustomizeColumns : function( columns ) { 
+                        $.each( columns, function(i,c)  { 
+                            if ( c.dataField == "DocumentNo") { 
+                                c.caption = "RR No.";
+                            }
+                            if ( c.dataField == "Date") { 
+                                c.caption = "RR Date";
+                            }
+                        });
+                    }
+                }).then( function(Details)  { 
+                    if ( _.$scope.CurrentObject.VouchersPayableDetails == null ) _.$scope.CurrentObject.VouchersPayableDetails = [];
+                    $.each(Details,function( i , d ) { 
+                        _.$scope.CurrentObject.VouchersPayableDetails.push({
+                            ID : -1,
+                            ID_ReceivingReport : d.ID,
+                            ReceivingReport : d.Name,
+                            RRNo : d.Name,
+                            GrandTotal : 0.00,
+                            SubTotal : d.TotalAmount,
+                            Date : d.Date,
+                            EWT : null,
+                            EWTAmt : 0.00,
+                            ID_EWT : null,
+                            EWTRate : 0.00,
+                            VatRate : 12,
+                            TaxAmt : 0.00,
+                            ID_TaxScheme : null,
+                            TaxScheme : null
+                        });
+                    });
+                });
+            });
+        };
+
+        @{@ControllerName}.prototype.onLoad = function () {
+            this.ComputeTotals();
+            if ( this.$scope.CurrentObject.ID_FilingStatus == 2 || this.$scope.CurrentObject.ID_FilingStatus == 7) {
+                this.setFormReadOnly( true );
+                this.butSave.disabled = true;
+            } else {
+                this.setFormReadOnly( false );
+                this.butSave.disabled = false;
+            }
+            BaseClass.prototype.onLoad.call( this );
+        }
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+});
+//</script>
+</text> , false)

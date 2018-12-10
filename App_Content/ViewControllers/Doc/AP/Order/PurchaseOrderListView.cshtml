@@ -1,0 +1,86 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.ListViewModelObject as dynamic;
+    var ControllerName = ModelObject.ViewControllerName;
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocListView");
+    var PurchaseOrder = Url.Encode("Doc/AP/Order/PurchaseOrder");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@{@PurchaseOrder}' , '/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}', 'AcctHelper'],
+        function (PurchaseOrder,BaseClass,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            //
+            //
+
+            _.Approve = function(items) {
+                return PurchaseOrder.Approve( items );
+            };
+
+            _.Cancel = function(items) {
+                return PurchaseOrder.Cancel( items );
+            };
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.prototype.onContextMenuPreparing = function (e) {
+            BaseClass.prototype.onContextMenuPreparing.call( this , e );
+
+            var itemsSelected = this.Grid.getSelectedRowsData();
+            if ( itemsSelected.length == 0 ) return;
+
+            var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+            if ( ID_Suppliers.length > 1 ) return;
+
+            var FullyServedDocs = Enumerable.From(itemsSelected).Where("$.ID_DocStatus == 3").ToArray();
+
+            if ( FullyServedDocs.length > 0 ) return;
+
+            var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+
+            if ( NotApprovedDocs.length > 0 ) return;
+
+            e.items.push({
+                text : 'Create',
+                //template: "contextItem",
+                items : [
+                    {
+                        text : 'Receiving Report'
+                        , //template: "contextItem"
+                        , onItemClick : function() { 
+                                
+                            AcctHelper.CreateRRFromPO( itemsSelected );
+                        
+                        }
+                    },
+                    {
+                        text : 'Purchase Invoice'
+                        , //template: "contextItem"
+                        , onItemClick : function() { 
+                            
+                            AcctHelper.CreatePurchaseInvoice(itemsSelected,65 );
+                        }
+                    },
+                ]
+
+            });
+           
+        }
+
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+    });
+//</script>
+</text> , false )

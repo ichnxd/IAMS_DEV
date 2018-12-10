@@ -1,0 +1,13 @@
+4/11/2018 7:02:11 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:02:12 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Model', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:02:48 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Model', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:02:48 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:03:15 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Model', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:03:16 PM: _pGetDataSet ---> Cannot insert the value NULL into column 'ID_Type', table 'IAMS_20180410_85354.dbo._tModelProperty'; column does not allow nulls. INSERT fails.
+The statement has been terminated..
+4/11/2018 7:08:19 PM: _pGetDataSet ---> Invalid column name 'SeqnNo'..

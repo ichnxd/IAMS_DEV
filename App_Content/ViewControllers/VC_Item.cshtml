@@ -1,0 +1,298 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper'], function (app, BaseClass, AcctHelper) {
+
+        var VC_Item = function () { }
+        
+        VC_Item.prototype = Object.create(BaseClass.prototype);
+
+        VC_Item.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+             var _ = this;
+//asdas
+            if(_.ID_ViewType == 2){
+                VC.AddToolBarButtonOnGrid('ItemSuppliers',{
+                    text: 'Add Suppliers',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function(){
+                        VC.BrowseDataSet('@Html.EncryptSQL(@" SELECT ID,Name,FullAddress FROM dbo.tBusinessPartner WHERE IsActive = 1 AND IsSupplier = 1 AND ID NOT IN(@IDs)")',{
+                            title: 'Suppliers',
+                            ID_View: 'E7A3C0BA-0907-44DF-ACA0-448C77542593',
+                            params: {
+                                'IDs':Enumerable.From(_.CurrentObject.ItemSuppliers).Select('$.ID_Supplier').ToArray()
+                            }
+                        }).then(function(data){
+                            if(_.CurrentObject.ItemSuppliers == null || _.CurrentObject.ItemSuppliers == undefined) _.CurrentObject.ItemSuppliers = [];
+
+                            $.each(data,function(i,supplier){
+                                var newDetail = {
+                                    ID: _.rndID(),
+                                    ID_Supplier:supplier.ID,
+                                    Supplier:supplier.Name,
+                                    Cost: 0.00,
+                                    LastUpdatedPrice: 0.00,
+                                    IsActive: true
+                                }
+
+                                _.CurrentObject.ItemSuppliers.push(newDetail);
+                            });
+                        });
+                    }          
+                }, true);
+
+
+
+                VC.ItemConversions_onColumnChanged = function (e) {
+                    var Item = e.key;
+                    if (e.dataField === 'IsStandardPack') {
+                        if (Item.IsStandardPack == false) {
+                            return;
+                        }
+
+                        $.each(_.CurrentObject.ItemConversions, function (index, value) {
+                            if (e.rowIndex != index) {
+                                value.IsStandardPack = false;
+                            }
+                        });
+                    }
+
+                }
+            }
+
+
+                // -- 2017-09-11
+        if(_.ID_ViewType == 1){
+         VC.onContextMenuPreparing = function (e) {
+                var item = e.row.data.ID_Item;
+                e.items.push({
+                    text: "Copy Item",
+                    icon: "fa fa-edit",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                       var itemsSelected = _.Grid.getSelectedRowsData();
+                       console.log(itemsSelected[0].ID)
+                       AcctHelper.Create_Copy_Item(itemsSelected[0].ID);
+                       
+                    }
+                });
+                
+            };
+
+        }
+
+        }
+
+
+        VC_Item.prototype.onCurrentObjectChanged = function (e) {
+
+            BaseClass.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = this.VC;
+
+            if(e.dataField == 'SupplierCode'){
+                //if (e.value == undefined || e.value == null) {
+                    if(VC.$scope.CurrentObject.$dirty === true){
+                        _.CurrentObject.ModelCode = e.value;
+                    }
+                //}
+                
+            }
+
+            if(e.dataField == 'ID_ItemGroup'){
+                console.log(VC.$scope.CurrentObject.$dirty,'dirty',e.value)
+                if (e.value == undefined || e.value == null) {
+                    if(VC.$scope.CurrentObject.$dirty === true){
+                        _.CurrentObject.ID_ItemCategory = null;
+                        _.CurrentObject.ItemCategory = null;
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+
+                }else{
+                    if(VC.$scope.CurrentObject.$dirty === true && e.value.IsActive !== undefined){
+                        _.CurrentObject.ID_ItemCategory = null;
+                        _.CurrentObject.ItemCategory = null;
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+                }
+            }
+
+            if(e.dataField == 'ID_ItemCategory'){
+                if (e.value == undefined || e.value == null) {
+                    if(VC.$scope.CurrentObject.$dirty === true){
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+                }else{
+                    if(VC.$scope.CurrentObject.$dirty === true && e.value.IsActive !== undefined){
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.ItemSubCategory = null;
+                    }
+                }
+            }
+
+            if(e.dataField == ''){
+
+            }
+
+        }
+
+        var ID_Brand_GENERIC = 161;
+        var ID_ItemType_GENERICITEM = 5801;
+
+        VC_Item.prototype.onInitDetailView = function (VC) {
+            BaseClass.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+            //
+            //
+            //
+            //console.log(_.CurrentObject)
+
+
+            VC.CustomSave = VC.Save;
+            VC.Save = function () {
+                if (VC.$FilesToUpload !== null) {
+                    $.each(VC.$FilesToUpload, function (i, o) {
+                        o.isSaveThumbnail = true;
+                    });
+                }
+                VC.CustomSave();
+            }
+
+            VC.ValidationRules.push(function () {
+
+                var brokenRules = [];
+                
+                if(_.CurrentObject.ID_ItemGroup !== 3){
+                    if(_.CurrentObject.ID_ItemColor == undefined || _.CurrentObject.ID_ItemColor == null){
+                        brokenRules.push("Color is required.");
+                    }
+                }
+
+                if (_.CurrentObject.isTrade != true && _.CurrentObject.isNonTrade != true) {
+                    brokenRules.push('Trade or Non trade is required.')
+                    // return { isValid: false, message: 'Model No is required for Trade Category Items.' };
+                }
+
+                if (_.CurrentObject.ID_ItemCategory == 1) {
+                    if (_.CurrentObject.ModelCode == null) {
+                        brokenRules.push('Model No is required.')
+                       // return { isValid: false, message: 'Model No is required for Trade Category Items.' };
+                    } else { 
+                        if (_.CurrentObject.ModelCode.trim().length == 0) {
+                        brokenRules.push('Model No is required.')
+                          //  return { isValid: false, message: 'Model No is required for Trade Category Items.' };
+                        }
+                    }
+
+                    if (_.CurrentObject.SupplierCode == null) {
+                        brokenRules.push('Supplier Code is required.')
+                       // return { isValid: false, message: 'Model No is required for Trade Category Items.' };
+                    } else { 
+                        if (_.CurrentObject.SupplierCode.length == 0) {
+
+                            brokenRules.push('Supplier Code is required.')
+                          //  return { isValid: false, message: 'Model No is required for Trade Category Items.' };
+                        }
+                    }
+                    
+                } 
+
+                var IsStandardPackcount = 0;
+                $.each(_.CurrentObject.ItemConversions,function(i,record){
+
+                    if(record.IsStandardPack == true){
+
+                       IsStandardPackcount++;
+                    } 
+
+                });
+
+                if (IsStandardPackcount > 1) {
+
+                    brokenRules.push('Standard Pack Conversion must assigned atleast one.');
+                } 
+
+                //    Accounting Set Up
+                var ID_Brand = _.CurrentObject.ID_Brand;
+                var ID_ItemType = _.CurrentObject.ID_ItemType;
+
+
+                if(ID_ItemType != ID_ItemType_GENERICITEM ){
+
+                    if((_.CurrentObject.ID_SalesAccount == null || _.CurrentObject.ID_SalesAccount == undefined)){
+
+                        brokenRules.push('Accounting Setup: Sales Account is required')
+                    }
+
+                    if((_.CurrentObject.ID_CostOfSales == null || _.CurrentObject.ID_CostOfSales == undefined)){
+
+                        brokenRules.push('Accounting Setup: COS Account is required')
+                    }
+
+                    if((_.CurrentObject.ID_InventoryAccount == null || _.CurrentObject.ID_InventoryAccount == undefined)){
+                        
+                        brokenRules.push('Accounting Setup: Inventory Account is required')
+                    }
+                }
+                
+                if (brokenRules.length > 0) {
+                    return {
+                        isValid: false,
+                        brokenRules: brokenRules
+                    }
+                }
+
+                console.log(_.CurrentObject);
+
+                return { isValid: true };
+            });
+
+          
+            //var PurchaseHistoryGrid = VC.GetFormItem('PurchaseHistory');
+            //var SalesHistoryGrid = VC.GetFormItem('SalesHistory');
+            
+            //SalesHistoryGrid.editorOptions.onContextMenuPreparing = function (e) {
+            //    var Current = e.row.data;
+            //    e.items.unshift({
+            //        text: 'Open Sales Order (' + Current.SONo + ')',
+            //        icon: 'mdi mdi-open-in-new',
+            //        onItemClick: function () {
+            //            AcctHelper.OpenSalesOrder(Current.ID_SalesOrder);
+            //        }
+            //    });
+            //}
+
+            //SalesHistoryGrid.editorOptions.onRowClick = function (e) {
+            //    AcctHelper.OpenSalesOrder(e.data.ID_SalesOrder);
+            //}
+
+            //PurchaseHistoryGrid.editorOptions.onRowClick = function (e) {
+            //    AcctHelper.OpenPurchaseOrder(e.data.ID_PurchaseOrder);
+            //}
+
+            //PurchaseHistoryGrid.editorOptions.onContextMenuPreparing = function (e) {
+            //    var Current = e.row.data;
+            //    e.items.unshift({
+            //        text: 'Open Purchase Order (' + Current.PONo + ')',
+            //        icon: 'mdi mdi-open-in-new',
+            //        onItemClick: function () {
+            //            AcctHelper.OpenPurchaseOrder(Current.ID_PurchaseOrder);
+            //        }
+            //    });
+            //}
+        }
+
+
+        return VC_Item;
+    });
+//</script>
+</text> , false )

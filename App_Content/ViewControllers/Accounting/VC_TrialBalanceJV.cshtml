@@ -1,0 +1,301 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Accounting/VC_BaseCustomAccounting");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_TrialBalanceJV = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+            
+            var onFirstLoad = true;
+            
+            _.Params = $scope.$Tab.params;
+            _.CurrentObject = _.Params.CurrentObject;
+            _.DateFilter = _.Params.VC_DateFilter;
+            
+            $scope.parentText = {
+                BegDebit: {
+                    value: Globalize.format(_.CurrentObject.BegDebit, "n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    precision:2,
+                    mode: "text",
+                    rtlEnabled: true
+                },
+                BegCredit: {
+                    value: Globalize.format(_.CurrentObject.BegCredit,"n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    mode: "text",
+                    rtlEnabled: true
+                },
+                Debit: {
+                    value: Globalize.format(_.CurrentObject.Debit,"n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    mode: "text",
+                    rtlEnabled: true
+                },
+                Credit: {
+                    value: Globalize.format(_.CurrentObject.Credit,"n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    mode: "text",
+                    rtlEnabled: true
+                },
+                EndDebit: {
+                    value: Globalize.format(_.CurrentObject.EndDebit,"n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    mode: "text",
+                    rtlEnabled: true
+                },
+                EndCredit: {
+                    value: Globalize.format(_.CurrentObject.EndCredit,"n2"),
+                    readOnly: true,
+                    hoverStateEnabled: false,
+                    mode: "text",
+                    rtlEnabled: true
+                }
+            };
+
+
+            var onRowClick = function(e){
+                var $rootScope = app.$rootScope();
+                
+                if(e.data.IsGenerated !== 1 && e.data.IsGenerated !== true){
+                    _.MsgBox("Transaction is not auto generated.","Trial Balance");
+                    return;
+                }
+                if(e.data.ID_Model == undefined) return;
+                var ViewID = e.data.ID_ModelDetailView;
+       
+                $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt(),
+                        Caption: '',
+                        ID_ViewType: 2,
+                        ViewID: ViewID,
+                        ID_CurrentObject: e.data.ID_Doc,
+                        ImageName: ''
+                });
+            };
+
+            var OpenJV = function(e){
+                var $rootScope = app.$rootScope();
+                
+                var ViewID = 5213;
+       
+                $rootScope.$emit("CallNewTabMethod", {
+
+                        ID: app.getRandomInt(),
+                        Caption: '',
+                        ID_ViewType: 2,
+                        ViewID: ViewID,
+                        ID_CurrentObject: e.data.ID_JournalVoucher,
+                        ImageName: ''
+                });
+            };
+            ///---------------
+
+            $scope.TrialBalanceJVData = [];
+            var getParams = function(){
+                return {
+                    'ID': app.getRandomInt(),
+                    'ID_COA': _.CurrentObject.ID,
+                    'ID_Subsidiary': _.CurrentObject.ID_Subsidiary,
+                    'StartDate': _.DateFilter.startDate,
+                    'EndDate': _.DateFilter.endDate,
+                    'ID_Period': _.DateFilter.ID_Period
+                }
+            }
+
+            $scope.BaseMenuOptionItems.push({
+                text: 'View Report',
+                icon: 'jspp-icon js-file-2',
+                isReport: true,
+                reportData: {
+                    Caption: 'Trial Balance Report',
+                    ID_Report: 3127,
+                    ParamsFunction: getParams
+                }
+            });
+            $scope.BaseMenuOptionItems.push({
+                name: 'VC_DateFilter',
+                caption: 'Period',
+                width: 120,
+                isActionDateRange: true,
+                value : 4 // CURRENT MONTH
+            });
+            
+            _.loadParams = function(){
+                if(onFirstLoad == false) _.DateFilter = _.ActionFilters.VC_DateFilter;
+                return {
+                    SQL: '@Html.EncryptSQL("pGetTrialBalanceJV")',
+                    params: {
+                        'ID_COA': _.CurrentObject.ID,
+                        'ID_Subsidiary': _.CurrentObject.ID_Subsidiary,
+                        'StartDate': _.DateFilter.startDate,
+                        'EndDate': _.DateFilter.endDate,
+                        'ID_Period': _.DateFilter.ID_Period
+                    }
+                }    
+
+            };
+
+            $scope.Sum = {}
+
+            _.loadData = function(d) {
+                console.log(d)
+                onFirstLoad = false;
+                $scope.TrialBalanceJVGridOption.dateCaption = ' - ' + d.Caption;
+                $scope.Sum['Debit'] = d.Debit;       
+                $scope.Sum['Credit'] = d.Credit;    
+            };
+
+            _.RefreshData = function (FilterName) {              
+                var TrialBalanceGrid = $('#TrialBalanceJVGrid').dxDataGrid('instance');
+                TrialBalanceGrid.refresh();
+            }
+
+            _.columns = [
+                { dataField: 'ID', dataType: 'number', caption: 'ID' },
+                { dataField: 'Date', dataType: 'date', caption: 'JV Date' ,allowFiltering: false },
+                { dataField: 'DocumentNo', dataType: 'string', caption: 'JV No.' },
+                { dataField: 'Description', dataType: 'string', caption: 'Description' },
+                { dataField: 'BegBal', dataType: 'number', caption: 'Beg. Balance' },
+                { dataField: 'Debit', dataType: 'number', caption: 'Trans. Debit' },
+                { dataField: 'Credit', dataType: 'number', caption: 'Trans. Credit' },
+                { dataField: 'EndBal', dataType: 'number', caption: 'Ending Balance' },
+                { dataField: 'IsGenerated', dataType: 'boolean', caption: 'Auto Generated' }
+                
+            ];
+
+            _.summary = [];
+            _.summary.push({ column:'Debit' , summaryType:'sum',
+                customizeText: function(data) {
+                    return Globalize.format($scope.Sum['Debit'], "n2");
+                }
+            });
+            _.summary.push({ column:'Credit' , summaryType:'sum',
+                customizeText: function(data) {
+                    return Globalize.format($scope.Sum['Credit'], "n2");
+                }
+            });
+            
+            $.each(_.columns,function(i,o){
+
+                o['filterOperations'] = [];
+                o['selectedFilterOperation'] = 'contains';
+
+                 
+                if(o.dataType == 'number' && o.dataField.substring(0,3) !== 'ID_' && o.dataField !== 'ID'){
+                    o['format'] = 'fixedPoint';
+                    o['precision'] = 2;                   
+                }     
+                   
+            });
+
+
+            $scope.filterRow = {
+                visible: true,
+                applyFilter: "auto"
+            };
+            
+            $scope.headerFilter = {
+                visible: true
+            };
+
+
+            $scope.TrialBalanceJVGridOption = {
+                title: 'Trial Balance (' + _.CurrentObject.Name + '/' + _.CurrentObject.Subsidiary + ')',
+                dateCaption: '',
+                columnAutoWidth: true,
+                rowAlternationEnabled: true,
+                hoverStateEnabled: true,
+                showBorders: true,
+                //filterRow: $scope.filterRow,
+                dataSource: {
+                    store: _.getCollection
+                },
+                sorting:{
+                    mode:'none'
+                },
+                columns: _.columns,
+                summary:{
+                    totalItems: _.summary
+                },
+                remoteOperations: true,
+                height: $(window).height() - 270,
+                selection: {
+                    mode: 'single' // 'multiple'
+                },
+                scrolling: {
+                    mode: 'infinite'
+                },
+                onRowClick: function(e){
+                    _.doubleClick(OpenJV,e);
+                },
+                onContextMenuPreparing: function(e){
+                    
+                    if (e.row.rowType === "data") {
+                        
+                        if(e.row.data.IsGenerated === true){
+                            e.items = [{
+                                text: "Open Transaction",
+                                icon: 'mdi mdi-tab',
+                                onItemClick: function () {
+                                    onRowClick(e.row);
+                                }
+                            },{
+                                text: "Open Journal Voucher",
+                                icon: 'mdi mdi-tab',
+                                onItemClick: function () {
+                                    OpenJV(e.row);
+                                }
+                            }];
+                        }else{
+                            e.items = [{
+                                text: "Open Journal Voucher",
+                                icon: 'mdi mdi-tab',
+                                onItemClick: function () {
+                                    OpenJV(e.row);
+                                }
+                            }];
+                        }
+
+                    }
+                }
+                //
+            }
+
+ 
+        }
+
+        VC_TrialBalanceJV.prototype = Object.create(BaseClass.prototype);
+
+        VC_TrialBalanceJV.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+        }
+
+        VC_TrialBalanceJV.prototype.OnFilterValueChanged = function (FilterName,e) {
+            this.RefreshData(FilterName);
+        };
+
+        VC_TrialBalanceJV.prototype.onMenuInitialized = function (e) {
+            //this.RefreshData(null);
+        };
+        
+        return VC_TrialBalanceJV;
+
+    });
+//</script>
+</text> , false )

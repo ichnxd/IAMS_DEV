@@ -1,0 +1,216 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_Consignment = function () {
+            //this.SerialsEnabled = true;
+            this.DocDetailPropertyName = 'Consignment_Details';
+        }
+
+        VC_Consignment.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Consignment.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+
+            VC.AddButtonReport({
+                    Name: 'Consignment Order Form',
+                    ID_Report: 4220,
+                    requireSingleObject: true
+            });
+
+            //
+
+           VC.AddToolbarButton({
+                text: 'Create Item Transfer',
+                IsDisabled : function(){
+                    
+                    if (_.ID_ViewType == 2) {
+                        if(_.CurrentObject.ID_FilingStatus == 2){
+                           return false; 
+                        }
+                    } else {
+                        return false;
+                    }
+                    return true;
+                },
+                onClick: function(){
+                    if (_.ID_ViewType === 1) {
+                    var itemsSelected = _.Grid.getSelectedRowsData();
+                    AcctHelper.Create_ItemTransfer_From_Consignment(itemsSelected);
+                    }
+                    else{
+                    AcctHelper.Create_ItemTransfer_From_Consignment([_.CurrentObject]);
+                    }
+                }
+                
+            });
+
+
+
+            //
+
+
+        }
+
+
+
+        VC_Consignment.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+
+            var _ = this;
+
+            VC.$ID_BusinessPartner_OnValueChanged = function (e) {
+              _.CurrentObject.ID_Branch = null;
+              _.CurrentObject.ID_Warehouse = null;
+              _.CurrentObject.Branch = null;
+              _.CurrentObject.Warehouse = null;
+             // if (e.value != null) {
+             //     _.CurrentObject.TradeName = e.value.TradeName;
+             //     _.CurrentObject.Branch = e.value.Branch;
+             // } else {
+             //     _.CurrentObject.TradeName = null;
+             //     _.CurrentObject.Branch = null;
+             // }
+             console.log(e,'BP')
+            }
+
+            VC.$ID_Branch_OnValueChanged = function (e) {
+           
+                if (e.value != null) {
+                  _.CurrentObject.ID_Warehouse = e.value.ID_Warehouse
+                  _.CurrentObject.Warehouse = e.value.Warehouse
+                } else {
+                    _.CurrentObject.ID_Warehouse = null
+                  _.CurrentObject.Warehouse = null
+                }
+            }
+
+
+
+
+        }
+
+
+        VC_Consignment.prototype.isColumnGridEditable = function (PropertyName, e) {
+            var _ = this;
+            var VC = _.VC;
+            console.log(PropertyName,'x')
+            return true;
+        }
+
+
+        VC_Consignment.prototype.OnDetail_ColumnChanged = function (e) {
+
+            var _ = this;
+            var Item = e.key;
+            if (_.SerialsEnabled == true) {
+                if (e.dataField === 'Quantity') {
+                    if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+                        if (e.data.Quantity == 0) return;
+                        e.grid.deselectAll();
+                        console.log('Serials')
+
+                        var DocDetailSerialName = _.DocSerialPropertyName != undefined ? _.DocSerialPropertyName : _.DocDetailPropertyName.substring(0, _.DocDetailPropertyName.length - 1) + '_Serials';
+
+                        Item[DocDetailSerialName] = [];
+
+                        if (_.NewSerials == true) {
+                            for (var i = 0; i < e.data.Quantity; i++) {
+                                Item[DocDetailSerialName].push({
+                                    ID: -1,
+                                    Name: null,
+                                    Code: Item.ItemCode
+                                });
+                            };
+
+                            _.VC.$timeout(function () {
+                                e.grid.selectRowsByIndexes([e.rowIndex]);
+                            }, 500);
+                        } else {
+                            _.BrowseSerials(e, Item, _.CurrentObject.ID_Warehouse);
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+
+        VC_Consignment.prototype.onLoad = function () {
+            var VC = this.VC;
+            var _ = this;
+            baseModelHelper.prototype.onLoad.call(this);
+
+        }
+
+
+        VC_Consignment.prototype.onCurrentObjectChanged = function (e) {
+
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+
+            var _ = this;
+            var VC = this.VC;
+
+
+
+        }
+
+
+
+        VC_Consignment.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pConsignmentApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_Consignment.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pConsignmentCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason' : Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_Consignment;
+
+    });
+//</script>
+</text> , false);

@@ -1,0 +1,49 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_InventoryOnHand = function () { }
+
+        VC_InventoryOnHand.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_InventoryOnHand.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+        }
+
+        VC_InventoryOnHand.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var InventoryHistoryGrid = VC.GetFormItem('InventoryHistoryGrid');
+            InventoryHistoryGrid.editorOptions.onContextMenuPreparing = function (e) {
+                var Current = e.row.data;
+                console.log(Current);
+                e.items.unshift({
+                    text: 'Open Transaction(' + Current.RefNo + ')',
+                    icon: 'mdi mdi-open-in-new',
+                    onItemClick: function () {
+                        var $rootScope = app.$rootScope();
+                        $rootScope.$emit("CallNewTabMethod", {
+                            ID: app.getRandomInt(),
+                            Caption: '',
+                            ID_ViewType: 2,
+                            ViewID: Current.ID_DetailView,
+                            ID_CurrentObject: Current.ID_Doc,
+                            ImageName: ''
+                        });
+                    }
+                });
+
+            }
+        }
+
+        return VC_InventoryOnHand;
+    });
+//</script>
+</text> , false)
+

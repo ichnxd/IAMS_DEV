@@ -1,0 +1,51 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+   Layout = null;
+   //var BaseVCUrl = null; //Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        var VC_BOQ_Services = function () {
+            //this.DocDetailPropertyName = "Contacts";
+        }
+       
+        VC_BOQ_Services.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BOQ_Services.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            
+        }
+
+        VC_BOQ_Services.prototype.onCurrentObjectChanged = function (e) {
+            var VC = this.VC;
+            var _ = this;
+            var CurrentObject = VC.$scope.CurrentObject;
+            if(e.dataField == "ID_Item"){
+
+                if(e.value !== null)
+                {
+                     if(e.value.Code !== null && e.value.Code !== undefined)
+                        {
+                        _.CurrentObject.Name = e.value.Name ;
+                        _.CurrentObject.DisplayName = e.value.Name ;
+                        _.CurrentObject.SKUcode = e.value.SKUCode;
+                        _.CurrentObject.Code = e.value.Code;
+                        }
+                }
+                else{
+                        _.CurrentObject.Name = null ;
+                        _.CurrentObject.DisplayName = null ;
+                        _.CurrentObject.SKUcode = null;
+                        _.CurrentObject.Code = e.value.Code;
+                }
+   
+            }
+        };
+
+        return VC_BOQ_Services;
+    });
+//</script>
+</text> , false )

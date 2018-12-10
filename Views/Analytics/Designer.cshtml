@@ -1,0 +1,46 @@
+﻿@model DevExpress.XtraReports.UI.XtraReport
+@using System.Web.Mvc.Html;
+@using DevExpress.Web.Mvc.UI;
+@using DevExpress.Web.Mvc;
+@using System.Web.Optimization;
+@using System.Dynamic;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html style="height:100%">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Report Designer</title>
+    @Html.DevExpress().GetScripts(
+        new Script { ExtensionSuite = ExtensionSuite.Dashboard },
+        new Script { ExtensionSuite = ExtensionSuite.Editors }
+    )
+    @Html.DevExpress().GetStyleSheets(
+        new StyleSheet { ExtensionSuite = ExtensionSuite.Dashboard },
+        new StyleSheet { ExtensionSuite = ExtensionSuite.Editors }
+    )
+    <script>
+        function beforeRender(sender) {
+            //var extension = new DevExpress.JS.Dashboard.Designer.Extensions.WorkingModeExtension(sender.getDesigner());
+            //extension.allowSwitchToDesigner(false);
+            //designer.registerExtension(extension);
+        }
+    </script>
+</head>
+<body style="margin:0;height: 100% !important;" id="JSWebApp">
+    <div id="#Dashboard" style="position: absolute; left: 0; right: 0; top:0; bottom:0;">
+            @Html.DevExpress().Dashboard(settings => {
+           settings.Name = "designer";
+           settings.Width = Unit.Percentage(100);
+           settings.Height = Unit.Percentage(100);
+           //settings.InitialDashboardId = "IAMSDashboard 1";
+           settings.EnableCustomSql = true;
+           settings.ClientSideEvents.BeforeRender = "beforeRender";
+       }).GetHtml()
+    </div>
+</body>
+</html>
+
+

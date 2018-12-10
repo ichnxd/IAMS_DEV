@@ -1,0 +1,27 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_Supplier = function () { }
+
+        VC_Supplier.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Supplier.prototype.onInitListView = function (VC) {
+            var _ = this;
+            _.OnOpenDetailView = function (data, CurrentObject) {
+                data.ID = VC.LvModel.ID_ModelObject * data.ID_CurrentObject;
+      
+                if (data.params == undefined) data.params = {};
+                data.params.IsSupplier = true;
+            }
+        }
+        
+        return VC_Supplier;
+    });
+//</script>
+</text> , false )

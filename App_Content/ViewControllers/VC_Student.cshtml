@@ -1,0 +1,38 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, BaseClass) {
+
+        var VC_Student = function () { }
+
+        VC_Student.prototype = Object.create(BaseClass.prototype);
+
+        VC_Student.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            VC.Student_Details_onColumnChanged = function (e) {
+                if (e.dataField == "ID_Item") {
+                    e.key.Code = e.data.Code;
+                    e.key.Name = e.data.Name;
+                    e.key.SRPAmt = e.data.SRP;
+                    e.key.TotalAmt = e.key.SRPAmt * 1;
+                }
+            }
+            var IsEnabled = false;
+            VC.AddToolbarButton({
+                text: 'Sample',
+                onItemClick: function () {
+                    IsEnabled = !IsEnabled;
+                    VC.setFormReadOnly(IsEnabled);
+                }
+            });
+        }
+
+        return VC_Student;
+    });
+//</script>
+</text> , false )

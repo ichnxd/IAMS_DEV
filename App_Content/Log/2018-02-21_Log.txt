@@ -1,0 +1,2 @@
+2/21/2018 3:08:41 PM: pDeliveryReceiptApprove ---> Cursor Fetch: Implicit conversion from data type varchar to varbinary is not allowed..
+2/21/2018 3:09:39 PM: pDeliveryReceiptApprove ---> Cursor Fetch: Implicit conversion from data type varchar to varbinary is not allowed..

@@ -1,0 +1,385 @@
+﻿#JSWebApp { 
+
+    .Customer_DetailView.js-detailview-container{
+        
+        .dx-layout-manager .dx-tabpanel .dx-multiview-item-content {
+            background-color:#fff;
+            
+        }
+        .tab_General {
+            .dx-multiview-item-content {
+                padding:10px 150px 20px 15px;
+            }
+        }
+    }
+    .Opportunity_DetailView {
+        .EquipmentTab {
+            padding-right:10px;
+        }
+    }
+
+    //.Proposal_DetailView  {
+    .BOMTab, .ServiceTab, .ConditionTab, .PaymentInfoTab, .ProposalTab {
+        padding-left:15px;
+        padding-right:15px;
+    }
+    //}
+    .SalesEndorsement_DetailView {
+        .AttachmentTab {
+            padding-left:20px;
+            padding-right:20px;
+        }
+    }
+
+    .model-comment-window {
+        .dx-popup-title.dx-toolbar {
+            background-color:green;
+            color:#fff;
+        }
+        .dx-toolbar-label .dx-toolbar-item-content>div {
+            &::before {
+                   display: inline-block;
+                   font: normal normal normal 24px/1 "Material Design Icons";
+                   /*font-size: 12px;*/
+                   text-rendering: auto;
+                   line-height: inherit;
+                   padding-right:3px;
+                   -webkit-font-smoothing: antialiased;
+                   -moz-osx-font-smoothing: grayscale;
+                   transform: translate(0, 0);
+                   content: "\F17C";
+                   font-size:16px;
+                   margin-right:5px;
+            }
+        }
+        .dx-closebutton {
+            color:#fff;
+        }
+    }
+
+    .dx-datagrid {
+
+        .dx-datagrid-rowsview {
+
+            //.dx-data-row:not(.dx-selection) {
+            .dx-group-row,
+            .dx-data-row {
+
+                &.OverAged {
+                    td {
+                        background-color:#ffcdcd;
+                    }
+                }
+
+                .js-group-caption {
+                    font-size:12px!important;
+                    color:#000;
+                }
+
+                .js-group-caption,
+                td:not(.JsCellFocus) {
+
+                    &::before {
+                        display: inline-block;
+                        font: normal normal normal 24px/1 "Material Design Icons";
+                        font-size: 12px;
+                        text-rendering: auto;
+                        line-height: inherit;
+                        padding-right:3px;
+                        -webkit-font-smoothing: antialiased;
+                        -moz-osx-font-smoothing: grayscale;
+                        transform: translate(0, 0);
+                    }
+
+                    //&.CurrentUser {
+                    //    //font-weight:bolder;
+                    //    &::before {
+                    //        /*color:darkorange;
+                    //        content: "\F6BB";
+                    //        font-size:15px;*/
+                    //    }
+                    //}
+
+                    &.AuditType {
+                        font-weight:bold;
+                        &::before {
+                            content: "\F3ED";
+                        }
+                        &.Approved,
+                        &.Added {
+                            color:forestgreen;
+                        }
+                        &.Modified {
+                            color:cornflowerblue;
+                        }
+                        &.Cancelled,
+                        &.Deleted {
+                            color:crimson;
+                        }
+                        &.Viewed {
+                            color:darkorange;
+                        }
+                    }
+
+                    &.DiaryType {
+                        font-weight:bold;
+                        color:#5c765f;
+                        &.PhoneCall {
+                            color:#ffa700;
+                            &::before {
+                                content: "\F3F2";    
+                            }
+                        }
+                        &.Meeting {
+                            color:#f68141;
+                            &::before {
+                                content: "\F00E";
+                            }
+                        }
+                        &.Email {
+                            color:#f46331;
+                            &::before {
+                                content: "\F1EE";
+                            }
+                        }
+                    }
+
+                    &.FilingStatus { 
+                         &::before {
+                            content: "\F12F";
+                         }
+                        font-weight:bold;
+                        
+                        &.Canvassed {
+                           color:#013500;
+                           &::before { 
+                               content: "\F3EB";
+                           }
+                        }
+                        &.PartiallyPaid {
+                           color:darkorange;
+                           &::before { 
+                               content: "\F0C1";
+                           }
+                        }
+                        &.Voided,
+                        &.Bounced,
+                        &.Denied,
+                        &.Cancelled {
+                            color:#a00000;
+                            &::before {
+                                content: "\F159";
+                            }
+                        }
+                        &.Filed {
+                            color:#05345d;
+                            &::before {
+                                  content: "\F6FE";
+                            }
+                        }
+                        &.Purchased {
+                            color:seagreen;
+                            &::before {
+                                content: "\F14C";
+                            }
+                        }
+                        &.Cleared,
+                        &.Posted,
+                        &.Approved {
+                            color:#008111;
+                            /*text-decoration:underline!important;*/
+                            &::before {
+                                content: "\F133";
+                            }
+                        }
+                        &.Done,
+                        &.Paid {
+                            color:forestgreen;
+                            font-size:14px;
+                            &::before {
+                                content: "\F5E1";
+                            }
+                        }
+                        &.Liquidated {
+                            color:#3d3d3d;
+                            font-size:14px;
+                            &::before {
+                                content: "\F207";
+                            }
+                        }
+                        &.Released {
+                            color:#005bff;
+                            font-size:14px;
+                            &::before {
+                                content: "\F207";
+                            }
+                        }
+                        
+                    }
+
+                    &.UnitPrice {
+                        background-color:#ffdede;
+                        color:#000!important;
+                    }
+
+                    &.LineTotal,
+                    &.TotalAmount {
+                        font-weight:bold;
+                    }
+
+                    &.DocStatus { 
+                        font-weight:normal;
+                        font-size:10px;
+                        &:before {
+                            content: "\F4F9";
+                        }
+                        &.FullyReturned ,
+                        &.FullyServed {
+                            color:#024202;
+                            font-weight:bolder;
+                            &:before {
+                                content: "\F135";
+                            }
+                        }
+
+                        &.PartiallyReturned ,
+                        &.PartiallyServed {
+                            color:#978001;
+                        }
+
+                        &.Pending {
+                            color:#666;
+                            font-weight:bold;
+                        }
+
+                    }
+
+                    &.ID_BusinessPartner { 
+                        font-weight:bold;
+                    }
+
+                    &.OppStage {
+                        font-size:11px;
+                        font-weight:bold;
+                        color:#5c765f;
+                        &.Introduction {
+                            &::before {
+                                
+                            }
+                        }
+                        &.Won {
+                            &::before {
+                                content: "\F4CE";
+                                color:#c6a800;
+                            }
+                            font-size:12px;
+                            color:#008111;
+                            font-weight:bolder;
+                            text-decoration:underline!important;
+                        }
+                    }
+
+                    &.OppAging {
+                        font-weight:bolder;
+                        color:red;
+                        font-size:14px;
+                        &::before {
+                            content: "\F6C3";
+                            font-size:7px;     
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .TrackerType {
+        font-weight:bold;
+        &.Bugs {
+            color:#ff0000;
+        }
+
+        &.Development {
+            color:#06004f;
+        }
+        &.Modification {
+            color:#c6a800;
+        }
+        &.Done {
+            color:#024202;
+        }
+    }
+
+    .dx-scheduler-appointment {
+                
+        .schedule-item {
+            display:table;
+            height:100%;
+
+            .customer {
+                font-weight:bold;
+            }
+            .event {
+                padding:2px;
+            }
+            .event,
+            .customer {
+                display:table-cell;
+                vertical-align:middle;
+            }
+
+        }
+    }
+
+    .js-dropdown-appointment {
+        width:220px!important;
+        position: relative;
+
+        .customer,.event{
+            font-size:14px;
+        }
+        .customer {
+            font-weight:bold;
+        }
+        .status {
+            font-size:10px;
+            color:#8a8a8a;
+            font-weight:bold;
+            position:absolute;
+            top:0;
+            right:0;
+            text-decoration:underline;
+        }
+    }
+    .DocFilingStatus {
+        color:#fff;
+        opacity:0.80;
+        position:absolute;
+        z-index:100;
+        right:0px;
+        padding:5px 10px 5px 10px;
+        font-size:29px;
+        margin-top:2px;
+        margin-right:2px;
+        border-radius:25px;
+        background-color:#fff;
+        display:none;
+        min-width:150px;
+        text-align:center;
+        &.Filed {
+            color:#000;
+            border:solid 3px #000;
+            display:inline-block;
+        }
+        &.Approved {
+            color:#008111;
+            border:solid 3px #008111;
+            display:inline-block;
+        }
+        &.Cancelled {
+            color:#ff0000;
+            border:solid 3px #ff0000;
+            display:inline-block;
+        }
+    }
+}

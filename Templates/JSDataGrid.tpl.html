@@ -1,0 +1,14 @@
+﻿<div class="toolbar">
+    <div class="btn-group" ng-hide="gridOption.isDetail">
+        <button type="button" class="btn btn-default" ng-click="OnNewClick()"><span class="darkgray mdi mdi-file"></span> New</button>
+        <button type="button" class="btn btn-default" ng-click="OnDeleteClick()" ng-disabled="IsButDeleteEnabled()"><span class="red mdi mdi-close"></span> Delete</button>
+        <button type="button" class="btn btn-default" ng-click="OnEditClick()" ng-disabled="IsButEditDisabled()"><span class="blue mdi mdi-pencil-box-outline"></span> Edit</button>
+        <button type="button" class="btn btn-default" ng-click="OnRefreshClick()"><span class="green mdi mdi-refresh"></span> Refresh</button>
+        <button type="button" class="btn btn-default" ng-click="OnFilterClick()"><span class="orange mdi mdi-filter"></span>Filter</button>
+        <button type="button" class="btn btn-default" ng-click="ToggleMultiSelect()" ng-style="IsMultiSelect && {'font-weight':'bolder'}"><span class="mdi mdi-checkbox-multiple-marked-outline"></span> Multi-Select</button>
+    </div>
+    <div class="btn-group" ng-hide="gridOption.isDetail == undefined">
+        <button type="button" class="btn btn-default" ng-click="OnDetailAdd()"><span class="green darkgray mdi mdi-plus"></span> {{gridOption.ButtonAddCaption}}</button>
+    </div>
+</div>
+<div id="gridContainer" dx-data-grid="dataGridOptions"></div>

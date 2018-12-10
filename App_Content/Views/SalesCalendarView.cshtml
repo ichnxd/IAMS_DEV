@@ -1,0 +1,17 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = "~/Views/BaseView/BaseDashboardView.cshtml";
+}
+<div dx-scheduler="dxSchedulerOption" dx-contextmenu="onSchedulerContextMenu($event)">
+    <div data-options="dxTemplate: {name: 'tooltip-template'}">
+        <div class="sales-calendar">
+            {{StratTime}}
+            <div class="sales-customer">{{Customer}}</div>
+            <div class="sales-event">{{Event}}</div>
+            <div class="sales-person">{{SalesPerson}}</div>
+        </div>
+    </div>
+</div>
+<div dx-context-menu="contextMenuEmptyCellOption"></div>
+<div dx-context-menu="contextMenuAppointmentOption"></div>

@@ -1,0 +1,74 @@
+﻿@using System.Web.Optimization
+<!DOCTYPE html>
+<html ng-app="JSWebApp" style="height:100%!important">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="@Url.Content("~/Content/img/AppIcon.ico")" />
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Styles.Render("~/Content/bootstrap")
+    @Styles.Render("~/Content/dx")
+    @Scripts.Render("~/bundles/angular")
+    @Scripts.Render("~/bundles/dx")
+    @Scripts.Render("~/bundles/appscripts")
+    @{
+
+        if (ViewBag.IsDebug == true)
+        {
+            <script src="~/Content/js/JS_Tabs.js"></script>
+        }
+        else
+        {
+            <script src="~/Content/js/JS_Tabs.min.js"></script>
+        }
+
+    }
+    @Styles.Render("~/Content/appcss")
+    <link href="~/App_Content/Css/AppStyle.min.css" rel="stylesheet" />
+</head>
+<body id="JSWebApp" style="overflow:hidden;height:100%">
+    <div class="loadingStatusMessage outer-div">
+        <div class="inner-div">
+            <div class="loader" style="position:absolute"></div>
+            <div style="display:inline-block">
+                <span class="FontInSys" style="font-size:50px"></span>
+            </div>
+            <div class="message">Please Wait...</div>
+        </div>
+    </div>
+    @RenderBody()
+    @RenderSection("scripts", required: false)
+    @{
+
+        if (ViewBag.IsDebug == true) {
+            <script data-main="/Content/js/main.debug.js" src="~/Scripts/requirejs.js"></script>
+            @*<script>
+                (function () {
+                    app.factory('$exceptionHandler', function () {
+                        return function errorCatcherHandler(exception, cause) {
+                            //console.error(exception);
+                            DevExpress.ui.notify({
+                                position: { my: 'top left', at: 'top left', of: window, offset: '10 10' },
+                                message: exception,
+                                type: 'error',
+                                width: '430px',
+                                closeOnClick: true,
+                                displayTime: 5000
+                            });
+                            if (window.OnClientError) window.OnClientError(exception);
+                        };
+                    })
+                })();
+            </script>*@
+        }
+        else
+        {
+            <script data-main="/Content/js/main.js" src="~/Scripts/requirejs.js"></script>
+        }
+
+    }
+</body>
+</html>

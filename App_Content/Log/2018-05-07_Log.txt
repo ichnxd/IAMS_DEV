@@ -1,0 +1,26 @@
+5/7/2018 11:03:41 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) rand Z,Brand X.
+5/7/2018 11:03:53 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) rand Z,Brand X.
+5/7/2018 11:04:14 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) rand Z,Brand X.
+5/7/2018 11:10:43 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) ,Brand Z,Brand X.
+5/7/2018 11:10:49 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) ,Brand Z,Brand X.
+5/7/2018 11:11:00 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) ,Brand Z,Brand X.
+5/7/2018 11:12:53 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) nd Z,Brand X.
+5/7/2018 11:15:04 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) rand Z,Brand X.
+5/7/2018 11:15:17 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z,Brand X.
+5/7/2018 11:15:23 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z,Brand X.
+5/7/2018 11:20:56 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z.
+5/7/2018 11:21:04 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z.
+5/7/2018 11:21:09 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z.
+5/7/2018 11:21:16 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand Z.
+5/7/2018 11:36:26 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand 123,Brand A,Brand X.
+5/7/2018 11:37:22 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand 123,Brand A,Brand X.
+5/7/2018 11:41:29 AM: pDeliveryReceiptCancel ---> Delivery Receipt has already reference to SI-04135.
+5/7/2018 11:41:33 AM: pDeliveryReceiptCancel ---> Delivery Receipt has already reference to SI-04135.
+5/7/2018 11:43:23 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand xvb,Brand 123,Brand A,Brand X.
+5/7/2018 11:48:57 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand xvb,Brand Z.
+5/7/2018 11:49:16 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand xvb,Brand Z.
+5/7/2018 11:49:30 AM: pDeliveryReceiptApprove ---> Insuficient inventory on hand for item(s) Brand xvb,Brand Z.
+5/7/2018 2:43:29 PM: pItemTransferApprove ---> Insuficient inventory on hand for item(s) Brand A.
+5/7/2018 2:47:13 PM: pItemTransferApprove ---> Insuficient inventory on hand for item(s) Brand A,Brand X.
+5/7/2018 2:49:28 PM: pItemTransferApprove ---> Insuficient inventory on hand for item(s) Brand A.
+5/7/2018 2:49:33 PM: pItemTransferApprove ---> Insuficient inventory on hand for item(s) Brand A.

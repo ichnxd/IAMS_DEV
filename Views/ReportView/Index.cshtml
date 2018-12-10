@@ -1,0 +1,58 @@
+﻿@model DevExpress.XtraReports.UI.XtraReport
+@using System.Web.Mvc.Html;
+@using DevExpress.Web.Mvc.UI;
+@using DevExpress.Web.Mvc;
+@using System.Web.Optimization;
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html style="height:100%">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link rel="icon" href="@Url.Content("~/Content/img/AppIcon.ico")" />
+
+    @Html.DevExpress().GetScripts(
+        new Script { ExtensionSuite = ExtensionSuite.Report }
+    )
+    
+    
+    @Html.DevExpress().GetStyleSheets(
+        new StyleSheet { ExtensionSuite = ExtensionSuite.Report }
+    )
+
+    <style>
+        form {
+            height:100%!important
+        }
+        body {
+            height:100%; margin:0px;
+        }
+    </style>
+    <script type="text/javascript">
+        function DocumentViewer_Init(sender, e) {
+            sender.previewModel.reportPreview.zoom(-1);
+        }
+        function DocumentViewer_onError(sender, e) {
+            console.log(e);
+            alert('Report has encountered error. Please check console.')
+        }
+    </script>
+</head>
+<body>
+    @using (Html.BeginForm())
+    {
+        @Html.DevExpress().WebDocumentViewer(settings => {
+           settings.Name = "documentViewer";
+           settings.Height = Unit.Percentage( 100 );
+           settings.ClientSideEvents.Init = "DocumentViewer_Init";
+           //settings.MobileMode = true;
+           settings.ClientSideEvents.CallbackError = "DocumentViewer_onError";
+        }).Bind(Model).GetHtml()
+    }
+</body>
+</html>
+
+

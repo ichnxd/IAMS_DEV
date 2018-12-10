@@ -1,0 +1,21 @@
+﻿<div class="form-inline row" ng-class="{'has-error' : hasError() }">
+    <label class="control-label">{{caption}}</label>
+    <div class="holder" ng-switch on="type">
+        <input class="form-control" type="text" ng-model="$parent.bindModel" ng-switch-when="String" ng-disabled="ngDisabled">    
+        <input class="form-control" type="text" ng-model="$parent.bindModel" ui-number-mask="2" ng-switch-when="Decimal" ng-disabled="ngDisabled">
+        <input class="form-control" type="text" ng-model="$parent.bindModel" ui-number-mask="0" ng-switch-when="Int" ng-disabled="ngDisabled">
+        <div class="input-group" ng-switch-when="DateTime">
+            <input class="form-control" type="text" ng-model="$parent.bindModel" datetime="yyyy-MM-dd HH:mm a" ng-disabled="ngDisabled" />
+            <span class="input-group-addon">
+                <span class="mdi mdi-calendar"></span>
+            </span>
+        </div>
+        <input class="form-control" type="text" ng-model="$parent.bindModel" datetime="HH:mm a" ng-switch-when="Time" ng-disabled="ngDisabled" />
+        <input class="form-control" type="text" ng-model="$parent.bindModel" datetime="yyyy-MM-dd" ng-switch-when="Date" ng-disabled="ngDisabled" />
+        <textarea class="form-control" type="text" ng-model="$parent.bindModel" ng-switch-when="Text" ng-disabled="ngDisabled"></textarea>
+        <input class="form-control" type="text" ng-model="$parent.bindModel" ng-switch-default ng-disabled="ngDisabled" />
+    </div>
+    <div class="error-message" ng-show="hasError()">
+        <div ng-show="isRequired()">{{caption}} is required</div>
+    </div>
+</div>

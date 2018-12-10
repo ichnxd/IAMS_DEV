@@ -1,0 +1,643 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        "use strict"
+        var VC_BaseInventory = function () { }
+
+        VC_BaseInventory.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BaseInventory.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+
+            var _ = this;
+
+            var DocDetailSerialName = _.DocDetailPropertyName.substring(0,_.DocDetailPropertyName.length -1) + '_Serials';
+
+            if(_.ID_ViewType == 2){
+
+                VC['onContextMenuPreparing_' + _.DocDetailPropertyName] = function (e) {
+                    e.items.unshift({
+                        text: "View Item",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            AcctHelper.ViewItem(e.row.data.ID_Item);
+                        }
+                    });
+
+                    if (_.NewSerials == true) {
+                        if (e.row.data.IsSerialized = true) {
+                            e.items.unshift({
+                                text: "Edit Serials",
+                                icon: "fa fa-edit",
+                                //template: "contextItem",
+                                onItemClick: function () {
+
+                                    var Item = e.row.data;
+                                    var Qty = Item.Quantity == null ? 0 : Item.Quantity;
+                                    Item[DocDetailSerialName] = [];
+                                    var SerialData = []
+
+                                    var count = 0
+                                    while (count < Qty) {
+                                        SerialData.push({
+                                            ID: -1,
+                                            Name: null,
+                                            Code: Item.Item
+                                        });
+                                        count++;
+                                    }
+
+                                    _.VC.JsPopUpView.EditSerial(SerialData, 'Serial(s) for' + Item.Description).then(function (Items) {
+                                        Item[DocDetailSerialName] = Items;
+                                        _.VC.$timeout(function () {
+                                            e.grid.selectRowsByIndexes([e.rowIndex]);
+                                        }, 500);
+                                    });
+
+                                }
+                            });
+                        }
+                    }
+
+                };
+
+                VC.ValidationRules.push(function () {
+                 
+                    var brokenRules = [];
+                    var Details =  VC.$scope.CurrentObject[_.DocDetailPropertyName];
+                if(Details == undefined || Details == null) Details = [];
+                 if(Details !== undefined){
+                        if(Details == null){
+                            Details = [];
+
+                        }
+
+                        if(Details.length == 0){
+                            brokenRules.push('Detail must have atleast one record.');
+                        }
+                  }
+
+
+                    $.each(Details, function (i, d) {
+                        if(_.DocDetailPropertyName !== 'InventoryAdjustment_Details'){
+                            if (d.Quantity == 0 || d.Quantity == null ) {
+                                brokenRules.push('Qty is required on Item (' + d.Description + ')' );
+                            }
+                        }
+
+                    });
+
+                    if(_.SerialsEnabled == true){
+                        $.each(Details, function (index, item) {
+                            var hasNoSerial = false;
+                            if(item[DocDetailSerialName] == undefined || item[DocDetailSerialName] == null){ item[DocDetailSerialName] = []; }
+                            var SerialData = item[DocDetailSerialName];
+                            if (item.IsSerialized === true) {
+                                if (Enumerable.From(SerialData).Where('$.Name == null').ToArray().length > 0) {
+                                    brokenRules.push('Serial(s) is required for Item (' + item.Item + ')');
+                                } else {
+                                    var isSerialsUnique = Enumerable.From(SerialData).Select('$.Name').Distinct().ToArray().length === SerialData.length;
+                                    if (isSerialsUnique === false) {
+                                        brokenRules.push('Serial(s) must be unique for Item (' + item.Item + ')');
+                                    }
+                                }
+                                //console.log(item,'ccc')
+
+                                /*if(item.ActualQuantity > 0){
+                                    if(item.ActualQuantity !== SerialData.length){
+                                        brokenRules.push('Serial(s) count must be same with Quantity for Item (' + item.Item + ')');
+                                    }
+                                }else{
+                                   //-l if((item.Quantity < 0 ?item.Quantity * -1 : item.Quantity  ) !== SerialData.length){
+                                    if(((item.Quantity < 0 ?item.Quantity * -1 : item.Quantity  ) * item.Conversion) !== SerialData.length){
+                                        brokenRules.push('Serial(s) count must be same with Quantity for Item (' + item.Item + ')');
+                                    }
+                                }*/
+
+                            }
+
+                        });//END each
+                    }
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+
+
+                    /*var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+                    var retval = { isValid: true }
+
+                    var getRetval = function(){
+                        if (brokenRules.length > 0) {
+                            return {
+                                isValid: false,
+                                brokenRules: brokenRules
+                            }
+                        }
+
+                        return { isValid: true };
+                    }
+
+                    if(_.UserSerialExemption == undefined || _.UserSerialExemption == null) _.UserSerialExemption = [];
+
+                    if (_.AllowOnHandChecking != null && _.AllowOnHandChecking != undefined && _.UserSerialExemption.includes(VC.CurrentUser.ID) == false){
+                        JsDataService.Query('@Html.EncryptSQL("SELECT ID,OnHand FROM dbo.vInventoryOnHandPerWarehouse WHERE ID_Warehouse = @ID_Warehouse AND ID IN(@IDs) AND OnHand > 0 ")', {
+                            params: {
+                                'IDs': Enumerable.From(Details).Select('$.ID_Item').ToArray(),
+                                'ID_Warehouse': VC.$scope.CurrentObject[_.AllowOnHandChecking.WarehouseName]
+                            }
+                        }).then(function (data) {
+                            $.each(Details, function (i, item) {
+                                var MatchItem = Enumerable.From(data.collection).Where("$.ID ==" + item.ID_Item).ToArray();
+
+                                if (MatchItem == undefined) MatchItem = [];
+                                if(MatchItem.length == 0){
+                                    brokenRules.push('Insuficient stock for item (' + item.Item + ') ');
+                                }else{
+                                     $.each(MatchItem, function (c, d) {
+                                        if(d.OnHand < item.Quantity){
+                                            brokenRules.push('Insuficient stock for item (' + item.Item + ') ');
+                                        }
+                                     });
+                                }
+
+
+                            });
+
+                            defer.resolve(getRetval());
+                        });
+                    }else{
+                        defer.resolve(getRetval());
+                    }
+
+
+
+                    return defer.promise;*/
+                });
+                if(_.SerialsEnabled == true){
+                    var JsDataService = app.$GetDataService();
+
+                    if(VC.$scope.CurrentObject[_.DocDetailPropertyName] == undefined || VC.$scope.CurrentObject[_.DocDetailPropertyName] == null) VC.$scope.CurrentObject[_.DocDetailPropertyName] = [];
+                    var Details =  VC.$scope.CurrentObject[_.DocDetailPropertyName];
+
+
+                    VC.ValidationRules.push(function () {
+                        var items = [];
+                        $.each(Details,function(i,item){
+                            if(item[DocDetailSerialName] == undefined || item[DocDetailSerialName] == null){ item[DocDetailSerialName] = []; }
+                            var SerialData = item[DocDetailSerialName];
+                            if (item.IsSerialized === true) {
+                                items.push({
+                                    'ID': item.ID_Item,
+                                    'Code': '',
+                                    'Name': item.Item,
+                                    'ID_UOM': item.ID_UOM,
+                                    'Quantity': item.ActualQuantity > 0 ? item.ActualQuantity : item.Quantity,
+                                    //'ID_Warehouse': null,
+                                    'OnHand': SerialData.length
+                                });
+                            }
+                        });
+
+                       
+                        return JsDataService.Validate('@Html.EncryptSQL("pValidateItemSerialCount")',
+                              {
+                                    'Items': items
+                              }
+                        );
+                    });
+                };
+                if(_.UserSerialExemption == undefined || _.UserSerialExemption == null) _.UserSerialExemption = [];
+
+                if (_.AllowOnHandChecking != null && _.AllowOnHandChecking != undefined && _.UserSerialExemption.includes(VC.CurrentUser.ID) == false){
+                    var JsDataService = app.$GetDataService();
+                    if(VC.$scope.CurrentObject[_.DocDetailPropertyName] == undefined || VC.$scope.CurrentObject[_.DocDetailPropertyName] == null) VC.$scope.CurrentObject[_.DocDetailPropertyName] = [];
+                    var Details =  VC.$scope.CurrentObject[_.DocDetailPropertyName];
+                    VC.ValidationRules.push(function () {
+                        var items = [];
+                        var brokenRules = [];
+                        var Details =  VC.$scope.CurrentObject[_.DocDetailPropertyName];
+                        if (VC.$scope.CurrentObject[_.AllowOnHandChecking.WarehouseName] == null || VC.$scope.CurrentObject[_.AllowOnHandChecking.WarehouseName] == undefined) {
+                            return { isValid: true };
+                        }
+                        $.each(Details,function(i,item){
+                            if (item.NonInventoriable !== true) {
+                                items.push({
+                                    'ID': item.ID_Item,
+                                    'Code': '',
+                                    'Name': item.Description,
+                                    'ID_UOM': item.ID_UOM,
+                                    'Quantity': item.Quantity,
+                                    'ID_Warehouse': VC.$scope.CurrentObject[_.AllowOnHandChecking.WarehouseName],
+                                    'OnHand': 0
+                                });
+                            }
+                        });
+
+                        return JsDataService.Validate('@Html.EncryptSQL("pValidateItemInventory")',
+                            {
+                                'Items': items
+                            }
+                        );
+
+                    });
+                }
+
+
+
+                if (_.IsAddItemDisabled === undefined || _.IsAddItemDisabled === false) {
+                    VC.AddToolBarButtonOnGrid(_.DocDetailPropertyName, {
+                        text: 'Add Item',
+                        icon: 'mdi mdi-package-variant',
+                        onClick: function () {
+                            VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vItem WHERE IsActive = 1 AND IsPurchase = 1 AND NonInventoriable <> 1 ")', {
+                                title: 'Select Items',
+                                ID_View: 'EA822ECF-6044-40B7-9B8E-B983A8E447C4',
+                                pageSize: 30
+                                ///params: {
+                                ///    'ID_Item': Enumerable.From(_.CurrentObject[_.DocDetailPropertyName]).Select("$.ID_Item").ToArray()
+                                ///}
+                            }).then(function (Items) {
+
+                                if (VC.$scope.CurrentObject[_.DocDetailPropertyName] == null) {
+                                    VC.$scope.CurrentObject[_.DocDetailPropertyName] = [];
+                                }
+                                if(_.UserSerialExemption == undefined || _.UserSerialExemption == null) _.UserSerialExemption = [];
+
+                                $.each(Items, function (i, item) {
+
+                                    var NewDetail = {
+                                        ID: -1,
+                                        ID_Item: item.ID,
+                                        Item: item.Name,
+                                        Name: item.Name,
+                                        ItemCode: item.Code,
+                                        Code : item.Code,
+                                        SupplierCode: item.SupplierCode,
+                                        PartNo : item.PartNo,
+                                        Description: item.Description,
+                                        Quantity: 0,
+                                        UnitPrice: item.SRP,
+                                        UnitCost: item.SRP,
+                                        ID_UOM: item.ID_UOM,
+                                        UOM: item.PrimaryUOM,
+                                        VatAmt: 0.00,
+                                        IsFree : false,
+                                        TaxScheme: 'VAT Inclusive',
+                                        ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                                        IsSerialized : _.UserSerialExemption.includes(VC.CurrentUser.ID) ? false : item.IsSerialized,
+                                        TotalAmount: 0.00,
+                                        DocStatus: '',
+                                        ID_DocStatus: null,
+                                        IsCanvassed: false,
+                                        ID_Customer: null,
+                                        Customer: '',
+                                        Reference: '',
+                                        Comment: null,
+                                        ID_Brand: item.ID_Brand,
+                                        Brand: item.Brand,
+                                        Conversion: item.Conversion,
+                                        ID_DocDetail: 0,
+                                        DocDetail: '',
+                                        LifeSpan: item.LifeSpan,
+                                        NonInventoriable: item.NonInventoriable,
+                                        ID_Warehouse: null,
+                                        ModelCode : item.ModelCode,
+                                        SupplierCode : item.SupplierCode
+                                    };
+
+                                    // may event na sa BaseListViewController
+                                    //if (VC[_.DocDetailPropertyName + '_OnRowInserted'] !== undefined) {
+                                    //    VC[_.DocDetailPropertyName + '_OnRowInserted'](NewDetail);
+                                    //}
+                                    //VC.$timeout(function () {
+                                        VC.$scope.CurrentObject[_.DocDetailPropertyName].push(NewDetail);
+
+                                    //},500);
+
+                                });
+
+                                //var grid = VC.GetGridEditor(_.DocDetailPropertyName);
+                                //grid.refresh();
+                            });
+                        }
+                    }, true);
+                }
+
+            }//------View Type 2
+
+
+            VC[_.DocDetailPropertyName + '_onColumnChanged'] = function( e ) {
+
+                var Item = e.key;
+                if (e.grid.PropertyName === 'InventoryAssembly_Details' && e.dataField === 'Quantity') {
+                    e.grid.deselectAll();
+
+                    $.each(Item.InventoryAssembly_BillOfMaterials, function (index, value) {
+                        value.TotalQty = Item.Quantity * value.Quantity;
+                    });
+
+                    VC.$timeout(function () {
+                        e.grid.selectRowsByIndexes([e.rowIndex]);
+                    }, 500);
+                }
+                if (e.dataField === 'Quantity' || e.dataField === 'ActualQuantity') {
+
+                    if (Item.IsSerialized === true && _.SerialsEnabled === true && Item.NonInventoriable !== true) {
+                        //alert('xxx');
+                        var Qty = 0;
+                        if( e.dataField === 'Quantity' ){
+                            if (Item.Quantity == 0 || Item.Quantity == null || Item.Quantity == undefined) return;
+                            Qty = Item.Quantity;
+                        }
+                        if( e.dataField === 'ActualQuantity' ){
+                            if (Item.ActualQuantity == 0 || Item.ActualQuantity == null || Item.ActualQuantity == undefined) return;
+
+                            Qty = Item.ActualQuantity;
+                        }
+
+                        if (Item[DocDetailSerialName] !== null && Item[DocDetailSerialName] !== undefined)
+                        {
+                            var TempSerials = angular.copy(Item[DocDetailSerialName]);
+
+                            if(VC._DeletedItems === undefined || VC._DeletedItem === null) { VC._DeletedItems = {} }
+
+                            if(VC._DeletedItems[DocDetailSerialName] === undefined || VC._DeletedItems[DocDetailSerialName] === null){
+                                VC._DeletedItems[DocDetailSerialName] = [];
+                            }
+
+                            $.each(TempSerials,function(index,object){
+                                if(object.ID > 0){
+                                    VC._DeletedItems[DocDetailSerialName].push(object);
+                                }
+                            });
+                        }
+
+                        /*if(e.dataField === 'ActualQuantity'){
+                            var variance = Item.ActualQuantity - Item.OnHand;
+                            if(variance < 0){
+                                _.NewSerials = false;
+                            }else{
+                                _.NewSerials = true;
+                            }
+                        }*/
+
+
+                        Item[DocDetailSerialName] = [];
+                        var SerialData = Item[DocDetailSerialName];
+                        e.grid.deselectAll();
+
+                        //For Item Issuance
+                        if(Item.ID_ItemIssuance > 0){
+                            _.VC.JsPopUpView.BrowseDataSet('@Html.EncryptSQL("SELECT ID,Name as SerialNo,Code As Item FROM dbo.tItemIssuance_Detail_Serial WHERE ID_ItemIssuance_Detail = @RefID")', {
+                                ID_View: 'C8271916-EEA4-4FF1-9B68-847B8EA4FE97',
+                                title: 'Select Item Serial (' + Qty + ')',
+                                params: {
+                                    RefID: Item.RefID
+                                }
+                            }).then(function (Serials) {
+                                $.each(Serials,function (i,d) {
+                                    SerialData.push({
+                                        ID: -1,
+                                        Name: d.SerialNo,
+                                        Code: d.Item
+                                    });
+                                });
+                            });
+                        }
+
+                        //
+                        //
+                        //
+
+                        //For New Serials
+
+                        else if(_.NewSerials == true){
+                            var cout = 0
+                            while (cout < Qty) {
+                                SerialData.push({
+                                    ID: -1,
+                                    Name: null,
+                                    Code: Item.Item
+                                });
+                                cout++;
+                            }
+                            _.VC.JsPopUpView.EditSerial(SerialData, 'Serial(s) for' + Item.Description).then(function (Items) {
+                                Item[DocDetailSerialName] = Items;
+                                _.VC.$timeout(function () {
+                                    e.grid.selectRowsByIndexes([e.rowIndex]);
+                                }, 500);
+                            });
+
+                        }
+
+                        //
+                        //
+                        //
+
+
+                        //For Old Serials
+                        else {
+
+                            _.VC.JsPopUpView.BrowseDataSet('@Html.EncryptSQL("SELECT * FROM vInventoryHistory_Serials WHERE ID_Item = @ID_Item")', {
+                                ID_View: '1FB05E10-B7E2-4F36-9ECD-9C7C21FCF462',
+                                title: 'Select Item Serial (' + Qty + ')',
+                                params: {
+                                    ID_Item: Item.ID_Item
+                                }
+                            }).then(function (Serials) {
+                                $.each(Serials,function (i,d) {
+                                    SerialData.push({
+                                        ID: -1,
+                                        Name: d.SerialNo,
+                                        Code: Item.Item
+                                    });
+                                });
+                            });
+                        }
+                    }
+
+
+                    VC.$timeout(function(){
+                        e.grid.selectRowsByIndexes([e.rowIndex]);
+                    },500);
+                }//Quantity
+
+                _.OnDetail_ColumnChanged(e);
+                _.Compute();
+            }
+
+
+            _.BrowseSerials = function (e, Item) {
+                var SQL = '@Html.EncryptSQL("SELECT * FROM vInventoryHistory_Serials WHERE ID_Item = @ID_Item")';
+                var params = {
+                    ID_Item: Item.ID_Item
+                }
+                if (_.SerialReference !== null && _.SerialReference !== undefined) {
+                    SQL = '@Html.EncryptSQL("SELECT * FROM vInventoryHistory_Serials2 WHERE ID_Item = @ID_Item AND ID_Model = @ID_Model AND ID_DocDetail = @ID_DocDetail  ")';
+
+                    params['ID_Model'] = _.SerialReference.ID_Model;
+                    params['ID_DocDetail'] = Item[_.SerialReference.Column];
+
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: '1FB05E10-B7E2-4F36-9ECD-9C7C21FCF462',
+                    title: 'Select Item Serial (' + Item.Quantity + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+
+
+                    var DocDetailSerialName = _.DocSerialPropertyName != undefined ? _.DocSerialPropertyName : _.DocDetailPropertyName.substring(0, _.DocDetailPropertyName.length - 1) + '_Serials';
+
+
+
+                    Item[DocDetailSerialName] = [];
+
+                    $.each(Serials, function (i, d) {
+                        Item[DocDetailSerialName].push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Item
+                        });
+                    });
+                    //
+                    //
+                    //
+
+                    _.VC.$timeout(function () {
+                        e.component.selectRowsByIndexes([e.rowIndex]);
+                        e.component.refresh();
+                    }, 500);
+                });
+            }
+
+        }//------End Init
+
+
+
+        VC_BaseInventory.prototype.onCurrentObjectChanged = function (e) {
+
+              var _ = this;
+              var VC = _.VC;
+              if (e.dataField === "ID_Warehouse") {
+                    if(_.DocDetailPropertyName === 'InventoryAdjustment_Details'){
+                        var Details = VC.$scope.CurrentObject[_.DocDetailPropertyName];
+
+                            if(VC._DeletedItems === undefined || VC._DeletedItem === null) { VC._DeletedItems = {} }
+
+                            if(VC._DeletedItems[_.DocDetailPropertyName] === undefined || VC._DeletedItems[_.DocDetailPropertyName] === null){
+                                VC._DeletedItems[_.DocDetailPropertyName] = [];
+                            }
+
+                            var grid = VC.GetGridEditor(_.DocDetailPropertyName);
+                            grid.deselectAll();
+                            $.each(Details,function(index,object){
+                                if(object.ID > 0){
+                                    VC._DeletedItems[_.DocDetailPropertyName].push(object);
+                                }
+                            });
+                            Details.length = 0;
+                            grid.refresh();
+
+
+                    }
+              }
+              if (e.dataField === "ID_InventoryAdjustmentType") {
+                //_DeletedItems[DocDetailSerialName].push()
+
+                  if(_.SerialsEnabled === true){
+                        var DocDetailSerialName = _.DocDetailPropertyName.substring(0,_.DocDetailPropertyName.length -1) + '_Serials';
+                        var Details = VC.$scope.CurrentObject[_.DocDetailPropertyName];
+                        var grid = VC.GetGridEditor(_.DocDetailPropertyName);
+                        var serialgrid = VC.GetGridEditor(DocDetailSerialName);
+                        grid.deselectAll();
+
+                        if (e.value.ID == 2) {
+                            _.NewSerials = false;
+                            serialgrid.columnOption(1,'allowEditing',false);
+                            serialgrid.columnOption(1,'cssClass','');
+                        }
+                        if (e.value.ID == 1) {
+                            _.NewSerials = true;
+                            serialgrid.columnOption(1,'allowEditing',true);
+                            serialgrid.columnOption(1,'cssClass','editable-cell  js-required');
+                        }
+
+
+
+                        $.each(Details,function(i,item){
+                            var TempSerials = angular.copy(item[DocDetailSerialName]);
+                            if(VC._DeletedItems === undefined || VC._DeletedItem === null) { VC._DeletedItems = {} }
+
+                            if(VC._DeletedItems[DocDetailSerialName] === undefined || VC._DeletedItems[DocDetailSerialName] === null){
+                                VC._DeletedItems[DocDetailSerialName] = [];
+                            }
+
+
+                            $.each(TempSerials,function(index,object){
+                                if(object.ID > 0){
+                                    VC._DeletedItems[DocDetailSerialName].push(object);
+                                }
+                            });
+
+
+                            item[DocDetailSerialName] = [];
+
+                            if(item.IsSerialized == true){
+                                item.Quantity = 0;
+                            }
+                        });
+
+
+
+                        VC.$timeout(function(){
+                            if(Details.length > 0){
+                                grid.selectRowsByIndexes([0])
+                            }
+                        },500);
+                  }
+
+              }
+
+        }
+
+
+        VC_BaseInventory.prototype.OnFormInitialized = function(VC){
+            var _ = this;
+            //var DocDetailSerialName = _.DocDetailPropertyName.substring(0,_.DocDetailPropertyName.length -1) + '_Serials';
+            //console.log(VC.GetGridEditor(DocDetailSerialName))
+        }
+
+        VC_BaseInventory.prototype.OnDetail_ColumnChanged = function () { }
+        VC_BaseInventory.prototype.onDetailRowUpdated = function () { }
+
+        VC_BaseInventory.prototype.Compute = function () { }
+
+        return VC_BaseInventory;
+
+    });
+//</script>
+</text> , false);

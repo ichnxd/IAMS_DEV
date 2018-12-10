@@ -1,0 +1,69 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    //var BaseVCUrl = Url.Encode("Doc/Base/baseModelHelper");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseModelHelper) {
+
+        var VC_Inventory = function () { }
+        
+        VC_Inventory.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_Inventory.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+
+            if (_.ID_ViewType == 2) {
+                
+              
+            };
+
+            //
+            //
+            //
+            //
+            VC.AddToolbarButton({
+                text: 'Compute Inventory',
+                icon: 'mdi mdi-file-outline',
+                requireSingleObject: true,
+                isContextMenu: true,
+                IsDisabled: function () {
+                    return false;
+                },
+                onItemClick: function () {
+
+
+                    VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pInventoryUpdate")', {}).then(function (d) {
+                        VC.ToastSuccess('Compute Done');
+                        if (_.ID_ViewType == 2) {
+                            VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    })
+
+                    
+                }
+            });
+
+           
+        }
+
+        VC_Inventory.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+              var _ = this;
+              var VC = _.VC;
+
+
+        }
+
+        return VC_Inventory;
+    });
+//</script>
+</text> , false);
+

@@ -1,0 +1,1359 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_DeliveryReceipt = function () {
+            this.DocDetailPropertyName = 'DeliveryReceipt_Details';
+            this.ShowBillOfMaterials = true;
+            this.SerialsEnabled = true;
+            this.AddItemWithInventory = true;
+            this.IsAddItemDisabled = true;
+        }
+        
+        VC_DeliveryReceipt.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_DeliveryReceipt.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            //
+            //ss
+            //
+////////////////////////////CONSOLE
+    console.log("ViewController",VC);
+
+            _.IsCanUpdateDoc = function () {
+
+                var VC = _.VC;
+
+                var isDisabled = true;
+
+                if (_.ID_ViewType == 1) {
+
+                    if (VC.Grid === undefined) return false;
+                    var SelectedRows = VC.Grid.getSelectedRowsData();
+                    if (SelectedRows.length != 1) return true;
+                    return !(SelectedRows[0].ID_FilingStatus === 2 && SelectedRows[0].IsDelivered === false);
+
+                } else {
+                    if (_.CurrentObject.ID == -1) {
+                        return true;
+                    }
+                    if (_.CurrentObject.ID_FilingStatus == 2 && _.CurrentObject.IsDelivered == false) {
+                        isDisabled = false;
+                    }
+                }
+                return isDisabled;
+            }
+
+            VC.AddToolbarButton({
+                text: 'Doc Delivered',
+                icon: 'mdi mdi-pencil-box',
+                color: '#009688',
+                isContextMenu: true,
+                IsDisabled: _.IsCanUpdateDoc,
+                onItemClick: function () {
+                    var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+                    var CurrentObjects = null;
+
+
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = _.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [_.CurrentObject];
+                    }
+
+                    var Documents = Enumerable.From(CurrentObjects).Select('$.DocumentNo').ToArray().join();
+                    VC.ConfirmBox("Do you want to Deliver the following Document: <br>" + Documents + "").then(function () {
+
+                        VC.JSDataService.ExecSQLProc('@Html.EncryptSQL("pUpdateDRStatus")', {
+                            IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                            //ID_Session: '#ID_CurrentUser'
+                        }).then(function (response) {
+							VC.ToastSuccess(Documents + ' Successfully Approved');
+							if (_.ID_ViewType == 2) {
+								_.VC.Reload();
+							} else {
+								VC.Grid.refresh();
+							}
+                            defer.resolve();
+                        }, function () {
+                            defer.reject();
+                        });
+                        return defer.promise;
+                    });
+
+                }
+
+
+            });
+            //
+            VC.AddToolbarButton({
+                text:'Template',
+                icon: 'mdi mdi-clipboard-arrow-down',
+                onClick : function(){
+                    //
+                       var content = 'ITRNo,Warehouse,ItemName,SerialNo, Quantity'
+                       var fileName = 'Template.csv'
+                       var mimeType = 'text/csv'
+           
+                       var a = document.createElement('a');
+                       mimeType = mimeType || 'application/octet-stream';
+
+                       if (navigator.msSaveBlob) { // IE10
+                           return navigator.msSaveBlob(new Blob([content], { type: mimeType }),     fileName);
+                       } else if ('download' in a) { //html5 A[download]
+                           a.href = 'data:' + mimeType + ',' + encodeURIComponent(content);
+                           a.setAttribute('download', fileName);
+                           document.body.appendChild(a);
+                           a.click();
+                           document.body.removeChild(a);
+                           return true;
+                       } else { //do iframe dataURL download (old ch+FF):
+                           var f = document.createElement('iframe');
+                           document.body.appendChild(f);
+                           f.src = 'data:' + mimeType + ',' + encodeURIComponent(content);
+
+                           setTimeout(function() {
+                           document.body.removeChild(f);
+                           }, 333);
+                           return true;
+                       }
+                    //
+                }
+            })
+            //
+            if (this.ID_ViewType == 2) {
+
+                  VC.ValidationRules.push(function () {
+                     var items = [];
+                     var brokenRules = [];
+
+                    //  var WRDcount = Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select('$.ID_Item').Where('$.ID_Warehouse_Detail !== undefined').ToArray();
+                    //  var WRDcountnull = Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select('$.ID_Item').Where('$.ID_Warehouse_Detail !== null').ToArray();
+                    //  var WRDcountundef = Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select('$.ID_Item').Where('$.ID_Warehouse_Detail == undefined').ToArray();
+                    //  var xx = Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select('$.ID_Warehouse_Detail').ToArray(); 
+                    //      console.log(WRDcount,'count', WRDcountnull,'null',WRDcountundef,'undef',_.CurrentObject.DeliveryReceipt_Details)
+                    //      if(WRDcount.length > 0){
+                             
+                    //        // $.each(_.CurrentObject.DeliveryReceipt_Details,function(i,d){
+                    //        //       if(d.ID_Warehouse_Dwetail == null || d.ID_Warehouse_Detail == undefined){
+                    //        //           brokenRules.push('Warehouse is required for Item'+d.Item)
+                    //        //       }
+                    //        //});
+                    //      }
+                    //      else{
+                    //          if(_.CurrentObject.ID_Warehouse == null || _.CurrentObject.ID_Warehouse == undefined)
+                    //          {
+                    //              brokenRules.push('Warehouse is required')
+                    //          }
+                              
+                    //      }
+
+                    if(_.CurrentObject.ID_Warehouse == null || _.CurrentObject.ID_Warehouse == undefined)
+                    {
+                        $.each(_.CurrentObject.DeliveryReceipt_Details,function(i,d){
+                            if(d.ID_Warehouse_Detail == null || d.ID_Warehouse_Detail == undefined){
+                                brokenRules.push('Warehouse is required for Item' + d.Item)
+                            }
+                        });
+                    }
+                              
+                        
+                    if(brokenRules.length > 0){
+                       return{
+                           isValid : false,
+                          brokenRules : brokenRules
+                       } 
+                    }
+                    return { isValid: true };
+                });
+
+                //pValidateItemInventory
+                var JsDataService = app.$GetDataService();
+
+                VC.ReloadOnHand = function () {
+                    if (_.CurrentObject.ID_Warehouse == null) {
+                        $.each(_.CurrentObject.DeliveryReceipt_Details, function (index, item) {
+                            item.OnHand = 0;
+                        });
+
+                        return;
+                    }
+
+
+                    JsDataService.Query('@Html.EncryptSQL("Select ID,OnHand From vInventoryOnHandPerWarehouse WHERE ID_Warehouse = @ID_Warehouse AND ID IN(@IDs)")', {
+                        params: {
+                            'ID_Warehouse': _.CurrentObject.ID_Warehouse == null ? 0 : _.CurrentObject.ID_Warehouse,
+                            'IDs': Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select('$.ID_Item').ToArray(),
+                        }
+                    }).then(function (data) {
+                        $.each(_.CurrentObject.DeliveryReceipt_Details, function (index, item) {
+                            item.ID_Item
+                            $.each(data.collection, function (i, o) {
+                                if (o.ID == item.ID_Item) {
+                                    item.OnHand = o.OnHand;
+                                }
+                            });
+                        });
+                    });
+                }
+
+                VC.ValidationRules.push(function () {
+                    var items = [];
+                    var brokenRules = [];
+
+                    if (_.CurrentObject.ID_Warehouse == null) {
+                        return { isValid: true };
+                    }
+
+
+                    VC.ReloadOnHand();
+                    $.each(_.CurrentObject.DeliveryReceipt_Details, function (index, item) {
+                        if (item.NonInventoriable !== true) {
+                            items.push({
+                                'ID': item.ID_Item,
+                                'Code': '',
+                                'Name': item.Description,
+                                'Quantity': item.Quantity,
+                                'ID_Warehouse': _.CurrentObject.ID_Warehouse,
+                                'OnHand': 0
+                            });
+                        }
+                    });
+                    console.log(items,'items')
+                    return JsDataService.Validate('@Html.EncryptSQL("pValidateItemInventory")',
+                        {
+                            'Items': items
+                        }
+                    );
+                });
+
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+
+                    var IsExcess = false;
+
+                    $.each(_.CurrentObject.DeliveryReceipt_Details, function (index, item) {
+
+                        if (item.NonInventoriable !== true) {
+                            if (item.Quantity > item.OnHand) {
+                                brokenRules.push('Insuficient inventory on hand(' + item.OnHand + ') for (' + item.Item + ')');
+                            }
+                        }
+
+                        if (item.ID_DocDetail > 0) {
+                            if (item.RefQuantity < item.Quantity) {
+                                IsExcess = true;
+                            }
+                        }
+                    });
+
+                    if (IsExcess) {
+                        brokenRules.push('Cannot accept excess Quantity');
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+
+                 VC.AddToolbarButton({
+                      text: 'Import',
+                      IsDisabled: function () {
+                          if(_.CurrentObject.ID_FilingStatus != 1){
+                            return true;
+                          }
+
+                          return false;
+                      },
+                      onItemClick: function () {
+                            //
+                            JsDataService.UploadCSV(
+                                    '@Html.EncryptSQL("pImport_TransferItems")', 
+                                    null, 
+                                    'Import Item Transfer Item'
+                                ).then(function (data) {
+                                    
+                              var ImportedData = data['_'];
+                              $.each(ImportedData, function (i, item) {
+                                  var NewDetail = {
+                                         Description             : item.Item,
+                                         Quantity                : item.Quantity,
+                                         ID_Warehouse_Detail     : item.ID_Warehouse,
+                                         UOM                     : item.UOM,
+                                         ID_UOM                  : item.ID_UOM,
+                                         Item                    : item.Item,
+                                         UnitPrice               : item.UnitPrice,
+                                         Warehouse_Detail        : item.Warehouse_Detail,
+                                         ID_Item                 : item.ID_Item,
+                                         ID_DocDetailParentModel : 3224,
+                                         OnHand                  : item.OnHand,
+                                         IsFree                  : 0,
+                                         IsSerialized            : item.IsSerialized
+                                  };
+
+                                 console.log(NewDetail.ID_Warehouse_Detail)
+                                  var Serials = Enumerable.From(data['Serials']).Where("$.ID ==" + NewDetail.ID_Item + " &&  $.Cost == " + NewDetail.UnitPrice +  "&& $.ID_Warehouse == "+ NewDetail.ID_Warehouse_Detail +" && $.ID_UOM == " + NewDetail.ID_UOM).ToArray();
+                                  var NewSerials = [];
+                                  console.log(Serials,data['Serials'] )
+                                  $.each(Serials,function(i,item){
+                                        NewSerials.push({
+                                                ID: -1,
+                                                Name: item.SerialNo,
+                                                Code: item.Item,
+                                                ID_DocParent: item.ID_DocParent,
+                                                ID_DocDetail: item.ID_DocDetail
+                                        });
+                                  });
+                              
+                                  NewDetail['DeliveryReceipt_Detail_Serials'] = NewSerials;
+                                 
+                                  VC.$timeout(function () {
+                                      _.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+                                      _.CurrentObject.ID_BusinessPartner = item.ID_BusinessPartner
+                                      _.CurrentObject.BusinessPartner = item.BusinessPartner
+                                  }, 500);
+                              });
+                          });
+                          //
+
+                      }
+                  });
+            }
+            
+
+
+            VC.AddButtonReport({
+                Name: 'Delivery Receipt Form',
+                ID_Report: 1022,
+                requireSingleObject: true
+            });
+            VC.AddButtonReport({
+                Name: 'Delivery Receipt Form with Cost',
+                ID_Report: 1028,
+                requireSingleObject: true
+            });
+            var fcreateSalesInvoicebyDRDetails = function () {
+
+                if (_.ID_ViewType === 1) {
+
+                    var itemsSelected = _.Grid.getSelectedRowsData();
+
+                    AcctHelper.Create_SalesInvoice_From_DeliveryReceipt(itemsSelected);
+
+
+                } else if (_.ID_ViewType === 2) {
+
+                    AcctHelper.Create_SalesInvoice_From_DeliveryReceipt([_.CurrentObject]);
+                }
+            }
+
+           var fcreateWarranty = function () {
+
+                if (_.ID_ViewType === 1) {
+
+                    var itemsSelected = _.Grid.getSelectedRowsData();
+
+                    AcctHelper.Create_Warranty_From_DeliveryReceipt(itemsSelected);
+
+
+                } else if (_.ID_ViewType === 2) {
+
+                    AcctHelper.Create_Warranty_From_DeliveryReceipt([_.CurrentObject]);
+                }
+            }
+            var btnBrowsedSalesOrder = {
+                text: 'Sales Order',
+                onItemClick: function () {
+                    if (_.ID_ViewType != 2) return;
+                    if (VC.$scope.CurrentObject.ID_BusinessPartner == 0 || VC.$scope.CurrentObject.ID_BusinessPartner == null) {
+                        VC.MsgBox("Please Select Customer", "Delivery Report");
+                        return;
+                    }
+
+                    var JsPopUpView = app.$GetPopupView();
+                    JsPopUpView.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,ID_Item,ItemCode,item,Description,Quantity,ID_CustomerOrderType,
+																Balance,UnitPrice,ID_UOM,UOM,VatAmt,TaxScheme,ID_TaxScheme,DeliveryAddress,DeliveryDate,
+																TotalAmount,ReferenceNo,SalesMan,ID_SalesMan,ID_PaymentTerm,ID_SalesOrder,
+																ID_Warehouse_Detail,Warehouse_Detail , SONo, IsFree,IsSerialized,OnHand,
+                                                                PurchaseOrderNo, PurchaseOrderDate,ID_Brand, Conversion,SpecialRemarks,InstallationRemarks,TenderBiz,Location,Warranty,Address,NonInventoriable
+																,PaymentTransactionNo, CustomerEmployee, isBundle
+                                                                FROM vPendingSalesOrder 
+																WHERE ID_BusinessPartner = @ID_BusinessPartner AND Balance > 0")', {
+                        ID_View: 'EAFA3EBA-BFBE-44F2-BCA6-E4235ED69597',
+                        params: {
+                            ID_BusinessPartner: VC.$scope.CurrentObject.ID_BusinessPartner
+                        },
+                        title: 'Select Sales Order Items'
+                    }).then(function (SelectedItems) {
+
+                        if(SelectedItems.length > 0){
+                            if(SelectedItems[0].ID_CustomerOrderType == 6){
+                                var DeliveryAddresses = Enumerable.From(SelectedItems).Select("$.DeliveryAddress").Distinct().ToArray();
+                                if(DeliveryAddresses.length > 1){
+                                    VC.MsgBox('Cannot add EPP Sales with different delivery address.');
+                                    return;
+                                }
+                            }  
+                        }
+
+                        $.each(SelectedItems, function (i, record) {
+                            if (VC.$scope.CurrentObject.DeliveryReceipt_Details == null) VC.$scope.CurrentObject.DeliveryReceipt_Details = [];
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                ID_Item: record.ID_Item,
+                                ItemCode: record.ItemCode,
+                                Item: record.item,
+                                Description: record.Description,
+                                Quantity: 0,
+                                Balance: null,
+                                UnitPrice: record.UnitPrice,
+                                ID_UOM: record.ID_UOM, 
+                                UOM: record.UOM,
+                                VatAmt: record.VatAmt,
+                                TaxScheme: record.TaxScheme,
+                                ID_TaxScheme: record.ID_TaxScheme,
+                                TotalAmount: record.TotalAmount,
+                                NonInventoriable: record.NonInventoriable,
+                                DocStatus: '',
+                                ID_DocStatus: null,
+                                ReferenceNo: record.ReferenceNo,
+                                Comment: null,
+                                RefQuantity: record.Balance,
+                                IsFree: record.IsFree,
+                                ID_DocDetail: record.ID,
+                                ID_Warehouse_Detail: record.ID_Warehouse_Detail,
+                                Warehouse_Detail: record.Warehouse_Detail,
+                                IsSerialized: record.IsSerialized,
+                                OnHand: record.OnHand,
+                                ID_DocDetailParentModel: AcctHelper.Model_ID_SalesOrder,
+                                ID_Brand: record.ID_Brand,
+                                Conversion: record.Conversion,
+                                ID_SalesOrder: record.ID_SalesOrder,
+                                ID_SalesOrder_Detail:record.ID,
+                                ID_ItemRequest: 0,
+                                ID_ItemRequest_Detail:0,
+                                DeliveryDate: record.DeliveryDate,
+                                DeliveryAddress: record.ID_CustomerOrderType == 6 ? record.DeliveryAddress : null ,
+                                ID_CustomerOrderType: record.ID_CustomerOrderType,
+                                isBundle : record.isBundle
+                            };
+
+                            VC.$timeout(function () {
+
+                                VC.$scope.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+                                //
+
+                                if(record.isBundle == true)
+                                {
+                                    var JsDataService = app.$GetDataService();
+                                    JsDataService.Query('@Html.EncryptSQL("Select * From vItemBundles WHERE ID_Parent = @ID_Parent")', {
+                                        params: {
+                                            'ID_Parent': record.ID_Item
+                                        }
+                                    }).then(function (Data) {
+                                        $.each(Data.collection, function(i,d){
+                                           var NewDetail = {
+                                                ID: _.rndID(),
+                                                ID_Item: d.ID_Item,
+                                                ItemCode: d.Code,
+                                                Item: d.Name,
+                                                Description: d.Name,
+                                                Quantity: 0,
+                                                Balance: null,
+                                                UnitPrice: 0,
+                                                ID_UOM: d.ID_UOM, 
+                                                UOM: d.UOM,
+                                                VatAmt: 0,
+                                                TaxScheme: record.TaxScheme,
+                                                ID_TaxScheme: record.ID_TaxScheme,
+                                                TotalAmount: 0,
+                                                DocStatus: '',
+                                                ID_DocStatus: null,
+                                                IsFree: 1,
+                                                ID_Warehouse_Detail: record.ID_Warehouse_Detail,
+                                                Warehouse_Detail: record.Warehouse_Detail,
+                                                IsSerialized: d.IsSerialized,
+                                                ID_Brand: d.ID_Brand,
+                                                Conversion: 1,
+                                                ID_Parent: record.ID_Item
+                                            };
+                                        VC.$scope.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+                                        });
+                                });
+                                }
+                                
+
+                                //
+
+                                VC.$scope.CurrentObject.SalesMan = record.SalesMan;
+                                var x = VC.GetDxControl('ID_SalesMan');
+                                if (x !== null && x !== undefined) {
+                                    x.option('selectedItem', {
+                                        ID: record.ID_SalesMan,
+                                        Name: VC.$scope.CurrentObject.SalesMan
+                                    });
+                                }
+                                VC.$scope.CurrentObject.ID_SOType = record.ID_CustomerOrderType
+                                VC.$scope.CurrentObject.ID_AccountExecutive = record.ID_SalesMan;
+                                VC.$scope.CurrentObject.AccountExecutive = record.SalesMan;
+                                VC.$scope.CurrentObject.ID_SalesMan = record.ID_SalesMan;
+                                VC.$scope.CurrentObject.ID_PaymentTerm = record.ID_PaymentTerm;
+                                VC.$scope.CurrentObject.ID_Warehouse = record.ID_Warehouse;
+                                VC.$scope.CurrentObject.ID_TaxScheme = record.ID_TaxScheme;
+
+
+                                VC.$scope.CurrentObject.PONo = record.PurchaseOrderNo;
+                                VC.$scope.CurrentObject.PODate = record.PurchaseOrderDate;
+
+                                VC.$scope.CurrentObject.SpecialRemarks = record.SpecialRemarks
+                                VC.$scope.CurrentObject.InstallationRemarks = record.InstallationRemarks
+                                VC.$scope.CurrentObject.TenderBiz = record.TenderBiz
+                                VC.$scope.CurrentObject.Location = record.Location
+                                VC.$scope.CurrentObject.Warranty = record.Warranty
+
+                                VC.$scope.CurrentObject.PaymentTransactionNo = record.PaymentTransactionNo
+                                VC.$scope.CurrentObject.CustomerEmployee = record.CustomerEmployee
+
+                                VC.$scope.CurrentObject.Address = record.ID_CustomerOrderType == 6 ? record.DeliveryAddress : record.Address;
+                                _.Compute();
+
+                                //
+                                //
+                                if (_.CurrentObject.DeliveryReceipt_PaymentSchemes == undefined || _.CurrentObject.DeliveryReceipt_PaymentSchemes == null) _.CurrentObject.DeliveryReceipt_PaymentSchemes = [];
+
+                                var ids_DocDetail =  Enumerable.From(_.CurrentObject.DeliveryReceipt_PaymentSchemes).Select('$.ID_DocDetail').ToArray();
+
+                                if(ids_DocDetail.length === 0){ ids_DocDetail = [0]; }
+
+                                var JsDataService = app.$GetDataService();
+                                JsDataService.Query('@Html.EncryptSQL("Select * From vSalesOrder_PaymentTerms WHERE ID_SalesOrder = @ID_SalesOrder AND ID NOT IN(@ID_DocDetail)")', {
+                                    params: {
+                                        'ID_SalesOrder': record.ID_SalesOrder,
+                                        'ID_DocDetail': ids_DocDetail
+                                    }
+                                }).then(function (Data) {
+
+                                    $.each(Data.collection, function (i, item) {
+
+                                        var NewDetail = {
+                                            ID: _.rndID(),
+                                            ID_DocDetail: item.ID,
+                                            ID_PaymentTerm: item.ID_PaymentTerm,
+                                            ID_PaymentScheme: item.ID_PaymentScheme,
+                                            PaymentScheme: item.PaymentScheme,
+                                            PaymentTerm: item.PaymentTerm,
+                                            DueDate: item.DueDate,
+                                            Amount: item.Amount,
+                                            Comment: item.Comment
+                                        };
+
+                                        _.CurrentObject.DeliveryReceipt_PaymentSchemes.push(NewDetail);
+
+                                    });
+
+                                });
+
+
+
+                                //
+                                //
+                                //getBOM(VC.$scope.CurrentObject.DeliveryReceipt_Details[VC.$scope.CurrentObject.DeliveryReceipt_Details.length -1]);
+                            }, 500);
+
+
+                        });
+
+                    });
+
+
+                }
+            };
+
+            var fDisableBrowseBtn = function () {
+                if (_.ID_ViewType == 2) {
+                     //return (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3) || VC.IsNew();
+                     
+                     var isNotDisabled = false;
+
+                     isNotDisabled = (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3) || VC.IsNew();
+
+                     if(isNotDisabled == false){ return true;} 
+
+                     return false;
+              
+                } 
+
+                return true;
+            };
+            var btnBrowsedItemTransfer = {
+                text : 'Item Transfer',
+                onClick : function (){
+                    var JsPopUpView = app.$GetPopupView();
+                    JsPopUpView.BrowseDataSet('@Html.EncryptSQL(@"Select * FROM vItemTransferForDR")',
+                    {
+                        ID_View:'13045708-9313-46AC-B59E-577FDF2C27IT',
+                        params : {
+                            ID_Item : Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select("$.ID_Item").ToArray(),
+                            ID_UOM : Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select("$.ID_UOM").ToArray(),
+                            UnitPrice : Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select("$.UnitPrice").ToArray(),
+                            ID_Warehouse_Detail : Enumerable.From(_.CurrentObject.DeliveryReceipt_Details).Select("$.ID_Warehouse_Detail").ToArray(),
+                        },
+                        title : 'Select Item Transfer Items'
+                    }).then(function (Items){
+                       ///     
+                          
+                              $.each(Items, function (i, item) {
+                                var  Detail = Enumerable.From(_.CurrentObject.DeliveryReceipt_Details)
+                                                  .Where("$.ID_Item == " + item.ID_Item + " && $.ID_Warehouse_Detail == " + item.ID_Warehouse +" && $.UnitPrice == " + item.UnitPrice + "&& $.ID_UOM == " + item.ID_UOM)
+                                                  .ToArray();
+
+                                
+                              
+                                var Serial = [] ;
+                                     if(item.Serial !== null){
+                                            Serial.push({
+                                                      ID : -1,
+                                                      Name : item.Serial,
+                                                      Code : item.Item
+                                                    });
+                                    }
+                                    console.log(Serial,'x')
+                                if (Detail.length == 0) {
+                                     var NewDetail = {
+                                            ID                      : _.rndID(),
+                                            Description             : item.Item,
+                                            Quantity                : item.Quantity,
+                                            ID_Warehouse_Detail     : item.ID_Warehouse,
+                                            UOM                     : item.UOM,
+                                            ID_UOM                  : item.ID_UOM,
+                                            Item                    : item.Item,
+                                            UnitPrice               : item.UnitPrice,
+                                            Warehouse_Detail        : item.Warehouse,
+                                            ID_Item                 : item.ID_Item,
+                                            ID_DocDetailParentModel : 3224,
+                                            OnHand                  : item.Quantity,
+                                            IsFree                  : 0,
+                                            RandomID                : item.ID,
+                                            Name                    : item.Name,
+                                            Code                    : item.Code
+                                           
+                                     };
+                                      NewDetail['DeliveryReceipt_Detail_Serials'] =  Serial;
+                                     _.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+                                      
+                                }
+
+                               else {
+                                   var detail = Detail[0];
+                                    detail.Quantity++;
+                                    detail.OnHand++;
+                                    var Serial = detail['DeliveryReceipt_Detail_Serials'];
+                                    if(item.Serial !== null){
+                                            Serial.push({
+                                                      ID : -1,
+                                                      Name : item.Serial,
+                                                      Code : item.Item
+                                                    });
+                                    }
+
+                                    detail['DeliveryReceipt_Detail_Serials'] = Serial;
+                                    
+                               }
+                                    
+                                //   var Serials = Enumerable.From(data['Serials']).Where("$.ID ==" + NewDetail.ID_Item + " &&  $.Cost == " + NewDetail.UnitPrice +  "&& $.ID_Warehouse == "+ NewDetail.ID_Warehouse_Detail +" && $.ID_UOM == " + NewDetail.ID_UOM).ToArray();
+                                //   var NewSerials = [];
+                                //   console.log(Serials,data['Serials'] )
+                                //   $.each(Serials,function(i,item){
+                                //         NewSerials.push({
+                                //                 ID: -1,
+                                //                 Name: item.SerialNo,
+                                //                 Code: item.Item,
+                                //                 ID_DocParent: item.ID_DocParent,
+                                //                 ID_DocDetail: item.ID_DocDetail
+                                //         });
+                                //   });
+                              
+                                //   NewDetail['DeliveryReceipt_Detail_Serials'] = NewSerials;
+                                 
+                                //   VC.$timeout(function () {
+                                //       _.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+                                //       _.CurrentObject.ID_BusinessPartner = item.ID_BusinessPartner
+                                //       _.CurrentObject.BusinessPartner = item.BusinessPartner
+                                //   }, 500);
+                              });
+
+
+
+                       ///
+
+                    })
+                }
+
+            }
+            var btnBrowsedItemRequest = {
+                text: 'Item Request',
+                onItemClick: function () {
+                    if (_.ID_ViewType != 2) return;
+                    if (VC.$scope.CurrentObject.ID_BusinessPartner == 0 || VC.$scope.CurrentObject.ID_BusinessPartner == null) {
+                        VC.MsgBox("Please Select Customer", "Delivery Report");
+                        return;
+                    }
+
+                    var JsPopUpView = app.$GetPopupView();
+                    JsPopUpView.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vPendingItemRequest 
+																WHERE ID_BusinessPartner = @ID_BusinessPartner AND Balance > 0")', {
+                        ID_View: 'EAFA3EBA-BFBE-44F2-BCA6-E4235ED69597',
+                        params: {
+                            ID_BusinessPartner: VC.$scope.CurrentObject.ID_BusinessPartner
+                        },
+                        title: 'Select Item Request Items'
+                    }).then(function (SelectedItems) {
+
+                        $.each(SelectedItems, function (i, record) {
+                            if (VC.$scope.CurrentObject.DeliveryReceipt_Details == null) VC.$scope.CurrentObject.DeliveryReceipt_Details = [];
+                            var NewDetail = {
+                                ID: _.rndID(),
+                                ID_Item: record.ID_Item,
+                                ItemCode: record.ItemCode,
+                                Item: record.item,
+                                Description: record.Description,
+                                Quantity: 0,
+                                Balance: null,
+                                UnitPrice: record.UnitPrice,
+                                ID_UOM: record.ID_UOM,
+                                UOM: record.UOM,
+                                VatAmt: record.VatAmt,
+                                TaxScheme: record.TaxScheme,
+                                ID_TaxScheme: record.ID_TaxScheme,
+                                TotalAmount: record.TotalAmount,
+                                NonInventoriable: record.NonInventoriable,
+                                DocStatus: '',
+                                ID_DocStatus: null,
+                                ReferenceNo: record.ReferenceNo,
+                                Comment: null,
+                                RefQuantity: record.Balance,
+                                IsFree: record.IsFree,
+                                ID_DocDetail: record.ID,
+                                ID_Warehouse_Detail: record.ID_Warehouse_Detail,
+                                Warehouse_Detail: record.Warehouse_Detail,
+                                IsSerialized: record.IsSerialized,
+                                OnHand: record.OnHand,
+                                ID_DocDetailParentModel: AcctHelper.Model_ID_ItemRequest,
+                                ID_Brand: record.ID_Brand,
+                                Conversion: record.Conversion,
+                                ID_ItemRequest: record.ID_ItemRequest,
+                                ID_ItemRequest_Detail:record.ID,
+                                ID_SalesOrder: 0,
+                                ID_SalesOrder_Detail:0
+
+                            };
+
+                            VC.$timeout(function () {
+
+                                VC.$scope.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+
+                                VC.$scope.CurrentObject.SalesMan = record.SalesMan;
+                                var x = VC.GetDxControl('ID_SalesMan');
+                                if (x !== null && x !== undefined) {
+                                    x.option('selectedItem', {
+                                        ID: record.ID_SalesMan,
+                                        Name: VC.$scope.CurrentObject.SalesMan
+                                    });
+                                }
+
+                                VC.$scope.CurrentObject.ID_Warehouse = record.ID_Warehouse_Detail;
+                                VC.$scope.CurrentObject.Warehouse = record.Warehouse_Detail;
+                                var Warehouse = VC.GetDxControl('ID_Warehouse');
+                                if (Warehouse !== null && Warehouse !== undefined) {
+                                    Warehouse.option('selectedItem', {
+                                        ID:  record.ID_Warehouse,
+                                        Name: record.ID_TaxScheme
+                                    });
+                                }
+
+
+                                VC.$scope.CurrentObject.ID_SalesMan = record.ID_SalesMan;
+                                VC.$scope.CurrentObject.ID_PaymentTerm = record.ID_PaymentTerm;
+                  
+                                VC.$scope.CurrentObject.ID_TaxScheme = record.ID_TaxScheme;
+                                VC.$scope.CurrentObject.TaxScheme = record.TaxScheme;
+
+                                VC.$scope.CurrentObject.Address = record.Address;
+
+                                VC.$scope.CurrentObject.PONo = record.PurchaseOrderNo;
+                                VC.$scope.CurrentObject.PODate = record.PurchaseOrderDate;
+
+                                VC.$scope.CurrentObject.SpecialRemarks = record.SpecialRemarks
+                                VC.$scope.CurrentObject.InstallationRemarks = record.InstallationRemarks
+                                VC.$scope.CurrentObject.TenderBiz = record.TenderBiz
+                                VC.$scope.CurrentObject.Location = record.Location
+                                VC.$scope.CurrentObject.Warranty = record.Warranty
+
+                                _.Compute();
+
+                         
+                          }, 500);
+
+
+                        });
+
+                    });
+
+
+                }
+            };
+
+            VC.AddToolbarButton({
+                text: 'Browse',
+                IsDisabled: fDisableBrowseBtn,
+                items: [ btnBrowsedSalesOrder  , btnBrowsedItemRequest, btnBrowsedItemTransfer  ]
+            });
+
+
+            VC.AddToolbarButton({
+                text: 'Create',
+                IsDisabled: function () {
+
+                    if (_.ID_ViewType == 2) {
+                        return (VC.$scope.CurrentObject.ID_FilingStatus !== AcctHelper.FilingStatus.Approved || VC.$scope.CurrentObject.ID_DocStatus == 3) || VC.IsNew();
+                    } else {
+
+                        var itemsSelected = VC.Grid.getSelectedRowsData();
+
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2").ToArray();
+
+                        var selected_ID_BusinessPartners = Enumerable
+                            .From(itemsSelected)
+                            .Select("$.ID_BusinessPartner")
+                            .Distinct()
+                            .ToArray();
+
+                        if (selected_ID_BusinessPartners.length !== 1) return true;
+
+                        if (itemsSelected.length === 0) return true;
+
+                        if (NotApprovedDocs.length > 0) return true;
+
+                        return false;
+                    }
+
+                    return false;
+                },
+                items: [
+                    {
+                        text: 'Sales Invoice',
+                        onItemClick: fcreateSalesInvoicebyDRDetails
+                    },
+                    {
+                        text: 'Warranty',
+                        onItemClick : fcreateWarranty
+                    }
+                ]
+            });
+
+        }
+		
+
+
+
+    
+
+
+
+
+
+        VC_DeliveryReceipt.prototype.onCurrentObjectChanged = function (e) {
+
+            var _ = this;
+            var VC = this.VC;
+
+
+
+                var fAddDetails = function(ID){
+        
+                //console.log("Current Object:",VC);
+                
+                    var  JsDataService = app.$GetDataService();
+                    JsDataService.Query('@Html.EncryptSQL("SELECT ID_Warehouse,Warehouse,ID_BusinessPartner,BusinessPartner,BusinessPartnerAddress FROM dbo.vSalesOrder WHERE ID = @SO ")', {
+                        params: {
+                            'SO': ID
+                        }
+                    }).then(function (data) { 
+                        var result = data.collection;
+                        // SETTING VALUES OF THE CURRENT OBJECT FROM THE PROPERTIES OF THE QUERIED OBJECT
+                        _.CurrentObject.ID_Warehouse = result[0].ID_Warehouse;
+                        _.CurrentObject.Warehouse = result[0].Warehouse;                    
+                        _.CurrentObject.ID_BusinessPartner = result[0].ID_BusinessPartner;
+                        _.CurrentObject.BusinessPartner = result[0].BusinessPartner;
+                        _.CurrentObject.Address = result[0].BusinessPartnerAddress;
+                    });
+
+                }
+
+            // if (e.dataField == 'ID_Warehouse') {
+            //     //VC.ReloadOnHand();
+            //     //fAddDetails();
+            //     // VC.$scope.CurrentObject.Address = e.value.FullAddress;
+            // }
+			
+            if (e.dataField == 'ID_SalesOrder') {
+                console.log("Current DR Details Length:",_.CurrentObject.DeliveryReceipt_Details.length);
+                fAddDetails(e.value.ID);
+                if(_.CurrentObject.DeliveryReceipt_Details.length != 0){
+                    _.CurrentObject.DeliveryReceipt_Details = [];
+                }
+                
+            }
+
+		    // if (e.dataField == 'ID_BusinessPartner') {
+            //     if(e.value != undefined){
+            //         if (e.value.FullAddress !== undefined) {
+            //             VC.$scope.CurrentObject.Address = null;
+            //             if (e.value != null) {
+            //                 VC.$scope.CurrentObject.Address = e.value.FullAddress;
+            //             }
+            //         }
+            //     }else{
+            //         VC.$scope.CurrentObject.Address = '';
+            //     }
+            // }
+        }
+
+
+        VC_DeliveryReceipt.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+
+            //console.log("After basehelper",_);
+
+            //VC.LoadBOM(_.CurrentObject.DeliveryReceipt_Details);
+
+            //console.log("SO:",_.CurrentObject.ID_SalesOrder);
+            if(_.CurrentObject.ID_SalesOrder != undefined){
+        
+                fAddDetails(_.CurrentObject.ID_SalesOrder);
+            }
+
+       
+            var fAddDRItemsByPLLitem = function(pickListItem){
+          
+                if(VC.$scope.CurrentObject.DeliveryReceipt_Details == null) VC.$scope.CurrentObject.DeliveryReceipt_Details = [];
+
+                var results = Enumerable.From(VC.$scope.CurrentObject.DeliveryReceipt_Details)
+                                            .Where(function (x) {
+                                                return x.ID_UOM == pickListItem.ID_UOM && x.ID_Item == pickListItem.ID_Item;
+                                            })
+                                            .ToArray();
+                
+                console.log("Enum:",Enumerable);
+
+                var NewDetail = null;
+
+                console.log("Result Length:",results.length);
+                if(results.length == 0){
+
+                    NewDetail = {
+                        ItemCode : pickListItem.ItemCode,
+                        DocumentNo:pickListItem.DocumentNo,
+                        Description:pickListItem.ItemDescription,
+                        Quantity:pickListItem.Quantity,
+                        UOM: pickListItem.UOM,
+                        ID_UOM: pickListItem.ID_UOM,
+                        ID_SalesOrder : pickListItem.ID_SalesOrder,
+                        ID_Item : pickListItem.ID_Item,
+                        IDs_PickList_Detail :  pickListItem.ID_PickList_Detail.toString(),
+                    };
+                   
+                    VC.$scope.CurrentObject.DeliveryReceipt_Details.push(NewDetail);
+
+                }else{
+
+                    NewDetail = results[0];
+                    
+                    NewDetail.Quantity = NewDetail.Quantity + pickListItem.Quantity;
+                    NewDetail.IDs_PickList_Detail = NewDetail.IDs_PickList_Detail + "|" + pickListItem.ID_PickList_Detail.toString();
+                } 
+            }   
+            
+            var fGetPickListItems = function(IDs_PickList){
+
+                var  JsDataService = app.$GetDataService();
+
+                JsDataService.Query('@Html.EncryptSQL("SELECT * FROM vAddPickListToDR WHERE ID IN (@IDs_PickList)")', {
+                    params: {
+                        'IDs_PickList': IDs_PickList
+                    }
+                }).then(function (data) {
+                    var results = data.collection;    
+                    var len = results.length;         
+                    results.forEach(function(pickListItem) {
+
+                        VC.$timeout(function(){
+
+                            fAddDRItemsByPLLitem(pickListItem);   
+                        });
+                    });
+                });
+            };
+
+            var query = '';
+
+            var fBrowsePickLists = function(){
+                var so_checker =  _.CurrentObject.ID_SalesOrder;
+                var details_checker = _.CurrentObject.DeliveryReceipt_Details.length;
+
+                    
+                var IDs_PL_Detail =Enumerable.From(VC.$scope.CurrentObject.DeliveryReceipt_Details).Select('$.IDs_PickList_Detail').ToArray();
+                var IDs_PLD_result = [0];
+
+                IDs_PL_Detail.forEach(function(str_IDs) {
+
+                    str_IDs.split("|").forEach(function(ID) {
+
+                        IDs_PLD_result.push(ID);
+                    });
+                });
+
+                    console.log('Exploooooooooooooooooooooooode',IDs_PLD_result);
+
+
+                if(so_checker === undefined){
+                    VC.MsgBox("Select a Sales Order first.");
+                }
+                else{
+                    query = '@Html.EncryptSQL(@"SELECT * FROM vPickListBrowse WHERE ID NOT IN (@IDs) AND SO_ID = @SOs")';
+               
+                    VC.BrowseDataSet(query,
+                    {
+                        title: 'Select PickList',
+                        ID_View: '09C0191B-A9ED-46B1-BED3-011730E618D3',
+                        width: '80%',
+                        params: {
+                            'IDs': IDs_PLD_result,
+                            'SOs': _.CurrentObject.ID_SalesOrder,
+                        }
+                    }).then(function (Items) {
+                        var IDs_PickList = AcctHelper.fGetSelectedObjectValuesNumeric(Items,"ID");
+                        fGetPickListItems(IDs_PickList);
+                    });
+
+                }
+
+            };
+
+            var btnAddPickList = {
+                text: 'Add PickList',
+                icon: 'mdi mdi-package-variant',
+                onClick: function (option) {
+                    fBrowsePickLists();
+                }
+            }
+
+            VC.AddToolBarButtonOnGrid('DeliveryReceipt_Details',btnAddPickList , true);
+            _.GenerateSerial = function (Detail) {
+                return app.$modal().Show({
+                    title: Detail.Description + ' (' + Detail.Quantity + ')',
+                    ViewSrc: 'App_Content/ViewControllers/Templates/EditSerial.tpl.html',
+                    width: 600,
+                    InitController: function (_$scope) {
+                        _$scope.GridOption = {
+                            dataSource: Detail.DeliveryReceipt_Detail_Serials,
+                            columns: [
+                                { dataField: "ID", width: 50, allowEditing: false }
+                              , { dataField: "Name", caption: 'Serial', validationRules: [{ type: 'required', message: 'Please input a serial number.' }] }
+                              //, { dataField: "Comment" }
+                            ],
+                            height: 'auto',
+                            editing: {
+                                allowAdding: false,
+                                allowDeleting: false,
+                                allowUpdating: true,
+                                mode: 'cell'
+                            }
+                        };
+                    }
+                });
+            }
+
+            _.editSerial = function (Detail, e) {
+
+                if (Detail.DeliveryReceipt_Detail_Serials == undefined) Detail.DeliveryReceipt_Detail_Serials = [];
+
+                if (Detail.DeliveryReceipt_Detail_Serials.length == 0) {
+                    VC.ConfirmBox('Generate Serials?', 'Delivery Receipt').then(function () {
+                        for (var i = 0 ; i < Detail.Quantity; i++) {
+                            Detail.DeliveryReceipt_Detail_Serials.push({
+                                ID: -1,
+                                Name: null,
+                                Comment: null,
+                            });
+                        }
+                        VC.$timeout(function () {
+                            _.GenerateSerial(Detail).then(function () {
+                                VC.RefreshGridSelection(e.component, e.rowIndex);
+                            });
+                        }, 500);
+
+                    });
+                } else {
+                    _.GenerateSerial(Detail).then(function () {
+                        VC.RefreshGridSelection(e.component, e.rowIndex);
+                    });
+                }
+            };
+
+            var _onContextMenuPreparing_DeliveryReceipt_Details = VC.onContextMenuPreparing_DeliveryReceipt_Details;
+            VC.onContextMenuPreparing_DeliveryReceipt_Details = function (e) {
+                _onContextMenuPreparing_DeliveryReceipt_Details(e);
+                //
+                //
+                //
+                e.items.unshift({
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        var Item = _.CurrentObject.DeliveryReceipt_Details[e.rowIndex];
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+                            VC.MsgBox('Please specify Quantity', 'Delivery Receipt ');
+                            return;
+                        }
+                        _.BrowseSerials(e, Item, _.CurrentObject.ID_Warehouse);
+                    }
+                });
+                
+
+                e.items.unshift({
+                    text: "Bill Of Materials",
+                    icon: "fa fa-th-list",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        var CurrentData = _.CurrentObject.DeliveryReceipt_Details[e.rowIndex];
+
+                        var JsPopUpView = app.$GetPopupView();
+
+                        JsPopUpView.BrowseDataSet('@Html.EncryptSQL(@"Select ID,Code,Name,Quantity,UOM,DateCreated From dbo.vItem_BillOfMaterials Where ID_Parent = @ID_Parent")',
+						{
+						    ID_View: 'F79A6A54-DA03-4F9B-8767-41E14970F45A',
+						    params: {
+						        ID_Parent: CurrentData.ID_Item
+						    },
+						    title: 'Bill of Materials (' + CurrentData.Description + ')'
+						}).then(function (SelectedItems) {
+
+
+						});
+
+                    }
+                });
+                //
+                //
+            }
+
+        }
+
+        var fSplitStringIDs = function(arrayOfIDs){
+          
+            var IDs_PLD_result = [0];
+
+            arrayOfIDs.forEach(function(str_IDs) {
+
+                str_IDs.split("|").forEach(function(ID) {
+
+                    IDs_PLD_result.push(ID);
+                });
+            });
+
+            return IDs_PLD_result;
+        }
+
+        VC_DeliveryReceipt.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pDeliveryReceiptApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        VC_DeliveryReceipt.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pDeliveryReceiptCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_DeliveryReceipt.prototype.OnDetail_ColumnChanged = function (e) {
+
+            var _ = this;
+            var Item = e.key;
+            console.log(_.SerialsEnabled,Item,'FU')
+            if (_.SerialsEnabled == true) {
+                if (e.dataField === 'Quantity') {
+                    if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+                        if (e.data.Quantity == 0) return;
+                        e.grid.deselectAll();
+                        console.log(Item,'Serials')
+
+                        var DocDetailSerialName = _.DocSerialPropertyName != undefined ? _.DocSerialPropertyName : _.DocDetailPropertyName.substring(0, _.DocDetailPropertyName.length - 1) + '_Serials';
+
+                        Item[DocDetailSerialName] = [];
+
+                         _.BrowseSerials(e, Item, _.CurrentObject.ID_Warehouse);
+
+                        
+                    }
+                }
+            }
+        }
+
+////////////////////////////////////////////////////////////////////////////////////////////////EDIT ME THIS/////////////////////////
+    // var fSetDate = function (VC, CurrentObject) {
+
+	// 		app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM vPickList where ID = @ID")',
+	// 		{
+	// 			params:
+	// 			{
+	// 				'ID': CurrentObject.ID_BusinessPartner,
+	// 			}
+	// 		}).then(function (data) {
+
+	// 			$.each(data.collection, function (i, result) {
+
+	// 				var txt_CreditLimitRemainingBalance = VC.GetDxControl('CreditLimitRemainingBalance');
+
+	// 				VC.$timeout(function () {
+
+	// 					var RemainingBalance = result.RemainingCreditLimit;
+
+	// 					CurrentObject.CreditLimitRemainingBalance = RemainingBalance;
+	// 				});
+	// 			});
+
+	// 		});
+
+	// 	};
+
+
+
+
+	//  VC_DeliveryReceipt.prototype.onCurrentObjectChanged = function (e) {
+	// 		baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+	// 		var VC = this.VC;
+
+
+	// 		if (e.dataField == 'ID_PickList') {
+
+	// 			if (VC.$scope.CurrentObject.$dirty == undefined || VC.$scope.CurrentObject.$dirty == false) {
+    //                  alert("Current Object is Undefined");
+	// 				return;
+	// 			}
+
+
+	// 			if (e.value !== null && VC.$scope.CurrentObject.$dirty != undefined) {
+	// 			if(e.value.PLDate !== undefined){
+	// 				VC.$scope.CurrentObject.PLDate = e.value.PLDate;
+    //                 alert("Current Object is Undefined");
+ 	// 			}
+	//  				// VC.$scope.CurrentObject.ContactPerson = 'xxx';
+
+	//  				//fSetCurrentCreditLimitRemainingBalance(VC, VC.$scope.CurrentObject);
+
+	// 			} else {
+	// 			if(VC.$scope.CurrentObject.ID_PickList == null){
+	// 					VC.$scope.CurrentObject.PLDate = null;
+    //                      alert("Current Object is Null");
+	// 				}
+	// 			// VC.$scope.CurrentObject.BusinessPartnerAddress = null;
+	//  				// VC.$scope.CurrentObject.ContactPerson = null;
+
+
+	//  			}
+	//  		}
+	//  	}
+
+
+
+
+
+
+
+	    VC_DeliveryReceipt.prototype.onLoad = function () {
+            baseModelHelper.prototype.onLoad.call(this);
+            var VC = this.VC;
+            VC.ReloadOnHand();
+        }
+
+	    VC_DeliveryReceipt.prototype.onCollectionSource_Load = function (data) {
+	        baseModelHelper.prototype.onCollectionSource_Load.call(this, data);
+	        var VC = this.VC;
+	        var WhereCriteria = data.WhereCriteria;
+	        if (VC.CurrentUser.ID_UserGroup === 5) {
+	            WhereCriteria.push("ID_AccountExecutive = " + VC.CurrentUser.ID_Employee);
+	        } else if (VC.CurrentUser.ID_UserGroup === 4) {
+	            VC.OwnerRightsField = 'ID_AccountExecutive';
+	            VC.OwnerRightsValueField = 'ID_Employee';
+	        }
+	    }
+
+        return VC_DeliveryReceipt;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+
+

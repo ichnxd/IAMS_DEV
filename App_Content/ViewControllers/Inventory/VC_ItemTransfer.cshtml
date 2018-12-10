@@ -1,0 +1,406 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+
+        var VC_ItemTransfer = function () {
+            this.DocDetailPropertyName = 'ItemTransfer_Details';
+            this.SerialsEnabled = true;
+            this.AllowOnHandChecking = { WarehouseName:'ID_Warehouse_From' }
+            //vInventoryHistoryPerWarehouse_Serials
+        }
+
+
+        VC_ItemTransfer.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_ItemTransfer.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+
+            VC.AddButtonReport({
+                Name: 'Item Transfer Form',
+                ID_Report: 3122,
+                requireSingleObject: true
+            });
+
+             VC.AddButtonReport({
+                Name: 'Item Transfer STP',
+                ID_Report: 3178,
+                requireSingleObject: true
+            });
+           
+		    // VC.AddButtonReport({
+            //  Name: 'Transfer Receipt Form',
+            //  ID_Report: 4218,
+            //  requireSingleObject: true
+            //});
+			
+        //    VC.AddToolbarButton({
+        //         text: 'Create Sales Invoice',
+        //         IsDisabled : function(){
+                    
+        //             if (_.ID_ViewType == 2) {
+        //                 if(_.CurrentObject.ID_FilingStatus == 2){
+        //                    return false; 
+        //                 }
+        //             } else {
+        //                 return false;
+        //             }
+        //             return true;
+        //         },
+        //         onClick: function(){
+        //             if (_.ID_ViewType === 1) {
+        //             var itemsSelected = _.Grid.getSelectedRowsData();
+        //              Create_SI(itemsSelected);
+        //             }
+        //             else{
+        //                 Create_SI([_.CurrentObject]);
+        //             }
+        //         }
+                
+        //     });
+
+            //
+       
+           var Create_SI = function (Items) {
+                  var SQL = '@Html.EncryptSQL(@" SELECT * FROM dbo.vItemTransferForSI
+                  WHERE ID_ItemTransfer IN ( @ID_ItemTransfer ) and balance <> 0 ")';
+                  var JsPopUpView = app.$GetPopupView();
+              
+                  JsPopUpView.BrowseDataSet(SQL, {
+                      ID_View: '785B101D-A897-4342-BD91-85EECA7B2D4SI',
+                      params: {
+                          ID_ItemTransfer: Enumerable.From(Items).Select('$.ID').ToArray()
+                      },
+                      title: 'Select Item Transfer Items'
+                  }).then(function (ItemTransfer) {
+                  
+                      app.$GetDataService().pGetCurrentObject(
+                         '@Html.EncryptSQL("pGetSalesInvoice")',
+                         {
+                              'ID_Details_Ref': Enumerable.From(ItemTransfer).Select('$.ID').ToArray(),
+                              'ID_ParentModel': 3224,
+                              'ID_Serials' : Enumerable.From(ItemTransfer).Select('$.SerialID').ToArray(),
+                         }
+                     ).then(function (ItemTransfer) {
+                     
+                         var $rootScope = app.$rootScope();
+                     
+                         $rootScope.$emit("CallNewTabMethod", {
+                         
+                             ID: app.getRandomInt() * -1,
+                             Caption: 'Create Sales Invoice',
+                             ID_ViewType: 2,
+                             ViewID: 4210,
+                             CurrentObject: ItemTransfer,
+                             ImageName: ''
+                         
+                         });
+                     
+                     });
+                 
+                  });
+              };
+            //
+
+            if(_.ID_ViewType == 2){
+
+                VC.ItemTransfer_Details_onColumnChanged = function(e){
+         
+                    var Item = e.key;
+                    
+                    if (e.dataField === 'Quantity') {
+                        if(_.CurrentObject.ID_Warehouse_From == null){
+                            VC.MsgBox('Please select Warehouse From','Item Transfer');
+                            return;
+                        }
+                        e.grid.deselectAll();
+                        if(Item.Quantity == 0 || Item.Quantity == null){
+                            return;
+                        }
+
+                        if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                            var NewSerials = [];
+                            
+                            if (Item.ItemTransfer_Detail_Serials !== null && Item.ItemTransfer_Detail_Serials !== undefined) {
+                                if (VC._DeletedItems["ItemTransfer_Detail_Serials"] === undefined) VC._DeletedItems["ItemTransfer_Detail_Serials"] = [];
+                                $.each(Item.ItemTransfer_Detail_Serials, function (i, s) {
+                                    if (s.ID > 0) {
+                                        VC._DeletedItems["ItemTransfer_Detail_Serials"].push(s);
+                                    }
+                                });
+                            }
+                            
+
+                            var SQL = '@Html.EncryptSQL("SELECT ID,SerialNo FROM vInventoryHistoryPerWarehouse_Serials WHERE ID_Item = @ID_Item AND ID_Warehouse = @ID_Warehouse")';
+        
+
+                            var params = {
+                                ID_Item: Item.ID_Item,
+                                ID_Warehouse: _.CurrentObject.ID_Warehouse_From
+                            }
+
+                            _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                                ID_View: 'AB8B4149-AB26-48A6-B8F9-DE6BBF4FD352',
+                                title: 'Select Item Serial (' + Item.Quantity + ')',
+                                params: params,
+                                validate: function (SelectedRows) {
+                                    if (SelectedRows.length !== Item.Quantity) {
+                                        _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            }).then(function (Serials) {
+                                        
+                                Item.ItemTransfer_Detail_Serials = [];
+
+                                $.each(Serials, function (i, d) {
+                                    Item.ItemTransfer_Detail_Serials.push({
+                                        ID: -1,
+                                        Name: d.SerialNo,
+                                        Code: Item.Item
+                                    });
+                                });
+                                //
+                                //
+                                //
+
+                                _.VC.$timeout(function () {
+                                    e.grid.selectRowsByIndexes([e.rowIndex]);
+                                }, 500);
+                            });
+
+
+                        }
+                    }
+                };
+
+                VC.ValidationRules.push(function (){
+                    var brokenRules = [];
+
+                    if(_.CurrentObject.ID_Warehouse_From == _.CurrentObject.ID_Warehouse_To){
+                        brokenRules.push('Same (warehouse from) and (warehouse to) is not allowed.')
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+
+            //     VC.AddToolbarButton({
+            //     text: 'Browse Consignment',
+            // // IsDisabled : function(){
+            // //     
+            // //     if (_.ID_ViewType == 2) {
+            // //         if(_.CurrentObject.ID_FilingStatus == 2){
+            // //            return false; 
+            // //         }
+            // //     } else {
+            // //         return false;
+            // //     }
+            // //     return true;
+            // // },
+            //     onClick: function(){
+            //       // if(_.CurrentObject.ID_Warehouse_To == null || _.CurrentObject.ID_Warehouse_To == undefined){
+            //       //         VC.MsgBox("Please Select Warehouse TO", "Item Transfer");
+            //       //         return;
+            //       // }
+            //       //  ID_Client
+
+            //        if(_.CurrentObject.ID_Client == null || _.CurrentObject.ID_Client == undefined){
+            //                VC.MsgBox("Please Select Client", "Item Transfer");
+            //                return;
+            //        }
+            //        if(_.CurrentObject.ID_ItemTransferType !== 3){
+            //               VC.MsgBox("Select Consignment as Transfer Type", "Item Transfer");
+            //               return;
+            //        }
+                    
+            //         var sql = '@Html.EncryptSQL(@"SELECT * FROM vConsignmentForIT where ID_Warehouse = @ID_Warehouse_To and isnull(Balance,0) > 0 and ID_FilingStatus = 2
+            //         and ID_BusinessPartner = @ID_Client and ID Not In (@IDs)")';
+            //             VC.BrowseDataSet(sql, {
+            //                 title: 'Browse Item Request',
+            //                 ID_View: '4782F58F-2163-46CC-A2A2-2DAF5F54A0IT',
+            //                 params: {
+            //                     'IDs': Enumerable.From(_.CurrentObject.ItemTransfer_Details).Select("$.ID_DocDetail").ToArray(),
+            //                     'ID_Warehouse_To': _.CurrentObject.ID_Warehouse_To,
+            //                     'ID_Client':_.CurrentObject.ID_Client
+            //                 }
+            //             }).then(function(data){
+
+            //                 $.each(data,function(i,d){
+            //                      var detail = {
+            //                          Name : d.Item,
+            //                          Code : d.Code,
+            //                          ID_Item : d.ID_Item,
+            //                          Quantity : d.IsSerialized == true ? 0 : d.Balance,
+            //                          RefQuantity : d.Balance,
+            //                          ID_UOM : d.ID_UOM,
+            //                          UnitPrice : d.UnitPrice,
+            //                          isInvoice : 0,
+            //                          ID_DocDetail : d.ID,
+            //                          ID_Consignment : d.ID_Consignment,
+            //                          ItemCode : d.Code,
+            //                          Item : d.Item,
+            //                          UOM : d.UOM,
+            //                          Description : d.Item,
+            //                          IsSerialized : d.IsSerialized
+            //                      }
+            //                      if(_.CurrentObject.ItemTransfer_Details == undefined)  _.ID_CurrentObject.ItemTransfer_Details = [];
+            //                     _.CurrentObject.ItemTransfer_Details.push(detail);
+            //                     _.CurrentObject.ID_Client = d.ID_BusinessPartner;
+            //                     _.CurrentObject.Client = d.BusinessPartner;
+            //                 })
+            //             })
+            //     }
+                
+            // });
+
+            }
+        }
+
+        
+
+        VC_ItemTransfer.prototype.OnDetail_ColumnChanged = function (e) {
+            var _ = this;
+            var VC = this.VC;
+            var Item = e.key;
+            return;
+            if (e.dataField === 'Quantity') {
+                if(_.CurrentObject.ID_Warehouse_From == null){
+                    VC.MsgBox('Please select Warehouse From','Item Transfer');
+                    return;
+                }
+                e.grid.deselectAll();
+                if(Item.Quantity == 0 || Item.Quantity == null){
+                    return;
+                }
+
+                if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                    var NewSerials = [];
+                    
+                    if (Item.ItemTransfer_Detail_Serials !== null && Item.ItemTransfer_Detail_Serials !== undefined) {
+                        if (VC._DeletedItems["ItemTransfer_Detail_Serials"] === undefined) VC._DeletedItems["ItemTransfer_Detail_Serials"] = [];
+                        $.each(Item.ItemTransfer_Detail_Serials, function (i, s) {
+                            if (s.ID > 0) {
+                                VC._DeletedItems["ItemTransfer_Detail_Serials"].push(s);
+                            }
+                        });
+                    }
+                    
+
+                    var SQL = '@Html.EncryptSQL("SELECT ID,SerialNo FROM vInventoryHistoryPerWarehouse_Serials WHERE ID_Item = @ID_Item AND ID_Warehouse = @ID_Warehouse")';
+   
+
+                    var params = {
+                        ID_Item: Item.ID_Item,
+                        ID_Warehouse: _.CurrentObject.ID_Warehouse_From
+                    }
+
+                    _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                        ID_View: 'AB8B4149-AB26-48A6-B8F9-DE6BBF4FD352',
+                        title: 'Select Item Serial (' + Item.Quantity + ')',
+                        params: params,
+                        validate: function (SelectedRows) {
+                            if (SelectedRows.length !== Item.Quantity) {
+                                _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                                return false;
+                            }
+                            return true;
+                        }
+                    }).then(function (Serials) {
+                                 
+                        Item.ItemTransfer_Detail_Serials = [];
+
+                        $.each(Serials, function (i, d) {
+                            Item.ItemTransfer_Detail_Serials.push({
+                                ID: -1,
+                                Name: d.SerialNo,
+                                Code: Item.Item
+                            });
+                        });
+                        //
+                        //
+                        //
+
+                        _.VC.$timeout(function () {
+                            e.grid.selectRowsByIndexes([e.rowIndex]);
+                        }, 500);
+                    });
+
+
+                }
+            }
+        }
+
+        VC_ItemTransfer.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            console.log(Enumerable.From(Items).Select('$.ID').ToArray())
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemTransferApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_ItemTransfer.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pItemTransferCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_ItemTransfer;
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+
+

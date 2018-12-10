@@ -1,0 +1,76 @@
+﻿<div class="toolbar">
+    <div class="btn-group">
+        <button type="button" class="btn btn-default" ng-click="OnNewClick()" ng-hide="gridOption.isDetail"><span class="darkgray mdi mdi-file"></span> New</button>
+        <button type="button" class="btn btn-default" ng-click="OnNewClick()" ng-hide="gridOption.isDetail == undefined"><span class="darkgray mdi mdi-plus"></span> Add</button>
+        <button type="button" class="btn btn-default" ng-click="OnDeleteClick()" ng-disabled="IsButDeleteEnabled()"><span class="red mdi mdi-close"></span> Delete</button>
+        <button type="button" class="btn btn-default" ng-click="OnEditClick()" ng-disabled="IsButEditEnabled()"><span class="blue mdi mdi-pencil-box-outline"></span> Edit</button>
+        <button type="button" class="btn btn-default" ng-click="OnRefreshClick()"><span class="green mdi mdi-refresh"></span> Refresh</button>
+        <button type="button" class="btn btn-default" ng-click="OnFilterClick()"><span class="orange mdi mdi-filter"></span> Filter</button>
+    </div>
+</div>
+<div>
+    <div class="col-md-9 gridview-holder" ng-style="{ 'width' : ( IsFilterBoxShow ? '75%'  : '100%' )  }">
+        <div class="fixed-content">
+            <table class="grid-header-table">
+                <tbody class="grid-header-content">
+                    <tr>
+                        <td class="checkbox-controller center" ng-click="OnSelectAllClick()"><span ng-class="{'mdi mdi-checkbox-marked' : IsSelectAll == true , 'mdi mdi-checkbox-blank-outline' : IsSelectAll == false}"></span></td>
+                        <td class="table-header fixed" ng-repeat="c in FixedColumns" ng-style="{width: c.width}" ng-class="{'center':c.align == 'center','left':c.align == undefined}">
+                            <div class="table-header-container" ng-style="{width: c.width}">{{c.name}}</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="scrollbar-container-horizontal">
+                <div class="scrollbar-container-vertical">
+                    <table class="grid-body-table">
+                        <tbody class="grid-body-content">
+                            <tr ng-repeat="d in modelValue()">
+                                <td class="checkbox-controller center" ng-click="OnItemSelected(d)"><span ng-class="{'mdi mdi-checkbox-marked' : d._IsSelected == true , 'mdi mdi-checkbox-blank-outline' : d._IsSelected == undefined || d._IsSelected == false}"></span></td>
+                                <td class="js-col-{{$index}}" ng-repeat="c in FixedColumns" ng-style="{width: c.width}" ng-class="{'center':c.align == 'center','left':c.align == undefined}">
+                                    <div ng-style="{width: c.width}" style="height:30px">{{d[c.name]}}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <table class="grid-header-table">
+                <tbody class="grid-header-content">
+                    <tr>
+                        <td class="checkbox-controller"></td>
+                        <td class="table-header js-col-{{$index}}" ng-class="{'center':c.type == 'Boolean'}" ng-repeat="c in columns" ng-init="OnColumnAdded(c,$index)" ng-style="{width: c.width}">
+                            <div class="table-header-container" ng-style="$last ? {width: c.width + 0} : {width: c.width}">{{c.name}}</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="scrollbar-container-horizontal js-scrollbar">
+                <div class="scrollbar-container-vertical js-scrollbar">
+                    <table class="grid-body-table">
+                        <tbody class="grid-body-content">
+                            <tr ng-repeat="d in modelValue()">
+                                <td class="checkbox-controller"></td>
+                                <td ng-repeat="c in columns" class="js-col-{{$index}}" ng-style="{width: c.width}">
+                                    <div ng-style="{width: c.width}" ng-switch on="c.type">
+                                        <div class="center is-checkbox" ng-switch-when="Boolean">
+                                            <span ng-class="{'mdi mdi-checkbox-marked' : (c.Property == undefined ? d[c.name] : d[c.Property][c.name]) == true , 'mdi mdi-checkbox-blank-outline' : (c.Property == undefined ? d[c.name] : d[c.Property][c.name]) == null || (c.Property == undefined ? d[c.name] : d[c.Property][c.name]) == false}"></span>
+                                        </div>
+                                        <div ng-switch-default>
+                                            {{c.Property == undefined ? d[c.name] : d[c.Property][c.name]}}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 gridview-filter-holder" ng-style="{ 'width' : ( IsFilterBoxShow ? '25%'  : '0%' ) , 'display' : ( IsFilterBoxShow ? 'block' : 'none' )  }">
+        <h2>Filter</h2>
+    </div>
+</div>

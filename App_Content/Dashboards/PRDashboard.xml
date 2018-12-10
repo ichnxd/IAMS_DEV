@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Dashboard" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="OLAP Data Source 1" ConnectionName="local_IAMSAnalytics_AccountsPayable" ConnectionString="provider=msolap;data source=local;initial catalog=IAMSAnalytics;timeout=1200;Cube Name=AccountsPayable;" />
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="Purchase Request Count" DataSource="dashboardOlapDataSource1" FilterString="[DataItem2] In ('[DimFilingStatus].[Name].&amp;[Approved]', '[DimFilingStatus].[Name].&amp;[Canvassed]', '[DimFilingStatus].[Name].&amp;[Purchased]')">
+      <ColoringOptions MeasuresColoringMode="Hue" UseGlobalColors="false" />
+      <DataItems>
+        <Dimension DataMember="[CreatedBy].[Department].[Department]" Name="Department" SortOrder="Descending" SortByMeasure="DataItem0" DefaultId="DataItem1" />
+        <Dimension DataMember="[DimFilingStatus].[Name].[Name]" Name="Filing Status" SortOrder="None" DefaultId="DataItem2" />
+        <Measure DataMember="[Measures].[PR Count]" DefaultId="DataItem0" />
+      </DataItems>
+      <SeriesDimensions>
+        <SeriesDimension DefaultId="DataItem2" />
+      </SeriesDimensions>
+      <Arguments>
+        <Argument DefaultId="DataItem1" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" Title="Count" Logarithmic="true" LogarithmicBase="Base2" />
+          <Series>
+            <Simple>
+              <Value DefaultId="DataItem0" />
+              <PointLabelOptions Content="ArgumentAndValue" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX EnableZooming="true" LimitVisiblePoints="true" VisiblePointsCount="7" />
+    </Chart>
+  </Items>
+  <ColorScheme>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-12731392">
+      <MeasureKey>
+        <Definition DataMember="[Measures].[PR Count]" />
+      </MeasureKey>
+      <DimensionKeys>
+        <DimensionKey>
+          <Definition DataMember="[DimFilingStatus].[Name].[Name]" />
+          <Value Type="System.String" Value="[DimFilingStatus].[Name].&amp;[Purchased]" />
+        </DimensionKey>
+      </DimensionKeys>
+    </Entry>
+  </ColorScheme>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="chartDashboardItem1" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

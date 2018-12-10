@@ -1,0 +1,631 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Inventory/VC_BaseInventory");
+   // var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+        
+        var VC_InventoryAssembly = function () { 
+			this.DocDetailPropertyName = 'InventoryAssembly_Details';
+			//this.SerialsEnabled = false;
+			this.IsAddItemDisabled = true;
+            this.ShowBillOfMaterials = true;
+            this.AddItemWithInventory = true;
+		}
+        var onFirstLoad ;
+      // VC_InventoryAssembly.prototype.onLoad = function(){
+      //         baseModelHelper.prototype.onLoad.call(this);
+      //         onFirstLoad = true;
+      //         console.log(onFirstLoad,'XXXXXXXXXXXX')
+      // }
+        
+        VC_InventoryAssembly.prototype = Object.create(VC_BaseDoc.prototype);
+        VC_InventoryAssembly.prototype.onCurrentObjectChanged = function (e) {
+            console.log(onFirstLoad,'items');
+                 
+              var _ = this;
+              var VC = this.VC;
+              var ID_Warehouse;
+              var ID_Item;
+              var ItemName;
+              var isFromitem = 0;
+            
+              if (e.dataField == 'ID_Item' ) {
+                       if (e.value != null) {
+                        if (e.value.IsSerialized !== undefined) {
+                           var Serial = VC.GetDxControl('IsSerialized');
+                           if (Serial !== undefined && Serial != null) {
+                               var Serial  =  Serial.option('value', e.value.IsSerialized);
+                           }
+                      //     console.log(e,'item')
+                           _.CurrentObject.IsSerialized = e.value.IsSerialized;
+                           isFromitem = 1;
+                           _.CurrentObject.ID_UOM = e.value.ID_UOM;
+                           _.CurrentObject.UOM = e.value.PrimaryUOM;
+
+                           _.CurrentObject.UOMConversion = e.value.Conversion;
+                           _.CurrentObject.QtyOnHand = e.value.OnHand;
+                      //
+                           _.CurrentObject.isBundle = e.value.IsBundle;
+                           _.CurrentObject.NonInventoriable = e.value.NonInventoriable;
+                             }
+                        }
+                 
+             }
+
+//f(_.CurrentObject.ID > 0){
+////-----------
+//if ( e.dataField == 'Quantity') {
+//      $.each(_.CurrentObject.InventoryAssembly_Details,function(i,d){
+//          _.CurrentObject.InventoryAssembly_Details[i].TotalQty = (_.CurrentObject.InventoryAssembly_Details[i].Quantity * _.CurrentObject.Quantity)
+//      });
+//  if(_.CurrentObject.ID_InventoryAssemblyType == 1){
+//      
+//  if(_.CurrentObject.IsSerialized == true){
+//   var _ = this;
+//   var VC = this.VC;
+//   var Item = e.key;
+//
+//       var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).Where('$.ID > 0 ').ToArray();
+//       	if( VC._DeletedItems['InventoryAssembly_Serial'] == null ||  VC._DeletedItems['InventoryAssembly_Serial'] == undefined ) VC._DeletedItems['InventoryAssembly_Serial'] = [];
+//       $.each(DeleteDetails,function(i,o){
+//              VC._DeletedItems['InventoryAssembly_Serial'].push(o);
+//       });
+//      var NewSerials = [];
+//
+//      for (var i = 0; i < _.CurrentObject.Quantity * _.CurrentObject.UOMConversion; i++) {
+//          NewSerials.push({
+//              ID: -1,
+//              Name: null,
+//              Code: _.CurrentObject.Item
+//          });
+//      };
+//      _.CurrentObject.InventoryAssembly_Serial = NewSerials;
+//          
+//     _.VC.JsPopUpView.EditSerial(_.CurrentObject.InventoryAssembly_Serial, 'Serial(s) for' + _.CurrentObject.Item).then(function (Items) {
+//                                 _.CurrentObject.InventoryAssembly_Serial = Items;
+//      });
+//    }
+//  }
+//
+//  else {
+//       if(_.CurrentObject.IsSerialized == true){
+//         var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).Where('$.ID > 0 ').ToArray();
+//         _.CurrentObject.InventoryAssembly_Serial = [];
+//       	if( VC._DeletedItems['InventoryAssembly_Serial'] == null ||  VC._DeletedItems['InventoryAssembly_Serial'] == undefined ) VC._DeletedItems['InventoryAssembly_Serial'] = [];
+//       $.each(DeleteDetails,function(i,o){
+//              VC._DeletedItems['InventoryAssembly_Serial'].push(o);
+//       });
+//      
+//        _.BrowseSerials(e,_.CurrentObject.ID_Item,_.CurrentObject.ID_Warehouse)
+//        
+//       }
+//  }
+//                                
+//  }
+//
+//    return;
+// }
+// else{
+        // e.dataField == 'ID_Warehouse' ||
+        console.log(onFirstLoad,'LOAD')
+        if (onFirstLoad !== true)
+         {
+           if ( e.dataField == 'ID_Item' || e.dataField == 'Quantity' || e.dataField == 'ID_InventoryAssemblyType') {
+                
+               VC.BOM(_.CurrentObject.Quantity,_.CurrentObject.UOMConversion);
+            }
+            if ( e.dataField == 'Quantity' || e.dataField == 'ID_InventoryAssemblyType') {
+                  $.each(_.CurrentObject.InventoryAssembly_Details,function(i,d){
+                    _.CurrentObject.InventoryAssembly_Details[i].TotalQty = (_.CurrentObject.InventoryAssembly_Details[i].Quantity * _.CurrentObject.Quantity)
+                  });
+                if(_.CurrentObject.ID_InventoryAssemblyType == 1){
+                        if(_.CurrentObject.IsSerialized == true){
+                            //
+                            //
+                               var _ = this;
+                               var VC = this.VC;
+                               var Item = e.key;
+                               var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).Where('$.ID > 0 ').ToArray();
+                            	console.log(DeleteDetails,'delete')
+                                if( VC._DeletedItems['InventoryAssembly_Serial'] == null ||  VC._DeletedItems['InventoryAssembly_Serial'] == undefined ) VC._DeletedItems['InventoryAssembly_Serial'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['InventoryAssembly_Serial'].push(o);
+                                      });
+                                
+                                var NewSerials = [];
+
+                                for (var i = 0; i < _.CurrentObject.Quantity * 1 ; i++) {
+                                      NewSerials.push({
+                                          ID: -1,
+                                          Name: null,
+                                          Code: _.CurrentObject.Item
+                                      });
+                                };
+
+                                _.CurrentObject.InventoryAssembly_Serial = NewSerials;
+
+                                _.VC.JsPopUpView.EditSerial(_.CurrentObject.InventoryAssembly_Serial, 'Serial(s) for' + _.CurrentObject.Item).then(function (Items) {
+                                 _.CurrentObject.InventoryAssembly_Serial = Items;
+                            //  _.VC.$timeout(function () {
+                            //      e.grid.selectRowsByIndexes([e.rowIndex]);
+                            //  }, 500);
+                                 });
+                          }
+                    //
+                    //
+                }
+
+                else {
+                         if(_.CurrentObject.IsSerialized == true){
+                                var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).Where('$.ID > 0 ').ToArray();
+                               _.CurrentObject.InventoryAssembly_Serial = [];
+                            	if( VC._DeletedItems['InventoryAssembly_Serial'] == null ||  VC._DeletedItems['InventoryAssembly_Serial'] == undefined ) VC._DeletedItems['InventoryAssembly_Serial'] = [];
+                                      $.each(DeleteDetails,function(i,o){
+                                           VC._DeletedItems['InventoryAssembly_Serial'].push(o);
+                                      });
+                                _.BrowseSerials(e,_.CurrentObject.ID_Item,_.CurrentObject.ID_Warehouse)
+                     }
+              
+           }
+
+            }
+
+           
+      }
+           
+     //}
+         onFirstLoad = false;
+        }
+
+ VC_InventoryAssembly.prototype.onInitDetailView = function (VC) {
+
+            VC_BaseDoc.prototype.onInitDetailView.call(this, VC);
+            var _ = this;
+            onFirstLoad = true;
+            console.log(onFirstLoad,'init')
+               VC.onContextMenuPreparing_InventoryAssembly_Details = function (e) {
+                if(_.CurrentObject.ID_InventoryAssemblyType == 1)
+                {
+                    e.items.unshift({
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        var Item = _.CurrentObject.InventoryAssembly_Details[e.rowIndex];
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+                            VC.MsgBox('Please specify Quantity', 'Assemble \ Dissamble');
+                            return;
+                        }
+
+                        if(Item.IsSerialized !== true){
+                            VC.MsgBox('Item '+ Item.Description+' is not Serialized', 'Assemble \ Dissamble');
+                            return;
+                        }
+                _.BrowseSerialsBOM(e, Item,_.CurrentObject.ID_Warehouse);
+                    }
+                });
+                }
+                else if (_.CurrentObject.ID_InventoryAssemblyType == 2){
+                
+                if (_.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] == undefined)
+                {
+                     _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] = [];
+                }
+                // _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'].length = 0;
+                 var Detail = e.row.data;
+         //        for (var i = 0; i < Detail.TotalQty; i++) {
+         //           var NewSerials = [];
+         //           NewSerials.push({
+         //               ID: -1,
+         //               Name: null,
+         //               Code: Detail.Description
+         //           });
+         //           
+         //            _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'].push(NewSerials);
+         //       };
+                
+               
+                e.items.unshift({
+                    text: "Edit Serials",
+                    icon: "mdi mdi-menu",
+                    //template: "contextItem",
+                    onItemClick: function () {
+                        
+                        _.VC.JsPopUpView.EditSerial(_.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'], 'Serial(s) for').then(function (Items) {
+                           _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] = Items;
+                    
+                            _.VC.$timeout(function () {
+                                e.component.selectRowsByIndexes([e.rowIndex]);
+                            }, 500);
+                        });
+
+                    }
+                });
+
+                }
+
+            
+            }
+
+
+        }
+
+    VC_InventoryAssembly.prototype.isColumnGridEditable = function (PropertyName, e) {
+            //alert('xxx');
+            var _ = this;
+            console.log('NonInventoriable',_.CurrentObject.ID_InventoryAssemblyType);
+            if (e.column.dataField === 'Name') {
+                if (_.CurrentObject.ID_InventoryAssemblyType == 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+		VC_InventoryAssembly.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+
+             VC.LoadBOM = function (newDetails) {
+             }
+
+			var _ = this;
+            //
+            //
+
+            VC.BOM = function(QTY,Conversion){
+                var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Detail_Serials).Where('$.ID > 0 ').ToArray();
+                                if( VC._DeletedItems['InventoryAssembly_Detail_Serials'] == null ||  VC._DeletedItems['InventoryAssembly_Detail_Serials'] == undefined ) VC._DeletedItems['InventoryAssembly_Detail_Serials'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['InventoryAssembly_Detail_Serials'].push(o);
+                                   });
+                                console.log(Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).ToArray(),'Det!!!')
+
+                                var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Details).Where('$.ID > 0 ').ToArray();
+                                if( VC._DeletedItems['InventoryAssembly_Details'] == null ||  VC._DeletedItems['InventoryAssembly_Details'] == undefined ) VC._DeletedItems['InventoryAssembly_Details'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['InventoryAssembly_Details'].push(o);
+                                   });
+
+                                var DeleteDetails = Enumerable.From(VC.$scope.CurrentObject.InventoryAssembly_Serial).Where('$.ID > 0 ').ToArray();
+                                if( VC._DeletedItems['InventoryAssembly_Serial'] == null ||  VC._DeletedItems['InventoryAssembly_Serial'] == undefined ) VC._DeletedItems['InventoryAssembly_Serial'] = [];
+                                  $.each(DeleteDetails,function(i,o){
+                                   VC._DeletedItems['InventoryAssembly_Serial'].push(o);
+                                   });
+                //  if(_.CurrentObject.InventoryAssembly_Details == undefined) _.CurrentObject.InventoryAssembly_Details = [];
+                //  var DeleteDetails = Enumerable.From(_.CurrentObject.InventoryAssembly_Details).Where('$.ID > 0 ').ToArray();
+                //                 $.each(DeleteDetails, function (i, o) {
+                //                     VC._DeletedItems['InventoryAssembly_Details'].push(o);
+                //   });
+                  app.$GetDataService().Query('@Html.EncryptSQL("SELECT * FROM dbo.vItem_BillOfMaterials_onHand WHERE ID_Parent = @Item and ID_Warehouse = @Warehouse" ) ' , {
+                        params: {
+                            'Item': _.CurrentObject.ID_Item,
+                            'Warehouse': _.CurrentObject.ID_Warehouse
+                        }
+
+                    }).then(function (data) {
+                        if(_.CurrentObject.InventoryAssembly_Details == undefined) _.CurrentObject.InventoryAssembly_Details = [];
+                        if (data.collection.length == 0){
+                             _.CurrentObject.InventoryAssembly_Details.length = 0 
+                             return;}
+                        
+                        _.CurrentObject.InventoryAssembly_Details.length = 0;
+
+                        $.each(data.collection, function (i, d) {
+
+                           var NewSerials = [];
+                        if(_.CurrentObject.ID_InventoryAssemblyType == 2){
+                                if(d.IsSerialized == true){
+                                        for(var i = 0; i < (( d.Quantity * 1) * parseFloat(QTY));i++ )
+                                        {
+                                        NewSerials.push({
+                                            ID: -1,
+                                            Name: null,
+                                            Code: d.Name
+                                            });
+                                        }
+                                      }
+                        }
+                           var bom = {
+										ID: -1,
+										ID_Parent: d.ID_Parent,
+										Code: d.Code,
+										Description: d.Name,
+										ID_UOM: d.ID_UOM,
+										UOM: d.UOM,
+										Quantity: d.Quantity,
+                                        QtyOnHand: d.OnHand,
+                                        ID_Item : d.ID_Item,
+                                        IsSerialized : d.IsSerialized,
+                                        TotalQty : (d.Quantity * 1) * parseFloat(QTY),
+                                       InventoryAssembly_Detail_Serials: NewSerials
+									}
+                                 VC.$timeout(function(){     
+                           _.CurrentObject.InventoryAssembly_Details.push(bom);
+                                 })
+                        });
+                    });	
+                  if(_.CurrentObject.InventoryAssembly_Serial == undefined) _.CurrentObject.InventoryAssembly_Serial = [];
+                  if(_.CurrentObject.IsSerialized == true)
+                           {
+                             _.CurrentObject.InventoryAssembly_Serial.length = 0;
+
+                               var itemSerial = [];
+                   //         for(i=0; i < parseFloat( _.CurrentObject.Quantity);i++){
+                   //             _.CurrentObject.InventoryAssembly_Serial.push({
+                   //                 ID: -1,
+                   //                 Code: _.CurrentObject.Item,
+                   //                 Name: null
+                   //             });   
+                   //          }
+                                 
+
+                           }
+                else{
+                   
+                    _.CurrentObject.InventoryAssembly_Serial.length = 0;
+                }
+
+                                
+            }
+
+
+        if(_.ID_ViewType == 2){
+				VC.ValidationRules.push(function () {
+                   var brokenRules = [];
+
+                   if(_.CurrentObject.isBundle == true){
+                       if(_.CurrentObject.NonInventoriable == false){
+                           brokenRules.push('Bundle item must be Non-Inventoriable.');
+                       }
+                   }
+                   if( _.CurrentObject.ID_InventoryAssemblyType == 1)
+                   {
+                        if(_.CurrentObject.InventoryAssembly_Details == undefined) _.CurrentObject.InventoryAssembly_Details = [];
+                            $.each(_.CurrentObject.InventoryAssembly_Details,function(index,item){
+                                if(item.TotalQty > item.QtyOnHand){
+                                    brokenRules.push('Not enough Quantity to assemble this item ( '+ item.Description +' )');
+                                }
+                            });
+                   }
+
+                   else if( _.CurrentObject.ID_InventoryAssemblyType == 2)
+                   {
+                        if(_.CurrentObject.InventoryAssembly_Details == undefined) _.CurrentObject.InventoryAssembly_Details = [];
+                           if(_.CurrentObject.Quantity > _.CurrentObject.QtyOnHand ){
+                                    brokenRules.push('Quantity must not be greater than On Hand( '+ _.CurrentObject.Item+' )');
+                                }
+                        /// -----
+                        $.each(_.CurrentObject.InventoryAssembly_Details, function (index, item) {
+                        var hasNoSerial = false;
+                        
+                        if (item.IsSerialized === true) {
+                            if (item.InventoryAssembly_Detail_Serials == undefined) {
+                                brokenRules.push('Serial(s) is required for Item (' + item.Description + ')');
+                                return;
+                            }
+                            if (Enumerable.From(item.InventoryAssembly_Detail_Serials).Where('$.Name == null').ToArray().length > 0) {
+                                brokenRules.push('Serial(s) is required for Item (' + item.Description + ')');
+                            } else {
+                                var isSerialsUnique = Enumerable.From(item.InventoryAssembly_Detail_Serials).Select('$.Name').Distinct().ToArray().length === item.InventoryAssembly_Detail_Serials.length;
+                                if (isSerialsUnique === false) {
+                                    brokenRules.push('Serial(s) must be unique for Item (' + item.Item + ')');
+                                }
+
+                            }
+                            var SerialData = item.InventoryAssembly_Detail_Serials;
+                            if (item.TotalQty !== SerialData.length) {
+                                brokenRules.push('Serial(s) count must be same with Quantity for Item (' + item.Description + ')');
+                            }
+
+                            
+
+                        }
+                    });
+                        /// -----
+                            
+                   }
+
+                  $.each(_.CurrentObject.InventoryAssembly_Details, function(i, d){
+                      if(d.IsSerialized == true){
+                          if(_.CurrentObject.InventoryAssembly_Details[i]['InventoryAssembly_Detail_Serials'] == undefined ) _.CurrentObject.InventoryAssembly_Details[i]['InventoryAssembly_Detail_Serials'] = []
+                 // console.log(_.CurrentObject.InventoryAssembly_Details[i]['InventoryAssembly_Detail_Serials'].length,'asdasd')
+                           if(_.CurrentObject.InventoryAssembly_Details[i]['InventoryAssembly_Detail_Serials'].length !== d.TotalQty){
+                               brokenRules.push('Serial of '+ d.Description +' must be equal to TotalQty ( '+ d.TotalQty +' )');
+                           }
+
+                          
+                      }
+                  });
+
+                  if( _.CurrentObject.IsSerialized == true ){
+                        var DetailSerialLength = 0;
+                        if( _.CurrentObject.InventoryAssembly_Serial == undefined || _.CurrentObject.InventoryAssembly_Serial == null ) _.CurrentObject.InventoryAssembly_Serial = [];
+                            DetailSerialLength =  _.CurrentObject.InventoryAssembly_Serial.length;
+                             console.log(_.CurrentObject.Quantity , DetailSerialLength)
+                           if( _.CurrentObject.Quantity !==  DetailSerialLength){
+                                brokenRules.push('Serial of '+ _.CurrentObject.Item +' must be equal to Quantity ( '+ _.CurrentObject.Quantity +' )');
+                           }
+
+                  }
+                   
+
+				if(_.CurrentObject.Quantity == 0){
+                    brokenRules.push('Quantity is required')
+                }
+					if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+					return { isValid: true };
+
+				});
+
+                 VC.ValidationRules.push(function () {
+                    var JsDataService =  app.$GetDataService();
+                    var serial = []
+                    if(_.CurrentObject.ID_InventoryAssemblyType == 1){
+                            if(_.CurrentObject.InventoryAssembly_Serial == undefined) _.CurrentObject.InventoryAssembly_Serial = [];
+                            $.each(_.CurrentObject.InventoryAssembly_Serial, function(i,d){
+                                serial.push({
+                                    ID : d.ID,
+                                	Name : d.Name,
+	                                ID_Model : 8290
+                                })
+                            });
+                    }
+                    else{
+                        if(_.CurrentObject.InventoryAssembly_Detail_Serials == undefined) _.CurrentObject.InventoryAssembly_Detail_Serials = [];
+                        $.each(_.CurrentObject.InventoryAssembly_Detail_Serials, function(i,d){
+                                serial.push({
+                                    ID : d.ID,
+                                	Name : d.Name,
+	                                ID_Model : 8290
+                                })
+                            });
+                    }
+                    return JsDataService.Validate( '@Html.EncryptSQL("pValidateSerial2")',
+                        {
+                            'Serial' : serial
+                        }
+                    );
+                });
+			}
+
+                _.BrowseSerials = function (e, Item, ID_Warehouse) {
+                var SQL = '@Html.EncryptSQL("SELECT * FROM vInventoryHistoryPerWarehouse_Serials WHERE ID_Item = @ID_Item and ID_Warehouse = @ID_Warehouse")';
+                var params = {
+                    ID_Item: Item,
+                    ID_Warehouse: ID_Warehouse == null? -1 : ID_Warehouse
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: '29CE3580-AF64-4A06-9097-D6F19A05D536',
+                    title: 'Select Item Serial (' + Item + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== _.CurrentObject.Quantity) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.Quantity + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+                    
+                    if (_.CurrentObject.InventoryAssembly_Serial == undefined) _.CurrentObject.InventoryAssembly_Serial = []
+
+                    $.each(Serials, function (i, d) {
+                        _.CurrentObject.InventoryAssembly_Serial.push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: _.CurrentObject.Item
+                        });
+                    });
+                  
+
+                });
+            }
+
+                _.BrowseSerialsBOM = function (e, Item, ID_Warehouse) {
+                    console.log()
+                if ( _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] == undefined){
+                     _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] = []
+                }
+
+                var SQL = '@Html.EncryptSQL("SELECT * FROM vInventoryHistoryPerWarehouse_Serials WHERE ID_Item = @ID_Item and ID_Warehouse = @ID_Warehouse and SerialNo Not In(@SerialName)")';
+                var params = {
+                    ID_Item: Item.ID_Item,
+                    ID_Warehouse: ID_Warehouse == null? -1 : ID_Warehouse,
+                    SerialName: Enumerable.From(_.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials']).Select('$.Name').ToArray().join()
+                }
+
+                _.VC.JsPopUpView.BrowseDataSet(SQL, {
+                    ID_View: '29CE3580-AF64-4A06-9097-D6F19A05D536',
+                    title: 'Select Item Serial (' + Item.Description + ')',
+                    params: params,
+                    validate: function (SelectedRows) {
+                        if (SelectedRows.length !== Item.TotalQty) {
+                            _.VC.MsgBox("Serial must be equal to quantity(" + Item.TotalQty + ")");
+                            return false;
+                        }
+                        return true;
+                    }
+                }).then(function (Serials) {
+
+                    if ( _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] == undefined)  _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'] = []
+                   //  _.CurrentObject.InventoryAssembly_Details[0]['InventoryAssembly_Detail_Serials'].length = 0
+                   $.each(Serials, function(i,d){
+                       _.CurrentObject.InventoryAssembly_Details[e.rowIndex]['InventoryAssembly_Detail_Serials'].push({
+                            ID: -1,
+                            Name: d.SerialNo,
+                            Code: Item.Description
+                       })
+                      //  _.CurrentObject.InventoryAssembly_Details[0]['InventoryAssembly_Detail_Serials'] = newDet;
+                   });
+
+                
+
+                });
+            }
+        }
+
+        VC_InventoryAssembly.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pInventoryAssemblyApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser' : '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+           VC_InventoryAssembly.prototype.Cancel = function (Items, Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+        
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pInventoryAssemblyCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+         return VC_InventoryAssembly;
+ });
+
+  
+    
+//</script>
+
+
+ </text> , false);

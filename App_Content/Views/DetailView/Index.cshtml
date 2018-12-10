@@ -1,0 +1,277 @@
+﻿@using System;
+@using System.Drawing;
+@{
+    Layout = null;
+    var ModelObject = ViewBag.DetailViewModelObject as dynamic;
+    var ModelDetailViewDetails = ((IEnumerable<dynamic>)ModelObject.ModelDetailViewDetails);
+    var Tabs = ModelDetailViewDetails.Where(p => p.ID_ControlType == 11).ToList();
+    var LookUpListViewControls = ModelDetailViewDetails.Where(p => p.ID_ControlType == 15 && p.IsReadOnly == false).ToList();
+    var GeneralTabName = "General_" + ModelObject.Name + "_{{CurrentObject.ID}}";
+    foreach (var tab in Tabs)
+    {
+        tab.FormOptionName = tab.Name + "FormOptions";
+        if (((IDictionary<string, object>)tab).Keys.Contains("TabName") == false)
+        {
+            tab.TabName = ModelObject.ModelName + "-" + tab.Name + "_{{CurrentObject.ID}}";
+        }
+    }
+    bool IsModal = ViewBag.IsModal;
+    bool IsGenerateTabs = Tabs.Count > 0;
+    string ScrollViewHieght = IsModal ? "auto" : "650px";
+    string FormId = HtmlHelperExtensions.RandomString();
+    string PrimaryColor = ModelObject.PrimaryColor;
+    string PrimaryLightColor = HtmlHelperExtensions.setSecondaryColor(@ModelObject.PrimaryColor);
+    bool IsDevelopersMode = ViewBag.IsDeveloperMode;
+    bool IsEditingOnly = ViewBag.IsEditingOnly;
+}
+<style>
+    @if (true)
+    {
+        @:#@FormId .header {
+             @:background-color:@PrimaryLightColor;
+             @:color:@PrimaryColor;
+        @:}
+        @:#@FormId .JsModalbtnContainer {
+            @:background-color:@PrimaryColor;
+        @:}
+        @:#@FormId .status-bar-container {
+        @:    background-color:@PrimaryColor;
+        @:}
+    }
+</style>
+<form id="@FormId" class="js-detailview-container js-themes
+      @if (ModelObject.ID_Orientation == 2) {  
+        @:js-form-horizontal 
+      }
+      @if (IsModal == true) {  
+        @:js-modal-detailview
+      }
+      " 
+      name="_DetailViewForm" style="height:100%;position:relative" init-view>
+    <div class="js-header-container">
+
+        <div class="header">
+            <span class="@ModelObject.Icon" /> {{DisplayName}} 
+            <div class="DisplayName" ng-click="ListViewTab()">
+                {{CurrentObject.ID == -1 ? '(New)' : DisplayPropertyName}}
+            </div>
+            <div style="display:inline-flex" ng-show="IsModelNotifShow"><js-notif icon="mdi mdi-note-outline" background="#b20000" option="ModelNotifOption" style="height:25px!important;width:25px!important;font-size:13px;line-height:20px;margin-left:0px"></js-notif></div>
+        </div>
+
+        <div class="js-grid-toolbar">
+            <div dx-menu="FormContextMenu" class="FormContextMenu">
+                <div data-options="dxTemplate: { name: 'item' }">
+                    <span class="icon {{icon}}"></span> <span>{{name}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="js-detail-scrollview-content" dx-scroll-view="MainScrollViewOption">
+        <div class="js-detailview-content" 
+             style="height:100%;width:100%;max-width:1420px
+             @if (ModelObject.ID_Orientation == 2)
+             {
+                   @:padding:5px
+             }">
+            @{
+
+                if (ModelObject.ID_Orientation == 1)
+                {
+                    @:<div class="row" style="height:100%;width:100%;padding:0px;">
+                }
+
+                <div 
+                    @if (ModelObject.ID_Orientation == 1)
+                    {
+
+                        @:class="js-dx-form-group col-md-4" style="margin-top:0px"
+
+                    } else {
+                        @:class="js-dx-form-group"
+                    } 
+                    dx-form="GeneralFormOptions"/>
+
+                var Grids = ModelDetailViewDetails.Where(p => p.ID_ControlType == 10 && p.ID_ModelProperty_ParentTable == null).ToList().OrderBy(p => p.SeqNo).ToList();
+                
+                if (Grids.Count > 1)
+                {
+                    <div
+                        @if (ModelObject.ID_Orientation == 1)
+                        {
+                            @:class="form-details col-md-8"
+                        } else {
+                            @:style="margin-top:15px" class="form-details"
+                        }
+                        id="@{@ModelObject.ID}GridTabPanel_{{CurrentObject.ID}}"
+                            dx-item-alias="Grid" dx-tab-panel="GridTabPanelControlOption">
+                       
+                        <div data-options="dxTemplate : { name: 'dxDataGrid' } ">
+
+                            
+
+                            <div ng-class="{'hasChildGrid': Grid.ChildGrids.length > 0}">
+
+                                <div ng-class="{'hasChildGrid-Parent': Grid.ChildGrids.length > 0}" style="width:{{Grid.width}}">
+                                     <div class="row">
+                                        <div class="col-md-1 record-count">
+                                            {{$parent.CurrentObject[Grid.PropertyName].length + ' Item(s)'}}
+                                        </div>
+                                        <div class="col-md-11 batch-edit-container">
+                                            <div dx-menu="Grid.MenuOptions" class="js-grid-toolbar dx-menu-right"></div>
+                                            @*<div dx-button="Grid.batchEditButton"></div>*@
+                                        </div>
+                                    </div>
+                                    <div id="{{Grid.Name}}_{{$parent.CurrentObject.ID}}" dx-data-grid="Grid.GridOption" >
+                                        <div data-options="dxTemplate:{ name:'contextItem' }">
+                                            <div class="JsdxContextMenu">
+                                                <div class="dxContainer">
+                                                    <div class="Icon"><span class="{{icon}}"></span></div> 
+                                                    <div class="Text">{{text}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="child-grid" ng-repeat="childGrid in Grid.ChildGrids" style="width:{{childGrid.width}}">
+                                    <div class="row">
+                                        <div class="col-md-1 record-count">
+                                            {{childGrid.Caption.toUpperCase()}}
+                                        </div>
+                                        <div class="col-md-11 batch-edit-container">
+                                            <div dx-menu="childGrid.MenuOptions" class="js-grid-toolbar dx-menu-right"></div>
+                                            @*<div dx-button="childGrid.batchEditButton"></div>*@
+                                        </div>
+                                    </div>
+                                    <div dx-data-grid="childGrid.GridOption">
+                                        <div data-options="dxTemplate:{ name:'contextItem' }">
+                                            <div class="JsdxContextMenu">
+                                                <div class="dxContainer">
+                                                    <div class="Icon"><span class="{{icon}}"></span></div> 
+                                                    <div class="Text">{{text}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                } else if ( Grids.Count == 1) {
+
+                    <div class="form-details" ng-repeat="Grid in GridTabPanelControlOption.items" style="margin-top:15px;background-color:#fff">
+                        <div ng-class="{'hasChildGrid': Grid.ChildGrids.length > 0}">
+                            <div ng-class="{'hasChildGrid-Parent': Grid.ChildGrids.length > 0}" style="width:{{Grid.width}}">
+                                    <div class="row">
+                                    <div class="col-md-3 record-count">
+                                        @*{{$parent.CurrentObject[Grid.PropertyName].length + ' Item(s)'}}*@
+                                        {{Grid.Caption.toUpperCase()}}
+                                    </div>
+                                    <div class="col-md-9 batch-edit-container">
+                                        <div dx-menu="Grid.MenuOptions" class="js-grid-toolbar dx-menu-right"></div>
+                                        @*<div dx-button="Grid.batchEditButton"></div>*@
+                                    </div>
+                                </div>
+                                <div id="{{Grid.Name}}_{{$parent.CurrentObject.ID}}" dx-data-grid="Grid.GridOption" >
+                                    <div data-options="dxTemplate:{ name:'contextItem' }">
+                                        <div class="JsdxContextMenu">
+                                            <div class="dxContainer">
+                                                <div class="Icon"><span class="{{icon}}"></span></div> 
+                                                <div class="Text">{{text}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="child-grid" ng-repeat="childGrid in Grid.ChildGrids" style="width:{{childGrid.width}};padding:5px">
+                            <div class="row">
+                                <div class="col-md-1 record-count">
+                                    {{childGrid.Caption.toUpperCase()}}
+                                </div>
+                                <div class="col-md-11 batch-edit-container">
+                                    <div dx-menu="childGrid.MenuOptions" class="js-grid-toolbar dx-menu-right"></div>
+                                    @*<div dx-button="childGrid.batchEditButton"></div>*@
+                                </div>
+                            </div>
+                            <div dx-data-grid="childGrid.GridOption">
+                                <div data-options="dxTemplate:{ name:'contextItem' }">
+                                    <div class="JsdxContextMenu">
+                                        <div class="dxContainer">
+                                            <div class="Icon"><span class="{{icon}}"></span></div> 
+                                            <div class="Text">{{text}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+    if (ModelObject.ID_Orientation == 1)
+    {
+                    @:</div>
+                }
+            }
+        </div>
+    </div>
+     @if (IsModal == false)
+     {
+         <div class="status-bar-container" style="bottom:0;position:absolute">
+            <div class="inner-status col-md-6">
+                    <span ng-hide="StatusText === ''" class='fa fa-exclamation-circle'></span> {{StatusText}}
+            </div>
+            <div class="inner-status col-md-6 other-infos">
+                <div class="right-container">
+                    <span class="mdi mdi-information-outline"/> {{DataInformationText}}
+                </div>
+            </div>
+        </div>
+     }
+    @{
+        @*if (IsEditingOnly)
+        {
+            <div class="js-btn-group-bottom btn-group">
+                <button type="button" class="btn btn-primary positive-btn" style="color:#fff" ng-click="OnEditingDone()">OK</button>
+                <button type="button" class="btn btn-primary" style="background-color:#fff">Cancel</button>
+            </div>
+        }*@
+
+        if (IsModal == true)
+        {
+            <div class="JsModalbtnContainer">
+                <div class="JsModalbtnContainerInner">
+                    <div class="inner-status" style="float:left">
+                        <span ng-hide="StatusText === ''" class='fa fa-exclamation-circle'></span> {{StatusText}}
+                    </div>
+                    <div class="ctn">
+                        @if (IsEditingOnly == true)
+                        {
+                            <div dx-button="{ text : '@Html.Raw(IsModal && IsEditingOnly == false ? "Save" : "OK")',
+                                          icon: '@Html.Raw(IsModal && IsEditingOnly == false ? "fa fa-save" : "mdi mdi-checkbox-marked-circle-outline")',
+                                          onClick : @Html.Raw(IsModal && IsEditingOnly == false ? "PerformSave" : "OnEditDone")  }"></div>
+                        }
+                        else
+                        {
+                            <div dx-button="{ text : 'Save & Close',
+                                 icon : 'fa fa-save',
+                                 onClick : PerformSaveAndClose }"></div>
+                        }
+                        <div dx-button="{ text : '@Html.Raw(IsModal && IsEditingOnly == false ? "Close" : "Cancel")',
+                                          icon:'@Html.Raw(IsModal && IsEditingOnly == false ? "mdi mdi-exit-to-app" : "fa fa-close")',
+                                          onClick : ClosePopup }"></div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+@*<pageslide ps-open="$PageSlideViewOpen.Open" ps-side="left" ps-speed="0.25" ps-push="true" ps-container="@FormId" style="background-color:#fff;display:none">
+       <h2>Sample</h2>
+</pageslide>*@
+</form>
+
+

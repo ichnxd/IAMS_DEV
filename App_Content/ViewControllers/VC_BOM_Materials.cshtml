@@ -1,0 +1,90 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+   Layout = null;
+   //var BaseVCUrl = null; //Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+        var VC_BOM_Materials = function () {
+            //this.DocDetailPropertyName = "Contacts";
+        }
+       
+        VC_BOM_Materials.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_BOM_Materials.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            
+        }
+
+        VC_BOM_Materials.prototype.onCurrentObjectChanged = function (e) {
+            var VC = this.VC;
+            var _ = this;
+            var CurrentObject = VC.$scope.CurrentObject;
+            if(e.dataField == "ID_Item"){
+
+                if(e.value !== null)
+                {
+                     if(e.value.Code !== null && e.value.Code !== undefined)
+                        {
+                        _.CurrentObject.Name = e.value.Name ;
+                        _.CurrentObject.ID_ItemType = e.value.ID_ItemType;
+                        _.CurrentObject.ItemType = e.value.ItemType;
+                        _.CurrentObject.ID_ItemBrand = e.value.ID_Brand;
+                        _.CurrentObject.ItemBrand = e.value.Brand;
+                        _.CurrentObject.ID_UOM = e.value.UOM;
+                        _.CurrentObject.UOM = e.value.PrimaryUOM;
+                        _.CurrentObject.ModelCode = e.value.ModelCode;
+                        _.CurrentObject.ID_ItemCategory = e.value.ID_ItemCategory;
+                        _.CurrentObject.ItemCategory = e.value.ItemCategory;
+                        _.CurrentObject.SupplierCode = e.value.SupplierCode;
+                        _.CurrentObject.Code = e.value.Code;
+                        _.CurrentObject.ID_ItemSubCategory = e.value.ID_ItemSubCategory;
+                        _.CurrentObject.SubCategory = e.value.SubCategory;
+                        _.CurrentObject.PartNo = e.value.PartNo;
+                        _.CurrentObject.SKUcode = e.value.SKUCode;
+                        }
+
+                }
+                else{
+                        _.CurrentObject.Name = null ;
+                        _.CurrentObject.ID_ItemType = null;
+                        _.CurrentObject.ItemType = null;
+                        _.CurrentObject.ID_ItemBrand = null;
+                        _.CurrentObject.ItemBrand = null;
+                        _.CurrentObject.ID_UOM = null;
+                        _.CurrentObject.UOM = null;
+                        _.CurrentObject.ModelCode = null;
+                        _.CurrentObject.ID_ItemCategory = null;
+                        _.CurrentObject.ItemCategory = null;
+                        _.CurrentObject.SupplierCode = null;
+                        _.CurrentObject.Code = null;
+                        _.CurrentObject.ID_ItemSubCategory = null;
+                        _.CurrentObject.SubCategory = null;
+                        _.CurrentObject.PartNo = null;
+                        _.CurrentObject.SKUcode = null;
+                        _.CurrentObject.Quantity = 0;
+                        _.CurrentObject.Unitprice = 0;
+                        _.CurrentObject.LineTotal = 0;
+
+                }
+   
+            }
+          
+            if(e.dataField == 'Quantity' || e.dataField == 'Unitprice')
+                {
+                    var Quantity = _.CurrentObject.Quantity == null ? 0 : _.CurrentObject.Quantity;
+                    var Unitprice = _.CurrentObject.Unitprice == null ? 0 : _.CurrentObject.Unitprice;
+                    var LineTotal = Quantity * Unitprice;
+                     _.CurrentObject.LineTotal = LineTotal; 
+                }
+    
+
+        };
+
+        return VC_BOM_Materials;
+    });
+//</script>
+</text> , false )

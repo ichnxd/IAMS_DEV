@@ -1,0 +1,347 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_PickList = function () {
+
+            this.DocDetailPropertyName  = 'PickList_Details';
+            this.SerialsEnabled         = true;
+            this.AddItemWithInventory   = true;
+            this.IsAddItemDisabled      = true;
+        }
+
+
+      
+        
+        var fBrowseSerial = function(options){
+            
+            options._BeforeQuantity = options.Item.Quantity;
+
+            options.e.addedOptions = {
+                height: '80%',
+                width: '50%'
+            }
+
+            options.butCancel_onClick = function(e){
+                options.Item.Quantity = options._BeforeQuantity;
+                console.log(options);
+            };  
+
+            if (options.Item.Quantity == null) Item.Quantity = 0;
+    
+            options._.BrowseSerials(
+                options.e,
+                options.Item,
+                options.ID_Warehouse
+            );
+
+        };
+
+        VC_PickList.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_PickList.prototype.Init = function (VC) {
+
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _   = this;
+            var VC  = _.VC;
+
+            if(_.ID_ViewType == 2)
+            {
+               VC.ValidationRules.push(function () {
+                     var items          = [];
+                     var brokenRules    = [];
+
+                    if(_.CurrentObject.PickList_Details == undefined) _.CurrentObject.PickList_Details = [];
+
+                    $.each(_.CurrentObject.PickList_Details , function(i,d){
+                        if(d.Quantity > d.BalanceQty )
+                        {
+                            brokenRules.push("Cannot accept excess Quantity. Item Code : " + d.ItemCode)
+                        }
+                    });
+
+                    if(brokenRules.length > 0){
+                        return{
+                            isValid     : false,
+                            brokenRules : brokenRules
+                       } 
+                    }
+                    return { isValid: true };
+                })
+
+            }
+
+
+        };
+
+
+
+        
+        VC_PickList.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            //
+        VC.btnSelectSO.option('onClick', function () {
+                //
+                //
+                //
+                VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vSalesOrder_ListView WHERE ID_DocStatus NOT IN (3,4)")',
+                {
+                    title   : 'Select Sales Order',
+                    ID_View : 'SO-C76FA02B-5B2B-493D-8B87-0691323C1355'
+                }).then(function (Details) {
+                    var JsDataService =  app.$GetDataService();
+                    if (_.CurrentObject.PickList_Details == null) _.CurrentObject.PickList_Details = [];
+
+                        if(Details.length > 1)
+                        {
+                            VC.MsgBox("One SO per Pick List Only");
+                        }
+                        else{
+                            _.CurrentObject.ID_BusinessPartner  = Details[0].ID_BusinessPartner
+                            _.CurrentObject.BusinessPartner     = Details[0].BusinessPartner
+                            _.CurrentObject.ID_SalesOrder       = Details[0].ID
+                            _.CurrentObject.SalesOrder          = Details[0].DocumentNo
+                            _.CurrentObject.ID_Warehouse        = Details[0].ID_Warehouse
+                            _.CurrentObject.Warehouse           = Details[0].Warehouse
+                        
+                            JsDataService.Query('@Html.EncryptSQL(@"SELECT * FROM vSalesOrder_Detail WHERE Balance > 0 And ID_SalesOrder = @ID")',{
+                                params : {
+                                    ID : Details[0].ID,
+                                }
+                            }).then(function(items){
+                                console.log('item',items.collection);
+                                _.CurrentObject.PickList_Details = [];  
+                                $.each(items.collection, function(i,d){
+                                    var detail = {
+                                        ID              : -1,
+                                        ID_Item         : d.ID_Item,
+                                        ItemCode        : d.ItemCode,
+                                        ItemDescription : d.Description,
+                                        ID_UOM          : d.ID_UOM,
+                                        UOM             : d.UOM,
+                                        BalanceQty      : d.Balance,
+                                        Quantity        : 0,
+                                        IsSerialized    : d.IsSerialized,
+                                        Item            : d.Description,
+                                        Conversion      : 1,
+                                        ID_DocDetail    : d.ID
+                                    }
+                                _.CurrentObject.PickList_Details.push(detail);
+                                });
+                            });  
+                        }   
+                });
+            });
+
+
+            //
+        };
+
+        VC_PickList.prototype.onInitDetailView = function(VC) { 
+
+            baseModelHelper.prototype.onInitDetailView.call(this, VC);
+
+            var _ = this;
+
+            var _onContextMenuPreparing_PickList_Details = VC.onContextMenuPreparing_PickList_Details;
+
+
+            VC.onContextMenuPreparing_PickList_Details = function (e) {
+
+                _onContextMenuPreparing_PickList_Details(e);
+
+                e.items.unshift({
+                    text: "Add Serials",
+                    icon: "mdi mdi-menu",
+               
+                    onItemClick: function () {
+
+                        var Item = _.CurrentObject.PickList_Details[e.rowIndex];
+                        
+                        if (Item.Quantity == 0 || Item.Quantity == null) {
+
+                            VC.MsgBox('Please specify Quantity', 'Pick List ');
+                            return;
+                        }
+
+                        var options = {
+                            _           : _,
+                            e           : e,
+                            Item        : Item,
+                            ID_Warehouse: _.CurrentObject.ID_Warehouse
+                        }
+
+                        fBrowseSerial(options);
+                    }
+                });
+            }
+
+            var btnAddItem = {
+
+                text        : 'Add Item',
+                icon        : 'mdi mdi-package-variant',
+                formatKey   : 'VC_PickList_Detail_AddItems',
+                onClick: function (option) {
+                    VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT * FROM vSOPickList_Detail WHERE ID_Item NOT IN (@ID_Item) AND ID = (@ID_SalesOrder) and Balance > 0")',
+                    {
+                        title   : 'Select Items',
+                        ID_View : '4037EC79-245B-4924-8337-9D4BB09D54C4',
+                        params  :  {
+                            'ID_Item'       : Enumerable.From(_.CurrentObject.PickList_Details).Select("$.ID_Item").ToArray(),
+                            'ID_SalesOrder' : _.CurrentObject.ID_SalesOrder
+                        }
+                    }).then(function (Items) {
+                        
+                        $.each(Items, function (i, item) {
+
+                            var NewDetail = {
+                                ID_Item         : item.ID_Item,
+                                ItemCode        : item.Code,
+                                ItemDescription : item.Description,
+                                Item            : item.Description,
+                                Name            : item.Description,
+                                ID_UOM          : item.ID_UOM,
+                                UOM             : item.UOM,
+                                Quantity        : 0,
+                                BalanceQty      : item.Balance,
+                                IsSerialized    : item.IsSerialized,
+                                NonInventoriable: item.NonInventoriable,
+                                ID_DocDetail    : item.ID_Det,
+                                IsSerialized    : item.IsSerialized,
+                                Conversion      : 1,
+                            };
+
+                            VC.$timeout(function(){
+
+                                if (_.CurrentObject.PickList_Details == null) _.CurrentObject.PickList_Details = [];
+
+                                VC.$scope.CurrentObject.PickList_Details.push(NewDetail);
+                            });
+
+                        })
+
+                    });
+                }
+            };
+
+            ///
+
+
+              var btnAddItem2 = {
+
+                text        : 'Add Item 2',
+                icon        : 'mdi mdi-package-variant',
+                formatKey   : 'VC_PickList_Detail_AddItems',
+                onClick: function (option) {
+
+                   VC.OpenOnNewWindowByID(10488, -1, {
+                        fullScreen      : false,
+                        InitController  : function (scope) {},
+                        IsEditingOnly   : true,
+                        Width           : $(window).width() * 0.50,
+                        shading         : true
+                    }).then(function (currentPayment) {
+
+                    });
+                }
+            };
+
+            VC.AddToolBarButtonOnGrid('PickList_Details', btnAddItem, true);
+            // VC.AddToolBarButtonOnGrid('PickList_Details', btnAddItem2, true);
+        }
+
+        VC_PickList.prototype.OnDetail_ColumnChanged = function (e) {
+
+            var _       = this;
+            var Item    = e.key;
+   
+            if (_.SerialsEnabled == true) {
+
+                if (e.dataField === 'Quantity') {
+
+                    if (Item.IsSerialized === true && Item.NonInventoriable !== true) {
+
+                        if (e.data.Quantity == 0) return;
+
+                        e.grid.deselectAll();
+
+                        var DocDetailSerialName     = _.DocSerialPropertyName != undefined ? _.DocSerialPropertyName : _.DocDetailPropertyName.substring(0, _.DocDetailPropertyName.length - 1) + '_Serials';
+
+                        Item[DocDetailSerialName]   = [];
+
+                        var options = {
+                            _           : _,
+                            e           : e,
+                            Item        : Item,
+                            ID_Warehouse: _.CurrentObject.ID_Warehouse
+                        }
+
+                        fBrowseSerial(options);
+                    }
+                }
+            }
+        }
+
+
+
+        
+        VC_PickList.prototype.Approve = function (Items) {
+
+            var $q              = app.$GetAsync();
+            var JsDataService   = app.$GetDataService();
+            var defer           = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPickListApprove")',
+                {
+                    'IDs'           : Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+
+        VC_PickList.prototype.Cancel = function (Items, Reason) {
+            var $q              = app.$GetAsync();
+            var JsDataService   = app.$GetDataService();
+            var defer           = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pPickListCancel")',
+                {
+                    'IDs'           : Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason'        : Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+
+        return VC_PickList;
+});
+//</script>
+</text> , false);
+

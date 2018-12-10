@@ -1,0 +1,105 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+   define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, VC_BaseDoc, AcctHelper) {
+
+        var VC_ShootToPrintModule = function () { }
+
+        VC_ShootToPrintModule.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_ShootToPrintModule.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+
+
+        }
+
+        VC_ShootToPrintModule.prototype.onInitDetailView = function (VC) {
+            VC_BaseDoc.prototype.onInitDetailView.call(this, VC);
+
+            var _ = this;
+            
+
+            VC.AddToolBarButtonOnGrid('ShootToPrint_Module_Reports', {
+                    text: 'Add Report',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {   
+
+                        var sql ='@Html.EncryptSQL(@"SELECT ID, Name FROM dbo.[_tReport] WHERE ID NOT IN (@ID_Reports)")';
+
+                        var ID_Reports = Enumerable.From(_.CurrentObject.ShootToPrint_Module_Reports).Select('$.ID_Report').ToArray();
+
+                        if(ID_Reports.length == 0) {
+
+                            ID_Reports = [0];
+                        }
+
+
+                        VC.BrowseDataSet(sql, {
+                            title: 'Browse Report',
+                            ID_View: '140AE730-5015-4D26-8CD5-39A01A0BAB47',
+                            params: {
+                            'ID_Reports': ID_Reports
+                            }
+                        }).then(function(data){
+
+                            if (_.CurrentObject['ShootToPrint_Module_Reports'] == null) {
+                                _.CurrentObject['ShootToPrint_Module_Reports'] = [];
+                            } 
+
+                            $.each(data, function (i, record) {
+
+                                var newDetail  =
+                                {
+                                    ID: _.rndID(),
+                                    Report: record.Name,
+                                    ID_Report: record.ID,
+                                    IsDefault: 0
+                                };
+
+                                VC.$timeout(function(){                            
+                                    _.CurrentObject['ShootToPrint_Module_Reports'].push(newDetail);                 
+                                },100);                            
+                                
+                            });
+
+                        });        
+
+                    }
+            }, true);
+
+
+            VC.AddToolBarButtonOnGrid('ShootToPrint_Module_ListColumns', {
+                    text: 'Add Column',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {   
+
+                        if (_.CurrentObject['ShootToPrint_Module_ListColumns'] == null) {
+                            _.CurrentObject['ShootToPrint_Module_ListColumns'] = [];
+                        } 
+
+                        var newDetail  =
+                        {
+                            ID: _.rndID(),
+                            ID_ShootToPrint_Module: _.CurrentObject.ID
+                        };
+
+                        VC.$timeout(function(){                            
+                            _.CurrentObject['ShootToPrint_Module_ListColumns'].push(newDetail);                 
+                        },100);      
+
+                    }
+            }, true);
+
+        }
+
+        return VC_ShootToPrintModule;
+    });
+//</script>
+</text> , false);

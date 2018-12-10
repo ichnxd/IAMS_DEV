@@ -1,0 +1,41 @@
+﻿@using JSLibrary;
+@using Newtonsoft.Json;
+@{
+    ViewBag.Title = "IAMS Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var CurrentUser = ViewBag.CurrentUser as dynamic;
+}
+<div class="row full-height" ng-controller="FullViewController" style="height:100%">
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header" style="height:100%">
+                <div style="height:100%;display:table"><div style="display:table-cell;vertical-align:middle"><a class="navbar-brand" href="#" style="padding:10px"><span class="AppIcon FontInSys"></span> INSYS ACCOUNTING MANAGEMENT SYSTEM</a></div></div>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+
+                <div class="navbar-right user-container">
+
+                    <div class="image-container">
+                        <img class="image-user" src="@CurrentUser.ImageFile" onerror="this.onerror = null; this.src='App_Content/Image/default-user.png';">
+                    </div>
+
+                    <div class="user-info">
+                        @CurrentUser.Name
+                        <div class="usergroup-container">@CurrentUser.UserGroup</div>
+                    </div>
+
+                </div>
+            </div>
+             <div dx-menu="dxHomeMenu"></div>
+        </div>
+    </nav>
+    <div>
+
+    </div>
+</div>
+
+
+
+
+
+

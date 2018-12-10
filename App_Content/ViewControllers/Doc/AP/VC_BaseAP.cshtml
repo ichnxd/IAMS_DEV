@@ -1,0 +1,28 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}'], function (app, VC_BaseDoc) {
+        "use strict"
+        function VC_BaseAP() { };
+
+        VC_BaseAP.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_BaseAP.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+        }
+        
+        VC_BaseAP.prototype.Compute = function () {
+            
+        }
+       
+        return VC_BaseAP;
+    });
+//</script>
+</text> , false);

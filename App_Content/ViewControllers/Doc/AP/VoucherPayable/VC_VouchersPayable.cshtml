@@ -1,0 +1,1464 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/AP/VC_BaseAP");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_VouchersPayable = function () {
+            this.DocModuleParent = 'AccountsPayable';
+        }
+        //
+
+
+        VC_VouchersPayable.Trade = 1
+        VC_VouchersPayable.NonTrade = 2;
+
+        VC_VouchersPayable.prototype = Object.create(baseModelHelper.prototype);
+        //
+        VC_VouchersPayable.prototype.Init = function (VC) {
+            this.DefaultFilterValue = -3;
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            if (_.ID_ViewType == 1) {
+
+                var onContextMenuPreparing = VC.onContextMenuPreparing;
+
+                VC.onContextMenuPreparing = function (e) {
+                    onContextMenuPreparing.call(this,e);
+                    var itemsSelected = e.row.data;
+                    if (itemsSelected.ID_VoucherType !== 2) return;
+                    e.items.push({
+                        text: "Copy VP (Non-Trade)",
+                        icon: "fa fa-edit",
+                        //template: "contextItem",
+                        onItemClick: function () {
+                            app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pGetVouchersPayable")', {
+                                'ID': itemsSelected.ID,
+                                ID_Refs: []
+                            }).then(function (d) {
+                                d.ID = -1;
+                                d.ID_CreatedBy = null;
+                                d.CreatedBy = null;
+                                d.ID_FilingStatus = 1;
+                                d.DateApproved = null;
+                                d.ID_ApprovedBy = null;
+                                d.ApprovedBy = null;
+                                d.ID_LastModifiedBy = null;
+                                d.LastModifiedBy = null;
+                                d.ID_CancelledBy = null;
+                                d.CancelledBy = null;
+                                d.ID_Company = null;
+                                d.Reason = null;
+                                var properties = ['VouchersPayableDetails', 'VouchersPayable_Trades', 'VouchersPayableNonTrades', 'VouchersPayable_CashAdvances', 'VouchersPayable_DebitMemos'];
+                                $.each(properties, function (i, p) {
+                                    if (d[p] === null || d[p] === undefined) return;
+                                    $.each(d[p], function (i, det) {
+                                        det.ID = -1;
+                                        det.ID_VoucherPayable = null;
+                                        det.ID_CreatedBy = null;
+                                        det.DateCancelled = null;
+                                        det.ID_Company = null;
+                                        if (p === 'VouchersPayableNonTrades') {
+                                            det.DebitAmt = 0.00;
+                                            det.CreditAmt = 0.00;
+                                        }
+                                    });
+                                });
+
+
+
+                                //
+                                //
+                                //
+                                var $rootScope = app.$rootScope();
+                                $rootScope.$emit("CallNewTabMethod", {
+                                    ID: app.getRandomInt(),
+                                    Caption: 'Vouchers Payable (New)',
+                                    ID_ViewType: 2,
+                                    ViewID: 3118,
+                                    CurrentObject: d,
+                                    ImageName: ''
+                                });
+                            });
+                        }
+                    });
+                }
+            }
+
+            VC.AddButtonReport({
+                Name: 'Vouchers Payable Form',
+                ID_Report: 16,
+                requireSingleObject: true
+            });
+
+            VC.AddButtonReport({
+                Name: 'Vouchers Payable Form ( Client )',
+                ID_Report: 3153,
+                requireSingleObject: true
+            });
+			    VC.AddButtonReport({
+                Name: '2307 Form',
+                ID_Report: 4213,
+                requireSingleObject: true
+            });
+            //
+            //
+            //
+
+
+            if (_.ID_ViewType == 2) {
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    //console.log(_.CurrentObject);
+                    if (_.CurrentObject.ID_Supplier === null && _.CurrentObject.ID_Employee === null) {
+                        brokenRules.push('Supplier/Employee is required.');
+                    }
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid: true };
+                });
+
+                VC.VouchersPayableNonTrades_ID_Subsidiary_onColumnDataSourceLoad = function (data, e) {
+                    console.log('xxx', _.CurrentObject.VouchersPayableNonTrades,e.ID)
+                    data.params.ID_SubsidiaryType = e.ID_SubsidiaryType == undefined ? null : e.ID_SubsidiaryType;
+                    data.params.ID_COA = e.ID_COA == undefined ? null: e.ID_COA;
+                }
+                VC.VouchersPayable_Trades_ID_Subsidiary_onColumnDataSourceLoad = function (data, e) {
+                    //console.log('xxx')
+                    data.params.ID_SubsidiaryType = e.ID_SubsidiaryType == undefined ? null : e.ID_SubsidiaryType;
+                    data.params.ID_COA = e.ID_COA == undefined ? null: e.ID_COA;
+                }
+
+                VC.AddToolBarButtonOnGrid('VouchersPayable_Trades', {
+                    text: 'Add Particulars',
+                    icon: 'mdi mdi-package-variant',
+                    IsDisabled: function () {
+                        if (_.CurrentObject.ID_FilingStatus > 1) {
+                            return true;
+                        }
+                        return false;
+
+                    },
+                    onClick: function () {
+                        if (_.CurrentObject.VouchersPayable_Trades == undefined) _.CurrentObject.VouchersPayable_Trades = [];
+                        if(_.CurrentObject.VouchersPayable_Trades.length == 0){
+                            _.CurrentObject.VouchersPayable_Trades.push({
+                                ID: -1,
+                                Name: 'Vouchers Payable',
+                                Comment: null,
+                                Particulars: '(Auto)',
+                                Code: '230-000',
+                                ID_COA: 10,
+                                ID_SubsidiaryType: null,
+                                ID_CostCenter: null,
+                                ID_Subsidiary: 0,
+                                COA: 'Vouchers Payable',
+                                Subsidiary: '-',
+                                DebitAmt: 0.00,
+                                CreditAmt: 0.00,
+                                IsAuto: true
+                            });
+                        }
+                        _.CurrentObject.VouchersPayable_Trades.push({
+                            ID: -1,
+                            Name: null,
+                            Comment: null,
+                            Particulars: null,
+                            Code: null,
+                            ID_COA: null,
+                            ID_SubsidiaryType: null,
+                            ID_CostCenter: null,
+                            ID_Subsidiary: 0,
+                            COA: '-',
+                            Subsidiary: '-',
+                            DebitAmt: 0.00,
+                            CreditAmt: 0.00
+                        });
+
+                    }
+                }, true);
+                //console.log('load')
+                VC.AddToolBarButtonOnGrid('VouchersPayableNonTrades', {
+                    text: 'Add Particulars',
+                    icon: 'mdi mdi-package-variant',
+                    IsDisabled: function () {
+                        if (_.CurrentObject.ID_FilingStatus > 1) {
+                            return true;
+                        }
+                        return false;
+
+                    },
+                    onClick: function () {
+                        if (_.CurrentObject.VouchersPayableNonTrades == undefined) _.CurrentObject.VouchersPayableNonTrades = [];
+
+                        if(_.CurrentObject.VouchersPayableNonTrades.length == 0){
+                            _.CurrentObject.VouchersPayableNonTrades.push({
+                                ID: -1,
+                                Name: 'Vouchers Payable',
+                                Comment: null,
+                                Particulars: '(Auto)',
+                                Code: '230-000',
+                                ID_COA: 10,
+                                ID_SubsidiaryType: null,
+                                ID_CostCenter: null,
+                                ID_Subsidiary: 0,
+                                COA: 'Vouchers Payable',
+                                Subsidiary: '-',
+                                DebitAmt: 0.00,
+                                CreditAmt: 0.00,
+                                IsAuto: true
+                            });
+
+                            if(_.CurrentObject.EWTAmount > 0){
+                                $.each(_.CurrentObject.VouchersPayableNonTrades,function(i,o){
+                                    if(o.ID_COA == 218) {
+                                        IsEWTCOA = true;
+                                    }
+                                });
+                                if(IsEWTCOA == false && _.CurrentObject.ID_VoucherType == 2){
+                                    _.CurrentObject.VouchersPayableNonTrades.push({
+                                        ID: -1,
+                                        Name: 'W/Taxes Expanded Payable',
+                                        Comment: null,
+                                        Particulars: '(Auto)',
+                                        Code: '212-403',
+                                        ID_COA: 218,
+                                        ID_SubsidiaryType: null,
+                                        ID_CostCenter: null,
+                                        ID_Subsidiary: 0,
+                                        COA: 'W/Taxes Expanded Payable',
+                                        Subsidiary: '-',
+                                        DebitAmt: 0.00,
+                                        CreditAmt: _.CurrentObject.EWTAmount,
+                                        IsAuto: true
+                                    });
+                                }
+                            }
+
+                        }
+
+                        _.CurrentObject.VouchersPayableNonTrades.push({
+                            ID: -1,
+                            Name: null,
+                            Comment: null,
+                            Particulars: null,
+                            Code: null,
+                            ID_COA: null,
+                            ID_SubsidiaryType: null,
+                            ID_CostCenter: null,
+                            ID_Subsidiary: 0,
+                            COA: '-',
+                            Subsidiary: '-',
+                            DebitAmt: 0.00,
+                            CreditAmt: 0.00
+                        });
+                    }
+                }, true);
+
+                VC.$ExchangeRate_IsDisabled = function () {
+                    if (_.CurrentObject.VouchersPayableDetails == undefined || _.CurrentObject.VouchersPayableDetails == null) {
+                        _.CurrentObject.VouchersPayableDetails = [];
+                    }
+                    if (_.CurrentObject.VouchersPayableDetails.length > 0) {
+                        if (_.CurrentObject.VouchersPayableDetails[0].ID_ReceivingReport == null && _.CurrentObject.VouchersPayableDetails[0].ID_PurchaseOrder !== null) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+
+                //
+                //  VALIDATIONS
+                //
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                    if(_.CurrentObject.VouchersPayable_CashAdvances == undefined || _.CurrentObject.VouchersPayable_CashAdvances == null) _.CurrentObject.VouchersPayable_CashAdvances = [];
+                    if(_.CurrentObject.VouchersPayable_CashAdvances.length > 0){
+                        $.each(_.CurrentObject.VouchersPayable_CashAdvances,function(i,o){
+                            var CAAmount = o.Amount == null || o.Amount == undefined ? 0.00 : o.Amount;
+                            var VPAmount = o.VPAmount == null || o.VPAmount == undefined ? 0.00 : o.VPAmount;
+
+                            if(VPAmount > CAAmount){
+                                brokenRules.push('VP Amount must not exceed CA Amount');
+                            }
+                        });
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { IsValid: true };
+                });
+
+                VC.ValidationRules.push(function () {
+                    if (_.CurrentObject.ExchangeRate == 0) {
+                        return {
+                            isValid: false,
+                            message: 'Exchange Rate required'
+                        };
+
+                    }
+
+
+
+                    if (_.CurrentObject.ID_VoucherType === VC_VouchersPayable.Trade) {
+                        if(_.CurrentObject.VouchersPayable_CashAdvances == undefined || _.CurrentObject.VouchersPayable_CashAdvances == null) _.CurrentObject.VouchersPayable_CashAdvances = [];
+                        if (_.CurrentObject.VouchersPayableDetails.length == 0 &&  _.CurrentObject.VouchersPayable_CashAdvances.length == 0) {
+                            return {
+                                isValid: false,
+                                message: 'Please insert detail'
+                            };
+                        }
+
+                        if(_.CurrentObject.VouchersPayableDetails.length > 0){
+                            var hasNoVPAmount = false;
+                            $.each(_.CurrentObject.VouchersPayableDetails,function(i,o){
+                                if(o.VPAmount == 0 || o.VPAmount == null || o.VPAmount == undefined){
+                                    hasNoVPAmount = true;
+                                }
+                            })
+
+                            if(hasNoVPAmount){
+                                return {
+                                    isValid: false,
+                                    message: 'Detail VP Amount cannot be zero.'
+                                };
+                            }
+
+                        }
+
+                        if(_.CurrentObject.VouchersPayable_Trades == undefined || _.CurrentObject.VouchersPayable_Trades == null) _.CurrentObject.VouchersPayable_Trades = [];
+                        var Debit = 0;
+                        var Credit = 0;
+                        if(_.CurrentObject.VouchersPayable_Trades.length > 0){
+                            $.each(_.CurrentObject.VouchersPayable_Trades, function (i, item) {
+                                Debit += item.DebitAmt;
+                                Credit += item.CreditAmt;
+                            });
+                            if (Debit.toFixed(2) !== Credit.toFixed(2)) {
+                                return {
+                                    isValid: false,
+                                    message: 'Debit and Credit amount must be equal'
+                                };
+                            }
+                        }
+
+                    } else if (_.CurrentObject.ID_VoucherType === VC_VouchersPayable.NonTrade) {
+                        if(_.CurrentObject.VouchersPayableDetails == undefined || _.CurrentObject.VouchersPayableDetails == null) _.CurrentObject.VouchersPayableDetails = [];
+                        if(_.CurrentObject.VouchersPayableNonTrades == undefined || _.CurrentObject.VouchersPayableNonTrades == null) _.CurrentObject.VouchersPayableNonTrades = [];
+                        if(_.CurrentObject.VouchersPayable_CashAdvances == undefined || _.CurrentObject.VouchersPayable_CashAdvances == null) _.CurrentObject.VouchersPayable_CashAdvances = [];
+
+                        if (_.CurrentObject.VouchersPayableNonTrades.length == 0 && _.CurrentObject.VouchersPayableDetails.length == 0  && _.CurrentObject.VouchersPayable_CashAdvances.length == 0) {
+                            return {
+                                isValid: false,
+                                message: 'Please insert non trade details'
+                            };
+                        } else {
+                            var Debit = 0;
+                            var Credit = 0;
+                            if(_.CurrentObject.VouchersPayableNonTrades.length > 0){
+                                $.each(_.CurrentObject.VouchersPayableNonTrades, function (i, item) {
+                                    Debit += item.DebitAmt;
+                                    Credit += item.CreditAmt;
+                                });
+                                if (Debit.toFixed(2) !== Credit.toFixed(2)) {
+                                    return {
+                                        isValid: false,
+                                        message: 'Debit and Credit amount must be equal'
+                                    };
+                                }
+                            }
+
+                        }
+                    }
+                    return { IsValid: true };
+                });
+
+
+                VC.ValidationRules.push(function () {
+
+                    var brokenRules = [];
+
+                    /*if (_.CurrentObject.TotalPaymentAmount == 0.00) {
+
+                        brokenRules.push('Total Payment is required.');
+                    } else {
+
+                        if (_.CurrentObject.GrandTotal == null) {
+
+                            _.CurrentObject.GrandTotal = 0.00;
+                        }
+
+                        if (_.CurrentObject.GrandTotal > 0.00) {
+
+                            if (_.CurrentObject.TotalPaymentAmount > _.CurrentObject.GrandTotal) {
+
+                                brokenRules.push('Total Payment must not more than from Total Amount.');
+                            }
+
+                        }
+
+                    }*/
+
+                    // TODO: Kapg pina-allow na pwde mag insert ng multiple PO sa detail , i- uncomment ito
+                    /* $.each(_.CurrentObject.VouchersPayableDetails, function(i,detail){
+
+                         if(detail.Balance == null){
+
+                             var ErrorMsg = 'Invalid input of Payable Amount at row ' + (i + 1).toString() + '.';
+
+                             brokenRules.push(ErrorMsg) ;
+                         }
+
+                     });*/
+
+                    if ( parseFloat((_.CurrentObject.VPBalance + _.CurrentObject.CosAdjustment + _.CurrentObject.TotalCashAdvance + (_.CurrentObject.EWTAmount == null ? 0 : _.CurrentObject.EWTAmount)).toFixed(2)) < parseFloat(_.CurrentObject.TotalAmount.toFixed(2)) ) {
+                        console.log(_.CurrentObject.VPBalance,'VPbalance' , _.CurrentObject.TotalAmount,'TotalAMount')
+                        brokenRules.push('Total VP Amount must not exceed VP Balance.') ;
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { IsValid: true };
+                });
+
+
+                if(VC.CurrentUser.ID == 7){
+                    VC.AddToolbarButton({
+                        text: 'Compute',
+                        IsDisabled: function(){
+                            return false;
+                        },
+                        onItemClick: function(){
+                            VC.$scope.CurrentObject.$dirty = true;
+                            _.Compute();
+                        }
+                    });
+                }
+                //heyhey
+                VC.AddToolbarButton({
+                    text: 'Browse',
+                    IsDisabled: function () {
+                        if (_.ID_ViewType == 2) {
+                            if (_.CurrentObject.ID_FilingStatus == 1) {
+                                return false;
+                            }
+                            else {
+                                return true;
+                            }
+                        }
+
+                    },
+                    items: [{
+                        text: 'Purchase Order',
+                        icon: 'mdi mdi-package-variant',
+                        //      formatKey: 'VC_VouchersPayable_BrowseRR',
+                        onItemClick: function () {
+                            if (_.CurrentObject.VouchersPayableDetails == null) _.CurrentObject.VouchersPayableDetails = [];
+                            if (!(_.CurrentObject.ID_Supplier > 0)) {
+                                VC.MsgBox('Please select a supplier', 'Vouchers Payable');
+                                return;
+                            }
+
+                            if (_.CurrentObject.VouchersPayableDetails.length > 0) {
+                                if(_.CurrentObject.VouchersPayableDetails[0].ID_DocDetailParentModel !== 65){
+                                    VC.MsgBox('Cannot add another record with different source', 'Vouchers Payable');
+                                    return;
+                                }
+                            }
+
+                            var sql = '@Html.EncryptSQL(@"
+                                    SELECT * FROM vPurchaseOrderForVouchersPayable WHERE
+                                    ID_BusinessPartner = @ID_BusinessPartner AND VPForBalance > 0 AND
+                                    ID NOT IN ( @IDS ) and isExists = 0")';
+
+                            var browseDataseParam =
+                            {
+                                title: 'Select Purchase Order Item (' + _.CurrentObject.Supplier + ')',
+                                ID_View: '060D9167-0662-46E2-9327-571A7D1AD4A4',
+                                params: {
+                                    'ID_BusinessPartner': _.CurrentObject.ID_Supplier
+                                            , 'IDS': Enumerable.From(_.CurrentObject.VouchersPayableDetails).Select('$.ID_PurchaseOrder').ToArray()
+                                },
+                                validate: function (selectedRecord) {
+
+                                    //if (selectedRecord.length > 1) {
+                                    //    VC.MsgBox('Please select purchase order atleast one.', 'Vouchers Payable');
+                                    //    return false;
+                                    //}
+
+                                    return true;
+                                }
+                            };
+
+                            var BrowseDataSetthen = function (Details) {
+
+                                if (_.CurrentObject.VouchersPayableDetails == null) _.CurrentObject.VouchersPayableDetails = [];
+                                if (_.CurrentObject.VouchersPayableDetails.length > 0 && Details.length > 0) {
+                                    var isValid = true;
+                                    $.each(Details, function (i, d) {
+                                        if(_.CurrentObject.VouchersPayableDetails[0].ID_PurchaseOrder !== d.ID ){
+                                            isValid = false
+                                        }
+                                    });
+
+                                    if(!isValid){
+                                        VC.MsgBox('Cannot add another record with different Purchase Order', 'Vouchers Payable');
+                                        return;
+                                    }
+
+                                }
+
+                                $.each(Details, function (i, d) {
+
+                                    var newDetail = {
+                                        ID: -1,
+                                        ID_PurchaseOrder: d.ID,
+                                        PurchaseOrder: d.DocumentNo,
+                                        GrandTotal: d.TotalAmount,
+                                        SubTotal: d.Subtotal,
+                                        TaxAmt: d.TotalVat,
+                                        Quantity: d.TotalQty,
+                                        Date: d.Date,
+                                        ID_ReceivingReport: null,
+                                        ReceivingReport: null,
+                                        ID_VouchersPayable: VC.$scope.CurrentObject.ID,
+                                        Balance: d.VPForBalance,
+                                        VPAmount: 0.00,
+                                        ID_DocDetailParentModel: 65
+                                    }
+
+                                    _.CurrentObject.RemainingBalance = _.CurrentObject.VouchersPayableDetails.SUM("Balance");
+                                    //_.CurrentObject.RemainingBalance = d.TotalAmount;
+                                    _.CurrentObject.TotalAmount = d.TotalAmount;
+                                    _.CurrentObject.ID_PaymentTerm = d.ID_PaymentTerm;
+                                    _.CurrentObject.ID_Currency = d.ID_Currency;
+                                    _.CurrentObject.Payee = d.Payee == null ? d.Supplier : d.Payee;
+                                    _.CurrentObject.Currency = d.Currency;
+                                    _.CurrentObject.ExchangeRate = d.IsImported == true ? (d.ID_Currency == 1 ? 1.00 : 0.00) : 1.00 ; //d.ExchangeRate;
+                                    _.CurrentObject.ID_VoucherType = d.ID_TransactionType;
+
+                                    var dueDate = new Date(_.CurrentObject.Date == null? new Date() : _.CurrentObject.Date);
+                                    dueDate.setDate(dueDate.getDate() + parseInt(d.InDays == null ? 0 : d.InDays));
+                                    _.CurrentObject.DueDate = dueDate.toLocaleDateString();
+
+                                    VC.$timeout(function () {
+
+                                        var countBeforePush = VC.$scope.CurrentObject['VouchersPayableDetails'].length;
+
+                                        VC.$scope.CurrentObject['VouchersPayableDetails'].push(newDetail);
+
+                                        if (countBeforePush == 0) {
+
+                                            VC.GetGridEditor('VouchersPayableDetails').refresh();
+                                        }
+
+                                        _.Compute();
+                                    }, 100);
+
+                                });
+                                VC.$scope.CurrentObject.$dirty = true;
+                                _.Compute();
+                            };
+                            VC.BrowseDataSet(sql, browseDataseParam).then(BrowseDataSetthen);
+                        }
+                    }, {
+                        text: 'Receiving Report',
+                        icon: 'mdi mdi-package-variant',
+                        onItemClick: function () {
+                            if (_.CurrentObject.VouchersPayableDetails == null) _.CurrentObject.VouchersPayableDetails = [];
+                            if (_.CurrentObject.ID_Supplier == null) {
+                                VC.MsgBox('Please select a supplier', 'Vouchers Payable');
+                                return;
+                            }
+                            if (_.CurrentObject.VouchersPayableDetails.length > 0) {
+                                if(_.CurrentObject.VouchersPayableDetails[0].ID_DocDetailParentModel !== 2142){
+                                    VC.MsgBox('Cannot add another record with different source.', 'Vouchers Payable');
+                                    return;
+                                }
+                            }
+
+                            var sql = '@Html.EncryptSQL(@"select * from UnservedRR WHERE
+                                    ID_BusinessPartner = @ID_BusinessPartner AND VPForBalance > 0 AND
+                                    ID NOT IN ( @IDS ) AND HasVP = 0")';
+                            var browseDataseParam =
+                            {
+                                title: 'Select Receiving Report Item (' + _.CurrentObject.Supplier + ')',
+                                ID_View: '07573CA1-4167-40A3-96F6-C1A88F7C264F',
+                                params: {
+                                    'ID_BusinessPartner': _.CurrentObject.ID_Supplier
+                                            , 'IDS': Enumerable.From(_.CurrentObject.VouchersPayableDetails).Select('$.ID_ReceivingReport').ToArray()
+                                },
+
+                            }
+
+                            var BrowseDataSetthen = function (Details) {
+
+                                if (_.CurrentObject.VouchersPayableDetails == undefined) _.CurrentObject.VouchersPayableDetails = [];
+
+                                if (_.CurrentObject.VouchersPayableDetails == null) _.CurrentObject.VouchersPayableDetails = [];
+                                if (_.CurrentObject.VouchersPayableDetails.length > 0 && Details.length > 0) {
+                                    var isValid = true;
+                                    $.each(Details, function (i, d) {
+                                        if(_.CurrentObject.VouchersPayableDetails[0].ID_PurchaseOrder !== d.ID_PurchaseOrder ){
+                                            isValid = false
+                                        }
+                                    });
+
+                                    if(!isValid){
+                                        VC.MsgBox('Cannot add another record with different Purchase Order', 'Vouchers Payable');
+                                        return;
+                                    }
+
+                                }
+
+                                $.each(Details, function (i, d) {
+
+                                    var newDetail = {
+                                        ID: -1,
+                                        ID_PurchaseOrder: d.ID_PurchaseOrder,
+                                        PurchaseOrder: d.PurchaseOrder,
+                                        GrandTotal: d.PrePayment == 1 ? d.POPayable : d.TotalAmount,
+                                        ReceivingReport: d.ReceivingReport,
+                                        ID_ReceivingReport: d.ID,
+                                        SubTotal: d.PrePayment == 1 ? d.POSubtotal : d.Subtotal,
+                                        TaxAmt: d.PrePayment == 1 ? d.POTotalVat : d.TotalVat,
+                                        Quantity: d.TotalQty,
+                                        Date: d.RRDate,
+                                        ID_VouchersPayable: VC.$scope.CurrentObject.ID,
+                                        Balance: d.VPForBalance,
+                                        VPAmount: 0.00,
+                                        ID_DocDetailParentModel: 2142
+                                    }
+                                    _.CurrentObject.RemainingBalance = _.CurrentObject.VouchersPayableDetails.SUM("Balance");
+                                    _.CurrentObject.ID_PaymentTerm = d.ID_PaymentTerm;
+                                    _.CurrentObject.ID_Currency = d.ID_Currency;
+                                    _.CurrentObject.Currency = d.Currency;
+                                    _.CurrentObject.ExchangeRate = d.ExchangeRate;
+                                    _.CurrentObject.Payee = d.Payee;
+
+
+                                    VC.$timeout(function () {
+
+                                        var countBeforePush = VC.$scope.CurrentObject['VouchersPayableDetails'].length;
+
+                                        VC.$scope.CurrentObject['VouchersPayableDetails'].push(newDetail);
+
+                                        if (countBeforePush == 0) {
+
+                                            VC.GetGridEditor('VouchersPayableDetails').refresh();
+                                        }
+
+                                        _.Compute();
+                                    }, 100);
+
+                                });
+
+                                VC.$scope.CurrentObject.$dirty = true;
+                                _.Compute();
+
+                            };
+
+                            VC.BrowseDataSet(sql, browseDataseParam).then(BrowseDataSetthen);
+                        }
+                    }, {
+                        text: 'Cash Advance',
+                        icon: 'mdi mdi-package-variant',
+                        onItemClick: function () {
+                            if (_.CurrentObject.VouchersPayable_CashAdvances == null) _.CurrentObject.VouchersPayable_CashAdvances = [];
+
+
+                            var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vCashAdvanceRequest WHERE VPExist = 0 AND ID_FilingStatus = 39 AND IsForVP = 1 AND ID NOT IN(@IDs)")';
+                            var browseDataseParam =
+                            {
+                                title: 'Select Cash Advance',
+                                ID_View: '88F92881-7646-45CC-8416-8BCC33EA784E',
+                                params: {
+                                    'IDs': Enumerable.From(_.CurrentObject.VouchersPayable_CashAdvances).Select('$.ID_CashAdvance').ToArray()
+                                },
+                            }
+
+                            var BrowseDataSetthen = function (Details) {
+                                $.each(Details,function(i,item){
+                                    var newDetail = {
+                                        ID: _.rndID(),
+                                        Name: item.DocumentNo,
+                                        CashAdvance: item.DocumentNo,
+                                        ID_CashAdvance: item.ID,
+                                        Amount: item.TotalCashAdvanceAmount,
+                                        Project: item.Project,
+                                        Purpose: item.Purpose,
+                                        ID_Client: item.ID_Client,
+                                        Client: item.Client,
+                                        ID_Employee: item.ID_Employee,
+                                        Employee: item.Employee,
+                                        StartDate: item.StartTime,
+                                        EndDate: item.EndTime,
+                                        VPAmount: 0.00
+                                    };
+
+                                    _.CurrentObject.Description = item.VPDescription;
+                                    _.CurrentObject.DueDate = item.StartTime;
+                                    _.CurrentObject.ID_PaymentTerm = 1;
+                                    _.CurrentObject.ID_VoucherType = 2;
+                                    _.CurrentObject.ID_Employee = item.ID_Employee;
+                                    _.CurrentObject.Employee = item.Employee;
+                                    _.CurrentObject.Payee = item.Employee;
+                                    _.CurrentObject.VouchersPayable_CashAdvances.push(newDetail);
+                                });
+
+                                VC.$scope.CurrentObject.$dirty = true;
+                                _.Compute();
+                            };
+
+                            VC.BrowseDataSet(sql, browseDataseParam).then(BrowseDataSetthen);
+                        }
+                    },{
+                        text: 'Replenishment',
+                        icon: 'mdi mdi-package-variant',
+                        onItemClick: function () {
+                            if(_.CurrentObject.ID_VoucherType !== 2){
+                                VC.MsgBox('Select Non-Trade Voucher Type','Vouchers Payable');
+                                return;
+                            }
+
+                            if (_.CurrentObject.VouchersPayableNonTrades == undefined || _.CurrentObject.VouchersPayableNonTrades == null) _.CurrentObject.VouchersPayableNonTrades = [];
+                            var sql = '@Html.EncryptSQL(@"SELECT * FROM dbo.vReplenishmentForVP WHERE ID NOT IN(@IDs) ")';
+                            var browseDataseParam =
+                            {
+                                title: 'Select Replenishment',
+                                ID_View: 'DE0DC4D8-1A5B-4837-B454-E9B8AB68C96D',
+                                params: {
+                                    'IDs': Enumerable.From(_.CurrentObject.VouchersPayableNonTrades).Select('$.ID_Doc').Where('$.ID_Model == 8391 && $.ID_Doc !== null').ToArray()
+                                },
+                                requireSingleObject: true
+                            }
+                            var BrowseDataSetthen = function (Details) {
+                                $.each(Details,function(i,item){
+
+                                    _.CurrentObject.VouchersPayableNonTrades.push({
+                                        ID: -1,
+                                        Name: 'Accounts Payable - Non-Trade',
+                                        Comment: null,
+                                        Particulars: item.DocumentNo + ' Replenishment (Auto)',
+                                        Code: '212-900',
+                                        ID_COA: 235,
+                                        ID_SubsidiaryType: null,
+                                        ID_CostCenter: null,
+                                        ID_Subsidiary: 0,
+                                        COA: 'Accounts Payable - Non-Trade',
+                                        Subsidiary: '-',
+                                        DebitAmt: item.TotalAmount,
+                                        CreditAmt: 0.00,
+                                        IsAuto: true,
+                                        ID_DocModel: 8391,
+                                        ID_Doc: item.ID
+                                    });
+
+
+                                    _.CurrentObject.VouchersPayableNonTrades.push({
+                                        ID: -1,
+                                        Name: 'Vouchers Payable',
+                                        Comment: null,
+                                        Particulars: item.DocumentNo + ' Replenishment (Auto)',
+                                        Code: '230-000',
+                                        ID_COA: 10,
+                                        ID_SubsidiaryType: null,
+                                        ID_CostCenter: null,
+                                        ID_Subsidiary: 0,
+                                        COA: 'Vouchers Payable',
+                                        Subsidiary: '-',
+                                        DebitAmt: 0.00,
+                                        CreditAmt: item.TotalAmount,
+                                        IsAuto: true,
+                                        ID_DocModel: 8391,
+                                        ID_Doc: item.ID
+                                    });
+
+                                    _.CurrentObject.ID_Employee = item.ID_Employee;
+                                    _.CurrentObject.Employee = item.Employee;
+                                    _.CurrentObject.Payee = item.Employee;
+
+                                });
+                                VC.$scope.CurrentObject.$dirty = true;
+                                _.Compute();
+                            };
+
+                            VC.BrowseDataSet(sql, browseDataseParam).then(BrowseDataSetthen);
+                        }
+                    }
+                    ]
+                })
+
+// ----- 08/25/2017 --
+
+      VC.AddToolBarButtonOnGrid('VouchersPayable_DebitMemos',
+            {
+               text: 'Browse Debit Memo',
+               icon: 'mdi mdi-package-variant',
+               onItemClick: function () {
+
+                    if(_.CurrentObject.ID_Supplier == null){
+                        VC.MsgBox('Select Supplier');
+                        return;
+                    }
+                    //var SQL = '@Html.EncryptSQL(@"Select * from vPendingAPDebitMemo where ID_FilingStatus = 2 and ID_BusinessPartner = @ID_Supplier And ID not IN (@ID_Ref)
+                    //And (ID_PurchaseOrder IN (@ID_PurchaseOrder) OR ID_ReceivingReport IN (@ID_ReceivingReport) ) ")'
+
+
+                    var SQL = '@Html.EncryptSQL(@"Select * from vPendingAPDebitMemo where ID_FilingStatus = 2 and ID_BusinessPartner = @ID_Supplier And ID not IN (@ID_Ref)")';
+                    var JsPopUpView = app.$GetPopupView();
+                    var ID_Ref = Enumerable.From(_.CurrentObject.VouchersPayable_DebitMemos).Select('$.ID_APDebitMemo').ToArray();
+                    var ID_ReceivingReport = Enumerable.From(_.CurrentObject.VouchersPayableDetails).Where('$.ID_ReceivingReport !== null').Select('$.ID_ReceivingReport').ToArray();
+                    var ID_PurchaseOrder = Enumerable.From(_.CurrentObject.VouchersPayableDetails).Select('$.ID_PurchaseOrder').ToArray();
+                     if(ID_PurchaseOrder.length == 0) ID_PurchaseOrder = []
+                    console.log(ID_ReceivingReport,ID_ReceivingReport.length)
+                    JsPopUpView.BrowseDataSet(SQL, {
+                                    ID_View: 'DA63B9F8-3C31-480D-8780-D9387B1012AB',
+                                    params: {
+                                      'ID_Supplier': _.CurrentObject.ID_Supplier,
+                                      'ID_Ref': ID_Ref,
+                                      'ID_ReceivingReport' : ID_ReceivingReport ,
+                                      'ID_PurchaseOrder' :  ID_PurchaseOrder,
+                                    },
+
+                                    title: 'Select Debit Memo'
+                                }).then(function(ReceivingReport){
+                                    $.each(ReceivingReport,function (i,d){
+                                   _.CurrentObject.VouchersPayable_DebitMemos.push({
+                                       Name : d.DocumentNo,
+                                       APDebitMemo : d.DocumentNo,
+                                       Cost : d.TotalAmount,
+                                       MemoDate : d.Date ,
+                                       ID_APDebitMemo : d.ID
+                                   })
+
+                                   _.CurrentObject.ID_Warehouse = d.ID_Warehouse;
+                                    _.Compute();
+
+                                    });
+
+                                })
+                }
+            }, true);
+
+            }
+
+            //
+            //
+            _.butCreatePayment = {
+                text: 'Create Payment',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 2) {
+                        if (_.CurrentObject.ID_FilingStatus == 2 || _.CurrentObject.ID_FilingStatus == 17) {
+                            return false;
+                        }
+                        return true;
+                    } else {
+                        var itemsSelected = _.Grid.getSelectedRowsData();
+                        if (itemsSelected.length == 0) return true;
+                        var ID_Suppliers = Enumerable.From(itemsSelected).Select("$.ID_BusinessPartner").Distinct().ToArray();
+                        if (ID_Suppliers.length > 1) return true;
+                        var NotApprovedDocs = Enumerable.From(itemsSelected).Where("$.ID_FilingStatus !== 2 && $.ID_FilingStatus !== 17").ToArray();
+                        if (NotApprovedDocs.length > 0) return true;
+                    }
+                    return false;
+                },
+                onItemClick: function () {
+                    var Selecteds = null;
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    } else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    AcctHelper.CreatePaymentVoucher(Selecteds);
+
+                }
+            }
+
+            VC.AddToolbarButton(_.butCreatePayment);
+
+
+
+        }
+
+
+
+        VC_VouchersPayable.prototype.onInitDetailView = function (VC) {
+            baseModelHelper.prototype.onInitDetailView.call(this,VC);
+            var _ = this;
+
+        };
+
+        VC_VouchersPayable.prototype.onCurrentObjectChanged = function (e) {
+            //baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            var VC = this.VC;
+
+
+            if (e.dataField == 'ExchangeRate') {
+                if(_.CurrentObject.ID_Currency == 1){
+                    _.CurrentObject.ExchangeRate = 1.00;
+                }
+                _.Compute();
+            }
+            if (e.dataField == 'ID_VoucherType') {
+                if(e.value !== null && e.value !== undefined){
+                    if(VC._DeletedItems['VouchersPayableDetails'] == undefined || VC._DeletedItems['VouchersPayableDetails'] == null) VC._DeletedItems['VouchersPayableDetails'] = [];
+                    if(VC._DeletedItems['VouchersPayable_Trades'] == undefined || VC._DeletedItems['VouchersPayable_Trades'] == null) VC._DeletedItems['VouchersPayable_Trades'] = [];
+                    if (e.value.ID === VC_VouchersPayable.NonTrade) {
+
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.VouchersPayableDetails).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['VouchersPayableDetails'].push(o);
+                        });
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.VouchersPayable_Trades).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['VouchersPayable_Trades'].push(o);
+                        });
+
+                    //   VC.$scope.CurrentObject.VouchersPayableDetails = [];
+
+                    } else if (e.value.ID === VC_VouchersPayable.Trade) {
+                        var DeleteDetails =  Enumerable.From(VC.$scope.CurrentObject.VouchersPayableNonTrades).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['VouchersPayableNonTrades'].push(o);
+                        });
+
+                        VC.$scope.CurrentObject.VouchersPayableNonTrades = [];
+                    } else {
+                        var DeleteDetails2 =  Enumerable.From(VC.$scope.CurrentObject.VouchersPayableDetails).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['VouchersPayableDetails'].push(o);
+                        });
+                        var DeleteDetails1 =  Enumerable.From(VC.$scope.CurrentObject.VouchersPayableNonTrades).Where('$.ID > 0 ').ToArray();
+                        $.each(DeleteDetails,function(i,o){
+                            VC._DeletedItems['VouchersPayableNonTrades'].push(o);
+                        });
+                        VC.$scope.CurrentObject.VouchersPayableDetails = [];
+                        VC.$scope.CurrentObject.VouchersPayableNonTrades = [];
+                    }
+
+                }
+                VC.RefreshToolBar();
+                this.Compute();
+            }
+
+            if (e.dataField == 'TotalPaymentAmount') {
+
+                $.each(VC.$scope.CurrentObject.VouchersPayableDetails, function (i, detail) {
+                    detail.VPAmount =  VC.$scope.CurrentObject.TotalPaymentAmount;
+                });
+
+
+
+               // lester VC.$scope.CurrentObject.PORemainingPayable = VC.$scope.CurrentObject.GrandTotal - VC.$scope.CurrentObject.TotalPaymentAmount;
+            }
+
+            if (e.dataField == 'ID_PaymentTerm'){
+                console.log(e)
+                if(e.value !== null){
+                    var dueDate = new Date(_.CurrentObject.Date == null? new Date() : _.CurrentObject.Date);
+                    dueDate.setDate(dueDate.getDate() + parseInt(e.value.InDays == null ? 0 : e.value.InDays));
+                    _.CurrentObject.DueDate = dueDate.toLocaleDateString();
+                }
+            }
+
+            if (e.dataField == 'EWTBaseAmount'){
+                _.Compute();
+                if(e.value !== null && e.value !== undefined){
+                    if(_.CurrentObject.EWTRate == null &&  _.CurrentObject.EWTRate == undefined ){
+                        _.CurrentObject.EWTRate = 0.00;
+                    }
+
+                    var IsEWTCOA = false;
+                    if(_.CurrentObject.VouchersPayableNonTrades == undefined || _.CurrentObject.VouchersPayableNonTrades == null) _.CurrentObject.VouchersPayableNonTrades = [];
+                    $.each(_.CurrentObject.VouchersPayableNonTrades,function(i,o){
+                        if(o.ID_COA == 218) {
+                            IsEWTCOA = true;
+                        }
+                    });
+                    if(IsEWTCOA == false && _.CurrentObject.ID_VoucherType == 2){
+                        _.CurrentObject.VouchersPayableNonTrades.push({
+                            ID: -1,
+                            Name: 'W/Taxes Expanded Payable',
+                            Comment: null,
+                            Particulars: '(Auto)',
+                            Code: '212-403',
+                            ID_COA: 218,
+                            ID_SubsidiaryType: null,
+                            ID_CostCenter: null,
+                            ID_Subsidiary: 0,
+                            COA: 'W/Taxes Expanded Payable',
+                            Subsidiary: '-',
+                            DebitAmt: 0.00,
+                            CreditAmt: 0.00,
+                            IsAuto: true
+                        });
+                    }
+                }else{
+                    _.CurrentObject.EWTRate = 0.00;
+                    _.CurrentObject.EWTAmount = 0.00;
+                    _.CurrentObject.EWTBaseAmount = 0.00;
+                }
+
+                _.Compute();
+            }
+
+            if (e.dataField == 'ID_EWT'){
+
+                if(e.value !== null && e.value !== undefined){
+                    if(e.value.Rate !== null && e.value.Rate !== undefined ){
+                        _.CurrentObject.EWTRate = e.value.Rate;
+                    }
+
+                    var IsEWTCOA = false;
+                    if(_.CurrentObject.VouchersPayableNonTrades == undefined || _.CurrentObject.VouchersPayableNonTrades == null) _.CurrentObject.VouchersPayableNonTrades = [];
+                    $.each(_.CurrentObject.VouchersPayableNonTrades,function(i,o){
+                        if(o.ID_COA == 218) {
+                            IsEWTCOA = true;
+                        }
+                    });
+                    if(IsEWTCOA == false && _.CurrentObject.ID_VoucherType == 2){
+                        _.CurrentObject.VouchersPayableNonTrades.push({
+                            ID: -1,
+                            Name: 'W/Taxes Expanded Payable',
+                            Comment: null,
+                            Particulars: '(Auto)',
+                            Code: '212-403',
+                            ID_COA: 218,
+                            ID_SubsidiaryType: null,
+                            ID_CostCenter: null,
+                            ID_Subsidiary: 0,
+                            COA: 'W/Taxes Expanded Payable',
+                            Subsidiary: '-',
+                            DebitAmt: 0.00,
+                            CreditAmt: 0.00,
+                            IsAuto: true
+                        });
+                    }
+
+
+
+                }else{
+                    _.CurrentObject.EWTRate = 0.00;
+                    _.CurrentObject.EWTAmount = 0.00;
+                    _.CurrentObject.EWTBaseAmount = 0.00;
+
+                }
+
+                _.Compute();
+            }
+
+            if (e.dataField == 'CosAdjustment'){
+                _.Compute();
+            }
+            if (e.dataField == 'ID_Supplier'){
+                 if(e.value !== null && e.value !== undefined){
+                     console.log(e.value)
+                    if(e.value.Code !== null && e.value.Code !== undefined ){
+                        _.CurrentObject.Payee = e.value.Name;
+                    }
+                 }else{
+                     _.CurrentObject.Payee = null;
+                 }
+            }
+
+
+            if (e.dataField == 'EWTAmount'){
+
+
+                var IsEWTCOA = false;
+                if(e.value > 0){
+                    $.each(_.CurrentObject.VouchersPayableNonTrades,function(i,o){
+                        if(o.ID_COA == 218) {
+                            IsEWTCOA = true;
+                        }
+                    });
+                    if(IsEWTCOA == false && _.CurrentObject.ID_VoucherType == 2){
+                        _.CurrentObject.VouchersPayableNonTrades.push({
+                            ID: -1,
+                            Name: 'W/Taxes Expanded Payable',
+                            Comment: null,
+                            Particulars: '(Auto)',
+                            Code: '212-403',
+                            ID_COA: 218,
+                            ID_SubsidiaryType: null,
+                            ID_CostCenter: null,
+                            ID_Subsidiary: 0,
+                            COA: 'W/Taxes Expanded Payable',
+                            Subsidiary: '-',
+                            DebitAmt: 0.00,
+                            CreditAmt: e.value,
+                            IsAuto: true
+                        });
+                    }
+                }
+                _.Compute(e.dataField);
+
+
+            }
+            _.Compute();
+        }
+
+        VC_VouchersPayable.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+
+            if(VC._DeletedItems['VouchersPayableDetails'] === undefined || VC._DeletedItems['VouchersPayableDetails'] === null){
+                VC._DeletedItems['VouchersPayableDetails'] = [];
+            }
+            if(VC._DeletedItems['VouchersPayableNonTrades'] === undefined || VC._DeletedItems['VouchersPayableNonTrades'] === null){
+                VC._DeletedItems['VouchersPayableNonTrades'] = [];
+            }
+            if(VC._DeletedItems['VouchersPayable_Trades'] === undefined || VC._DeletedItems['VouchersPayable_Trades'] === null){
+                VC._DeletedItems['VouchersPayable_Trades'] = [];
+            }
+
+
+            if(VC.$scope.VouchersPayableDetails_MenuOptions.length > 0){
+                VC.$scope.VouchersPayableDetails_MenuOptions[0].IsDisabled = function() {
+                    if ( _.IsFormReadOnly == true ) {
+                        return true;
+                    }
+                    if(_.CurrentObject.ID_VoucherType === VC_VouchersPayable.NonTrade){
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            if(VC.$scope.VouchersPayable_Trades_MenuOptions.length > 0){
+                VC.$scope.VouchersPayable_Trades_MenuOptions[0].IsDisabled = function() {
+                    if ( _.IsFormReadOnly == true ) {
+                        return true;
+                    }
+                    if(_.CurrentObject.ID_VoucherType === VC_VouchersPayable.NonTrade){
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+            if(VC.$scope.VouchersPayableNonTrades_MenuOptions.length > 0){
+                VC.$scope.VouchersPayableNonTrades_MenuOptions[0].IsDisabled = function() {
+                    if ( _.IsFormReadOnly == true ) {
+                        return true;
+                    }
+                    if(_.CurrentObject.ID_VoucherType !== VC_VouchersPayable.NonTrade){
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+
+            VC.VouchersPayable_CashAdvances_onColumnChanged = function (e) {
+                if (e.dataField === 'VPAmount') {
+                    _.Compute();
+                }
+            }
+            VC.VouchersPayableDetails_onColumnChanged = function (e) {
+
+//
+                if (e.dataField === 'VPAmount') {
+                    _.Compute();
+                }
+            }
+
+
+            VC.VouchersPayable_Trades_onColumnChanged = function (e) {
+                if (e.dataField == 'ID_COA'){
+
+                    if(e.data === undefined || e.data === null) return;
+                    if(e.data.Code !== undefined){
+                        //_.CurrentObject['VouchersPayable_Trades'][e.rowIndex].Code = e.data.Code;
+                        //_.CurrentObject['VouchersPayable_Trades'][e.rowIndex].Name = e.data.Name;
+                        //_.CurrentObject['VouchersPayable_Trades'][e.rowIndex].ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                        e.key.Code = e.data.Code;
+                        e.key.Name = e.data.Name;
+                        e.key.ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                    }
+                }
+                _.Compute();
+            };
+            VC.VouchersPayableNonTrades_onColumnChanged = function (e) {
+                if (e.dataField == 'ID_COA'){
+
+                    if(e.data === undefined || e.data === null) return;
+                    if(e.data.Code !== undefined){
+                        
+                        //_.CurrentObject['VouchersPayableNonTrades'][e.rowIndex].Code = e.data.Code;
+                        //_.CurrentObject['VouchersPayableNonTrades'][e.rowIndex].Name = e.data.Name;
+                        //_.CurrentObject['VouchersPayableNonTrades'][e.rowIndex].ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+
+                        e.key.Code = e.data.Code;
+                        e.key.Name = e.data.Name;
+                        e.key.ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                    }
+                        console.log(_.CurrentObject)
+                }
+                _.Compute();
+            };
+
+        }
+
+        VC_VouchersPayable.prototype.Compute = function (dataField) {
+            //
+            //
+            //
+
+            var _ = this;
+
+            var VC = this.VC;
+
+            console.log(VC.$scope.CurrentObject.$dirty)
+            if(VC.$scope.CurrentObject.$dirty == undefined){ return; }
+
+            var EWTAmt = 0.00;
+            var TaxAmt = 0.00;
+            var GrandTotal = 0.00;
+            var TotalAmt = 0.00;
+            var SubTotal = 0.00;
+            var VPAmount = 0.00;
+            var CreditAmt = 0.00;
+
+            if(_.CurrentObject.VouchersPayableNonTrades == undefined) _.CurrentObject.VouchersPayableNonTrades = [];
+            if(_.CurrentObject.VouchersPayableDetails ==undefined) _.CurrentObject.VouchersPayableDetails = [];
+            if(_.ID_VoucherType == 2)
+            {
+                _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableDetails.SUM("VPAmount");
+            }
+            if (_.CurrentObject.ID_VoucherType !== VC_VouchersPayable.NonTrade) {
+
+                if (_.CurrentObject.VouchersPayableDetails !== null) {
+                    //
+                    //
+                    $.each(_.CurrentObject.VouchersPayableDetails, function (i, detail) {
+
+                        GrandTotal += detail.VPAmount;
+                        SubTotal += detail.SubTotal > 0 ?detail.SubTotal : 0 ;
+                        TaxAmt  += detail.TaxAmt;
+
+                    });
+
+                    _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableDetails.SUM("VPAmount");
+                    _.CurrentObject.VPBalance = _.CurrentObject.VouchersPayableDetails.SUM("Balance");
+                }
+            } else {
+
+                //
+                //  NON TRADES
+                //
+                _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableDetails.SUM("VPAmount");
+                _.CurrentObject.VPBalance = _.CurrentObject.VouchersPayableDetails.SUM("Balance");
+
+
+                if (_.CurrentObject.VouchersPayableNonTrades.length > 0 ) {
+
+                    _.CurrentObject.VPBalance = _.CurrentObject.VouchersPayableNonTrades.SUM("CreditAmt");
+                    _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableNonTrades.SUM("DebitAmt");
+
+                }
+
+                //
+                //
+                //
+
+            }
+            if(_.CurrentObject.VouchersPayable_CashAdvances == null || _.CurrentObject.VouchersPayable_CashAdvances == undefined) _.CurrentObject.VouchersPayable_CashAdvances = [];
+            _.CurrentObject.TotalCashAdvance = _.CurrentObject.VouchersPayable_CashAdvances.SUM("Amount");
+            var TotalVPCashAdvance = _.CurrentObject.VouchersPayable_CashAdvances.SUM("VPAmount");
+            if(dataField !== 'EWTAmount'){
+                _.CurrentObject.EWTAmount = _.CurrentObject.EWTBaseAmount * (_.CurrentObject.EWTRate == null ? 0 : _.CurrentObject.EWTRate);
+            }
+
+
+
+            _.CurrentObject.CosAdjustment = _.CurrentObject.CosAdjustment == null || _.CurrentObject.CosAdjustment == undefined ? 0.00 : _.CurrentObject.CosAdjustment;
+            _.CurrentObject.TotalAmount = _.CurrentObject.TotalAmount + TotalVPCashAdvance - _.CurrentObject.EWTAmount;
+
+            var TotalAmount = _.CurrentObject.TotalAmount;
+            var creditAmount = 0.00;
+            if(_.CurrentObject.VouchersPayableNonTrades.length > 1){
+                _.CurrentObject.VPBalance = _.CurrentObject.VouchersPayableNonTrades.SUM("CreditAmt");
+                _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableNonTrades.SUM("DebitAmt");
+                var VPIndex = -1;
+                $.each(_.CurrentObject.VouchersPayableNonTrades,function(i,o){
+                    if(o.ID_COA == 10 ){
+                        VPIndex = i;
+                    }
+                    else if(o.ID_COA == 218 && o.IsAuto == true){
+                        o.CreditAmt = _.CurrentObject.EWTAmount;
+                        creditAmount += o.CreditAmt;
+                    }else{
+                        creditAmount += o.CreditAmt;
+                    }
+                })
+                if(VPIndex > -1){
+                    _.CurrentObject.VouchersPayableNonTrades[VPIndex].CreditAmt = _.CurrentObject.TotalAmount - creditAmount ;
+                }
+                _.CurrentObject.VPBalance = _.CurrentObject.VouchersPayableNonTrades.SUM("CreditAmt");
+                _.CurrentObject.TotalAmount = _.CurrentObject.VouchersPayableNonTrades.SUM("DebitAmt");
+
+                TotalAmount = _.CurrentObject.TotalAmount + TotalVPCashAdvance - creditAmount ;
+            }
+
+            //compute ulit
+           //--08/25/2017
+           _.CurrentObject.TotalDebitMemo = 0.00;
+
+            if(_.CurrentObject.VouchersPayable_DebitMemos == undefined || _.CurrentObject.VouchersPayable_DebitMemos == null) _.CurrentObject.VouchersPayable_DebitMemos = [];
+            if(_.CurrentObject.VouchersPayable_DebitMemos.length > 0){
+                _.CurrentObject.TotalDebitMemo = _.CurrentObject.VouchersPayable_DebitMemos.SUM("Cost");
+            }
+
+           //--
+
+
+            //NEW TRADE
+            var TradeDebit = 0.00;
+            var TradeCredit = 0.00;
+
+            if (_.CurrentObject.ID_VoucherType !== VC_VouchersPayable.NonTrade) {
+                if(_.CurrentObject.VouchersPayable_Trades == null || _.CurrentObject.VouchersPayable_Trades == undefined) _.CurrentObject.VouchersPayable_Trades = [];
+
+                //========================================================================
+                //_.CurrentObject.TotalAmount
+                TradeDebit = _.CurrentObject.VouchersPayable_Trades.SUM("DebitAmt");
+                //========================================================================
+                var creditAmount = 0.00;
+                var VPIndex = -1;
+                $.each(_.CurrentObject.VouchersPayable_Trades,function(i,o){
+                    if(o.ID_COA == 10 ){
+                        VPIndex = i;
+                    }else{
+                        creditAmount += o.CreditAmt;
+                    }
+                })
+                if(VPIndex > -1){
+                    _.CurrentObject.VouchersPayable_Trades[VPIndex].CreditAmt = TradeDebit - creditAmount;
+                }
+                //========================================================================
+                //_.CurrentObject.VPBalance
+                TradeCredit = _.CurrentObject.VouchersPayable_Trades.SUM("CreditAmt");
+                //========================================================================
+            }
+            ///
+            _.CurrentObject.VPBalance = _.CurrentObject.VPBalance + TradeCredit;
+            console.log('Compute');
+            console.log(TotalAmount);
+            console.log(_.CurrentObject.CosAdjustment);
+            _.CurrentObject.TotalAmount = ((TotalAmount  + _.CurrentObject.CosAdjustment + TradeDebit) - parseFloat(_.CurrentObject.TotalDebitMemo).toFixed(2));
+
+            _.CurrentObject.TaxAmount = parseFloat(TaxAmt).toFixed(2) ;
+            _.CurrentObject.PesoAmount =  _.CurrentObject.TotalAmount *  _.CurrentObject.ExchangeRate;
+
+            _.CurrentObject.RemainingBalance = 0; //Joseph 2017-06-30 10:30 am
+            _.CurrentObject.AmountPaid = 0; //Joseph 2017-06-30 10:30 am
+
+        }
+        //
+
+
+
+
+        VC_VouchersPayable.prototype.isColumnGridEditable = function (p, e) {
+            //
+            //
+            //
+            var _ = this;
+            var VC = _.VC;
+
+            if(p == 'VouchersPayableNonTrades'){
+                //console.log(e)
+                if(e.data.ID_COA == 10){
+                    return false;
+                }
+                if(e.data.ID_COA == 218 && (_.CurrentObject.ID_EWT > 0 || _.CurrentObject.EWTAmount > 0)) {
+                    return false;
+                }
+                if(e.data.IsAuto == true){
+                    return false;
+                }
+            }
+
+            if(p == 'VouchersPayable_Trades'){
+                //console.log(e)
+                if(e.data.ID_COA == 10){
+                    return false;
+                }
+                if(e.data.IsAuto == true){
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        //
+        //
+        VC_VouchersPayable.prototype.Approve = function (Items) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pVouchersPayableApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+            return defer.promise;
+        }
+
+        //
+        //
+        //
+        VC_VouchersPayable.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pVouchersPayableCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'Reason' : Reason
+                }
+            ).then(function (response) {
+                //AcctHelper.ValidateAccountingPeriod(VC);
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+            return defer.promise;
+        }
+
+        return VC_VouchersPayable;
+
+    });
+      //</script>
+</text> , false);

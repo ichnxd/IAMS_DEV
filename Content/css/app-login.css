@@ -1,0 +1,113 @@
+﻿@font-face {
+  font-family: Roboto Black;
+  src: url("Styles/fonts/Roboto/Roboto-Black.ttf");
+}
+@font-face {
+  font-family: Roboto Black Italic;
+  src: url("Styles/fonts/Roboto/Roboto-BlackItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Bold;
+  src: url("Styles/fonts/Roboto/Roboto-Bold.ttf");
+}
+@font-face {
+  font-family: Roboto Bold Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-BoldItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-Italic.ttf");
+}
+@font-face {
+  font-family: Roboto Light;
+  src: url("/Styles/fonts/Roboto/Roboto-Light.ttf");
+}
+@font-face {
+  font-family: Roboto Light Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-LightItalic.ttf");
+}
+@font-face {
+  font-family: Roboto Black;
+  src: url("/Styles/fonts/Roboto/Roboto-Medium.ttf");
+}
+@font-face {
+  font-family: Roboto Medium Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-MediumItalic.ttf");
+}
+@font-face {
+  font-family: Roboto;
+  src: url("/Styles/fonts/Roboto/Roboto-Regular.ttf");
+}
+@font-face {
+  font-family: Roboto Thin;
+  src: url("/Styles/fonts/Roboto/Roboto-Thin.ttf");
+}
+@font-face {
+  font-family: Roboto Thin Italic;
+  src: url("/Styles/fonts/Roboto/Roboto-ThinItalic.ttf");
+}
+#Login {
+  font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
+  color: #808080;
+  background: rgba(77, 77, 77, 0.91) url('../img/login-vector.png') no-repeat fixed center;
+}
+#Login .dx-texteditor.dx-state-hover,
+#Login .dx-texteditor.dx-state-focused {
+  border-color: #0373dd;
+}
+#Login .upper-section {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  font-size: 10px;
+}
+#Login .bottom-section {
+  background-color: #0373dd;
+  position: absolute;
+  bottom: 0;
+  z-index: 100;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+}
+#Login .applogo {
+  width: 25%;
+  padding-top: 20px;
+}
+#Login h2 {
+  font-size: 30px;
+}
+#Login .form-container {
+  width: 35%;
+  display: inline-block;
+  padding-top: 10px;
+}
+#Login .form-container .dx-show-clear-button .dx-clear-button-area {
+  width: 50px!important;
+}
+#Login .form-container .dx-texteditor {
+  border-width: 3px;
+}
+#Login ._container .dx-button-content {
+  font-size: 25px;
+}
+#Login .dx-button {
+  width: 50%;
+}
+#Login .outer {
+  height: 100%;
+  width: 100%;
+  display: table;
+}
+#Login .outer .inner {
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+}
+#Login .outer .inner .container {
+  /*height:60%!important;*/
+  padding: 10px 0 10px 0;
+  background-color: #ffffff;
+  border-top: #ff7800 5px solid;
+  border-bottom: #ff7800 5px solid;
+}

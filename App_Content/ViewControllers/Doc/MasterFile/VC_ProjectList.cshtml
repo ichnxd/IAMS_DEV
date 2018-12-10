@@ -1,0 +1,234 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDocWithDetail");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}','AcctHelper'], function (app, baseModelHelper, AcctHelper) {
+
+        var VC_ProjectList = function () {
+            this.DocDetailPropertyName = 'Project_Details';
+            this.IsAllowNoDetails = true;
+        }
+
+        VC_ProjectList.prototype = Object.create(baseModelHelper.prototype);
+
+
+        
+        VC_ProjectList.prototype.Init = function (VC) {
+            var _ = this;
+            baseModelHelper.prototype.Init.call(this, VC);   
+
+            if(_.ID_ViewType == 2){
+                var JsDataService = app.$GetDataService();
+                VC.AddToolbarButton({
+                      text: 'Generate Template',
+                      icon: 'mdi mdi-clipboard-arrow-down',
+                      IsDisabled: function () {
+                          return false;
+                      },
+                      onItemClick: function () {
+                            AcctHelper.CreateTemplate('Code,Name,UOM,Quantity','Template.csv','text/csv');
+                      }
+                });
+                VC.AddToolBarButtonOnGrid('Project_Branchs', {
+                    text: 'Add Branch',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+                        
+                        if(_.CurrentObject.Project_Branchs == undefined || _.CurrentObject.Project_Branchs == null) _.CurrentObject.Project_Branchs = [];
+
+                        _.CurrentObject.Project_Branchs.push({
+                            ID: -1,
+                            Name: null,
+                            Address: null
+                        })
+                    }
+                });
+
+                VC.AddToolbarButton({
+                      text: 'Import',
+                      icon: 'mdi mdi-cloud-upload',
+                      IsDisabled: function () {
+                          if(_.CurrentObject.ID_FilingStatus != 1){
+                            return true;
+                          }
+
+                          return false;
+                      },
+                      onItemClick: function () {
+                        //
+                            JsDataService.UploadCSV(
+                                    '@Html.EncryptSQL("pImport_ProjectItems")', 
+                                    null, 
+                                    'Import Project List Items'
+                            ).then(function (data) {
+                            var ImportedData = data['Items'];
+                            var Others = data['Others'];
+
+
+                            if(ImportedData == null) ImportedData = [];
+                            if(Others == null) Others = [];
+
+                            $.each(Others, function(i,item){
+                                item.ID = -1;
+                                item.IsNew = true;
+                                item.UnitPrice = 0.00;
+                                item.Model = null;
+                                item.Brand = null;
+                                _.CurrentObject[_.DocDetailPropertyName].push(item);
+                            });
+
+                            $.each(ImportedData, function (i, item) {
+                  
+                                var NewDetail = {
+                                      ID: -1,
+                                      ID_Item: item.ID,
+                                      Item: item.Name,
+                                      Name: item.Name,
+                                      ItemCode: item.Code,
+                                      Code: item.Code,
+                                      SupplierCode: item.SupplierCode,
+                                      PartNo: item.PartNo,
+                                      Description: item.Description,
+                                      Quantity: item.Quantity,
+                                      UnitPrice: item.SRP,
+                                      UnitCost: item.SRP,
+                                      ID_UOM:  item.ID_IUOM > 0 ?  item.ID_IUOM: item.ID_UOM,
+                                      UOM: item.ID_IUOM > 0 ? item.IUOM  : item.PrimaryUOM ,
+                                      VatAmt: 0.00,
+                                      IsFree: false,
+                                      TaxScheme: 'VAT Inclusive',
+                                      ID_TaxScheme: VC.$scope.CurrentObject.ID_TaxScheme,
+                                      IsSerialized: item.IsSerialized,
+                                      TotalAmount: 0.00,
+                                      DocStatus: '',
+                                      ID_DocStatus: null,
+                                      IsCanvassed: false,
+                                      ID_Customer: null,
+                                      Customer: '',
+                                      Reference: '',
+                                      Comment: null,
+                                      ID_Brand: item.ID_Brand,
+                                      Brand: item.Brand,
+                                      Conversion: item.Conversion,
+                                      ID_Project: null,
+                                      Project: '',
+                                      CanvassSheet: '',
+                                      ID_Model: item.ID_Model,
+                                      Model: item.ItemModel,
+                                      ItemModel: item.ItemModel
+                                  };
+                                  _.CurrentObject[_.DocDetailPropertyName].push(NewDetail);
+                              });
+                          },function(error){
+                              console.log(error)
+                          });
+                        //
+
+                      }
+                  });
+            }
+        }
+
+    
+        
+        VC_ProjectList.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+
+        }
+
+        VC_ProjectList.prototype.onInitDetailView = function () {
+            baseModelHelper.prototype.onInitDetailView.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+        }
+
+        VC_ProjectList.prototype.onCurrentObjectChanged = function (e) {
+            baseModelHelper.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            if ( e.dataField == 'ID_Client' ) { 
+                if(e.value !== null){
+                    if(e.value.FullAddress !== undefined) _.CurrentObject.Address = e.value.FullAddress;
+                    if(e.value.DefaultContact !== undefined) _.CurrentObject.Contact = e.value.DefaultContact;                    
+                    if(e.value.Contact_ID !== undefined) _.CurrentObject.ID_Contact = e.value.Contact_ID;
+                    if(e.value.Contact_TelNo !== undefined) _.CurrentObject.PhoneNo = e.value.Contact_TelNo;
+                    if(e.value.Contact_MobileNo !== undefined) _.CurrentObject.MobileNo = e.value.Contact_MobileNo;
+                }
+            }
+            if ( e.dataField == 'ID_Contact' ) { 
+                if(e.value !== null){          
+                    if(e.value.TelNo !== undefined) _.CurrentObject.PhoneNo = e.value.TelNo;
+                    if(e.value.MobileNo !== undefined) _.CurrentObject.MobileNo = e.value.MobileNo;
+                }
+            }
+
+
+             
+        }
+
+        //VC_ProjectList.prototype.onLoad = function () {
+        //    baseModelHelper.prototype.onLoad.call(this);
+        //    var VC = this.VC;   
+        //}
+
+        VC_ProjectList.prototype.Approve = function (Items) {
+
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProjectApproved")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        VC_ProjectList.prototype.Cancel = function (Items,Reason) {
+            var $q = app.$GetAsync();
+            var JsDataService = app.$GetDataService();
+            var defer = $q.defer();
+
+            JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pProjectCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser',
+                    'Reason': Reason
+                }
+            ).then(function (response) {
+                defer.resolve();
+            }, function () {
+                defer.reject();
+            });
+
+            return defer.promise;
+        }
+
+        return VC_ProjectList;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+

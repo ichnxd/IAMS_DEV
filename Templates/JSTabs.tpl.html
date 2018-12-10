@@ -1,0 +1,47 @@
+﻿<uib-tabset id="tabControlElement" class="tab-container" active="currenttabindex">
+    <uib-tab index="tab.id" class="tabElement" ng-repeat="tab in tabs" ng-click ="onTabClick(tab)">
+        <uib-tab-heading class="context-menu">
+            <div id="{{tab._ID}}" class="context-menu">
+                <i class="{{tab.icon}} context-menu"></i> <span class="context-menu">{{tab.title}}</span>
+            </div>
+            <i class="glyphicon glyphicon-remove context-menu" ng-click="CloseTab(tab)"></i>
+            <div dx-tooltip="tab.toolTipOption" class="js-dx-tooltip"><div class="tooltip-content">{{tab.title}}</div></div>
+        </uib-tab-heading>
+        <div id="{{tab.ViewName}}" 
+             tabindex="$index" 
+             class="js-tab"
+             style="height:100%;background-color:{{tab.BgColor}}"
+             dx-scroll-view="{
+                height : '100%'
+             }">
+
+            <div class="outer" style="height:{{ContentHeight + 'px'}}" ng-show="tab.$isInit === true">
+
+                <div class="inner" style="color:{{tab.foreColor}}">
+                    
+                    <div class="notification" ng-show="tab.IsLoadError && tab.IsAllow === true">
+                        <span style="font-size:100px" class="mdi mdi-image-broken-variant"></span>
+                          <div style="font-size:30px" class="tagline">
+                            Ooopss... Something went wrong!!!
+                        </div>
+                    </div>
+                    
+                    <div class="module-icon" ng-show="tab.IsLoadError == false">
+                        <span class="{{tab.icon}}"></span>
+                    </div>
+
+                    <div class="spinner" ng-show="tab.IsLoadError == false && tab.ShowProgress != false">
+                        <div style="background-color:{{tab.foreColor}}" class="bounce1"></div>
+                        <div style="background-color:{{tab.foreColor}}" class="bounce2"></div>
+                        <div style="background-color:{{tab.foreColor}}" class="bounce3"></div>
+                    </div>
+
+                    <div class="tagline" ng-show="tab.IsLoadError == false" style="background-color:{{tab.foreColor}};color:{{tab.BgColor}}">
+                        {{tab.DisplayMessage}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </uib-tab>
+</uib-tabset>
+<div dx-context-menu="dxContextMenu"></div>

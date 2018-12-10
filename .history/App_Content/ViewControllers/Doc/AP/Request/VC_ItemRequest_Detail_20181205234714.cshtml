@@ -1,0 +1,72 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, baseDoc) {
+
+        var VC_ItemRequest_Detail = function () {
+      
+        }
+        
+        VC_ItemRequest_Detail.prototype = Object.create(baseDoc.prototype);
+          
+        VC_ItemRequest_Detail.prototype.Init = function (VC) {
+
+            baseDoc.prototype.Init.call(this, VC);
+
+            var _ = this;
+        }
+
+        VC_ItemRequest_Detail.prototype.OnFormInitialized = function (VC) {
+
+            var _ = this;
+            
+
+            var fBrowseItem = function(){
+
+
+                
+            }
+            var SQL = '@Html.EncryptSQL(@"SELECT * FROM vItemWidthInventoryAndTopSupplier WHERE IsActive = 1 AND ID_Warehouse = @ID_Warehouse ")'
+
+            VC.BrowseDataSet(SQL,
+            {
+                title: 'Select Items',
+                ID_View: '3D89B92F-6D74-40B3-9C39-537D315FCB8D',
+                params: {
+                    'ID_Item': Enumerable.From(_.CurrentObject.PickList_Details).Select("$.ID_Item").ToArray(),
+                }
+            }).then(function (Items) {
+                
+                $.each(Items, function (i, item) {
+
+                    VC.$scope.CurrentObject.ID_Item = item.ID_Item;
+                    VC.$scope.CurrentObject.Code = item.Code;
+                    VC.$scope.CurrentObject.ItemDescription = item.Description;
+                    VC.$scope.CurrentObject.Item = item.Description;
+                    VC.$scope.CurrentObject.Name = item.Description;
+                })
+
+            });
+
+
+            VC.btnItem.option('onClick', function () {
+
+                
+
+            });
+        }
+                    
+        VC_ItemRequest_Detail.prototype.onLoad = function (VC) {
+
+            baseDoc.prototype.onLoad(this, VC);
+        }
+
+        return VC_ItemRequest_Detail;
+    });
+//</script>
+</text> , false )

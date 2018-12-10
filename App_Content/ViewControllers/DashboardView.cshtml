@@ -1,0 +1,34 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app, BaseClass) {
+
+        var DashboardView = function ($scope, CurrentObject, ViewStateName, IsModal, ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            // afdasfsafsafds
+            //
+
+            $scope.currentExpr = 1;
+
+            $scope.dxComboBoxOption = {
+                SQL: 'SELECT * FROM tItem',
+            };
+        }
+
+        DashboardView.prototype = Object.create(BaseClass.prototype);
+
+        DashboardView.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('DashboardView', DashboardView);
+
+    });
+//</script>
+</text> , false )
+

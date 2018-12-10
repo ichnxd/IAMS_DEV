@@ -1,0 +1,34 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper'], function (app, BaseClass) {
+
+        var VC_Customers = function () { }
+
+        VC_Customers.prototype = Object.create(BaseClass.prototype);
+        
+        VC_Customers.prototype.onInitListView = function (VC) {
+            var _ = this;
+            VC.$CanUpdateReference = true;
+            if(_.ID_ViewType == 2){
+                
+            }
+
+
+            _.OnOpenDetailView = function (data, CurrentObject) {
+                console.log(CurrentObject)
+                data.ID = VC.LvModel.ID_ModelObject * data.ID_CurrentObject;           
+                if (data.params == undefined) data.params = {};
+                data.params.IsCustomer = true;
+            }
+        }
+ 
+ 
+        return VC_Customers;
+    });
+//</script>
+</text> , false )

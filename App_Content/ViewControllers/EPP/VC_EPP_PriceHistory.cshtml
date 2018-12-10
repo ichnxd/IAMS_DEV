@@ -1,0 +1,153 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, BaseClass, AcctHelper) {
+
+        var VC_EPP_PriceHistory = function () { }
+
+        VC_EPP_PriceHistory.prototype = Object.create(BaseClass.prototype);
+
+        VC_EPP_PriceHistory.prototype.Init = function (VC) {
+            BaseClass.prototype.Init.call(this, VC);
+            var _ = this;
+
+            String.prototype.replaceAll = function (find, replace) {
+                var str = this;
+                return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+            };
+
+            VC.IsNull = function(data,substitute){
+                var x = data == null ? substitute : data;
+                return x;
+            };
+
+            var JsDataService = app.$GetDataService();
+            VC.AddToolbarButton({
+                  text: 'Generate Template',
+                  icon: 'mdi mdi-clipboard-arrow-down',
+                  IsDisabled: function () {
+                      return false;
+                  },
+                  onItemClick: function () {
+                        JsDataService.Query('@Html.EncryptSQL("SELECT * FROM dbo.vEPP_Item WHERE IsActive = 1 ORDER BY Brand, Category")',
+                        {
+                            params:
+                            {
+                              
+                            }
+                        }).then(function (data){
+                            var stringItems = '';
+                            $.each(data.collection,function(i,o){
+                                stringItems += "\n";
+                                stringItems += (o.ItemCode == null ? '' : String(o.ItemCode).replaceAll(',',' ') ) + ',';
+                                stringItems += (o.Brand == null ? '' : String(o.Brand).replaceAll(',',' ') ) + ',';
+                                stringItems += (o.Category == null ? '' : String(o.Category) .replaceAll(',',' ') ) + ',';
+                                stringItems += (o.Name == null? '':String(o.Name).replaceAll(',',' ') ) + ',';
+								stringItems += (VC.IsNull(o.ProductColor,'').length == 0 ? 'BLACK':String(o.ProductColor).replaceAll(',',' ') ) + ',';
+                                stringItems += (o.SRPAmt == null? '0.00':String(o.SRPAmt).replaceAll(',','') ) + ',';
+                                stringItems += '0.00,';
+                                stringItems += '0.00,';
+                                stringItems += '0.00,';
+                                stringItems += '0,';
+                                stringItems += '0,';
+                                stringItems += '0,';
+                                stringItems += '0,';
+                                stringItems += '0';
+                            });
+                            AcctHelper.CreateTemplate('Code,Brand,Category,Name,ProductColor,SRP,EUP,is0%Interest,POP,IsInActive,24Months,12Months,6Months,3Months' + stringItems,'PriceTemplate.csv','text/csv');
+                        });
+
+                  }
+            });
+
+
+            if (_.ID_ViewType == 2) {
+                VC.AddToolbarButton({
+                    text: 'Import',
+                    IsDisabled: function () {
+                        if(_.CurrentObject.ID_FilingStatus != 1){
+                          return true;
+                        }
+
+                        return false;
+                    },
+                    onItemClick: function () {
+                                                //
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_ItemsPrice")', 
+                            null, 
+                            'Import EPP Price History'
+                        ).then(function (data) {
+
+                            var ImportedData = data['Items'];
+
+                            console.log('ImportedData', ImportedData);
+
+                            if(ImportedData == null) ImportedData = [];
+                            if(_.CurrentObject.EPP_PriceHistory_Details == undefined || _.CurrentObject.EPP_PriceHistory_Details == null) _.CurrentObject.EPP_PriceHistory_Details = [];
+
+                            var Details = [];
+
+                             $.each(ImportedData, function (i, item) {
+                                var NewDetail = {
+                                    ID: -1,                           
+                                    Code: item.ItemCode,
+                                    Name: item.Name,
+                                    Item: item.Name,
+                                    ID_Item: item.ID,
+                                    SRPAmt: item.ImportedPrice,
+                                    OldSRP: VC.IsNull(item.SRPAmt,0.00),
+                                    ProductColor: VC.IsNull(item.ProductColor, '').length == 0 ? 'BLACK' : item.ProductColor,
+                                    IsZeroPercentInterest: item['is0%Interest'],
+                                    IsInActive: item.IsInActive,
+                                    PassOnPrice: item.PassOnPrice,
+                                    is3Months: item['3Months'],
+                                    is6Months: item['6Months'],
+                                    is12Months: item['12Months'],
+                                    is24Months: item['24Months'],
+                                };
+                                Details.push(NewDetail);
+                             });
+
+                             VC.$timeout(function () {
+                                 _.CurrentObject.EPP_PriceHistory_Details = Details;
+                             }, 500);
+                             
+                        });
+                    }
+                });
+            };
+        }
+
+        VC_EPP_PriceHistory.prototype.Approve = function (Items) {
+            var JsDataService = app.$GetDataService();
+            return JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pEPP_PriceHistoryApprove")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            );
+        }
+
+
+        VC_EPP_PriceHistory.prototype.Cancel = function (Items) {
+            var JsDataService = app.$GetDataService();
+            return JsDataService.ExecSQLProc(
+                '@Html.EncryptSQL("pEPP_PriceHistoryCancel")',
+                {
+                    'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    'ID_CurrentUser': '#ID_CurrentUser'
+                }
+            );
+        }
+
+        return VC_EPP_PriceHistory;
+    });
+//</script>
+</text> , false )

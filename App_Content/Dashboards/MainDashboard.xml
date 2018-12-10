@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Visible="false" Text="Dashboard" Alignment="Left" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="DsAccountsPayable" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsPayable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsPayable;" />
+    <OLAPDataSource ComponentName="dashboardOlapDataSource2" Name="DsAccountReceivable" ConnectionName="192.168.2.8:2383_IAMSAnalysis_vAccountsReceivable" ConnectionString="provider=msolap;data source=192.168.2.8:2383;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vAccountsReceivable;" />
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="ACCOUNTS RECIEVABLE" ShowCaption="false" Group="dashboardItemGroup1" DataSource="dashboardOlapDataSource2">
+      <DataItems>
+        <Measure DataMember="[Measures].[SI Total Amount]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[PT TotalAmount]" UniqueName="DataItem2" />
+        <Measure DataMember="[Measures].[DR Total Amount]" UniqueName="DataItem3" />
+        <Measure DataMember="[Measures].[SO Total Amount]" UniqueName="DataItem0" />
+      </DataItems>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" />
+          <Series>
+            <Simple>
+              <Value UniqueName="DataItem0" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+            <Simple>
+              <Value UniqueName="DataItem3" />
+            </Simple>
+            <Simple Name="Sales Invoice">
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+            <Simple Name="Payment Transaction">
+              <Value UniqueName="DataItem2" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX Visible="false" EnableZooming="true" />
+    </Chart>
+    <Chart ComponentName="chartDashboardItem2" Name="ACCOUNTS PAYABLE" ShowCaption="false" Group="dashboardItemGroup2" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Measure DataMember="[Measures].[Total Amount]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[RR TotalAmount]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[VP TotalAmount]" UniqueName="DataItem2" />
+        <Measure DataMember="[Measures].[Total PV Amt]" UniqueName="DataItem3" />
+      </DataItems>
+      <Panes>
+        <Pane Name="Pane 1">
+          <AxisY TitleVisible="false" />
+          <Series>
+            <Simple Name="Puchase Order">
+              <Value UniqueName="DataItem0" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+            <Simple Name="Receiving Report">
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+            <Simple Name="Vouchers Payable">
+              <Value UniqueName="DataItem2" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+            <Simple Name="Payment Voucher">
+              <Value UniqueName="DataItem3" />
+              <PointLabelOptions Visible="true" Content="ArgumentAndValue" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+      <AxisX Visible="false" EnableZooming="true" />
+    </Chart>
+    <ListBox ComponentName="listBoxDashboardItem1" Name="List Box 1" ShowCaption="false" Group="dashboardItemGroup1" DataSource="dashboardOlapDataSource2">
+      <InteractivityOptions IgnoreMasterFilters="false" />
+      <DataItems>
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[TotalTransactionCount]" UniqueName="DataItem1" />
+      </DataItems>
+      <HiddenMeasures>
+        <Measure UniqueName="DataItem1" />
+      </HiddenMeasures>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem0" />
+      </FilterDimensions>
+    </ListBox>
+    <ListBox ComponentName="listBoxDashboardItem2" Name="List Box 2" ShowCaption="false" Group="dashboardItemGroup2" DataSource="dashboardOlapDataSource1">
+      <InteractivityOptions IgnoreMasterFilters="false" />
+      <DataItems>
+        <Dimension DataMember="[DimFilingStatus].[Filing Status].[Filing Status]" SortOrder="None" UniqueName="DataItem0" />
+      </DataItems>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem0" />
+      </FilterDimensions>
+    </ListBox>
+    <Grid ComponentName="gridDashboardItem2" Name="TOP 5 Suppliers by Transaction Count" Group="dashboardItemGroup2" DataSource="dashboardOlapDataSource1">
+      <DataItems>
+        <Dimension DataMember="[DimBusinessPartner].[Name].[Name]" ColoringMode="Hue" TopNEnabled="true" TopNMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[TransactionCount]" UniqueName="DataItem1">
+          <NumericFormat FormatType="Number" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[TotalTransactionAmount]" UniqueName="DataItem3">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Total Count">
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount">
+          <Measure UniqueName="DataItem3" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions />
+    </Grid>
+    <Grid ComponentName="gridDashboardItem1" Name="TOP 5 Customers by Transaction Count" Group="dashboardItemGroup1" DataSource="dashboardOlapDataSource2">
+      <DataItems>
+        <Dimension DataMember="[DimCustomer].[Name].[Name]" ColoringMode="Hue" TopNEnabled="true" TopNCount="10" TopNMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[TotalTransactionCount]" UniqueName="DataItem1" />
+        <Measure DataMember="[Measures].[TotalTransactionAmount]" UniqueName="DataItem3">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+      </DataItems>
+      <GridColumns>
+        <GridDimensionColumn>
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Total Count">
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Total Amount">
+          <Measure UniqueName="DataItem3" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions />
+    </Grid>
+  </Items>
+  <Groups>
+    <Group ComponentName="dashboardItemGroup1" Name="ACCOUNTS RECEIVABLES" />
+    <Group ComponentName="dashboardItemGroup2" Name="ACCOUNTS PAYABLE" />
+  </Groups>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutGroup Orientation="Vertical" DashboardItem="dashboardItemGroup1" Weight="49.966420416386839">
+        <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="16.955017301038062" />
+        <LayoutItem DashboardItem="chartDashboardItem1" Weight="49.019607843137258" />
+        <LayoutItem DashboardItem="gridDashboardItem1" Weight="34.02537485582468" />
+      </LayoutGroup>
+      <LayoutGroup Orientation="Vertical" DashboardItem="dashboardItemGroup2" Weight="50.033579583613161">
+        <LayoutItem DashboardItem="listBoxDashboardItem2" Weight="16.955017301038062" />
+        <LayoutItem DashboardItem="chartDashboardItem2" Weight="49.019607843137258" />
+        <LayoutItem DashboardItem="gridDashboardItem2" Weight="34.02537485582468" />
+      </LayoutGroup>
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

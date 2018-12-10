@@ -1,0 +1,263 @@
+﻿@model System.Dynamic.DynamicObject
+@{
+    Layout = null;
+    string ReportID = ViewBag.CurrentReport.ID.ToString();
+    string DefaultFilterRangeParameter = "'" + ViewBag.DefaultDateFilter + "'";
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseView'], function (app,BaseClass) {
+
+        function ReportController($scope,ReportParams,$OwnerRights) {
+            BaseClass.prototype.Init.call(this,$scope);
+
+            var CurrentUser = $scope.$CurrentUser;
+
+            var _ = this;
+
+
+            var $ID_Employees = Enumerable.From($OwnerRights).Select('$.ID_Employee').ToArray().join();
+            var $ID_Users = Enumerable.From($OwnerRights).Select('$.ID').ToArray().join();
+            //console.log('Owner Rights',$OwnerRights);
+
+            _.FilterString = null;
+            _.SearchText = null;
+            _.DateFilter = null;
+
+            var $rootScope = angular.element(document).injector().get('$rootScope');;
+
+            $scope.ReportID = @ReportID;
+
+            $scope.CurrentObject = { };
+
+            $scope.onLoadDone = function() {
+                $rootScope.$broadcast('loadingStatusInactive');
+            };
+
+            @{
+            @:var ViewSrc = '/ReportView/Viewer';
+                        if (ViewBag.CurrentReport.IsLoadImmediately == true)
+                {
+
+               @:$scope.CurrentReport = {
+                                               @:    src: '/ReportView/Viewer?ID=@ReportID',
+                                               @:    Caption: '@ViewBag.CurrentReport.Caption',
+                                               @:    Name: '@ViewBag.CurrentReport.Name'
+                                               @:}
+                                       @:$scope.IsFilterOpen = false;
+                                    } else {
+               @:$scope.CurrentReport = {
+                                               @:    src: null,
+                                               @:    Caption: '@ViewBag.CurrentReport.Caption',
+                                               @:    Name: '@ViewBag.CurrentReport.Name'
+                                               @:}
+                                       @:$scope.IsFilterOpen = false;
+                                    }
+            }
+
+            $scope.ReloadView = function(FullTextSearch,FilterString,IsFullScreen) {
+                if ( FullTextSearch == undefined ) FullTextSearch = '';
+                if ( IsFullScreen != true){
+                    $rootScope.$broadcast('loadingStatusActive');
+                }
+                //
+                //
+                //
+                _.filterArgs = [];
+                onCustomFilter();
+
+                if ( _.filterArgs.length > 0 ) {
+                    if ( FilterString !== null && FilterString !== undefined ) {
+                        FilterString += ' AND ';
+                    } else {
+                        FilterString = '';
+                    }
+
+                    FilterString += "(" + _.filterArgs.join(' AND ') + ")";
+                };
+                console.log(FilterString);
+                _.$timeout( function() {
+                    //var FilterString = FullTextSearch.trim().length > 0 ? null :  app.Base64.encode(JSON.stringify( $scope.CurrentObject ) );
+                    var ID_CurrentObject = ReportParams != null ? ReportParams.ID : 0;
+                    //console.log(typeof ID_CurrentObject,ID_CurrentObject);
+                    if ( ID_CurrentObject.length !== undefined) {
+                        ID_CurrentObject = ID_CurrentObject.join(',');
+                        ID_CurrentObject = ID_CurrentObject.replace(/,/g , "");
+                    }
+                    //alert('@ReportID' + '_' +  ID_CurrentObject);
+                    var form = $("<form/>").attr({
+                        method: "post",
+                        action: ViewSrc,
+                        target: IsFullScreen === true ? '_blank' : '@ReportID' + '_' +  ID_CurrentObject
+                    })
+                    .append($("<input type='hidden' name='ID'/>").attr('value',@ReportID))
+                    .append($("<input type='hidden' name='FilterString'/>").attr('value', FilterString != null ? app.Base64.encode( FilterString ) : null))
+                    .append($("<input type='hidden' name='FullTextSearch'/>").attr('value',FullTextSearch))
+                    .append($("<input type='hidden' name='FilterArgs'/>").attr('value',JSON.stringify(_.FilterArgs)))
+                    .append($("<input type='hidden' name='DateRangeParameter'/>").attr('value',@Html.Raw(DefaultFilterRangeParameter)))
+                    .append($("<input type='hidden' name='DateRangeParameterValue'/>").attr('value',JSON.stringify(_.DateFilter)))
+                    .append($("<input type='hidden' name='ReportParams'/>").attr('value',ReportParams != null ? JSON.stringify(ReportParams) : null ))
+                    .appendTo('body').submit().remove();
+
+                },500);
+            }
+
+            var onCustomFilter = function() {
+                _.filterArgs = [];
+                @Html.Raw(ViewBag.ReportScript.ToString());
+            }
+
+            var FilterGrid = null;
+
+            $scope.ReportDesigner = function() {
+                window.open('/ReportDesigner?ID_Report=@ReportID');
+            }
+
+            $scope.FullScreen = function() {
+                var ID_CurrentObject = ReportParams != null ? ReportParams.ID : 0;
+                if (ID_CurrentObject === 0) {
+                    window.open('/ReportView/Viewer?ID=@ReportID');
+                } else {
+                    $scope.ReloadView(app.Base64.encode( _.SearchText ),_.FilterString,true);
+                }
+            }
+
+            $scope.DateRangeBoxOption = {
+                value: 1,
+                OnDateValueChanged: function(e) {
+                    if ( _.DateFilter == null ) _.DateFilter = { };
+                    _.DateFilter.startDate = e.startDate;
+                    _.DateFilter.endDate = e.endDate;
+                    _.$timeout(function(){
+                        $scope.ReloadView(app.Base64.encode( _.SearchText ),_.FilterString,false);
+                    },500);
+                }
+            }
+
+            $scope.butRequeryOption = {
+text: 'Requery',
+                width: 100,
+                icon:'green mdi mdi-refresh',
+                onClick : function() {
+        if ( FilterGrid !== null) {
+            FilterGrid.refresh();
+            var FilterString = null;
+            var FilterExpression = FilterGrid.getCombinedFilter();
+            var FilterListData = FilterGrid.FilterListData;
+            console.log('FilterExpression',FilterExpression);
+            if ( FilterExpression != null && FilterExpression !== undefined) {
+                FilterString = app.GetFilterString(FilterExpression);
+            }
+
+                        for (var p in FilterListData) {
+                if (FilterListData.hasOwnProperty(p)) {
+                    if ( FilterListData[p] != null ) {
+                        if ( FilterListData[p].length > 0 ) {
+                            if ( FilterString != null ) FilterString += " AND ";
+                            FilterString = ( FilterString == null ? '' : FilterString ) + "[" +  p +  "] IN (" + FilterListData[p].join(",") + ")";
+                        }
+                    }
+                }
+            }
+
+            _.FilterString = FilterString;
+
+                        $scope.ReloadView(null,FilterString);
+
+
+            //
+            //
+            //
+        }
+    }
+}
+
+            $scope.butClearFilterOption = {
+text: 'Clear',
+                icon: 'red mdi mdi-close',
+                width: 100,
+                onClick : function() {
+        if ( FilterGrid != null ) {
+            FilterGrid.clearFilter();
+            FilterGrid.ClearListViewFilter();
+        }
+    }
+}
+
+var DataSource = {
+                load: function (loadOptions) {
+    var deferred = _.$q.defer();
+    _.$timeout(function () {
+        deferred.resolve([]);
+                    }, 100);
+                    return deferred.promise;
+                },
+                totalCount: function () {
+                    return 0;
+                }
+            }
+
+
+
+            @{
+                if (ViewBag.Columns != null) {
+                    @:$scope.dxGridFilterOption = {
+                                    @:     columns: @Html.Raw(ViewBag.Columns)
+                                    @:   , onInitialized: function(  e  ) {   FilterGrid = e.component;  }
+                                    @:   , dataSource: DataSource
+                                    @:};
+                            }
+            }
+
+
+            @{
+                if ( ViewBag.ShowFilter == true ) {
+                    @:$scope.ToggleFilter = function() {
+                                    @:$scope.IsFilterOpen = !$scope.IsFilterOpen;
+                                    @:if ( FilterGrid != null && FilterGrid.$isInit == undefined ) { FilterGrid.getController("columns").updateColumns();FilterGrid.$isInit == true;}
+                                    @:};
+                            }
+            }
+
+            var IsFullTextSearch = false;
+
+            $scope.SearchTextBox = {
+                mode:'search',
+                width:300 ,
+                //placeholder : 'Search',
+                showClearButton : true ,
+                onEnterKey : function(e) {
+                    var SearchText = e.component.option('text');
+                    if ( SearchText.trim().length == 0 ) {
+                        if ( IsFullTextSearch === true) {
+                            $scope.ReloadView('');
+                        }
+                    } else {
+                        $scope.ReloadView(SearchText);
+                    };
+                    _.SearchText = SearchText;
+                },
+                onInitialized : function( e ) {
+                    _.$timeout( function() {
+                        e.component.focus();
+                    },500);
+
+                }
+            };
+
+
+            @if (ViewBag.CurrentReport.IsLoadImmediately == true) {
+
+                @:_.$timeout(function() {
+                                @:  $scope.ReloadView('');
+                                @:},500);
+                        }
+        }
+
+        ReportController.prototype = Object.create( BaseClass.prototype );;
+
+        return ReportController;
+
+    });
+    //</script>
+</text>,false)

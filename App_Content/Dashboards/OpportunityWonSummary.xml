@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dashboard CurrencyCulture="en-US">
+  <Title Text="Opportunity (Won) Summary" />
+  <DataSources>
+    <OLAPDataSource ComponentName="dashboardOlapDataSource1" Name="Ds A" ConnectionName="local_IAMSAnalysis_vSalespipeline" ConnectionString="provider=msolap;data source=local;initial catalog=IAMSAnalysis;timeout=1200;Cube Name=vSalespipeline;" />
+  </DataSources>
+  <Items>
+    <Chart ComponentName="chartDashboardItem1" Name="Chart 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="[DataItem4] = '[DimStage].[Stage].&amp;[Won]'" IsMasterFilterCrossDataSource="true">
+      <ColoringOptions MeasuresColoringMode="Hue" />
+      <InteractivityOptions MasterFilterMode="Multiple" TargetDimensions="Points" />
+      <DataItems>
+        <Measure DataMember="[Measures].[OPP FinalVATInc]" UniqueName="DataItem1">
+          <NumericFormat FormatType="Number" Unit="Millions" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimBusinessUnit].[BusinessUnit].[BusinessUnit]" SortOrder="Descending" ColoringMode="None" SortByMeasure="DataItem1" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[OPP FinalVATEx]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Millions" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[OPP Count]" UniqueName="DataItem3" />
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" UniqueName="DataItem4" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension UniqueName="DataItem4" />
+      </HiddenDimensions>
+      <Arguments>
+        <Argument UniqueName="DataItem0" />
+      </Arguments>
+      <Panes>
+        <Pane Name="Pane 1">
+          <Series>
+            <Simple Name="Total VAT Inc">
+              <Value UniqueName="DataItem1" />
+              <PointLabelOptions Visible="true" ShowForZeroValues="true" />
+            </Simple>
+            <Simple Name="Total VAT Ex">
+              <Value UniqueName="DataItem2" />
+              <PointLabelOptions Visible="true" />
+            </Simple>
+          </Series>
+        </Pane>
+        <Pane Name="Pane 2">
+          <Series>
+            <Simple Name="Count">
+              <Value UniqueName="DataItem3" />
+            </Simple>
+          </Series>
+        </Pane>
+      </Panes>
+    </Chart>
+    <Grid ComponentName="gridDashboardItem1" Name="Summary" DataSource="dashboardOlapDataSource1" FilterString="[DataItem4] = '[DimStage].[Stage].&amp;[Won]'">
+      <DataItems>
+        <Dimension DataMember="[DimEmployee].[Name].[Name]" UniqueName="DataItem0" />
+        <Measure DataMember="[Measures].[OPP FinalVATInc]" UniqueName="DataItem1">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Measure DataMember="[Measures].[OPP FinalVATEx]" UniqueName="DataItem2">
+          <NumericFormat FormatType="Number" Unit="Ones" IncludeGroupSeparator="true" />
+        </Measure>
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" UniqueName="DataItem4" />
+        <Dimension DataMember="[DimCustomerLead].[Customer Name].[Customer Name]" UniqueName="DataItem6" />
+        <Dimension DataMember="[DimOpportunity].[OPP No].[OPP No]" UniqueName="DataItem7" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension UniqueName="DataItem4" />
+      </HiddenDimensions>
+      <GridColumns>
+        <GridDimensionColumn Name="BDM" Weight="82.65306122448979">
+          <Dimension UniqueName="DataItem0" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="Client" Weight="70.408163265306129">
+          <Dimension UniqueName="DataItem6" />
+        </GridDimensionColumn>
+        <GridDimensionColumn Name="OPP Name" Weight="80.816326530612244">
+          <Dimension UniqueName="DataItem7" />
+        </GridDimensionColumn>
+        <GridMeasureColumn Name="Final VAT Inc" Weight="78.367346938775512">
+          <Measure UniqueName="DataItem1" />
+        </GridMeasureColumn>
+        <GridMeasureColumn Name="Final VAT Ex" Weight="78.367346938775512">
+          <Measure UniqueName="DataItem2" />
+        </GridMeasureColumn>
+      </GridColumns>
+      <GridOptions ColumnWidthMode="Manual" />
+    </Grid>
+    <ListBox ComponentName="listBoxDashboardItem1" Name="List Box 1" ShowCaption="false" DataSource="dashboardOlapDataSource1" FilterString="[DataItem0] = '[DimStage].[Stage].&amp;[Won]'">
+      <DataItems>
+        <Dimension DataMember="[DimStage].[Stage].[Stage]" UniqueName="DataItem0" />
+        <Dimension DataMember="[DimDateTime].[Month].[Month]" UniqueName="DataItem1" />
+      </DataItems>
+      <HiddenDimensions>
+        <Dimension UniqueName="DataItem0" />
+      </HiddenDimensions>
+      <FilterDimensions>
+        <Dimension UniqueName="DataItem1" />
+      </FilterDimensions>
+    </ListBox>
+  </Items>
+  <ColorScheme>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-4567727">
+      <DimensionKeys>
+        <DimensionKey>
+          <Definition DataMember="[DimPurchaseOrder].[FilingStatus].[FilingStatus]" />
+          <Value Type="System.String" Value="[DimPurchaseOrder].[FilingStatus].&amp;[Approved]" />
+        </DimensionKey>
+      </DimensionKeys>
+    </Entry>
+    <Entry DataSource="dashboardOlapDataSource1" Color="-5273005">
+      <MeasureKey>
+        <Definition DataMember="[Measures].[OPP Count]" />
+      </MeasureKey>
+    </Entry>
+  </ColorScheme>
+  <LayoutTree>
+    <LayoutGroup>
+      <LayoutItem DashboardItem="listBoxDashboardItem1" Weight="11.970410221923336" />
+      <LayoutItem DashboardItem="chartDashboardItem1" Weight="41.896435776731671" />
+      <LayoutItem DashboardItem="gridDashboardItem1" Weight="46.133154001344991" />
+    </LayoutGroup>
+  </LayoutTree>
+</Dashboard>

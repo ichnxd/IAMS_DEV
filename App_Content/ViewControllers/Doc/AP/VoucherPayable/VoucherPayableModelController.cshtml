@@ -1,0 +1,62 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var VouchersPayableLink = Url.Encode("Doc/AP/VoucherPayable/VouchersPayable");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', 'baseModelHelper', 'AcctHelper', '/JsApp/GetScript?Url=@{@VouchersPayableLink}'],
+        function (app, baseModelHelper, AcctHelper, VouchersPayable) {
+
+        function VouchersPayable() { };
+
+        VouchersPayable.prototype = baseModelHelper;
+
+        VouchersPayable.prototype.Init = function (VC) {
+            baseModelHelper.prototype.Init.call(this, VC);
+            var _ = this;
+            if (this.ID_ViewType == 2) {
+                VC.AddToolbarButton({
+                    text: 'Approve',
+                    icon: 'mdi mdi-thumb-up',
+                    color: '#009688',
+                    IsDisabled: function (baseObject) {
+                        if (baseObject.ID_FilingStatus == 2) return true;
+                        if (baseObject.ID == -1) return true;
+                        return false;
+                    },
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        _.ConfirmBox("Do you want to approve the following Document: <br>" + VC.$scope.CurrentObject.DocumentNo + "", VC.ModelName).then(function () {
+                            VouchersPayable.Approve([VC.$scope.CurrentObject]);
+                        });
+                    }
+                });
+
+                VC.AddToolbarButton({
+                    text: 'Cancel',
+                    icon: 'mdi mdi-close-circle-outline',
+                    color: '#FF3D00',
+                    IsDisabled: function (baseObject) {
+                        if (baseObject.ID_FilingStatus == 7) return true;
+                        if (baseObject.ID == -1) return true;
+                        return false;
+                    },
+                    isContextMenu: true,
+                    requireSingleObject: true,
+                    onItemClick: function (BaseObjects) {
+                        _.ConfirmBox("Do you want to cancel the following Document: <br>" + VC.$scope.CurrentObject.DocumentNo + "", VC.ModelName).then(function () {
+                            VouchersPayable.Cancel([VC.$scope.CurrentObject]);
+                        });
+                    }
+                });
+            }
+
+        }
+
+        return VouchersPayable;
+    });
+//</script>
+</text> , false )

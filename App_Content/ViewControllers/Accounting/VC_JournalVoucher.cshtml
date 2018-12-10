@@ -1,0 +1,379 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Accounting/VC_BaseAccounting");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '/JsApp/GetScript?Url=@{@BaseVCUrl}', 'AcctHelper'], function (app, VC_BaseDoc, AcctHelper) {
+
+        var VC_JournalVoucher = function () {
+            this.DocDetailPropertyName = 'JournalVoucher_Details';
+        }
+
+        VC_JournalVoucher.prototype = Object.create(VC_BaseDoc.prototype);
+
+        VC_JournalVoucher.prototype.Init = function (VC) {
+            VC_BaseDoc.prototype.Init.call(this, VC);
+            var _ = this;
+            if (_.ID_ViewType == 2) {
+                VC.ValidationRules.push(function () {
+                    var JsDataService = app.$GetDataService();
+                    return JsDataService.Validate('@Html.EncryptSQL("pValidateAccountingPeriod")',
+                        {
+                            'Date': _.CurrentObject.Date
+                        }
+                    );
+                });
+            }
+
+
+            if (_.ID_ViewType == 1) {
+                VC.onContextMenuPreparing = function (e) {
+                    var item = e.row.data.ID_Item;
+                    e.items.push({
+                        text: "Copy Doc",
+                        icon: "fa fa-edit",
+                        onItemClick: function () {
+                            var itemsSelected = _.Grid.getSelectedRowsData()[0];
+                            if (itemsSelected.ID_BookOfAccount !== 5){
+                                VC.MsgBox("Unable to proceed. The document's Book of Account is not a General Journal")
+                                return;
+                            } 
+                            //
+                            //
+                            //
+                            AcctHelper.Create_Copy_JV(itemsSelected.ID);
+
+                        }
+                    });
+                };
+            }
+
+            VC.AddButtonReport({
+                Name: 'Journal Voucher Form',
+                ID_Report: 3147,
+                requireSingleObject: true
+            });
+
+            VC.AddToolbarButton({
+                text: 'Post',
+                icon: 'mdi mdi-cube-send',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 1) {
+
+                        var itemsSelected = VC.Grid.getSelectedRowsData();
+                        if (itemsSelected.length === 0) return true;
+                        if (itemsSelected[0].ID_FilingStatus != 1) return true;
+                    } else if (_.ID_ViewType == 2) {
+
+
+
+                        if (_.CurrentObject.ID === -1) return true;
+                        if (_.CurrentObject.ID_FilingStatus != 1) return true;
+                    }
+                    return false;
+                },
+                onItemClick: function () {
+                    var JsDataService = app.$GetDataService();
+                    var CurrentObject = null;
+                    if (_.ID_ViewType == 1) {
+                        CurrentObject = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) {
+                        CurrentObject = [_.CurrentObject];
+                    }
+                    JsDataService.ExecSQLProc(
+                        '@Html.EncryptSQL("pJournalVoucherPost")',
+                        {
+                            'IDs': Enumerable.From(CurrentObject).Select('$.ID').ToArray(),
+                            'Name': 'fsadfsadfsa'
+                        }
+                    ).then(function (response) {
+                        VC.ToastSuccess('Posted Successfully.');
+                        if (_.ID_ViewType == 2) {
+                            VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    });
+                },
+
+            });
+
+            VC.AddToolbarButton({
+                text: 'Void',
+                icon: 'mdi mdi-delete-forever',
+                IsDisabled: function () {
+                    if (_.ID_ViewType == 1) {
+
+                        var itemsSelected = VC.Grid.getSelectedRowsData();
+                        if (itemsSelected.length !== 1) return true;
+                        if (itemsSelected[0].ID_FilingStatus != 23) return true;
+                        if (itemsSelected[0].IsVoided == true) return true;
+                        if (itemsSelected[0].IsReversalDone == true) return true;
+                        if (itemsSelected[0].IsForVoided == true) return true;
+                    } else if (_.ID_ViewType == 2) {
+
+                        if (_.CurrentObject.ID === -1) return true;
+                        if (_.CurrentObject.ID_FilingStatus != 23) return true;
+                        if (_.CurrentObject.IsVoided == true) return true;
+                        if (_.CurrentObject.IsReversalDone == true) return true;
+                        if (_.CurrentObject.IsForVoided == true) return true;
+                    }
+                    return false;
+                },
+                onItemClick: function () {
+                    var JsDataService = app.$GetDataService();
+                    var CurrentObject = null;
+                    if (_.ID_ViewType == 1) {
+                        CurrentObject = VC.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) {
+                        CurrentObject = [_.CurrentObject];
+                    }
+
+                    JsDataService.ExecSQLProc(
+                        '@Html.EncryptSQL("pJournalVoucherVoid")',
+                        {
+                            'IDs': Enumerable.From(CurrentObject).Select('$.ID').ToArray(),
+                            'Name': 'fsadfsadfsa'
+                        }
+                    ).then(function (response) {
+                        VC.ToastSuccess('Voided Successfully.');
+                        if (_.ID_ViewType == 2) {
+                            VC.Reload();
+                        } else {
+                            VC.Grid.refresh();
+                        }
+                    });
+                },
+
+            });
+            //_.butApproved.visible = false;
+            //_.butCancel.visible = false;    
+            var JsDataService = app.$GetDataService();
+            VC.AddToolbarButton({
+                text: 'Generate Template',
+                icon: 'mdi mdi-clipboard-arrow-down',
+                IsDisabled: function () {
+                    return false;
+                },
+                onItemClick: function () {
+                    AcctHelper.CreateTemplate('Particulars,BranchCode,BranchName,AcctCode,AcctTitle,Subsidiary,Debit,Credit', 'Template.csv', 'text/csv');
+                }
+            });
+
+            if (_.ID_ViewType == 2) {
+
+                VC.AddToolbarButton({
+                    text: 'Import',
+                    icon: 'mdi mdi-cloud-upload',
+                    IsDisabled: function () {
+                        if (_.CurrentObject.ID_FilingStatus != 1) {
+                            return true;
+                        }
+                        return false;
+                    },
+                    onItemClick: function () {
+                        //
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_JVList")',
+                            null,
+                            'Import Journal Voucher'
+                        ).then(function (data) {
+
+                            var ImportedData = data['_'];
+
+                            if (ImportedData == null) ImportedData = [];
+                            $.each(ImportedData, function (i, item) {
+                                var NewDetail = {
+                                    ID: -1,
+                                    Comment: item.Particulars,
+                                    ID_Warehouse: item.ID_Warehouse,
+                                    Warehouse: item.Warehouse,
+                                    Code: item.Code,
+                                    Name: item.COA,
+                                    Account: item.COA,
+                                    ID_Account: item.ID_COA,
+                                    ID_SubsidiaryType: item.ID_SubsidiaryType,
+                                    ID_Subsidiary: item.ID_Subsidiary,
+                                    Subsidiary: item.Subsidiary,
+                                    Debit: item.Debit == null ? 0 : item.Debit,
+                                    Credit: item.Credit == null ? 0 : item.Credit
+                                };
+                                _.CurrentObject[_.DocDetailPropertyName].push(NewDetail);
+                            });
+
+                        }, function (error) {
+                            console.log(error)
+                        });
+                        //
+
+                    }
+                });
+
+                //
+
+                VC[_.DocDetailPropertyName + '_onColumnChanged'] = function (e) {
+
+                    if (e.dataField === 'ID_Account') {
+                        if (e.data === undefined || e.data === null) return;
+                        if (e.data.Code !== undefined) {
+                            _.CurrentObject[_.DocDetailPropertyName][e.rowIndex].Code = e.data.Code;
+                            _.CurrentObject[_.DocDetailPropertyName][e.rowIndex].Name = e.data.Name;
+                            _.CurrentObject[_.DocDetailPropertyName][e.rowIndex].ID_SubsidiaryType = e.data.ID_SubsidiaryType;
+                        }
+                    }
+
+                }
+
+
+                VC.$ReversalDate_IsDisabled = function () {
+                    if (_.CurrentObject.IsReversal === true) return true;
+                    return false;
+                }
+                _.OnFormInitialized = function () {
+
+                };
+
+                VC.AddToolBarButtonOnGrid(_.DocDetailPropertyName, {
+                    text: 'Add Particulars',
+                    icon: 'mdi mdi-package-variant',
+                    onClick: function () {
+
+                        if (_.CurrentObject[_.DocDetailPropertyName] == undefined) {
+                            _.CurrentObject[_.DocDetailPropertyName] = []
+                        }
+
+                        if (_.CurrentObject[_.DocDetailPropertyName] == null) {
+                            _.CurrentObject[_.DocDetailPropertyName] = []
+                        }
+
+                        _.CurrentObject[_.DocDetailPropertyName].push({
+                            ID: -1,
+                            ID_Account: null,
+                            ID_SubsidiaryType: null,
+                            ID_Subsidiary: 0,
+                            Debit: 0,
+                            Credit: 0,
+                            Account: '',
+                            Subsidiary: '-',
+                            Comment: '',
+                            ID_Warehouse: null,
+                            Warehouse: null
+
+                        });
+                    }
+                }, true);
+
+
+                VC[_.DocDetailPropertyName + '_ID_Subsidiary_onColumnDataSourceLoad'] = function (data, e) {
+
+                    data.params.ID_SubsidiaryType = e.ID_SubsidiaryType == undefined ? null : e.ID_SubsidiaryType;
+                    data.params.ID_COA = e.ID_Account == undefined ? null : e.ID_Account;
+                }
+
+                VC[_.DocDetailPropertyName + '_ID_Account_onColumnDataSourceLoad'] = function (data, e) {
+                }
+
+                VC.ValidationRules.push(function () {
+                    _.Compute();
+                    var brokenRules = [];
+                    if (_.CurrentObject[_.DocDetailPropertyName] == undefined || _.CurrentObject[_.DocDetailPropertyName] == null) _.CurrentObject[_.DocDetailPropertyName] = [];
+                    if (_.CurrentObject[_.DocDetailPropertyName].length == 0) {
+                        brokenRules.push('Details is required');
+                    }
+                    else {
+                        var Debit = 0;
+                        var Credit = 0;
+                        $.each(_.CurrentObject[_.DocDetailPropertyName], function (i, item) {
+                            Debit += item.Debit;
+                            Credit += item.Credit;
+                        });
+
+                        if (Debit.toFixed(2) != Credit.toFixed(2)) {
+                            brokenRules.push('Total Debit & Credit is not equal');
+                        }
+                    }
+
+                    if (_.CurrentObject.IsReversal === true) {
+                        if (_.CurrentObject.ReversalDate == undefined || _.CurrentObject.ReversalDate == null) {
+                            brokenRules.push('Date of Reversal required.');
+                        } else {
+                            if (new Date(_.CurrentObject.ReversalDate) < new Date(_.CurrentObject.Date)) {
+                                brokenRules.push('Date of Reversal must be greater than JV Date.');
+                            }
+                        }
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+
+                    return { isValid: true };
+                });
+
+            };
+
+            //
+            //
+            //
+            //
+
+            VC.JournalVoucher_Details_OnRowInserted = function (e) {
+                _.Compute();
+
+            }
+
+        }
+
+        VC_JournalVoucher.prototype.onCurrentObjectChanged = function (e) {
+            VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+            var _ = this;
+            var VC = _.VC;
+
+        }
+
+        VC_JournalVoucher.prototype.onLoad = function () {
+            VC_BaseDoc.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+            if (_.CurrentObject.ID_FilingStatus !== 1) {
+                VC.setFormReadOnly(true);
+            } else {
+                VC.setFormReadOnly(false);
+            }
+        }
+
+        VC_JournalVoucher.prototype.Compute = function () {
+            var _ = this;
+
+
+            if (_.CurrentObject[_.DocDetailPropertyName] == undefined || _.CurrentObject[_.DocDetailPropertyName] == null) _.CurrentObject[_.DocDetailPropertyName] = [];
+
+            var Debit = 0;
+            var Credit = 0;
+            $.each(_.CurrentObject[_.DocDetailPropertyName], function (i, item) {
+                Debit += item.Debit;
+                Credit += item.Credit;
+            });
+
+            _.CurrentObject.TotalDebit = Debit;
+            _.CurrentObject.TotalCredit = Credit;
+        }
+
+        VC_JournalVoucher.prototype.onCurrentObjectChanged = function (e) {
+            VC_BaseDoc.prototype.onCurrentObjectChanged.call(this, e);
+        }
+
+        return VC_JournalVoucher;
+    });
+//</script>
+</text> , false);
+

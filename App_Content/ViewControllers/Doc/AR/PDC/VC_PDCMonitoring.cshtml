@@ -1,0 +1,532 @@
+@inherits System.Web.Mvc.WebViewPage
+@using InsysWebAccounting.Utility;
+
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    var BaseVCUrl = Url.Encode("Doc/Base/VC_BaseDoc");
+	
+} 
+@Html.JsMinify(@<text>
+//<script>
+    define(['app','baseModelHelper' ], function (app, baseModelHelper) {
+
+		//'/JsApp/GetScript?Url=@{@BaseVCUrl}'
+		
+        var VC_PDCMonitoring = function () {
+            this.DocDetailPropertyName = 'PDCMonitoring_Details';
+        }
+
+        VC_PDCMonitoring.prototype = Object.create(baseModelHelper.prototype);
+
+        VC_PDCMonitoring.prototype.onInitListView = function (VC) {
+            var _ = this;
+            if(_.ID_ViewType == 2){
+                
+            }
+	
+            _.OnOpenDetailView = function (data, CurrentObject) {
+				//console.log(data,'data',CurrentObject)
+				//return;
+                data.ID = VC.LvModel.ID_ModelObject * data.ID_CurrentObject;           
+                if (data.params == undefined) data.params = {};
+                data.params.ID_Model = CurrentObject.ID_Model;
+				data.params.ID_Ref = CurrentObject.ID_Ref;
+            }
+        }
+        
+        VC_PDCMonitoring.prototype.Init = function (VC) {
+            var _ = this;
+			VC.IsFormReadOnly = true;
+
+            baseModelHelper.prototype.Init.call(this, VC);   
+			
+			var toastr = angular.element(document).injector().get('toastr');
+
+			var showDateDepositBox = function(title,items){
+                var $q = app.$GetAsync();
+                var defer = $q.defer();
+                app.$modal().Show({
+                    ViewSrc: 'App_Content/ViewControllers/Templates/EditSerial.tpl.html',
+                    title: title,
+                    width: 550,
+                    height: 300,
+                    closeOnConfirm: true,
+                    showCloseButton: false,
+                    InitController: function ($scope) {
+                        $scope.Data = items;
+
+                        $scope.GridOption = {
+							height: 230,
+                            columnAutoWidth: true,
+                            rowAlternationEnabled: true,
+                            columns: [
+								{ dataField: 'ID', dataType: 'number', caption: 'Ref No.' ,allowEditing: false},
+                                { dataField: 'CheckNumber', dataType: 'string', caption: 'Check Number',allowEditing: false },
+                                { dataField: 'DateDeposit', dataType: 'date', caption: 'Date Deposit', allowEditing: true },
+                            ],
+                            bindingOptions : {
+                                'dataSource' : 'Data'
+                            },
+                            editing: {
+                                editEnabled: true,
+                                editMode: 'cell',
+                                insertEnabled: false,
+                                removeEnabled: false
+                            },
+                            onRowUpdated: function(e){
+                                //console.log(e)
+                            }
+
+                        }
+
+                        $scope.onPositiveClick = function () {
+                            VC.$timeout(function () {
+                                defer.resolve($scope.Data);
+                            },500);
+                        };
+
+
+                        $scope.onNegativeClick = function () {
+                            //console.log('reject')
+                            defer.reject();
+                        };
+                    }
+                });
+
+
+                return defer.promise;
+            }
+			
+			var UpdateStatus = function(ID_FilingStatus,Caption){
+				
+					VC.ConfirmBox('Update Status ' + Caption, 'PDC Monitoring').then(function () {
+							var JsDataService = app.$GetDataService();		
+
+							var Selected = [];
+							if(_.ID_ViewType == 1){
+								Selected = VC.Grid.getSelectedRowsData();
+							}
+							if(_.ID_ViewType == 2){
+								Selected = [_.CurrentObject]
+							}	
+
+							var IDs = Enumerable.From(Selected).Select('$.ID_Ref').ToArray();		
+
+							JsDataService.ExecSQLProc(
+								'@Html.EncryptSQL("pPDCMonitoringUpdateStatus")',
+								{
+									'IDs': IDs,
+									'ID_CurrentUser': '#ID_CurrentUser',
+									'ID_FilingStatus' : ID_FilingStatus
+								}
+							).then(function (response) {
+								
+									if(_.ID_ViewType == 2){
+										VC.Reload();	
+									}else{
+										VC.Grid.refresh();
+									}							    
+
+									toastr.success( Caption + ' Successfully', _.ModelName, {
+										closeButton: true
+									});
+														
+							}, function (response) {
+								VC.MsgBox('An error occured', 'PDC Monitoring');
+							});
+					})
+			}
+				
+		
+			
+				//if (_.ID_ViewType === 2) {
+					 /* VC.AddToolbarButton({
+						  text: 'Cleared',
+						  IsDisabled: function () {
+								var IsDisabled = true;
+
+								var Selected = [];
+								if(_.ID_ViewType == 1){
+									Selected = VC.Grid.getSelectedRowsData();
+								}
+								if(_.ID_ViewType == 2){
+									Selected = [_.CurrentObject]
+								}
+								if(Selected.length == 0 ){
+									return true;
+								}
+
+								var isAllowed = true;
+								$.each(Selected,function(i,item){
+										if (item.ID_CheckStatus != 14 && item.ID_CheckStatus != 15 && item.ID > 0) {
+											//isAllowed = true;
+										}else{
+											isAllowed = false;
+										}
+
+										if(item.ID_CheckStatus  == 'Cancelled'){
+											isAllowed = false;
+										}
+								});
+
+								if(isAllowed == true){
+									IsDisabled = false;
+								}
+
+								return IsDisabled;				
+						  },
+						  onItemClick: function () {
+								UpdateStatus(14,'Cleared');
+						  }
+					  });  */
+
+
+					  VC.AddToolbarButton({
+						  text: 'Deposit',
+						  IsDisabled: function () {
+								var IsDisabled = true;
+
+								var Selected = [];
+
+								if(_.ID_ViewType == 1){
+									Selected = VC.Grid.getSelectedRowsData();
+								}
+								if(_.ID_ViewType == 2){
+									Selected = [_.CurrentObject]
+								}
+								if(Selected.length == 0 ){
+									return true;
+								}
+
+								var isAllowed = true;
+								$.each(Selected,function(i,item){
+										if (item.ID_CheckStatus != 14 && item.ID_CheckStatus != 15 && item.ID > 0) {
+											//isAllowed = true;
+										}else{
+											isAllowed = false;
+										}
+
+										if(item.ID_CheckStatus  == 'Cancelled'){
+											isAllowed = false;
+										}
+								});
+
+								if(isAllowed == true){
+									IsDisabled = false;
+								}
+
+								return IsDisabled;				
+						  },
+						  onItemClick: function () {
+
+							  	var Selected = [];
+
+								if(_.ID_ViewType == 1){
+									Selected = VC.Grid.getSelectedRowsData();
+								}
+								if(_.ID_ViewType == 2){
+									Selected = [_.CurrentObject]
+								}
+
+								showDateDepositBox('Update Date Deposit',angular.copy(Selected)).then(function(data){
+
+									var JsDataService = app.$GetDataService();
+
+									var hasNullDate = false;
+									
+									$.each(data,function(i,item){
+										console.log(item)
+										if(item.DateDeposit == null){
+											hasNullDate = true
+										}else{
+											item.DateDeposit = new Date(item.DateDeposit).toLocaleDateString("en-US");
+										}
+									});
+									
+									if(hasNullDate == true){
+										VC.MsgBox("Date Deposit is required.");
+										return;
+									}
+							
+									var Dates = [];
+									$.each(data,function(i,item){
+										Dates.push({ ID: item.ID_Ref , Date: item.DateDeposit, ID_Model: item.ID_Model })
+									});
+
+									console.log(Dates)
+									//return;
+									JsDataService.ExecSQLProc(
+										'@Html.EncryptSQL("pUpdateDateDeposit")',
+										{
+											'IDs': Dates,
+											'ID_CurrentUser': '#ID_CurrentUser' 
+										}
+									).then(function (response) {
+										if(_.ID_ViewType == 2){
+											VC.Reload();	
+										}else{
+											VC.Grid.refresh();
+										}
+																		
+										toastr.success( 'Date Deposit has been saved successfully', _.ModelName, {
+											closeButton: true
+										});
+																
+									}, function (response) {
+										VC.MsgBox('An error occured', 'Collection Monitoring');
+									});
+
+								});
+
+						  }
+					  });
+					  
+					  
+					  VC.AddToolbarButton({
+						  text: 'Check Replacement',
+						  IsDisabled: function () {
+								var IsDisabled = true;
+
+								var Selected = [];
+								if(_.ID_ViewType == 1){
+									Selected = VC.Grid.getSelectedRowsData();
+								}
+								if(_.ID_ViewType == 2){
+									Selected = [_.CurrentObject]
+								}
+								if(Selected.length == 0 ){
+									return true;
+								}
+
+								var isAllowed = true;
+								$.each(Selected,function(i,item){
+										if (item.ID_CheckStatus != 14 && item.ID_CheckStatus != 15 && item.ID > 0) {
+											//isAllowed = true;
+										}else{
+											isAllowed = false;
+										}
+
+										if(item.ID_CheckStatus  == 'Cancelled'){
+											isAllowed = false;
+										}
+										if(item.ID_Model == 3212){
+											isAllowed = false;
+										}
+								});
+
+								if(isAllowed == true){
+									IsDisabled = false;
+								}
+
+								return IsDisabled;	
+						  },
+						  onItemClick: function () {
+								UpdateStatus(15,'Check Replacement');
+						  }
+					  });
+					  
+					  
+					  VC.AddToolbarButton({
+						  text: 'Re Deposit',
+						  IsDisabled: function () {
+								var IsDisabled = true;
+
+								var Selected = [];
+								if(_.ID_ViewType == 1){
+									Selected = VC.Grid.getSelectedRowsData();
+								}
+								if(_.ID_ViewType == 2){
+									Selected = [_.CurrentObject]
+								}
+								if(Selected.length == 0 ){
+									return true;
+								}
+
+								var isAllowed = true;
+								$.each(Selected,function(i,item){
+										if (item.ID_CheckStatus != 14 && item.ID_CheckStatus != 15 && item.ID > 0) {
+											//isAllowed = true;
+										}else{
+											isAllowed = false;
+										}
+
+										if(item.ID_CheckStatus  == 'Cancelled'){
+											isAllowed = false;
+										}
+										if(item.ID_Model == 3212){
+											isAllowed = false;
+										}
+								});
+
+								if(isAllowed == true){
+									IsDisabled = false;
+								}
+
+								return IsDisabled;	
+						  },
+						  onItemClick: function () {
+								UpdateStatus(16,'Re Deposit');
+						  }
+					  });
+				//}
+				
+				
+				
+        }
+		
+		VC_PDCMonitoring.prototype.onInitDetailView = function(VC){
+			var _ = this;
+			
+
+			if (_.CurrentObject.Name === null ){ _.CurrentObject.Name = 'PDC' ; } 
+			
+		}//onInitDetailView
+
+        VC_PDCMonitoring.prototype.OnFormInitialized = function (VC) {
+            var _ = this; 
+	
+               return;//viewing nalang daw
+
+				VC.AddToolBarButtonOnGrid('PDCMonitoring_Details', {
+					text: 'Browse Reference PR',
+					icon: 'mdi mdi-package-variant',
+					onClick: function () {
+						
+							
+							if (_.CurrentObject.ID_Bank == null || _.CurrentObject.ID_Bank == 0 ){
+								VC.MsgBox('Please select a bank', 'PDC Monitoring');
+								return;
+							}
+							VC.BrowseDataSet('@Html.EncryptSQL(@"Select * FROM vPaymentTransactionApproveCheque Where ID_Bank = @ID_Bank AND ID NOT IN(@ID_Details)")', {
+							title: 'Select PDC Monitoring (' + _.CurrentObject.Bank + ')',
+							ID_View: 'DEBD341B-730C-4F9A-9415-863A1CC1072D',
+							params : {
+								'ID_Bank' : _.CurrentObject.ID_Bank
+							  , 'ID_Details': Enumerable.From(_.CurrentObject.PDCMonitoring_Details).Select('$.RefID').ToArray()
+							},
+							onCustomizeColumns : function( columns ) { 
+								$.each( columns, function(i,c)  { 
+									if ( c.dataField == "PaymentTransaction") { 
+										c.caption = "PR No.";
+									}
+									if ( c.dataField == "Date") { 
+										c.caption = "PR Date";
+									}
+								});
+							}
+						}).then( function(Details)  { 
+							if (_.CurrentObject.PDCMonitoring_Details == null) _.CurrentObject.PDCMonitoring_Details = [];
+							$.each(Details,function( i , d ) { 
+								var detail = { 
+									ID : -1,
+									RefID : d.ID,
+									ID_Bank : d.ID_Bank,
+									Bank : d.Bank,
+									ID_CheckType : d.ID_CheckType,
+									CheckType : d.CheckType,
+									CheckNumber : d.CheckNumber,
+									CheckAmount : d.CheckAmount,
+									ID_CheckStatus : d.ID_CheckStatus,
+									CheckStatus : d.CheckStatus,								
+									ID_PaymentTranscation : d.ID_PaymentTranscation,
+									PaymentTransaction : d.PaymentTransaction,
+									Name : d.Bank
+								
+									
+								}
+								_.CurrentObject.PDCMonitoring_Details.push(detail);
+							});
+							
+							_.Compute();
+						});
+					}
+				}, true);
+
+					
+					
+					if (typeof(VC.BrowseBank) === 'undefined' || VC.BrowseBank === null) { return;}
+					
+					VC.BrowseBank.option('onClick', function () {
+					
+						   VC.BrowseDataSet('@Html.EncryptSQL(@"SELECT ID,ID_Bank,Bank,Name AS BankAccount,AccountName,AccountNumber FROM dbo.vBankAccount")', {
+							   title: 'Select Bank',
+							   ID_View: '6527DD72-973F-48BA-A76A-07B72CAF94D9',
+							   params: {  },
+							   onCustomizeColumns: function (columns) {
+								   $.each(columns, function (i, c) {
+									   if (c.dataField == "BankAccount") {
+										   c.caption = "Bank Account";
+									   }
+									   if (c.dataField == "AccountName") {
+										   c.caption = "AccountName";
+									   }
+									   if (c.dataField == "AccountNumber") {
+										   c.caption = "Account Number";
+									   }
+								   });
+							   }
+						   }).then(function (Details) {
+								_.CurrentObject.ID_Bank = Details[0].ID_Bank;
+								_.CurrentObject.Bank = Details[0].Bank;
+								_.CurrentObject.BankAccount = Details[0].BankAccount;
+								_.CurrentObject.ID_BankAccount = Details[0].ID;
+						   });
+					});
+        }//
+
+        // VC_PDCMonitoring.prototype.Approve = function (Items) {
+
+            // var $q = app.$GetAsync();
+            // var JsDataService = app.$GetDataService();
+            // var defer = $q.defer();
+
+            // JsDataService.ExecSQLProc(
+                // '@Html.EncryptSQL("pSalesReturnApprove")',
+                // {
+                    // 'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    // 'ID_CurrentUser': '#ID_CurrentUser'
+                // }
+            // ).then(function (response) {
+                // defer.resolve();
+            // }, function () {
+                // defer.reject();
+            // });
+
+            // return defer.promise;
+        // }
+
+        // VC_PDCMonitoring.prototype.Cancel = function (Items) {
+            // var $q = app.$GetAsync();
+            // var JsDataService = app.$GetDataService();
+            // var defer = $q.defer();
+
+            // JsDataService.ExecSQLProc(
+                // '@Html.EncryptSQL("pSalesReturnCancel")',
+                // {
+                    // 'IDs': Enumerable.From(Items).Select('$.ID').ToArray(),
+                    // 'ID_CurrentUser': '#ID_CurrentUser'
+                // }
+            // ).then(function (response) {
+                // defer.resolve();
+            // }, function () {
+                // defer.reject();
+            // });
+
+            // return defer.promise;
+        // }
+
+        return VC_PDCMonitoring;
+
+    });
+//</script>
+</text> , false);
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,76 @@
+﻿@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+@{
+    Layout = null;
+    dynamic ModelObject = ViewBag.ListViewModelObject as dynamic;
+    int ID_View = ModelObject.ID;
+    string ViewName = ModelObject.Name;
+    var ControllerName = ModelObject.ViewControllerName;
+    var VouchersPayableLink = Url.Encode("Doc/AP/VoucherPayable/VouchersPayable");
+    var BaseDocUrl = Url.Encode("Doc/Base/BaseDocListView");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['/JsApp/GetScript?Url=@BaseDocUrl&ID=@{@ModelObject.ID}&ViewName=@{@ModelObject.Name}','/JsApp/GetScript?Url=@{@VouchersPayableLink}', 'AcctHelper']
+        , function (BaseClass,VouchersPayable,AcctHelper) {
+
+        var @{@ControllerName} = function ($scope,CurrentObject,ViewStateName,IsModal,ModalMode) {
+            var _ = this;
+            _.Init($scope, CurrentObject, ViewStateName, IsModal, ModalMode);
+
+            //
+            //
+            //
+
+            _.DetailSQLDataSource = '@Html.EncryptSQL(@"
+                SELECT ReceivingReport,SubTotal, VatRate, TaxAmt, EWTAmt, EWT, GrandTotal FROM vVouchersPayable_Detail WHERE ID_VoucherPayable = @ID_VoucherPayable
+            ")';
+
+            _.GetDetailSQLDataSourceParameters = function (Data) {
+                return { 
+                    'ID_VoucherPayable' : Data.ID
+                }
+            }
+
+            _.Approve = function(items) {
+                return VouchersPayable.Approve( items );
+            };
+
+            _.Cancel = function(items) {
+                return VouchersPayable.Cancel( items );
+            };
+
+            _.butCreatePayment = {
+                text: 'Create Payment',
+                icon: 'mdi mdi-close-circle-outline',
+                color: '#FF3D00',
+                disabled: true,
+                isContextMenu : true,
+                IsDisabled: function () {
+                    var SelectedRows = _.Grid.getSelectedRowsData();
+                    return !(SelectedRows.length == 1 && SelectedRows[0].ID_FilingStatus !== 7);
+                },
+                onItemClick: function () {
+
+                    var itemSelected = Enumerable.From(_.Grid.getSelectedRowsData()).Where("$.ID_DocStatus !== 3").Distinct().ToArray();
+
+                    if (itemSelected.length == 0) return;
+
+                    AcctHelper.CreatePaymentVoucher(itemSelected);
+                }
+            }
+
+            _.AddToolbarButton(_.butCreatePayment);
+
+
+        }
+
+        @{@ControllerName}.prototype = Object.create( BaseClass.prototype );
+
+        @{@ControllerName}.$inject = ['$scope', 'CurrentObject', 'ViewStateName', 'IsModal', 'ModalMode'];
+
+        app_cached_providers.$controllerProvider.register('@{@ControllerName}', @{@ControllerName});
+
+    });
+//</script>
+</text> , false )

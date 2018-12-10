@@ -1,0 +1,999 @@
+@inherits System.Web.Mvc.WebViewPage
+@using System.Web.Mvc;
+
+@{
+    Layout = null;
+    var BaseVCUrl = "/JsApp/GetScript?Url=" + Url.Encode("Salespipeline/VC_BaseSalespipeline");
+}
+@Html.JsMinify(@<text>
+//<script>
+    define(['app', '@BaseVCUrl', 'AcctHelper'], function (app, Base, AcctHelper) {
+
+        var VC_Customer = function () {
+            this.DocDetailPropertyName = 'Customer_Details';
+        }
+
+        VC_Customer.prototype = Object.create(Base.prototype);
+
+        VC_Customer.prototype.onInitListView = function (VC) {
+            Base.prototype.onInitListView.call(this, VC);
+
+            VC.AddActionFilter({
+                name: 'VC_Employee',
+                caption: 'BDM',
+                SQL: '@Html.EncryptSQL("SELECT ID_User AS ID, Name FROM vSalesPipeLineUsers")',
+                //params: {
+                //    'ID_BusinessUnit': VC.CurrentUser.ID_BusinessUnit
+                //},
+                width: 240,
+                defaultItems: [
+                  {
+                      ID: -2,
+                      Name: '(My Customer)'
+                  },
+                  {
+                      ID: -1,
+                      Name: '(All)'
+                  }
+                ],
+                value: -2
+
+            })
+            //   }
+        }
+        //
+        //
+        VC_Customer.prototype.onCollectionSource_Load = function (data) {
+            var _ = this;
+            var VC = this.VC;
+            var ID_UserGroup = VC.CurrentUser.ID_UserGroup;
+            if (data.WhereCriteria == undefined) data.WhereCriteria = [];
+            var WhereCriteria = data.WhereCriteria;
+            var VC_Employee = VC.ActionFilters.VC_Employee;
+
+            switch (VC_Employee) {
+                case -1://ALL
+                    WhereCriteria.push("ID_CreatedBy > 0")
+                    break;
+                case -2://My Customers
+                    WhereCriteria.push("ID_CreatedBy = " + VC.CurrentUser.ID + " OR " + VC.CurrentUser.ID + " IN ( SELECT Part FROM  dbo.fGetSplitString(ID_AccountOwners,',')) ");
+                    break;
+                default:
+                    WhereCriteria.push("ID_CreatedBy = " + VC_Employee + " OR " + VC_Employee + " IN ( SELECT Part FROM  dbo.fGetSplitString(ID_AccountOwners,',')) ");
+                    break;
+
+            }
+        }
+        //
+        //
+
+        VC_Customer.prototype.onLoad = function () {
+            Base.prototype.onLoad.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+                if (VC.CurrentUser.ID !== _.CurrentObject.ID_CreatedBy && VC.IsUserValid(_.CurrentObject,VC.CurrentUser.ID) !== true) {
+
+                    VC.setFormReadOnly(true);
+                    VC.butSave.disabled = false;
+                    VC.butSaveClose.disabled = false;
+                    VC.$scope.Customer_Details_MenuOptions[0].disabled = false;
+                    VC.IsFormReadOnly = false;
+                    ///
+
+                    ///
+                    
+                }
+                else {
+                    VC.IsFormReadOnly = true;
+                    VC.setFormReadOnly(false);
+                }
+                if(_.CurrentObject.ID > 0){
+                    // var ID_Parent = VC.GetDxControl('ID_Parent');
+                    // if(_.CurrentObject.IsParent == true){
+                    
+                    //     ID_Parent.option('readOnly', true);
+                    //     _.CurrentObject.ID_Parent = null;
+                    //     _.CurrentObject.ParentCompany = null;
+                    // }
+                    // else{
+                    //     ID_Parent.option('readOnly', false);
+
+                    // }
+                }
+
+        }
+        VC_Customer.prototype.Init = function (VC) {
+            Base.prototype.Init.call(this, VC);
+            var _ = this;
+
+
+            if (this.ID_ViewType == 2) {
+
+                VC.Customer_Details_onColumnChanged = function (e) {
+                    var Item = e.key;
+                    if (e.dataField === 'IsDefault') {
+                        if (Item.IsDefault == false) {
+                            return;
+                        }
+
+                        $.each(_.CurrentObject.Customer_Details, function (index, value) {
+                            if (e.rowIndex != index) {
+                                value.IsDefault = false;
+                            }
+                        });
+                    }
+
+                }
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+                        // '632' AS [PhoneNo] ,
+                        // '(632)' AS BillingTelNo ,
+                        // '+(63)' AS BillingMobileNo ,
+                        // '(632)' AS ShippingTelNo ,
+                        // '+(63)' AS ShippingMobileNo ,
+                        // '(632)' AS BillingFaxNo ,
+                        // '(632)' AS ShippingFaxNo ,
+                        // '(632)' AS PhoneNo2 ,
+                        // '(632)' AS PhoneNo3 ,
+                        // '(632)' AS FaxNo ,
+					    // '(632)' AS TrunkLine,
+
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.PhoneNo,10,3) == false){
+                        brokenRules.push('Address Info: Phone 1 should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.PhoneNo2,10,3) == false){
+                        brokenRules.push('Address Info: Phone 2 should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.BillingTelNo,10,3) == false){
+                        brokenRules.push('Billing: Tel No should be 10 digits');
+                    }
+                    console.log(_.CurrentObject.ShippingTelNo);
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ShippingTelNo,10,3) == false){
+                        brokenRules.push('Shipping: Tel No should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.BillingFaxNo,10,3) == false){
+                        brokenRules.push('Billing: Fax No should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ShippingFaxNo,10,3) == false){
+                        brokenRules.push('Shipping: Fax No should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.BillingMobileNo,12,2) == false){
+                        brokenRules.push('Billing: Mobile No should be 12 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.ShippingMobileNo,12,2) == false){
+                        brokenRules.push('Shipping: Mobile No should be 12 digits');
+                    }
+ 
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.FaxNo,10,3) == false){
+                        brokenRules.push('Address Info: Fax No should be 10 digits');
+                    }
+                    if(AcctHelper.ValidatePhoneNo(_.CurrentObject.TrunkLine,10,3) == false){
+                        brokenRules.push('Address Info: Trunk Line No should be 10 digits');
+                    }
+
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid: true }
+                });
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    var DupPhone = false;
+                    var DupMobile = false;
+                    var DupEmail = false;
+        
+                    var re = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
+                    console.log(_.CurrentObject.Website,'xx')
+                   if(_.CurrentObject.Website !== null && _.CurrentObject.Website !== ''){
+                       console.log(re,'web')
+                   if (!re.test(_.CurrentObject.Website)) { 
+                       brokenRules.push('Invalid Website Format');
+                   }
+                   }
+
+                    if (_.CurrentObject.CustomerLead_Details == null || _.CurrentObject.CustomerLead_Details == undefined)  _.CurrentObject.CustomerLead_Details = [];
+                       
+ 
+                    //Questionable
+                    //$.each(_.CurrentObject[_.DocDetailPropertyName], function (index1, item1) {
+                    //    $.each(_.CurrentObject[_.DocDetailPropertyName], function (index2, item2) {
+                    //        if (index1 != index2) {
+                    //            //if (item1.Phone == item2.Phone && DupPhone == false) {
+                    //            //    DupPhone = true
+                    //            //    brokenRules.push('Duplicate contact phone found.'); //JEFREY Pinatanngal ni GSY
+                    //            //}
+                    //            if (item1.MobileNo == item2.MobileNo && DupMobile == false) {
+                    //                DupMobile = true
+                    //                brokenRules.push('Duplicate contact mobile # found.');
+                    //            }
+                    //            if (item1.Email == item2.Email && DupEmail == false) {
+                    //                DupEmail = true
+                    //                brokenRules.push('Duplicate contact email found.');
+                    //            }
+                    //            //MobileNo,Email
+                    //        }
+                    //    });
+                    //});
+
+
+                    // if (_.CurrentObject.ID_MediaSource == 1 || _.CurrentObject.ID_MediaSource == 9) {
+                    //     if (_.CurrentObject.ID_Event > 0) {
+
+                    //     }
+                    //     else {
+                    //         brokenRules.push('Event is required');
+                    //     }
+                    // }
+                    //
+                    var detail = Enumerable.From(_.CurrentObject.Customer_Details).Select('$.ID').ToArray();
+
+                    if(detail.length == 0){
+                        brokenRules.push('Contact detail is required')
+                     }
+                    //
+                    var hasDefault = false;
+                    if (_.CurrentObject.Customer_Details.length == 0) {
+                        hasDefault = true;
+                    }
+                    $.each(_.CurrentObject.Customer_Details, function (index, value) {
+                        if (value.IsDefault === true) {
+                            hasDefault = true;
+                        }
+                    });
+
+                    if (hasDefault === false) {
+                        brokenRules.push('Please check default contact');
+                    }
+
+                    if (brokenRules.length > 0) {
+                        return {
+                            isValid: false,
+                            brokenRules: brokenRules
+                        }
+                    }
+                    return { isValid: true }
+                });
+
+                VC.ValidationRules.push(function () {
+                    var brokenRules = [];
+
+                    var $q = app.$GetAsync();
+                    var JsDataService = app.$GetDataService();
+                    var defer = $q.defer();
+                    var retval = { isValid: true }
+
+                    JsDataService.Query('@Html.EncryptSQL("pValidateCustomerLead @ID_Customer,@Name,@EmailAddress,@PhoneNo,@MobileNo")', {
+                        params: {
+                            'ID_Customer': _.CurrentObject.ID,
+                            'Name': _.CurrentObject.Name == null ? '' : _.CurrentObject.Name,
+                            'EmailAddress': _.CurrentObject.EmailAddress == null ? '' : _.CurrentObject.EmailAddress,
+                            'PhoneNo': _.CurrentObject.PhoneNo == null || _.CurrentObject.PhoneNo == undefined ? '' : _.CurrentObject.PhoneNo,
+                            'MobileNo': _.CurrentObject.MobileNo == null || _.CurrentObject.MobileNo == undefined ? '' : _.CurrentObject.MobileNo
+                        }
+                    }).then(function (data) {
+
+                        var collection = data.collection;
+
+                        $.each(collection, function (i, item) {
+                            if (item.IsName > 0) {
+                                brokenRules.push('Duplicate name found! Name must be unique');
+                            }
+                            if (item.IsEmailAddress > 0) {
+                                //brokenRules.push('Duplicate email found! Email must be unique');
+                            }
+
+                            if (!(_.CurrentObject.PhoneNo == null || _.CurrentObject.PhoneNo == undefined)) {
+                                if (item.IsPhoneNo > 0) {
+                                    //brokenRules.push('Duplicate phone # found! Phone # must be unique');
+                                }
+                            }
+
+                            if (item.IsMobileNo > 0) {
+                                //brokenRules.push('Duplicate mobile # found! Mobile # must be unique');
+                            }
+                        });
+
+
+                        if (brokenRules.length > 0) {
+                            retval = {
+                                isValid: false,
+                                brokenRules: brokenRules
+                            }
+                        }
+                        defer.resolve(retval);
+                    }, function () {
+                        defer.reject();
+                    });
+
+
+
+                    return defer.promise;
+                });
+
+
+             VC.AddToolBarButtonOnGrid('Customer_Details', {
+                    text: 'Import Contact',
+                    icon: 'mdi mdi-file-excel',
+                    onClick: function () {
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.UploadCSV(
+                            '@Html.EncryptSQL("pImport_Contacts")', null,
+                                'Import Contacts'
+                        ).then(function (d) {
+                            console.log(d)
+                            $.each(d.Contacts, function (i, item) {
+                                var NewDetail = {
+                                      Name: item.Name,
+                                      FirstName: item.FirstName,
+                                      LastName: item.LastName,
+                                      MiddleName: item.MiddleName,
+                                      Position: item.Position,
+                                      Department: item.Department,
+                                      Phone : item.Phone,
+                                      Email : item.Email,
+                                      MobileNo : item.MobileNo,
+                                      ID_CreatedBy : item.ID_CreatedBy,
+                                      CreatedBy : item.CreatedBy,
+                                      IsDefault : false
+                                };
+                       
+                                _.CurrentObject.Customer_Details.push(NewDetail);
+                            });
+                        });
+                    }
+                });
+
+             VC.AddToolBarButtonOnGrid('Customer_Branchs', {
+                    text: 'Add Branch',
+                    icon: 'mdi mdi-account-multiple-plus',
+                    onClick: function () {
+                       if(_.CurrentObject.Customer_Branchs == undefined || _.CurrentObject.Customer_Branchs == null) _.CurrentObject.Customer_Branchs = [];
+                       _.CurrentObject.Customer_Branchs.push({
+                           ID: -1,
+                           Name: null,
+                           Address: null
+                       });
+                    }
+                });
+             if (_.ID_ViewType === 2) {
+                    VC.AddToolbarButton({
+                        text: 'Generate Template',
+                        icon: 'mdi mdi-clipboard-arrow-down',
+                        IsDisabled: function () {
+                            return false;
+                        },
+                        onItemClick: function () {
+                            AcctHelper.CreateTemplate('FirstName,LastName,MiddleName,Phone,Email,MobileNo,Position,Department', 'Template.csv', 'text/csv');
+                        }
+                    });
+                }
+            }
+
+            VC.IsUserValid = function (CurrentObject, ID_User) {
+                //if (CurrentObject == undefined) return false;
+                //if (CurrentObject.ID_SalesAccountRequest !== null && CurrentObject.ID_SalesAccountRequest !== undefined) {
+                //    var IDs_SAR = CurrentObject.ID_SalesAccountRequest.split(',');
+                //    if (IDs_SAR.indexOf(ID_User.toString()) > -1) {
+                //        return true;
+                //    }
+                //}
+                //if (CurrentObject.OtherSalesAccounts !== null && CurrentObject.OtherSalesAccounts !== undefined) {
+                //    var IDs_SAR = CurrentObject.OtherSalesAccounts.split(',');
+                //    if (IDs_SAR.indexOf(ID_User.toString()) > -1) {
+                //        return true;
+                //    }
+                //}
+                //return false;
+                return true;
+            }
+
+            @*VC.AddToolbarButton({
+                text: 'Tag as My Customer',
+                icon: 'mdi mdi-account-multiple-plus',
+                requireMultipleObject: true,
+                IsDisabled: function () {
+
+                    var Selecteds = null
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                    }
+                    else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+
+                    if (VC.IsUserValid(Selecteds[0], VC.CurrentUser.ID) == true) {
+                        return true;
+                    }
+
+
+                    if (Selecteds[0].ID_CreatedBy == VC.CurrentUser.ID) return true;
+                    if (Selecteds.length > 1) {
+                        return true;
+                    }
+                    else {
+
+                        return false;
+                    }
+
+                },
+                onItemClick: function () {
+
+                    if (_.ID_ViewType == 1) { //ListView
+                        CurrentObjects = _.Grid.getSelectedRowsData();
+                    } else if (_.ID_ViewType == 2) { //DetailView
+                        CurrentObjects = [_.CurrentObject];
+                    }
+                    var isValid
+                    var JsDataService = app.$GetDataService();
+                    JsDataService.Validate('@Html.EncryptSQL("pValidateRequest")',
+                    {
+                        'ID_Customer': CurrentObjects[0].ID,
+                        'ID_Currentuser': VC.CurrentUser.ID
+                    }).then(function (data) {
+                        if (data.isValid == true) {
+                            VC.MsgBox('You have already sent a request for this Customer', 'Customer');
+                        }
+                        else {
+                            CreateRequest(CurrentObjects);
+                        }
+
+                    });
+
+
+                }
+            });*@
+
+            VC.AddToolbarButton({
+                icon: 'green mdi mdi-asterisk',
+                text: 'New Opportunity',
+                IsDisabled: function () {
+                    var Selecteds = null;
+
+                    if (_.ID_ViewType == 2) {
+                        Selecteds = [_.CurrentObject];
+                        if(_.CurrentObject.ID == -1) return true;
+                    }
+                    else {
+                        Selecteds = _.Grid.getSelectedRowsData();
+                    }
+                    if (Selecteds.length == 0) return true;
+                    if (VC.IsUserValid(Selecteds[0], VC.CurrentUser.ID) == true || Selecteds[0].ID_CreatedBy == VC.CurrentUser.ID) {
+                        return false;
+                    }
+
+                    //if (VC.CurrentUser.ID_BusinessUnit !== Selecteds[0].ID_BusinessUnit) {
+                    //    if (Selecteds[0].ID_BusinessUnitTag !== null && Selecteds[0].ID_BusinessUnitTag !== undefined) {
+                    //        var ID_BUs = Selecteds[0].ID_BusinessUnitTag.split(',');
+                    //        if (ID_BUs.indexOf(VC.CurrentUser.ID_BusinessUnit.toString()) > -1) {
+                    //            return true
+                    //        } else {
+                    //            return false;
+                    //        }
+                    //    }
+                    //}
+
+                    return true;
+                },
+                onItemClick: function () {
+                    var ID_Customer = _.ID_ViewType === 2 ? [VC.$scope.CurrentObject] : VC.Grid.getSelectedRowsData();
+                    if (ID_Customer[0].ID == -1) return;
+
+                    var JsDataService = app.$GetDataService();
+                    JsDataService.Query('@Html.EncryptSQL("pValidateOpportunity @ID_Customer,@ID_User")', {
+                        params: {
+                            'ID_Customer': ID_Customer[0].ID,
+                            'ID_User': VC.CurrentUser.ID
+                        }
+                    }).then(function (data) {
+                        var collection = data.collection;
+
+                        if (collection.length === 0) {
+                            VC.MsgBox('Opportunity is already created with same businessunit and account', 'Customer')
+                        } else {
+                            AcctHelper.CreateNewOpportunity(ID_Customer[0].ID);
+                        }
+                    })
+                }
+            });
+
+
+
+
+            VC.AddToolbarButton(
+                {
+                    text: 'New Diary',
+                    IsDisabled: function () {
+                        var Selecteds = null;
+                        if (_.ID_ViewType == 2) {
+                            Selecteds = [_.CurrentObject];
+                        }
+                        else {
+                            Selecteds = _.Grid.getSelectedRowsData();
+                        }
+                        if (Selecteds.length == 0) return true;
+                        if (VC.IsUserValid(Selecteds[0], VC.CurrentUser.ID) == true || Selecteds[0].ID_CreatedBy == VC.CurrentUser.ID) {
+                            return false;
+                        }
+                        return true;
+                    },
+                    icon: 'green mdi mdi-asterisk',
+                    onItemClick: function () {
+                        var ID_Customer = _.ID_ViewType === 2 ? [VC.$scope.CurrentObject] : VC.Grid.getSelectedRowsData();
+                        if (ID_Customer[0].ID == -1) return;
+
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.Query('@Html.EncryptSQL("pValidateDiary @ID_Customer,@ID_User")', {
+                            params: {
+                                'ID_Customer': ID_Customer[0].ID,
+                                'ID_User': VC.CurrentUser.ID
+                            }
+                        }).then(function (data) {
+                            var collection = data.collection;
+
+                            if (collection.length == 0) {
+                                VC.MsgBox('Not allowed to create diary.', 'Customer')
+                            } else {
+                                AcctHelper.CreateDiaryFromCustomer(ID_Customer);
+                            }
+                        })
+                    }
+                }
+            );
+
+
+
+
+
+              VC.AddToolbarButton({
+                    text: 'Call',
+                    IsDisabled: function () {
+                        var Selecteds = null;
+                        if (_.ID_ViewType == 2) {
+                            Selecteds = [_.CurrentObject];
+                        }
+                        else {
+                            Selecteds = _.Grid.getSelectedRowsData();
+                        }
+                        if (Selecteds.length == 0) return true;
+                        if (VC.IsUserValid(Selecteds[0], VC.CurrentUser.ID) == true || Selecteds[0].ID_CreatedBy == VC.CurrentUser.ID) {
+                            return false;
+                        }
+                        return true;
+                    },
+                    icon: 'green mdi mdi-asterisk',
+                    onItemClick: function () {
+                        var ID_Customer = _.ID_ViewType === 2 ? [VC.$scope.CurrentObject] : VC.Grid.getSelectedRowsData();
+                        if (ID_Customer[0].ID == -1) return;
+
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.Query('@Html.EncryptSQL("pValidateDiary @ID_Customer,@ID_User")', {
+                            params: {
+                                'ID_Customer': ID_Customer[0].ID,
+                                'ID_User': VC.CurrentUser.ID
+                            }
+                        }).then(function (data) {
+                            var collection = data.collection;
+
+                            if (collection.length == 0) {
+                                VC.MsgBox('Not allowed to create diary.', 'Customer')
+                            } else {
+                                AcctHelper.CreateDiaryFromCustomer(ID_Customer,6);
+                            }
+                        })
+                    }
+
+              })
+
+              VC.AddToolbarButton({
+                    text: 'Email',
+                    IsDisabled: function () {
+                        var Selecteds = null;
+                        if (_.ID_ViewType == 2) {
+                            Selecteds = [_.CurrentObject];
+                        }
+                        else {
+                            Selecteds = _.Grid.getSelectedRowsData();
+                        }
+                        if (Selecteds.length == 0) return true;
+                        if (VC.IsUserValid(Selecteds[0], VC.CurrentUser.ID) == true || Selecteds[0].ID_CreatedBy == VC.CurrentUser.ID) {
+                            return false;
+                        }
+                        return true;
+                    },
+                    icon: 'green mdi mdi-asterisk',
+                    onItemClick: function () {
+                        var ID_Customer = _.ID_ViewType === 2 ? [VC.$scope.CurrentObject] : VC.Grid.getSelectedRowsData();
+                        if (ID_Customer[0].ID == -1) return;
+
+                        var JsDataService = app.$GetDataService();
+                        JsDataService.Query('@Html.EncryptSQL("pValidateDiary @ID_Customer,@ID_User")', {
+                            params: {
+                                'ID_Customer': ID_Customer[0].ID,
+                                'ID_User': VC.CurrentUser.ID
+                            }
+                        }).then(function (data) {
+                            var collection = data.collection;
+
+                            if (collection.length == 0) {
+                                VC.MsgBox('Not allowed to create diary.', 'Customer')
+                            } else {
+                                AcctHelper.CreateDiaryFromCustomer(ID_Customer,1);
+                            }
+                        })
+                    }
+
+              })
+
+            var ShowRequest = function(CurrentObjects){
+
+                app.$modal().Show({
+                    Template: '<div dx-text-area="dxTextAreaOption"></div>',
+                    title: 'Request for ' + CurrentObjects[0].Name,
+                    width: 450,
+                    height: 280,
+                    closeOnConfirm: false,
+                    InitController: function (s) {
+                        //  s.NextStep =  Selecteds[0].NextStep ;
+                        s.Reason = '';
+                        s.dxTextAreaOption = {
+                            bindingOptions: {
+                                'value': 'Reason'
+                            },
+                            maxLength: 300,
+                            height: 178
+                        }
+                        s.onPositiveClick = function (d) {
+
+                            if (s.Reason.trim().length === 0) {
+                                VC.MsgBox('Reason of Request is required')
+                                return;
+                            }
+
+                            var JsDataService = app.$GetDataService();
+                            JsDataService.ExecSQLProc('@Html.EncryptSQL("pCreateAccountRequest")', {
+                                IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                                Reason: s.Reason,
+                                ID_Session: '#ID_CurrentUser'
+                            }).then(function () {
+                                VC.ToastSuccess('Account Requested');
+                            });
+
+                            d.hide();
+
+                            if (_.ID_ViewType == 2) {
+                                VC.Reload();
+                            } else {
+                                VC.Grid.refresh();
+                            }
+
+                        }
+                    }
+                });
+            };
+
+
+            var CreateRequest = function (CurrentObjects) {
+
+                if(CurrentObjects[0].ID_BusinessUnit !== VC.CurrentUser.ID_BusinessUnit){
+                    var JsDataService = app.$GetDataService();
+
+                    JsDataService.Validate('@Html.EncryptSQL("pValidateCustomerAccount")',
+                    {
+                        'IDs': CurrentObjects[0].ID,
+                        'ID_CurrentUser': VC.CurrentUser.ID
+                    }).then(function (data) {
+
+                        if (data.isValid == true) {
+                            JsDataService.ExecSQLProc('@Html.EncryptSQL("pCreateAccountRequest")', {
+                                IDs: Enumerable.From(CurrentObjects).Select('$.ID').ToArray(),
+                                Reason: '(Auto)',
+                                ID_Session: '#ID_CurrentUser'
+                            }).then(function () {
+                                VC.ToastSuccess('Successfully Tag!');
+                                if (_.ID_ViewType == 2) {
+                                    VC.Reload();
+                                } else {
+                                    VC.Grid.refresh();
+                                }
+                            });
+                        }
+                        else {
+                            VC.ConfirmBox("Customer already tag by your teammate(s). Do you want to continue?").then(function () {
+                                ShowRequest(CurrentObjects);
+                            });
+                        }
+
+                    });
+
+
+                    return;
+                }else{
+                    ShowRequest(CurrentObjects);
+                }
+
+
+            }
+
+        }
+
+
+        VC_Customer.prototype.onCurrentObjectChanged = function (e) {
+            Base.prototype.onCurrentObjectChanged.call(this);
+            var _ = this;
+            var VC = _.VC;
+
+            if(VC.$scope.CurrentObject.$dirty == true && _.CurrentObject.ID == -1){
+                if(e.dataField == 'ParentCompany'){
+                    _.CurrentObject.RegisteredCompanyName = _.CurrentObject.ParentCompany;
+                    _.CurrentObject.TradeName = _.CurrentObject.ParentCompany;
+                }
+                if(e.dataField == 'RegisteredCompanyName'){
+                    _.CurrentObject.TradeName = _.CurrentObject.RegisteredCompanyName;
+                }
+            }
+            console.log(VC.$scope.CurrentObject.$dirty)
+
+            if(e.dataField == 'ID_Province'){
+                _.CurrentObject.ID_City = null;
+                _.CurrentObject.City = null;
+            }
+
+            if(VC.$scope.CurrentObject.$dirty == true){
+         
+                if(_.CurrentObject.IsMainAddress !== true && _.CurrentObject.IsMainAddress !== 1){
+                    if(e.dataField == 'ID_BillingProvince'){
+                        _.CurrentObject.ID_BillingCity = null;
+                        _.CurrentObject.BillingCity = null;
+                    }
+    
+                    if(e.dataField == 'ID_ShippingProvince'){
+                        _.CurrentObject.ID_ShippingCity = null;
+                        _.CurrentObject.ShippingCity = null;
+                    }
+                }
+
+            }
+
+            if(e.dataField == 'IsMainAddress'){
+                if(e.value == true){
+                    //shipping
+                    _.CurrentObject.ShippingAddress = _.CurrentObject.Address;
+                    _.CurrentObject.ShippingCity = _.CurrentObject.City;
+                    _.CurrentObject.ID_ShippingCity = _.CurrentObject.ID_City;
+                    _.CurrentObject.ShippingTelNo = _.CurrentObject.TrunkLine;
+                    //_.CurrentObject.ShippingMobileNo = _.CurrentObject.PhoneNo;
+                    _.CurrentObject.ShippingFaxNo = _.CurrentObject.FaxNo;
+                    _.CurrentObject.ID_ShippingProvince = _.CurrentObject.ID_Province;
+                    _.CurrentObject.ShippingProvince = _.CurrentObject.Province;
+                    _.CurrentObject.ShippingZipCode = _.CurrentObject.PostalCode;
+
+                    //billing
+                    _.CurrentObject.BillingAddress = _.CurrentObject.Address;
+                    _.CurrentObject.ID_BillingCity = _.CurrentObject.ID_City;
+                    _.CurrentObject.BillingCity = _.CurrentObject.City;
+                    _.CurrentObject.BillingTelNo = _.CurrentObject.TrunkLine;
+                    //_.CurrentObject.BillingMobileNo = _.CurrentObject.PhoneNo;
+                    _.CurrentObject.BillingFaxNo = _.CurrentObject.FaxNo;
+                    _.CurrentObject.ID_BillingProvince = _.CurrentObject.ID_Province;
+                    _.CurrentObject.BillingProvince = _.CurrentObject.Province;
+                    _.CurrentObject.BillingZipCode = _.CurrentObject.PostalCode;
+                   
+
+                }else{
+                    _.CurrentObject.ShippingAddress = null;
+                    _.CurrentObject.ShippingCity = null;
+                    _.CurrentObject.ShippingTelNo = null;
+                    //_.CurrentObject.ShippingMobileNo = null;
+                    _.CurrentObject.ShippingFaxNo = null;
+                    _.CurrentObject.ID_ShippingProvince = null;
+                    _.CurrentObject.ShippingProvince = null;
+                    _.CurrentObject.ShippingZipCode = null;
+                    _.CurrentObject.ID_ShippingCity = null
+
+                    //billing
+                    _.CurrentObject.BillingAddress = null;
+                    _.CurrentObject.ID_BillingCity = null;
+                    _.CurrentObject.BillingTelNo = null;
+                    //_.CurrentObject.BillingMobileNo = null;
+                    _.CurrentObject.BillingFaxNo = null;
+                    _.CurrentObject.ID_BillingProvince = null;
+                    _.CurrentObject.BillingProvince = null;
+                    _.CurrentObject.BillingZipCode = null;
+                    _.CurrentObject.BillingCity = null;
+
+                }
+            }
+            if(e.dataField == 'IsParent'){
+                var ID_Parent = VC.GetDxControl('ID_Parent');
+                if(e.value == true){
+                    ID_Parent.option('readOnly', true);
+                    _.CurrentObject.ID_Parent = null;
+                    _.CurrentObject.ParentCompany = null;
+                }
+                else{
+                    ID_Parent.option('readOnly', false);
+
+                }
+                
+                
+            }
+        }
+
+        VC_Customer.prototype.onCurrentObjectSaved = function (CurrentObject) {
+
+            Base.prototype.onCurrentObjectSaved.call(CurrentObject, this);
+
+            var _ = this;
+            var VC = _.VC;
+
+          // app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pSaveBusinessPartnerFromCustomerLead")', {
+           //    ID_CustomerLead: CurrentObject.ID
+           //}).then(function(response){
+           
+             //  app.$GetDataService().ExecSQLProc('@Html.EncryptSQL("pSaveBusinessPartnerFromCustomerLeadContacts")', {
+              //     IDs: Enumerable.From(CurrentObject.Customer_Details).Select("$.ID").ToArray()
+          //     });
+           
+          // });
+        }
+
+        VC_Customer.prototype.onInitDetailView = function (VC) {
+            Base.prototype.onInitDetailView.call(this, VC);
+
+            var _ = this;
+
+
+
+            var PhoneList = [];
+            PhoneList.push(VC.GetFormItem('TrunkLine'));
+            PhoneList.push(VC.GetFormItem('PhoneNo'));
+            PhoneList.push(VC.GetFormItem('PhoneNo2'));
+            PhoneList.push(VC.GetFormItem('FaxNo'));
+            PhoneList.push(VC.GetFormItem('ShippingTelNo'));
+            PhoneList.push(VC.GetFormItem('ShippingMobileNo'));
+            PhoneList.push(VC.GetFormItem('ShippingFaxNo'));
+            PhoneList.push(VC.GetFormItem('BillingTelNo'));
+            PhoneList.push(VC.GetFormItem('BillingMobileNo'));
+            PhoneList.push(VC.GetFormItem('BillingFaxNo'));
+
+            $.each(PhoneList,function(i,Phone){
+                if(Phone !== null){
+                    var _onFocusIn = Phone.editorOptions.onFocusIn;
+                    Phone.editorOptions.onFocusIn = function(e){                                      
+                        $(e.element).find('.dx-texteditor-input')[0].selectionStart = 5;
+                        
+                        if(_onFocusIn !== undefined && _onFocusIn !== null){
+                            _onFocusIn(e);
+                        } 
+                    }
+                }
+            });
+
+
+            // var dxName = VC.GetFormItem('Name');
+            // dxName.editorOptions.onItemClick = function (e) {
+
+            //     if (e.itemData.IsLead === 1) {
+            //         VC.ConfirmBox('Do you want to open (' + e.itemData.Name + ')').then(function (result) {
+            //             VC.Reload(e.itemData.ID);
+            //         });
+            //     } else {
+            //         VC.ConfirmBox(e.itemData.Name + ' not exists on Customer Leads Master File. Do you want to import?').then(function (result) {
+            //             app.$GetDataService().pGetCurrentObject('@Html.EncryptSQL("pImportBusinessPartnerToLead")', {
+            //                 'ID_BusinessPartner': e.itemData.ID
+            //             }
+            //             ).then(function (obj) {
+            //                 VC.Reload(obj.ID);
+            //             });
+
+            //         });
+            //     }
+            // }
+
+
+
+            var DiaryGrid = VC.GetFormItem('DiaryGrid');
+            DiaryGrid.editorOptions.onContextMenuPreparing = function (e) {
+                var Current = e.row.data;
+                e.items.unshift({
+                    text: 'Open Dairy (' + Current.Diary_No + ')',
+                    icon: 'mdi mdi-open-in-new',
+                    onItemClick: function () {
+                        console.log(Current)
+                        AcctHelper.OpenDiary(Current.ID);
+                    }
+                });
+            }
+
+            var SalesHistory = VC.GetFormItem('SalesHistory');
+            SalesHistory.editorOptions.onContextMenuPreparing = function (e) {
+                var Current = e.row.data;
+                e.items.unshift({
+                    text: 'Open Opportunity ',//(' + Current.Diary_No + ')',
+                    icon: 'mdi mdi-open-in-new',
+                    onItemClick: function () {
+                        console.log(Current)
+                        AcctHelper.OpenOpportunity(Current.ID);
+                    }
+                });
+            }
+
+            setTimeout(function() {
+                    
+                $(".SalesHistoryTab").css("padding-left","19px");
+                $(".SalesHistoryTab").css("padding-right","19px");
+                $(".SalesHistoryTab").css("padding-top","22px");
+            }, 333);
+
+
+            VC.$onOpenDetailView = function (ID_DetailView, ID_CurrentObject, option) {
+                if (ID_DetailView == 6250) {
+                    option.Orientation = 2;
+                }
+            };
+            //
+            //
+
+
+            var forMainAddress = [];
+            forMainAddress.push('ShippingAddress');
+            forMainAddress.push('ShippingTelNo');
+            forMainAddress.push('ShippingMobileNo');
+            forMainAddress.push('ShippingFaxNo');
+            forMainAddress.push('ShippingZipCode');
+            forMainAddress.push('ID_ShippingProvince');
+            forMainAddress.push('ID_ShippingCity');
+
+            //billing
+            forMainAddress.push('BillingAddress');
+            forMainAddress.push('BillingTelNo');
+            forMainAddress.push('BillingMobileNo');
+            forMainAddress.push('BillingFaxNo');
+            forMainAddress.push('BillingZipCode');
+            forMainAddress.push('ID_BillingProvince');
+            forMainAddress.push('ID_BillingCity');
+
+            VC._onControl_Initialized = function(PropertyName, e){
+                if(forMainAddress.includes(PropertyName)){
+                    if(_.CurrentObject.IsMainAddress == true || _.CurrentObject.IsMainAddress == 1) {
+                        e.component.option('disabled', true);
+                    }
+                }
+            }; 
+
+            $.each(forMainAddress,function(i,o){
+                VC['$' + o + '_IsDisabled'] = function(){
+                    if(_.CurrentObject.IsMainAddress == true || _.CurrentObject.IsMainAddress == 1) return false;
+                    return true;
+                }
+            });
+
+
+            VC.$ID_Event_IsDisabled = function () {
+                if (_.CurrentObject.ID_MediaSource !== 1 && _.CurrentObject.ID_MediaSource !== 9) {
+                    return false;
+                }
+
+                return true;
+            }
+
+        }
+
+        //
+        VC_Customer.prototype.OnFormInitialized = function (VC) {
+            var _ = this;
+        }
+
+        return VC_Customer;
+    });
+//</script>
+</text> , false )
+
